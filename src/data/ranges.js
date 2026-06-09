@@ -36,7 +36,7 @@ export const RFI_RANGES = {
       raise: [
         'AA','KK','QQ','JJ','TT','99','88','77',
         'AKs','AQs','AJs','ATs','A9s','A8s',
-        'KQs','KJs','KTs','K9s',
+        'KQs','KJs','KTs','K9s','K8s',
         'QJs','QTs','JTs',
         'T9s','98s','87s','76s',
         'AKo','AQo','AJo',
@@ -77,39 +77,39 @@ export const RFI_RANGES = {
       // GTO Wizard MTT Avg 100bb ChipEV — ~19.6%
       raise: [
         'AA','KK','QQ','JJ','TT','99','88','77',
-        'AKs','AQs','AJs','ATs','A9s','A8s',
-        'KQs','KJs','KTs','K9s','K8s',
+        'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A5s',
+        'KQs','KJs','KTs','K9s','K8s','K7s',
         'QJs','QTs','Q9s','JTs','J9s',
         'T9s','98s','87s','76s','65s',
         'AKo','AQo','AJo',
       ],
-      mix: ['66','55','A7s','A6s','A5s','K6s','Q8s','T8s','97s','86s','ATo','KQo'],
+      mix: ['66','55','A6s','Q8s','T8s','97s','86s','ATo','KQo'],
       fold: []
     },
     50: {
       // GTO Wizard MTT Avg 50bb ChipEV — 19.6%
       raise: [
         'AA','KK','QQ','JJ','TT','99','88','77',
-        'AKs','AQs','AJs','ATs','A9s','A8s',
-        'KQs','KJs','KTs','K9s',
+        'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s',
+        'KQs','KJs','KTs','K9s','K8s',
         'QJs','QTs','Q9s','JTs','J9s',
         'T9s','98s','87s','76s',
         'AKo','AQo','AJo',
       ],
-      mix: ['66','55','A7s','A6s','T8s','97s','ATo','KQo'],
+      mix: ['66','55','A5s','T8s','97s','ATo','KQo'],
       fold: []
     },
     25: {
       // GTO Wizard MTT Avg 25bb ChipEV — 20.8%
       raise: [
         'AA','KK','QQ','JJ','TT','99','88','77',
-        'AKs','AQs','AJs','ATs','A9s',
+        'AKs','AQs','AJs','ATs','A9s','A8s',
         'KQs','KJs','KTs','K9s',
         'QJs','QTs','JTs',
         'T9s','98s','87s',
         'AKo','AQo','AJo',
       ],
-      mix: ['66','55','A8s','A7s','J9s','76s','ATo','KQo'],
+      mix: ['66','55','A7s','J9s','76s','ATo','KQo'],
       fold: []
     },
     15: {
@@ -145,13 +145,13 @@ export const RFI_RANGES = {
       // GTO Wizard MTT Avg 50bb ChipEV — 23.7%
       raise: [
         'AA','KK','QQ','JJ','TT','99','88','77','66',
-        'AKs','AQs','AJs','ATs','A9s','A8s','A7s',
-        'KQs','KJs','KTs','K9s','K8s',
+        'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s',
+        'KQs','KJs','KTs','K9s','K8s','K7s',
         'QJs','QTs','Q9s','JTs','J9s',
         'T9s','T8s','98s','87s','76s','65s',
         'AKo','AQo','AJo','ATo',
       ],
-      mix: ['55','A6s','A5s','K7s','Q8s','J8s','97s','86s','75s','KQo'],
+      mix: ['55','A5s','Q8s','J8s','97s','86s','75s','KQo'],
       fold: []
     },
     25: {
@@ -205,12 +205,12 @@ export const RFI_RANGES = {
         'AA','KK','QQ','JJ','TT','99','88','77','66','55',
         'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s',
         'KQs','KJs','KTs','K9s','K8s','K7s',
-        'QJs','QTs','Q9s','Q8s','JTs','J9s','J8s','J7s','J6s',
+        'QJs','QTs','Q9s','Q8s','JTs','J9s','J8s','J7s',
         'T9s','T8s','98s','97s','87s','86s','76s','75s','65s',
         'AKo','AQo','AJo','ATo','A9o',
         'KQo','KJo',
       ],
-      mix: ['44','A4s','K6s','Q7s','T7s','96s','85s','74s','64s','54s'],
+      mix: ['44','A4s','K6s','Q7s','J6s','T7s','96s','85s','74s','64s','54s'],
       fold: []
     },
     25: {
@@ -385,7 +385,7 @@ export const RFI_RANGES = {
       raise: [
         'AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
         'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
-        'KQs','KJs','KTs','K9s','K8s','K7s','K6s',
+        'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s',
         'QJs','QTs','Q9s','Q8s','Q7s',
         'JTs','J9s','J8s','J7s',
         'T9s','T8s','T7s',
@@ -399,11 +399,11 @@ export const RFI_RANGES = {
         'QJo','QTo','Q9o',
         'JTo','J9o',
         'T9o','T8o',
-        '98o','97o',
+        '97o',
         '87o','86o',
         '76o',
       ],
-      mix: ['K5s','K4s','Q6s','J6s','T6s','95s','84s','74s','63s','53s','43s','A6o','A5o','K8o','Q8o','J8o','T7o'],
+      mix: ['K4s','Q6s','J6s','T6s','95s','84s','74s','63s','53s','43s','A6o','A5o','K8o','Q8o','J8o','T7o','98o'],
       fold: []
     },
     15: {
