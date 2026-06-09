@@ -138,144 +138,165 @@ function evaluate(scenario, action) {
   return { correct, isCorrect, isMix: false }
 }
 
-// ─── Mesa de Poker estilo GTO Wizard ─────────────────────────────
-// Posições em círculo, sentido horário, começando do topo
-// viewBox 200x180 para ter espaço para os labels externos
-const CX = 100, CY = 88, RX = 72, RY = 56
+// ─── Mesa de Poker estilo GTO Wizard (CSS layout) ────────────────
+const SUIT_COLOR = { s: '#b0b8c8', h: '#e94560', d: '#e94560', c: '#b0b8c8' }
+const SUIT_SYM   = { s: '♠', h: '♥', d: '♦', c: '♣' }
 
-function seatXY(pos) {
-  const angles = {
-    'UTG':   -90,
-    'UTG+1': -45,
-    'LJ':      0,
-    'HJ':     45,
-    'CO':     90,
-    'BTN':   135,
-    'SB':    180,
-    'BB':   -135,
-  }
-  const deg = angles[pos] ?? 0
-  const rad = (deg * Math.PI) / 180
-  return {
-    x: CX + RX * Math.cos(rad),
-    y: CY + RY * Math.sin(rad),
-  }
-}
-
-const SUIT_COLOR_MAP = { s: '#c0c0c0', h: '#e94560', d: '#e94560', c: '#c0c0c0' }
-const SUIT_SYM_MAP   = { s: '♠', h: '♥', d: '♦', c: '♣' }
-const CARD_BG        = { s: '#1a1a2e', h: '#2e1a1a', d: '#2e1a1a', c: '#1a1a2e' }
-
-function HeroCards({ cx, cy, cards }) {
-  // Cartas ao lado direito do assento, estilo GTO Wizard
+function MiniCard({ card }) {
+  const suit = card.slice(-1)
+  const rank = card.startsWith('T') ? '10' : card[0]
+  const col  = SUIT_COLOR[suit] || '#aaa'
+  const sym  = SUIT_SYM[suit] || suit
   return (
-    <g>
-      {cards.map((c, i) => {
-        const suit = c.slice(-1)
-        const rank = c.length === 3 ? '10' : c[0]
-        const bg   = CARD_BG[suit] || '#1e1e2e'
-        const col  = SUIT_COLOR_MAP[suit] || '#aaa'
-        const sym  = SUIT_SYM_MAP[suit] || suit
-        const x0   = cx + 10 + i * 13
-        const y0   = cy - 8
-        return (
-          <g key={i}>
-            <rect x={x0} y={y0} width="11" height="16" rx="1.5" fill={bg} stroke={col} strokeWidth="0.6" />
-            <text x={x0 + 5.5} y={y0 + 6.5} textAnchor="middle"
-              style={{ fontSize: 5.5, fill: col, fontWeight: 900 }}>{rank}</text>
-            <text x={x0 + 5.5} y={y0 + 13} textAnchor="middle"
-              style={{ fontSize: 4.5, fill: col }}>{sym}</text>
-          </g>
-        )
-      })}
-    </g>
+    <div style={{
+      display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      width: 28, height: 40, borderRadius: 4, border: `1px solid ${col}`,
+      background: '#111', color: col, lineHeight: 1,
+    }}>
+      <span style={{ fontSize: 13, fontWeight: 900 }}>{rank}</span>
+      <span style={{ fontSize: 11 }}>{sym}</span>
+    </div>
   )
 }
+
+function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards }) {
+  const borderColor = isHero ? '#4a9eff' : isRaiser ? '#f5a623' : '#2a2a3a'
+  const bg          = isHero ? '#0d1a2e' : '#111118'
+  const nameColor   = isHero ? '#4a9eff' : isRaiser ? '#f5a623' : '#666'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      {isRaiser && (
+        <div style={{
+          fontSize: 10, fontWeight: 800, color: '#f5a623',
+          background: '#1e1400', border: '1px solid #f5a62360',
+          borderRadius: 4, padding: '1px 6px',
+        }}>RAISE</div>
+      )}
+      <div style={{
+        width: 46, height: 46, borderRadius: '50%',
+        background: bg, border: `2px solid ${borderColor}`,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{ fontSize: pos === 'UTG+1' ? 8 : 10, color: nameColor, fontWeight: 700, lineHeight: 1 }}>{pos}</span>
+        <span style={{ fontSize: 9, color: '#444', marginTop: 1 }}>{stack}bb</span>
+      </div>
+      {/* Chip de blind */}
+      {(isSB || isBB) && (
+        <div style={{
+          fontSize: 9, fontWeight: 800,
+          color: isSB ? '#f5a623' : '#4a9eff',
+          background: isSB ? '#1e140055' : '#0d1a2e55',
+          border: `1px solid ${isSB ? '#f5a62360' : '#4a9eff60'}`,
+          borderRadius: 10, padding: '1px 6px',
+        }}>{isSB ? 'SB' : 'BB'}</div>
+      )}
+      {isHero && cards && (
+        <div style={{ display: 'flex', gap: 3, marginTop: 2 }}>
+          {cards.map((c, i) => <MiniCard key={i} card={c} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Ordem fixa da mesa, sentido horário
+const ALL_SEATS_ORDER = ['UTG','UTG+1','LJ','HJ','CO','BTN','SB','BB']
+
+// Posições fixas no oval — herói sempre no centro-baixo (bottom-center)
+// Rotacionamos a lista de forma que o herói caia na posição bottom-center
+const FIXED_POSITIONS = [
+  { top: '2%',  left: '26%' },  // 0 - top-left
+  { top: '2%',  left: '50%' },  // 1 - top-center
+  { top: '2%',  left: '74%' },  // 2 - top-right
+  { top: '38%', left: '88%' },  // 3 - right
+  { top: '74%', left: '74%' },  // 4 - bottom-right
+  { top: '85%', left: '50%' },  // 5 - bottom-center (HERÓI)
+  { top: '74%', left: '26%' },  // 6 - bottom-left
+  { top: '38%', left: '12%' },  // 7 - left
+]
+
+// Dealer button fica à direita do assento BTN (posição 4 relativa ao herói)
+// Calculado dinamicamente na função abaixo
 
 function PokerTable({ scenario, cards }) {
   const heroPos   = scenario.type === 'bb' ? 'BB' : scenario.pos
   const raiserPos = scenario.type === 'bb' ? scenario.pos : null
-  const allSeats  = ['UTG','UTG+1','LJ','HJ','CO','BTN','SB','BB']
 
-  // Dealer button fica entre BTN e CO
-  const dBtn = seatXY('BTN')
-  const dCo  = seatXY('CO')
-  const dX   = (dBtn.x + dCo.x) / 2 + 4
-  const dY   = (dBtn.y + dCo.y) / 2
+  // Rotacionar: herói fica na posição 5 (bottom-center)
+  const heroIdx   = ALL_SEATS_ORDER.indexOf(heroPos)
+  const rotated   = ALL_SEATS_ORDER.map((_, i) =>
+    ALL_SEATS_ORDER[(heroIdx + i - 5 + 8) % 8]
+  )
+
+  // BTN fica na posição 4 da lista rotacionada → FIXED_POSITIONS[4]
+  // Dealer button fica logo à direita do assento BTN
+  const btnSlot   = rotated.indexOf('BTN')
+  const btnPos    = FIXED_POSITIONS[btnSlot]
+
+  const typeLabel = scenario.type === 'rfi' ? 'Raise First In'
+    : scenario.type === 'pushfold' ? 'Push / Fold' : 'BB vs RFI'
 
   return (
-    <svg viewBox="0 0 200 180" style={{ width: '100%', maxWidth: 400, display: 'block', margin: '0 auto' }}>
-      {/* Fundo preto */}
-      <rect width="200" height="180" fill="#0d0d0d" />
+    <div style={{ position: 'relative', width: '100%', paddingBottom: '70%', userSelect: 'none' }}>
+      {/* Felt oval */}
+      <div style={{
+        position: 'absolute', inset: '8% 6%',
+        borderRadius: '50%',
+        background: 'radial-gradient(ellipse at center, #0f3020 0%, #0a1f14 60%, #081510 100%)',
+        border: '3px solid #1a3a24',
+        boxShadow: 'inset 0 0 30px #000a, 0 0 0 6px #0d1a10',
+      }} />
 
-      {/* Trilho circular da mesa — só contorno, sem fill verde */}
-      <ellipse cx={CX} cy={CY} rx={RX} ry={RY} fill="none" stroke="#2a2a3a" strokeWidth="1" />
+      {/* Info central */}
+      <div style={{
+        position: 'absolute', top: '40%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        textAlign: 'center', pointerEvents: 'none',
+      }}>
+        <div style={{ color: '#555', fontSize: 10, fontWeight: 700, letterSpacing: 1 }}>{typeLabel.toUpperCase()}</div>
+        <div style={{ color: '#888', fontSize: 14, fontWeight: 800, marginTop: 2 }}>{scenario.stack}bb</div>
+      </div>
 
-      {/* Pot no centro */}
-      <text x={CX} y={CY - 8} textAnchor="middle" style={{ fontSize: 7, fill: '#888', fontWeight: 700 }}>
-        {scenario.stack}bb
-      </text>
-      <text x={CX} y={CY + 2} textAnchor="middle" style={{ fontSize: 4.5, fill: '#444' }}>
-        {scenario.type === 'rfi' ? 'Raise First In' : scenario.type === 'pushfold' ? 'Push / Fold' : 'BB vs RFI'}
-      </text>
+      {/* Dealer button — colado ao BTN */}
+      {btnPos && (
+        <div style={{
+          position: 'absolute',
+          top: btnPos.top, left: btnPos.left,
+          transform: 'translate(18px, -28px)',
+          width: 18, height: 18, borderRadius: '50%',
+          background: '#e8e8e8', color: '#111',
+          fontSize: 9, fontWeight: 900,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: '2px solid #aaa', zIndex: 10,
+        }}>D</div>
+      )}
 
-      {/* Dealer button */}
-      <circle cx={dX} cy={dY} r="5" fill="#e8e8e8" />
-      <text x={dX} y={dY + 1.8} textAnchor="middle" style={{ fontSize: 4.5, fill: '#111', fontWeight: 800 }}>D</text>
-
-      {allSeats.map(pos => {
-        const { x, y } = seatXY(pos)
-        const isHero   = pos === heroPos
-        const isRaiser = pos === raiserPos
-
-        const circleFill   = isHero ? '#1e2a3a' : '#1a1a22'
-        const circleStroke = isHero ? '#4a9eff' : isRaiser ? '#f5a623' : '#333'
-        const circleSW     = isHero || isRaiser ? 1.5 : 0.8
-        const nameColor    = isHero ? '#4a9eff' : isRaiser ? '#f5a623' : '#aaa'
-        const stackColor   = isHero ? '#ccc' : '#555'
-
+      {/* Assentos */}
+      {rotated.map((pos, slot) => {
+        const p = FIXED_POSITIONS[slot]
+        const isSB = pos === 'SB'
+        const isBB = pos === 'BB'
         return (
-          <g key={pos}>
-            {/* Círculo do assento */}
-            <circle cx={x} cy={y} r="14" fill={circleFill} stroke={circleStroke} strokeWidth={circleSW} />
-
-            {/* Nome da posição */}
-            <text x={x} y={y - 2} textAnchor="middle"
-              style={{ fontSize: pos === 'UTG+1' ? 4 : 5, fill: nameColor, fontWeight: 700 }}>
-              {pos}
-            </text>
-
-            {/* Stack */}
-            <text x={x} y={y + 6} textAnchor="middle"
-              style={{ fontSize: 4.5, fill: stackColor }}>
-              {scenario.stack}
-            </text>
-
-            {/* "Fold" nos não-ativos */}
-            {!isHero && !isRaiser && (
-              <text x={x} y={y - 18} textAnchor="middle"
-                style={{ fontSize: 4, fill: '#444', fontWeight: 600 }}>
-                Fold
-              </text>
-            )}
-
-            {/* "Raise" no raiser */}
-            {isRaiser && (
-              <>
-                <rect x={x - 12} y={y - 26} width="24" height="10" rx="3" fill="#2a1f00" stroke="#f5a623" strokeWidth="0.8" />
-                <text x={x} y={y - 19} textAnchor="middle"
-                  style={{ fontSize: 5.5, fill: '#f5a623', fontWeight: 800 }}>
-                  Raise
-                </text>
-              </>
-            )}
-
-            {/* Cartas do herói ao lado do assento */}
-            {isHero && cards && <HeroCards cx={x} cy={y} cards={cards} />}
-          </g>
+          <div key={pos} style={{
+            position: 'absolute',
+            top: p.top, left: p.left,
+            transform: 'translate(-50%, -50%)',
+            zIndex: 5,
+          }}>
+            <Seat
+              pos={pos}
+              isHero={pos === heroPos}
+              isRaiser={pos === raiserPos}
+              isSB={isSB}
+              isBB={isBB}
+              stack={scenario.stack}
+              cards={pos === heroPos ? cards : null}
+            />
+          </div>
         )
       })}
-    </svg>
+    </div>
   )
 }
 
