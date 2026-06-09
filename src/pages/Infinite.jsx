@@ -496,14 +496,36 @@ export default function Infinite() {
               Range de referência
             </div>
             {scenario.type === 'rfi' && (
-              <RangeViewer type="rfi" position={scenario.pos} stack={scenario.stack} highlightHand={scenario.hand} />
+              <RangeViewer
+                pos={scenario.pos} stack={scenario.stack}
+                highlightHand={scenario.hand}
+                label={`Ver range RFI — ${scenario.pos} ${scenario.stack}bb`}
+              />
             )}
-            {scenario.type === 'pushfold' && (
-              <RangeViewer type="pushfold" position={scenario.pos} stack={scenario.stack} highlightHand={scenario.hand} />
-            )}
-            {scenario.type === 'bb' && (
-              <RangeViewer type="bb" position={scenario.pos} highlightHand={scenario.hand} />
-            )}
+            {scenario.type === 'pushfold' && (() => {
+              const stacks = Object.keys(PUSH_FOLD_RANGES[scenario.pos] || {}).map(Number).sort((a,b)=>a-b)
+              const closest = stacks.reduce((p,c) => Math.abs(c-scenario.stack)<Math.abs(p-scenario.stack)?c:p, stacks[0])
+              const pushList = PUSH_FOLD_RANGES[scenario.pos]?.[closest] || []
+              return (
+                <RangeViewer
+                  customRange={{ push: pushList }}
+                  label={`Ver range push — ${scenario.pos} ${scenario.stack}bb`}
+                  legend={[['push', 'Push (All-in)'], ['fold', 'Fold']]}
+                  highlightHand={scenario.hand}
+                />
+              )
+            })()}
+            {scenario.type === 'bb' && (() => {
+              const range = BB_VS_RFI[BB_KEYS[scenario.pos]] || {}
+              return (
+                <RangeViewer
+                  customRange={{ threebet: range.threebet || [], call: range.call || [] }}
+                  label={`Ver range BB vs ${scenario.pos}`}
+                  legend={[['threebet', '3-Bet'], ['call', 'Call'], ['fold', 'Fold']]}
+                  highlightHand={scenario.hand}
+                />
+              )
+            })()}
           </div>
         )}
       </div>
