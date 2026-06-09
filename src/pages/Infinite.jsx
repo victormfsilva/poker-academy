@@ -138,172 +138,180 @@ function evaluate(scenario, action) {
   return { correct, isCorrect, isMix: false }
 }
 
-// ─── Mesa de Poker estilo GTO Wizard (CSS layout fiel ao HTML) ───
-const SUIT_COLOR = { s: '#504F4F', h: '#AD0E04', d: '#2235C5', c: '#0EAD2C' }
-const SUIT_SYM   = { s: '♠', h: '♥', d: '♦', c: '♣' }
+// ─── Mesa estilo GTO Wizard ───────────────────────────────────────
+// Cores de naipe exatas do GTO Wizard
+const SUIT_BG  = { s: '#1c1c1c', h: '#1a0000', d: '#000d2a', c: '#001a00' }
+const SUIT_COL = { s: '#aaa',    h: '#e05555', d: '#4a6ee0', c: '#3db85a' }
+const SUIT_SYM = { s: '♠', h: '♥', d: '♦', c: '♣' }
 
-function MiniCard({ card }) {
+// Carta do herói — grande, fundo colorido por naipe, igual GTO Wizard
+function HeroCard({ card }) {
   const suit = card.slice(-1)
   const rank = card.startsWith('T') ? '10' : card[0]
-  const col  = SUIT_COLOR[suit] || '#aaa'
+  const bg   = SUIT_BG[suit]  || '#2a2a2a'
+  const col  = SUIT_COL[suit] || '#ccc'
   const sym  = SUIT_SYM[suit] || suit
   return (
     <div style={{
-      display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      width: 26, height: 38, borderRadius: 3,
-      background: '#2f2f2f', border: '1px solid #444',
-      color: col, lineHeight: 1, gap: 1,
+      width: 36, height: 52, borderRadius: 5,
+      background: bg, border: `1px solid ${col}55`,
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      color: col, lineHeight: 1, gap: 2,
     }}>
-      <span style={{ fontSize: 12, fontWeight: 900 }}>{rank}</span>
-      <span style={{ fontSize: 11 }}>{sym}</span>
+      <span style={{ fontSize: 17, fontWeight: 900 }}>{rank}</span>
+      <span style={{ fontSize: 14 }}>{sym}</span>
     </div>
   )
 }
 
-// Fichas visuais estilo GTO Wizard (pchips)
-function Chips({ count = 1, color = '#aaa' }) {
+// Ficha bolinha estilo GTO Wizard — pequeno círculo colorido
+function ChipDot({ color }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column-reverse', alignItems: 'center', gap: 1 }}>
-      {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
-        <div key={i} style={{
-          width: 14, height: 4, borderRadius: 2,
-          background: color, border: '1px solid #0006',
-          boxShadow: '0 1px 2px #0005',
-        }} />
-      ))}
-    </div>
+    <div style={{
+      width: 10, height: 10, borderRadius: '50%',
+      background: color, border: '1px solid #0008',
+      boxShadow: `0 0 4px ${color}88`,
+      flexShrink: 0,
+    }} />
   )
 }
 
-function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards }) {
-  const borderColor = isHero ? '#00ac8d' : isRaiser ? '#ff8f00' : '#3f3f3f'
-  const bg          = isHero ? '#1a2e2b' : '#1e1e1e'
-  const nameColor   = isHero ? '#00ac8d' : isRaiser ? '#ff8f00' : '#888'
-  const posLabel    = pos === 'UTG+1' ? 'UTG1' : pos
-  const hasBet      = isRaiser || isSB || isBB
+// Assento igual ao GTO Wizard: círculo cinza com pos + stack, sem fill colorido nos inativos
+function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards, betAmt }) {
+  const posLabel = pos === 'UTG+1' ? 'UTG1' : pos
+  // Herói: borda verde-água. Raiser: borda laranja. Demais: cinza escuro
+  const border = isHero  ? '2px solid #00ac8d'
+               : isRaiser ? '2px solid #ff8f00'
+               : '2px solid #3a3a3a'
+  const bg     = isHero  ? '#1a2e2a'
+               : '#2a2a2a'
+  const txtCol = isHero  ? '#00ac8d'
+               : isRaiser ? '#ff8f00'
+               : '#ccc'
+
+  // Bolinha de aposta + valor (igual GTO Wizard: bolinha azul + número branco)
+  const hasBet   = isRaiser || isSB || isBB
+  const chipColor = isRaiser ? '#ff8f00' : isSB ? '#5ab966' : '#4a9eff'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-      {/* Fichas + valor da aposta acima do círculo */}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      {/* Bet: bolinha + valor acima do assento */}
       {hasBet && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 1 }}>
-          <Chips
-            count={isRaiser ? 3 : 1}
-            color={isRaiser ? '#ff8f00' : isSB ? '#ff8f00' : '#00ac8d'}
-          />
-          <span style={{
-            fontSize: 9, fontWeight: 700,
-            color: isRaiser ? '#ff8f00' : isSB ? '#ff8f00' : '#00ac8d',
-          }}>
-            {isRaiser ? `${(stack * 2.5).toFixed(0)}` : isSB ? `${(stack * 0.5).toFixed(0)}` : `${stack}`}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <ChipDot color={chipColor} />
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#ddd' }}>{betAmt}</span>
         </div>
       )}
 
       {/* Círculo do assento */}
       <div style={{
-        width: 44, height: 44, borderRadius: '50%',
-        background: bg, border: `2px solid ${borderColor}`,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        boxShadow: isHero ? '0 0 8px #00ac8d40' : isRaiser ? '0 0 8px #ff8f0040' : 'none',
+        width: 48, height: 48, borderRadius: '50%',
+        background: bg, border,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
       }}>
-        <span style={{ fontSize: posLabel.length > 3 ? 7 : 10, color: nameColor, fontWeight: 700, lineHeight: 1 }}>{posLabel}</span>
-        <span style={{ fontSize: 8, color: '#555', marginTop: 1 }}>{stack}</span>
+        <span style={{ fontSize: posLabel.length > 3 ? 7.5 : 10, color: txtCol, fontWeight: 700, lineHeight: 1.1 }}>
+          {posLabel}
+        </span>
+        <span style={{ fontSize: 9, color: '#666', lineHeight: 1.2 }}>{stack}</span>
       </div>
 
-      {/* Chip de blind (SB/BB) abaixo do círculo */}
-      {(isSB || isBB) && (
-        <div style={{
-          fontSize: 8, fontWeight: 800,
-          color: isSB ? '#ff8f00' : '#00ac8d',
-          background: '#1e1e1e',
-          border: `1px solid ${isSB ? '#ff8f0060' : '#00ac8d60'}`,
-          borderRadius: 10, padding: '1px 5px',
-        }}>{isSB ? 'SB' : 'BB'}</div>
-      )}
-
-      {/* Cartas do herói */}
+      {/* Cartas do herói abaixo do assento */}
       {isHero && cards && (
-        <div style={{ display: 'flex', gap: 3, marginTop: 2 }}>
-          {cards.map((c, i) => <MiniCard key={i} card={c} />)}
+        <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+          {cards.map((c, i) => <HeroCard key={i} card={c} />)}
         </div>
       )}
     </div>
   )
 }
 
-// Ordem fixa da mesa, sentido horário
+// Ordem da mesa sentido horário
 const ALL_SEATS_ORDER = ['UTG','UTG+1','LJ','HJ','CO','BTN','SB','BB']
 
-// 8 slots — slot 5 = bottom-center = HERÓI
-// Posições em % do container (deixa espaço pras cartas em baixo)
+// Posições: herói sempre no slot 5 (bottom-center)
+// Mesa horizontal achatada igual ao GTO Wizard
 const SLOT_POS = [
-  { top: '8%',  left: '25%' },  // 0 top-left
-  { top: '4%',  left: '50%' },  // 1 top-center
-  { top: '8%',  left: '75%' },  // 2 top-right
-  { top: '42%', left: '90%' },  // 3 right
-  { top: '76%', left: '75%' },  // 4 bottom-right
-  { top: '82%', left: '50%' },  // 5 bottom-center ← HERÓI
-  { top: '76%', left: '25%' },  // 6 bottom-left
-  { top: '42%', left: '10%' },  // 7 left
+  { top: '10%', left: '22%' }, // 0 top-left      (UTG relativo)
+  { top: '3%',  left: '50%' }, // 1 top-center
+  { top: '10%', left: '78%' }, // 2 top-right
+  { top: '50%', left: '93%' }, // 3 right
+  { top: '82%', left: '75%' }, // 4 bottom-right
+  { top: '88%', left: '50%' }, // 5 bottom-center ← HERÓI
+  { top: '82%', left: '25%' }, // 6 bottom-left
+  { top: '50%', left: '7%'  }, // 7 left
 ]
 
 function PokerTable({ scenario, cards }) {
   const heroPos   = scenario.type === 'bb' ? 'BB' : scenario.pos
   const raiserPos = scenario.type === 'bb' ? scenario.pos : null
 
-  // Rotacionar: herói sempre no slot 5
+  // Rotacionar para herói ficar no slot 5
   const heroIdx = ALL_SEATS_ORDER.indexOf(heroPos)
   const rotated = SLOT_POS.map((_, i) =>
     ALL_SEATS_ORDER[(heroIdx + i - 5 + 8) % 8]
   )
 
-  // Dealer button: colado ao BTN
+  // BTN para dealer button
   const btnSlotIdx = rotated.indexOf('BTN')
   const btnPos     = SLOT_POS[btnSlotIdx]
 
-  const typeLabel = scenario.type === 'rfi' ? 'Raise First In'
-    : scenario.type === 'pushfold' ? 'Push / Fold' : 'BB vs RFI'
+  // Pot central: blind total + aposta do raiser
+  const potBB  = scenario.stack
+  const potAmt = raiserPos ? (potBB * 2.5).toFixed(1) : (potBB * 1.5).toFixed(1)
+  const startPot = (potBB * 0.5).toFixed(1)
 
   return (
-    <div style={{ position: 'relative', width: '100%', paddingBottom: '80%', userSelect: 'none', background: '#141414', borderRadius: 12 }}>
-
-      {/* Mesa oval */}
+    <div style={{
+      position: 'relative', width: '100%', paddingBottom: '68%',
+      userSelect: 'none',
+    }}>
+      {/* Oval da mesa — borda cinza, fundo transparente igual GTO Wizard */}
       <div style={{
         position: 'absolute',
-        top: '10%', left: '8%', right: '8%', bottom: '10%',
+        top: '16%', left: '5%', right: '5%', bottom: '8%',
         borderRadius: '50%',
-        background: '#141414',
-        border: '2px solid #4D4D4D',
+        border: '2px solid #3a3a3a',
+        background: 'transparent',
       }} />
 
-      {/* Info central */}
+      {/* Pot central */}
       <div style={{
-        position: 'absolute', top: '42%', left: '50%',
+        position: 'absolute', top: '38%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center', pointerEvents: 'none',
       }}>
-        <div style={{ color: '#444', fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{typeLabel}</div>
-        <div style={{ color: '#666', fontSize: 13, fontWeight: 800, marginTop: 2 }}>{scenario.stack}bb</div>
+        <div style={{ color: '#555', fontSize: 10, fontWeight: 600 }}>{potBB}bb</div>
+        <div style={{ color: '#ccc', fontSize: 15, fontWeight: 800 }}>{potAmt} bb</div>
+        <div style={{ color: '#555', fontSize: 10 }}>{startPot} bb</div>
       </div>
 
-      {/* Dealer button colado ao BTN */}
+      {/* Dealer button — ao lado do BTN */}
       {btnPos && (
         <div style={{
           position: 'absolute',
           top: btnPos.top, left: btnPos.left,
-          transform: 'translate(22px, -20px)',
-          width: 16, height: 16, borderRadius: '50%',
-          background: '#e0e0e0', color: '#111',
-          fontSize: 8, fontWeight: 900,
+          transform: 'translate(-28px, -28px)',
+          width: 18, height: 18, borderRadius: '50%',
+          background: '#d0d0d0', color: '#111',
+          fontSize: 9, fontWeight: 900,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '1.5px solid #999', zIndex: 10,
+          border: '1px solid #888', zIndex: 10,
         }}>D</div>
       )}
 
       {/* Assentos */}
       {rotated.map((pos, slotIdx) => {
-        const p = SLOT_POS[slotIdx]
+        const p        = SLOT_POS[slotIdx]
+        const isRaiser = pos === raiserPos
+        const isSB     = pos === 'SB'
+        const isBB     = pos === 'BB'
+        // Valor apostado para mostrar ao lado
+        const betAmt   = isRaiser ? `${(potBB * 2).toFixed(0)}`
+                       : isSB     ? `${(potBB * 0.5).toFixed(1)}`
+                       : isBB     ? `${potBB}`
+                       : null
         return (
           <div key={pos} style={{
             position: 'absolute',
@@ -314,11 +322,12 @@ function PokerTable({ scenario, cards }) {
             <Seat
               pos={pos}
               isHero={pos === heroPos}
-              isRaiser={pos === raiserPos}
-              isSB={pos === 'SB'}
-              isBB={pos === 'BB'}
+              isRaiser={isRaiser}
+              isSB={isSB}
+              isBB={isBB}
               stack={scenario.stack}
               cards={pos === heroPos ? cards : null}
+              betAmt={betAmt}
             />
           </div>
         )
