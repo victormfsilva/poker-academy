@@ -237,7 +237,7 @@ function Trainer() {
               />
             )
           })()}
-          <button onClick={newHand} className="mt-4 w-full py-3 rounded-lg font-semibold" style={{ background: '#1e1e2e', color: 'white' }}>Próxima Mão →</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mão →</button>
         </div>
       )}
     </div>

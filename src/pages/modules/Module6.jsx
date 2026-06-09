@@ -215,6 +215,7 @@ function Trainer() {
       {feedback && (
         <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>{feedback.isCorrect ? '✓ Correto!' : '✗ Incorreto'}</div>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mão →</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Correto: <strong style={{ color: '#f5a623' }}>{feedback.correct.toUpperCase()}</strong></div>
           {!feedback.isCorrect && (() => {
@@ -230,7 +231,6 @@ function Trainer() {
               />
             )
           })()}
-          <button onClick={newHand} className="mt-4 w-full py-3 rounded-lg font-semibold" style={{ background: '#1e1e2e', color: 'white' }}>Próxima Mão →</button>
         </div>
       )}
     </div>
