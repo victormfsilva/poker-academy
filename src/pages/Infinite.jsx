@@ -120,22 +120,36 @@ function newScenario(unlockedModules) {
 }
 
 // ─── Avalia resposta ─────────────────────────────────────────────
+// Botões sempre: fold | call | raise | allin
+// Mapeamento por tipo de cenário:
+//   rfi:      raise=raise, fold=fold (call/allin = errado)
+//   pushfold: allin=push, fold=fold (call/raise = errado)
+//   bb:       raise=3bet, call=call, fold=fold (allin = errado)
 function evaluate(scenario, action) {
   if (scenario.type === 'rfi') {
     const correct = rfiAction(scenario.hand, scenario.pos, scenario.stack)
-    const isMix = correct === 'mix'
-    const isCorrect = action === correct || (isMix && (action === 'raise' || action === 'fold'))
-    return { correct, isCorrect, isMix }
+    const isMix   = correct === 'mix'
+    // raise→raise, allin→raise (all-in conta como raise no RFI)
+    const mapped  = action === 'allin' ? 'raise' : action
+    const isCorrect = mapped === correct || (isMix && (mapped === 'raise' || mapped === 'fold'))
+    const correctLabel = correct === 'mix' ? 'raise ou fold' : correct
+    return { correct: correctLabel, isCorrect, isMix }
   }
   if (scenario.type === 'pushfold') {
     const correct = pfAction(scenario.hand, scenario.pos, scenario.stack)
-    const isCorrect = action === correct
-    return { correct, isCorrect, isMix: false }
+    // allin→push, demais→fold
+    const mapped  = action === 'allin' ? 'push' : 'fold'
+    const isCorrect = mapped === correct
+    const correctLabel = correct === 'push' ? 'all-in' : 'fold'
+    return { correct: correctLabel, isCorrect, isMix: false }
   }
-  // bb
+  // bb vs rfi
   const correct = bbAction(scenario.hand, scenario.pos)
-  const isCorrect = action === correct
-  return { correct, isCorrect, isMix: false }
+  // raise→3bet, call→call, fold→fold, allin→3bet
+  const mapped  = action === 'raise' || action === 'allin' ? '3bet' : action
+  const isCorrect = mapped === correct
+  const correctLabel = correct === '3bet' ? 'raise (3-bet)' : correct
+  return { correct: correctLabel, isCorrect, isMix: false }
 }
 
 // ─── Mesa estilo GTO Wizard ───────────────────────────────────────
@@ -334,38 +348,24 @@ function ScenarioLabel({ scenario }) {
   )
 }
 
-// ─── Botões de ação estilo GTO Wizard ────────────────────────────
-// Cores exatas do HTML: Fold=#3D7CB8, Call=#5ab966, Raise=#F03C3C, Allin=#ff8f00
-const BTN_STYLE = {
-  base: {
-    flex: 1, padding: '14px 8px', borderRadius: 8, fontWeight: 700,
-    fontSize: 15, border: 'none', cursor: 'pointer', letterSpacing: 0.3,
-    color: '#f5f5f5', textShadow: '0 1px 2px #0008',
-  },
-}
+// ─── Botões de ação — sempre os mesmos 4 ─────────────────────────
+const FIXED_BTNS = [
+  { label: 'Fold',   action: 'fold',  bg: '#3D7CB8' },
+  { label: 'Call',   action: 'call',  bg: '#5ab966' },
+  { label: 'Raise',  action: 'raise', bg: '#F03C3C' },
+  { label: 'All-in', action: 'allin', bg: '#ff8f00' },
+]
 
-function ActionButtons({ scenario, onAnswer }) {
-  const btns = scenario.type === 'rfi'
-    ? [
-        { label: 'Raise', action: 'raise', bg: '#F03C3C' },
-        { label: 'Fold',  action: 'fold',  bg: '#3D7CB8' },
-      ]
-    : scenario.type === 'pushfold'
-    ? [
-        { label: 'Allin', action: 'push', bg: '#ff8f00' },
-        { label: 'Fold',  action: 'fold', bg: '#3D7CB8' },
-      ]
-    : [
-        { label: 'Raise', action: '3bet', bg: '#F03C3C' },
-        { label: 'Call',  action: 'call', bg: '#5ab966' },
-        { label: 'Fold',  action: 'fold', bg: '#3D7CB8' },
-      ]
-
+function ActionButtons({ onAnswer }) {
   return (
     <div style={{ display: 'flex', gap: 8 }}>
-      {btns.map(b => (
+      {FIXED_BTNS.map(b => (
         <button key={b.action} onClick={() => onAnswer(b.action)}
-          style={{ ...BTN_STYLE.base, background: b.bg }}>
+          style={{
+            flex: 1, padding: '14px 4px', borderRadius: 8, fontWeight: 700,
+            fontSize: 13, border: 'none', cursor: 'pointer', letterSpacing: 0.3,
+            color: '#f5f5f5', textShadow: '0 1px 2px #0008', background: b.bg,
+          }}>
           {b.label}
         </button>
       ))}
@@ -432,10 +432,7 @@ export default function Infinite() {
         <div className="rounded-2xl mb-4"
           style={{ background: '#121212', border: `1px solid ${result ? (result.isCorrect ? '#00ac8d55' : '#F03C3C55') : '#262626'}` }}>
 
-          {/* Label do cenário */}
-          <div className="px-4 pt-3 pb-1 flex items-center gap-2">
-            <ScenarioLabel scenario={scenario} />
-          </div>
+          <div style={{ height: 12 }} />
 
           {/* Mesa */}
           <div className="px-2 pt-1 pb-1">
@@ -453,9 +450,7 @@ export default function Infinite() {
               {scenario.hand}
             </div>
             <div style={{ color: '#444', fontSize: 12, marginTop: 2 }}>
-              {scenario.type === 'rfi' && `${scenario.pos} · ${scenario.stack}bb — Raise First In`}
-              {scenario.type === 'pushfold' && `${scenario.pos} · ${scenario.stack}bb — Push ou Fold?`}
-              {scenario.type === 'bb' && `BB vs raise do ${scenario.pos}`}
+              {scenario.stack ? `${scenario.stack}bb` : '100bb'}
             </div>
           </div>
 
@@ -479,7 +474,7 @@ export default function Infinite() {
           {/* Botões de ação */}
           <div className="px-4 pb-4">
             {!result ? (
-              <ActionButtons scenario={scenario} onAnswer={handleAnswer} />
+              <ActionButtons onAnswer={handleAnswer} />
             ) : (
               <button onClick={handleNext}
                 style={{
