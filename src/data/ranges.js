@@ -178,7 +178,7 @@ export const RFI_RANGES = {
         'AKo','AQo','AJo','ATo',
         'KQo',
       ],
-      mix: ['55','A7s','J9s','98s','KJo'],
+      mix: ['55','A7s','J9s'],
       fold: []
     }
   },
@@ -238,7 +238,7 @@ export const RFI_RANGES = {
         'AKo','AQo','AJo','ATo',
         'KQo','KJo',
       ],
-      mix: ['44','A6s','A5s','K8s','Q9s','76s','QJo'],
+      mix: ['44','A6s','A5s','K8s','Q9s','QJo'],
       fold: []
     }
   },
@@ -313,7 +313,7 @@ export const RFI_RANGES = {
         'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s',
         'KQs','KJs','KTs','K9s','K8s',
         'QJs','QTs','Q9s','JTs','J9s',
-        'T9s','98s','87s','76s',
+        'T9s','98s','87s',
         'AKo','AQo','AJo','ATo','A9o',
         'KQo','KJo','KTo',
         'QJo','QTo',
