@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useProgress } from '../context/ProgressContext'
 import { RFI_RANGES, PUSH_FOLD_RANGES, BB_VS_RFI } from '../data/ranges'
-import Card, { handToCards } from '../components/Card'
+import Card, { handToCards, parseCard } from '../components/Card'
 import RangeViewer from '../components/RangeViewer'
 
 // ─── Utilitários ────────────────────────────────────────────────
@@ -139,30 +139,9 @@ function evaluate(scenario, action) {
 }
 
 // ─── Mesa estilo GTO Wizard ───────────────────────────────────────
-// Cores de naipe exatas do GTO Wizard
-const SUIT_BG  = { s: '#1c1c1c', h: '#1a0000', d: '#000d2a', c: '#001a00' }
-const SUIT_COL = { s: '#aaa',    h: '#e05555', d: '#4a6ee0', c: '#3db85a' }
-const SUIT_SYM = { s: '♠', h: '♥', d: '♦', c: '♣' }
-
-// Carta do herói — grande, fundo colorido por naipe, igual GTO Wizard
+// Carta do herói — usa o componente Card real do projeto
 function HeroCard({ card }) {
-  const suit = card.slice(-1)
-  const rank = card.startsWith('T') ? '10' : card[0]
-  const bg   = SUIT_BG[suit]  || '#2a2a2a'
-  const col  = SUIT_COL[suit] || '#ccc'
-  const sym  = SUIT_SYM[suit] || suit
-  return (
-    <div style={{
-      width: 36, height: 52, borderRadius: 5,
-      background: bg, border: `1px solid ${col}55`,
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      color: col, lineHeight: 1, gap: 2,
-    }}>
-      <span style={{ fontSize: 17, fontWeight: 900 }}>{rank}</span>
-      <span style={{ fontSize: 14 }}>{sym}</span>
-    </div>
-  )
+  return <Card card={parseCard(card)} size="md" />
 }
 
 // Ficha bolinha estilo GTO Wizard — pequeno círculo colorido
