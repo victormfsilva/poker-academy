@@ -202,12 +202,9 @@ function ActionButtons({ scenario, onAnswer }) {
 
 // ─── Componente principal ────────────────────────────────────────
 export default function Infinite() {
-  const { progress, recordAnswer, getModuleProgress } = useProgress()
+  const { recordAnswer, getModuleProgress } = useProgress()
 
-  const unlockedModules = [1,2,3,4,5,6].filter(id => {
-    const p = getModuleProgress(id)
-    return p.unlocked
-  })
+  const unlockedModules = [1,2,3,4,5,6].filter(id => getModuleProgress(id).unlocked)
 
   const [scenario, setScenario] = useState(() => newScenario(unlockedModules))
   const [result, setResult] = useState(null)
@@ -217,10 +214,7 @@ export default function Infinite() {
   const handleAnswer = useCallback((action) => {
     if (result) return
     const { isCorrect, correct, isMix } = evaluate(scenario, action)
-
-    // Determina o moduleId para salvar no progresso
     const moduleId = scenario.type === 'rfi' ? 1 : scenario.type === 'pushfold' ? 2 : 3
-
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
     setSessionStats(s => ({ total: s.total + 1, correct: s.correct + (isCorrect ? 1 : 0) }))
@@ -234,111 +228,103 @@ export default function Infinite() {
   }, [unlockedModules])
 
   const sessionAcc = sessionStats.total > 0
-    ? Math.round((sessionStats.correct / sessionStats.total) * 100)
-    : 0
+    ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0
 
+  const accColor = sessionAcc >= 90 ? '#00d4aa' : sessionAcc >= 70 ? '#f5a623' : '#e94560'
   const cards = handToCards(scenario.hand)
 
-  return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
-      <div className="max-w-lg mx-auto pt-6">
+  // cor de destaque do módulo atual
+  const moduleColor = scenario.type === 'rfi' ? '#e94560'
+    : scenario.type === 'pushfold' ? '#f5a623' : '#4a90e2'
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 style={{ color: 'white', fontSize: 20, fontWeight: 700 }}>Modo Infinito</h1>
-            <p style={{ color: '#555', fontSize: 13 }}>Todos os módulos desbloqueados</p>
-          </div>
-          <div className="flex gap-3 text-center">
-            <div className="rounded-lg px-3 py-2" style={{ background: '#12121a' }}>
-              <div style={{ color: '#e94560', fontWeight: 700, fontSize: 18 }}>{sessionStats.total}</div>
-              <div style={{ color: '#555', fontSize: 11 }}>mãos</div>
+  return (
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20" style={{ background: '#0a0a0f' }}>
+      <div className="max-w-md mx-auto px-4 pt-6">
+
+        {/* Stats bar */}
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          {[
+            { label: 'Mãos', value: sessionStats.total, color: '#e94560' },
+            { label: 'Acerto', value: sessionStats.total ? `${sessionAcc}%` : '—', color: accColor },
+            { label: 'Sequência', value: streak, color: '#f5a623' },
+          ].map(s => (
+            <div key={s.label} className="rounded-xl py-3 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+              <div style={{ color: s.color, fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{s.value}</div>
+              <div style={{ color: '#444', fontSize: 11, marginTop: 3 }}>{s.label}</div>
             </div>
-            <div className="rounded-lg px-3 py-2" style={{ background: '#12121a' }}>
-              <div style={{ color: sessionAcc >= 90 ? '#00d4aa' : sessionAcc >= 70 ? '#f5a623' : '#e94560', fontWeight: 700, fontSize: 18 }}>{sessionAcc}%</div>
-              <div style={{ color: '#555', fontSize: 11 }}>acerto</div>
-            </div>
-            <div className="rounded-lg px-3 py-2" style={{ background: '#12121a' }}>
-              <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 18 }}>{streak}</div>
-              <div style={{ color: '#555', fontSize: 11 }}>sequência</div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Cenário */}
-        <div className="rounded-xl p-5 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-          <div className="mb-3">
+        {/* Card principal */}
+        <div className="rounded-2xl overflow-hidden mb-4"
+          style={{ background: '#12121a', border: `1px solid ${result ? (result.isCorrect ? '#00d4aa55' : '#e9456055') : '#1e1e2e'}` }}>
+
+          {/* Faixa do módulo */}
+          <div className="px-5 py-3 flex items-center justify-between"
+            style={{ background: `${moduleColor}18`, borderBottom: `1px solid ${moduleColor}30` }}>
             <ScenarioLabel scenario={scenario} />
           </div>
 
-          {/* Cartas */}
-          <div className="flex justify-center gap-3 my-5">
-            {cards.map((c, i) => <Card key={i} rank={c.rank} suit={c.suit} />)}
+          {/* Cartas + mão */}
+          <div className="px-5 pt-6 pb-4 text-center">
+            <div className="flex justify-center gap-3 mb-3">
+              {cards.map((c, i) => <Card key={i} rank={c.rank} suit={c.suit} />)}
+            </div>
+            <div style={{ color: 'white', fontSize: 26, fontWeight: 800, letterSpacing: 1 }}>
+              {scenario.hand}
+            </div>
+            <div style={{ color: '#444', fontSize: 13, marginTop: 4 }}>
+              {scenario.type === 'rfi' && `${scenario.pos} · ${scenario.stack}bb — Raise First In`}
+              {scenario.type === 'pushfold' && `${scenario.pos} · ${scenario.stack}bb — Push ou Fold?`}
+              {scenario.type === 'bb' && `BB · raise do ${scenario.pos} — Qual a ação?`}
+            </div>
           </div>
 
-          <div className="text-center mb-4">
-            <span style={{ color: 'white', fontSize: 22, fontWeight: 700 }}>{scenario.hand}</span>
-          </div>
-
-          {/* Pergunta */}
-          <div className="text-center mb-4" style={{ color: '#888', fontSize: 14 }}>
-            {scenario.type === 'rfi' && `Você está no ${scenario.pos} com ${scenario.stack}bb. Qual a ação?`}
-            {scenario.type === 'pushfold' && `Você está no ${scenario.pos} com ${scenario.stack}bb. Push ou Fold?`}
-            {scenario.type === 'bb' && `Você está no BB. O ${scenario.pos} abre. Qual a ação?`}
-          </div>
-
-          {/* Resultado */}
+          {/* Feedback */}
           {result && (
-            <div className="mb-4 rounded-lg p-3" style={{
-              background: result.isCorrect ? '#00d4aa11' : '#e9456011',
-              border: `1px solid ${result.isCorrect ? '#00d4aa44' : '#e9456044'}`
+            <div className="mx-5 mb-4 rounded-xl px-4 py-3" style={{
+              background: result.isCorrect ? '#00d4aa15' : '#e9456015',
+              border: `1px solid ${result.isCorrect ? '#00d4aa40' : '#e9456040'}`
             }}>
-              <div style={{ color: result.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
-                {result.isCorrect ? '✓ Correto!' : `✗ Errou — correto: ${result.correct.toUpperCase()}`}
+              <div style={{ color: result.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 17 }}>
+                {result.isCorrect ? '✓ Correto!' : `✗ Errou — era ${result.correct.toUpperCase()}`}
               </div>
               {result.isMix && (
-                <div style={{ color: '#f5a623', fontSize: 13, marginBottom: 4 }}>Mão de transição (mix) — ambas as ações são aceitáveis.</div>
+                <div style={{ color: '#f5a623', fontSize: 12, marginTop: 3 }}>
+                  Mão de transição — raise ou fold são aceitáveis.
+                </div>
               )}
             </div>
           )}
 
-          {/* Botões */}
-          {!result ? (
-            <ActionButtons scenario={scenario} onAnswer={handleAnswer} />
-          ) : (
-            <button onClick={handleNext} className="w-full py-3 rounded-xl font-bold text-lg"
-              style={{ background: '#e94560', color: 'white' }}>
-              Próxima Mão →
-            </button>
-          )}
+          {/* Botões de ação */}
+          <div className="px-5 pb-5">
+            {!result ? (
+              <ActionButtons scenario={scenario} onAnswer={handleAnswer} />
+            ) : (
+              <button onClick={handleNext}
+                className="w-full py-4 rounded-xl font-bold text-lg"
+                style={{ background: '#e94560', color: 'white', letterSpacing: 0.5 }}>
+                Próxima Mão →
+              </button>
+            )}
+          </div>
         </div>
 
         {/* RangeViewer quando errar */}
         {result && !result.isCorrect && (
-          <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-            <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>Range de referência:</div>
+          <div className="rounded-2xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+            <div style={{ color: '#555', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+              Range de referência
+            </div>
             {scenario.type === 'rfi' && (
-              <RangeViewer
-                type="rfi"
-                position={scenario.pos}
-                stack={scenario.stack}
-                highlightHand={scenario.hand}
-              />
+              <RangeViewer type="rfi" position={scenario.pos} stack={scenario.stack} highlightHand={scenario.hand} />
             )}
             {scenario.type === 'pushfold' && (
-              <RangeViewer
-                type="pushfold"
-                position={scenario.pos}
-                stack={scenario.stack}
-                highlightHand={scenario.hand}
-              />
+              <RangeViewer type="pushfold" position={scenario.pos} stack={scenario.stack} highlightHand={scenario.hand} />
             )}
             {scenario.type === 'bb' && (
-              <RangeViewer
-                type="bb"
-                position={scenario.pos}
-                highlightHand={scenario.hand}
-              />
+              <RangeViewer type="bb" position={scenario.pos} highlightHand={scenario.hand} />
             )}
           </div>
         )}
