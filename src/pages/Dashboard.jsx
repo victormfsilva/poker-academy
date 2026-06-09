@@ -83,7 +83,7 @@ export default function Dashboard() {
             const p = getModuleProgress(m.id)
             const locked = !p.unlocked
             const acc = p.accuracy
-            const sessions = p.trainerSessions?.length || 0
+            const goodSessions = (p.trainerSessions || []).slice(-2).filter(s => s.accuracy >= 90).length
 
             return (
               <div key={m.id}
@@ -118,7 +118,7 @@ export default function Dashboard() {
                   <div className="mt-3">
                     <div className="flex justify-between text-xs mb-1" style={{ color: '#666' }}>
                       <span>{acc}% de acerto</span>
-                      <span>{sessions}/2 sessões 10/10</span>
+                      <span style={{ color: goodSessions >= 2 ? '#00d4aa' : '#666' }}>{goodSessions}/2 sessões 90%+</span>
                     </div>
                     <div className="rounded-full h-2" style={{ background: '#1e1e2e' }}>
                       <div
