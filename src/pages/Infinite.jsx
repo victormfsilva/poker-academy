@@ -138,6 +138,104 @@ function evaluate(scenario, action) {
   return { correct, isCorrect, isMix: false }
 }
 
+// ─── Mesa de Poker ───────────────────────────────────────────────
+// Posições em sentido horário: BTN(direita), CO, HJ, LJ, UTG+1, UTG, BB(baixo), SB(baixo-direita)
+const SEAT_POSITIONS = {
+  'BTN':   { x: 82, y: 50 },
+  'CO':    { x: 74, y: 22 },
+  'HJ':    { x: 50, y: 10 },
+  'LJ':    { x: 26, y: 22 },
+  'UTG+1': { x: 18, y: 50 },
+  'UTG':   { x: 26, y: 78 },
+  'SB':    { x: 50, y: 90 },
+  'BB':    { x: 74, y: 78 },
+}
+
+function PokerTable({ scenario }) {
+  // Quem é "você" e quem é o raiser
+  let heroPos = null
+  let raiserPos = null
+  let heroLabel = 'Você'
+
+  if (scenario.type === 'rfi') {
+    heroPos = scenario.pos
+  } else if (scenario.type === 'pushfold') {
+    heroPos = scenario.pos
+  } else if (scenario.type === 'bb') {
+    heroPos = 'BB'
+    raiserPos = scenario.pos
+  }
+
+  const allSeats = Object.keys(SEAT_POSITIONS)
+
+  return (
+    <div style={{ width: '100%', maxWidth: 320, margin: '0 auto' }}>
+      <svg viewBox="0 0 100 100" style={{ width: '100%', height: 'auto' }}>
+        {/* Mesa */}
+        <ellipse cx="50" cy="50" rx="38" ry="28" fill="#1a4d2e" stroke="#2d7a4f" strokeWidth="2" />
+        <ellipse cx="50" cy="50" rx="34" ry="24" fill="#1e5c36" stroke="#3a9460" strokeWidth="0.5" />
+
+        {/* Logo central */}
+        <text x="50" y="48" textAnchor="middle" style={{ fontSize: 3.5, fill: '#2d7a4f', fontWeight: 700 }}>POKER</text>
+        <text x="50" y="53" textAnchor="middle" style={{ fontSize: 3, fill: '#2d7a4f' }}>ACADEMY BR</text>
+
+        {/* Assentos */}
+        {allSeats.map(pos => {
+          const { x, y } = SEAT_POSITIONS[pos]
+          const isHero = pos === heroPos
+          const isRaiser = pos === raiserPos
+          const isOther = !isHero && !isRaiser
+
+          const bgColor = isHero ? '#e94560' : isRaiser ? '#f5a623' : '#12121a'
+          const borderColor = isHero ? '#ff6b84' : isRaiser ? '#ffc555' : '#2e2e3e'
+          const textColor = isHero || isRaiser ? '#0a0a0f' : '#666'
+          const labelColor = isHero ? '#e94560' : isRaiser ? '#f5a623' : '#444'
+
+          return (
+            <g key={pos}>
+              {/* Círculo do assento */}
+              <circle cx={x} cy={y} r="7.5" fill={bgColor} stroke={borderColor} strokeWidth={isHero || isRaiser ? 0.8 : 0.5} />
+
+              {/* Nome da posição */}
+              <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: pos === 'UTG+1' ? 2.2 : 2.8, fill: textColor, fontWeight: 700 }}>
+                {pos}
+              </text>
+
+              {/* Label abaixo: Você / Raise */}
+              {(isHero || isRaiser) && (
+                <text x={x} y={y + 11} textAnchor="middle"
+                  style={{ fontSize: 2.5, fill: labelColor, fontWeight: 700 }}>
+                  {isHero ? 'VOCÊ' : 'RAISE'}
+                </text>
+              )}
+
+              {/* Seta do raiser apontando para o centro */}
+              {isRaiser && (
+                <line
+                  x1={x + (50 - x) * 0.35}
+                  y1={y + (50 - y) * 0.35}
+                  x2={x + (50 - x) * 0.65}
+                  y2={y + (50 - y) * 0.65}
+                  stroke="#f5a623" strokeWidth="0.8" strokeDasharray="1,0.5"
+                  markerEnd="url(#arrowOrange)"
+                />
+              )}
+            </g>
+          )
+        })}
+
+        {/* Definição da seta */}
+        <defs>
+          <marker id="arrowOrange" markerWidth="3" markerHeight="3" refX="1.5" refY="1.5" orient="auto">
+            <polygon points="0 0, 3 1.5, 0 3" fill="#f5a623" />
+          </marker>
+        </defs>
+      </svg>
+    </div>
+  )
+}
+
 // ─── Labels do cenário ───────────────────────────────────────────
 function ScenarioLabel({ scenario }) {
   if (scenario.type === 'rfi') {
@@ -265,8 +363,13 @@ export default function Infinite() {
             <ScenarioLabel scenario={scenario} />
           </div>
 
+          {/* Mesa */}
+          <div className="px-4 pt-4">
+            <PokerTable scenario={scenario} />
+          </div>
+
           {/* Cartas + mão */}
-          <div className="px-5 pt-6 pb-4 text-center">
+          <div className="px-5 pt-2 pb-4 text-center">
             <div className="flex justify-center gap-3 mb-3">
               {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
             </div>
