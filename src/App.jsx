@@ -13,6 +13,7 @@ import Module4 from './pages/modules/Module4'
 import Module5 from './pages/modules/Module5'
 import Module6 from './pages/modules/Module6'
 import Tools from './pages/Tools'
+import Infinite from './pages/Infinite'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -55,6 +56,7 @@ function App() {
           <Route path="/modulos/5" element={<Module5 />} />
           <Route path="/modulos/6" element={<Module6 />} />
           <Route path="/ferramentas" element={<Tools />} />
+          <Route path="/infinito" element={<Infinite />} />
         </Routes>
       </BrowserRouter>
     </ProgressProvider>

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 const links = [
   { to: '/', label: 'Dashboard', icon: '📊' },
   { to: '/modulos', label: 'Módulos', icon: '📚' },
+  { to: '/infinito', label: 'Infinito', icon: '♾️' },
   { to: '/ferramentas', label: 'Ferramentas', icon: '🧮' },
 ]
 

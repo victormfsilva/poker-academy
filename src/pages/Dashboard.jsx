@@ -117,7 +117,7 @@ export default function Dashboard() {
                 {!locked && (
                   <div className="mt-3">
                     <div className="flex justify-between text-xs mb-1" style={{ color: '#666' }}>
-                      <span>{acc}% de acerto</span>
+                      <span>{acc}% de acerto · {p.totalAnswered || 0} mãos</span>
                       <span style={{ color: goodSessions >= 2 ? '#00d4aa' : '#666' }}>{goodSessions}/2 sessões 90%+</span>
                     </div>
                     <div className="rounded-full h-2" style={{ background: '#1e1e2e' }}>
