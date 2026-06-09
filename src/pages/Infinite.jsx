@@ -160,22 +160,47 @@ function MiniCard({ card }) {
   )
 }
 
+// Fichas visuais estilo GTO Wizard (pchips)
+function Chips({ count = 1, color = '#aaa' }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column-reverse', alignItems: 'center', gap: 1 }}>
+      {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
+        <div key={i} style={{
+          width: 14, height: 4, borderRadius: 2,
+          background: color, border: '1px solid #0006',
+          boxShadow: '0 1px 2px #0005',
+        }} />
+      ))}
+    </div>
+  )
+}
+
 function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards }) {
-  // Cores exatas do GTO Wizard: herói #00ac8d, raiser #ff8f00, inativo #3f3f3f, folded #262626
   const borderColor = isHero ? '#00ac8d' : isRaiser ? '#ff8f00' : '#3f3f3f'
   const bg          = isHero ? '#1a2e2b' : '#1e1e1e'
   const nameColor   = isHero ? '#00ac8d' : isRaiser ? '#ff8f00' : '#888'
   const posLabel    = pos === 'UTG+1' ? 'UTG1' : pos
+  const hasBet      = isRaiser || isSB || isBB
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-      {isRaiser && (
-        <div style={{
-          fontSize: 9, fontWeight: 800, color: '#ff8f00',
-          background: '#1e1800', border: '1px solid #ff8f0050',
-          borderRadius: 3, padding: '1px 5px', marginBottom: 1,
-        }}>RAISE</div>
+      {/* Fichas + valor da aposta acima do círculo */}
+      {hasBet && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 1 }}>
+          <Chips
+            count={isRaiser ? 3 : 1}
+            color={isRaiser ? '#ff8f00' : isSB ? '#ff8f00' : '#00ac8d'}
+          />
+          <span style={{
+            fontSize: 9, fontWeight: 700,
+            color: isRaiser ? '#ff8f00' : isSB ? '#ff8f00' : '#00ac8d',
+          }}>
+            {isRaiser ? `${(stack * 2.5).toFixed(0)}` : isSB ? `${(stack * 0.5).toFixed(0)}` : `${stack}`}
+          </span>
+        </div>
       )}
+
+      {/* Círculo do assento */}
       <div style={{
         width: 44, height: 44, borderRadius: '50%',
         background: bg, border: `2px solid ${borderColor}`,
@@ -185,7 +210,8 @@ function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards }) {
         <span style={{ fontSize: posLabel.length > 3 ? 7 : 10, color: nameColor, fontWeight: 700, lineHeight: 1 }}>{posLabel}</span>
         <span style={{ fontSize: 8, color: '#555', marginTop: 1 }}>{stack}</span>
       </div>
-      {/* Chips de blind */}
+
+      {/* Chip de blind (SB/BB) abaixo do círculo */}
       {(isSB || isBB) && (
         <div style={{
           fontSize: 8, fontWeight: 800,
@@ -195,6 +221,8 @@ function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards }) {
           borderRadius: 10, padding: '1px 5px',
         }}>{isSB ? 'SB' : 'BB'}</div>
       )}
+
+      {/* Cartas do herói */}
       {isHero && cards && (
         <div style={{ display: 'flex', gap: 3, marginTop: 2 }}>
           {cards.map((c, i) => <MiniCard key={i} card={c} />)}
@@ -300,63 +328,63 @@ function PokerTable({ scenario, cards }) {
 }
 
 // ─── Labels do cenário ───────────────────────────────────────────
+const LABEL_COLORS = { rfi: '#F03C3C', pushfold: '#ff8f00', bb: '#00ac8d' }
+const LABEL_TEXT   = { rfi: 'RFI', pushfold: 'Push/Fold', bb: 'BB vs RFI' }
+
 function ScenarioLabel({ scenario }) {
-  if (scenario.type === 'rfi') {
-    return (
-      <div className="flex gap-2 flex-wrap justify-center">
-        <span className="px-3 py-1 rounded-full text-sm font-semibold" style={{ background: '#e9456022', color: '#e94560' }}>RFI</span>
-        <span className="px-3 py-1 rounded-full text-sm font-semibold" style={{ background: '#1e1e2e', color: '#aaa' }}>{scenario.pos}</span>
-        <span className="px-3 py-1 rounded-full text-sm font-semibold" style={{ background: '#1e1e2e', color: '#aaa' }}>{scenario.stack}bb</span>
-      </div>
-    )
-  }
-  if (scenario.type === 'pushfold') {
-    return (
-      <div className="flex gap-2 flex-wrap justify-center">
-        <span className="px-3 py-1 rounded-full text-sm font-semibold" style={{ background: '#f5a62322', color: '#f5a623' }}>Push/Fold</span>
-        <span className="px-3 py-1 rounded-full text-sm font-semibold" style={{ background: '#1e1e2e', color: '#aaa' }}>{scenario.pos}</span>
-        <span className="px-3 py-1 rounded-full text-sm font-semibold" style={{ background: '#1e1e2e', color: '#aaa' }}>{scenario.stack}bb</span>
-      </div>
-    )
-  }
+  const col = LABEL_COLORS[scenario.type]
+  const lbl = LABEL_TEXT[scenario.type]
   return (
-    <div className="flex gap-2 flex-wrap justify-center">
-      <span className="px-3 py-1 rounded-full text-sm font-semibold" style={{ background: '#4a90e222', color: '#4a90e2' }}>BB vs RFI</span>
-      <span className="px-3 py-1 rounded-full text-sm font-semibold" style={{ background: '#1e1e2e', color: '#aaa' }}>vs {scenario.pos}</span>
+    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+      <span style={{
+        fontSize: 11, fontWeight: 800, color: col,
+        background: col + '22', borderRadius: 4, padding: '2px 7px', letterSpacing: 0.5,
+      }}>{lbl}</span>
+      {scenario.pos && (
+        <span style={{ fontSize: 12, color: '#666' }}>{scenario.pos}</span>
+      )}
+      {scenario.stack && (
+        <span style={{ fontSize: 12, color: '#666' }}>{scenario.stack}bb</span>
+      )}
     </div>
   )
 }
 
-// ─── Botões de ação ──────────────────────────────────────────────
+// ─── Botões de ação estilo GTO Wizard ────────────────────────────
+// Cores exatas do HTML: Fold=#3D7CB8, Call=#5ab966, Raise=#F03C3C, Allin=#ff8f00
+const BTN_STYLE = {
+  base: {
+    flex: 1, padding: '14px 8px', borderRadius: 8, fontWeight: 700,
+    fontSize: 15, border: 'none', cursor: 'pointer', letterSpacing: 0.3,
+    color: '#f5f5f5', textShadow: '0 1px 2px #0008',
+  },
+}
+
 function ActionButtons({ scenario, onAnswer }) {
-  if (scenario.type === 'rfi') {
-    return (
-      <div className="flex gap-3">
-        <button onClick={() => onAnswer('raise')} className="flex-1 py-4 rounded-xl font-bold text-lg"
-          style={{ background: '#00d4aa', color: '#0a0a0f' }}>Raise</button>
-        <button onClick={() => onAnswer('fold')} className="flex-1 py-4 rounded-xl font-bold text-lg"
-          style={{ background: '#e94560', color: 'white' }}>Fold</button>
-      </div>
-    )
-  }
-  if (scenario.type === 'pushfold') {
-    return (
-      <div className="flex gap-3">
-        <button onClick={() => onAnswer('push')} className="flex-1 py-4 rounded-xl font-bold text-lg"
-          style={{ background: '#f5a623', color: '#0a0a0f' }}>Push All-In</button>
-        <button onClick={() => onAnswer('fold')} className="flex-1 py-4 rounded-xl font-bold text-lg"
-          style={{ background: '#e94560', color: 'white' }}>Fold</button>
-      </div>
-    )
-  }
+  const btns = scenario.type === 'rfi'
+    ? [
+        { label: 'Raise', action: 'raise', bg: '#F03C3C' },
+        { label: 'Fold',  action: 'fold',  bg: '#3D7CB8' },
+      ]
+    : scenario.type === 'pushfold'
+    ? [
+        { label: 'Allin', action: 'push', bg: '#ff8f00' },
+        { label: 'Fold',  action: 'fold', bg: '#3D7CB8' },
+      ]
+    : [
+        { label: 'Raise', action: '3bet', bg: '#F03C3C' },
+        { label: 'Call',  action: 'call', bg: '#5ab966' },
+        { label: 'Fold',  action: 'fold', bg: '#3D7CB8' },
+      ]
+
   return (
-    <div className="flex gap-2">
-      <button onClick={() => onAnswer('3bet')} className="flex-1 py-4 rounded-xl font-bold"
-        style={{ background: '#e94560', color: 'white' }}>3-Bet</button>
-      <button onClick={() => onAnswer('call')} className="flex-1 py-4 rounded-xl font-bold"
-        style={{ background: '#00d4aa', color: '#0a0a0f' }}>Call</button>
-      <button onClick={() => onAnswer('fold')} className="flex-1 py-4 rounded-xl font-bold"
-        style={{ background: '#1e1e2e', color: '#888' }}>Fold</button>
+    <div style={{ display: 'flex', gap: 8 }}>
+      {btns.map(b => (
+        <button key={b.action} onClick={() => onAnswer(b.action)}
+          style={{ ...BTN_STYLE.base, background: b.bg }}>
+          {b.label}
+        </button>
+      ))}
     </div>
   )
 }
@@ -399,7 +427,7 @@ export default function Infinite() {
     : scenario.type === 'pushfold' ? '#f5a623' : '#4a90e2'
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20" style={{ background: '#121212' }}>
       <div className="max-w-md mx-auto px-4 pt-6">
 
         {/* Stats bar */}
@@ -418,42 +446,41 @@ export default function Infinite() {
 
         {/* Card principal */}
         <div className="rounded-2xl overflow-hidden mb-4"
-          style={{ background: '#12121a', border: `1px solid ${result ? (result.isCorrect ? '#00d4aa55' : '#e9456055') : '#1e1e2e'}` }}>
+          style={{ background: '#121212', border: `1px solid ${result ? (result.isCorrect ? '#00ac8d55' : '#F03C3C55') : '#262626'}` }}>
 
-          {/* Faixa do módulo */}
-          <div className="px-5 py-3 flex items-center justify-between"
-            style={{ background: `${moduleColor}18`, borderBottom: `1px solid ${moduleColor}30` }}>
+          {/* Label do cenário */}
+          <div className="px-4 pt-3 pb-1 flex items-center gap-2">
             <ScenarioLabel scenario={scenario} />
           </div>
 
-          {/* Mesa estilo GTO Wizard */}
-          <div className="px-2 pt-3 pb-1">
+          {/* Mesa */}
+          <div className="px-2 pt-1 pb-1">
             <PokerTable scenario={scenario} cards={cards} />
           </div>
 
-          {/* Mão em texto */}
-          <div className="px-5 pb-4 text-center">
-            <div style={{ color: 'white', fontSize: 24, fontWeight: 800, letterSpacing: 1 }}>
+          {/* Mão highlight — nome grande + contexto */}
+          <div className="px-5 pb-3 text-center">
+            <div style={{ color: '#ffb800', fontSize: 26, fontWeight: 800, letterSpacing: 2, textShadow: '0 0 12px #ffb80060' }}>
               {scenario.hand}
             </div>
-            <div style={{ color: '#444', fontSize: 13, marginTop: 2 }}>
+            <div style={{ color: '#444', fontSize: 12, marginTop: 2 }}>
               {scenario.type === 'rfi' && `${scenario.pos} · ${scenario.stack}bb — Raise First In`}
               {scenario.type === 'pushfold' && `${scenario.pos} · ${scenario.stack}bb — Push ou Fold?`}
-              {scenario.type === 'bb' && `BB · raise do ${scenario.pos} — Qual a ação?`}
+              {scenario.type === 'bb' && `BB vs raise do ${scenario.pos}`}
             </div>
           </div>
 
           {/* Feedback */}
           {result && (
-            <div className="mx-5 mb-4 rounded-xl px-4 py-3" style={{
-              background: result.isCorrect ? '#00d4aa15' : '#e9456015',
-              border: `1px solid ${result.isCorrect ? '#00d4aa40' : '#e9456040'}`
+            <div className="mx-4 mb-3 rounded-lg px-4 py-3" style={{
+              background: result.isCorrect ? '#00ac8d15' : '#F03C3C15',
+              border: `1px solid ${result.isCorrect ? '#00ac8d40' : '#F03C3C40'}`
             }}>
-              <div style={{ color: result.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 17 }}>
+              <div style={{ color: result.isCorrect ? '#00ac8d' : '#F03C3C', fontWeight: 700, fontSize: 16 }}>
                 {result.isCorrect ? '✓ Correto!' : `✗ Errou — era ${result.correct.toUpperCase()}`}
               </div>
               {result.isMix && (
-                <div style={{ color: '#f5a623', fontSize: 12, marginTop: 3 }}>
+                <div style={{ color: '#ff8f00', fontSize: 12, marginTop: 3 }}>
                   Mão de transição — raise ou fold são aceitáveis.
                 </div>
               )}
@@ -461,13 +488,17 @@ export default function Infinite() {
           )}
 
           {/* Botões de ação */}
-          <div className="px-5 pb-5">
+          <div className="px-4 pb-4">
             {!result ? (
               <ActionButtons scenario={scenario} onAnswer={handleAnswer} />
             ) : (
               <button onClick={handleNext}
-                className="w-full py-4 rounded-xl font-bold text-lg"
-                style={{ background: '#e94560', color: 'white', letterSpacing: 0.5 }}>
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 8,
+                  background: '#1e1e1e', border: '1px solid #333',
+                  color: '#f5f5f5', fontWeight: 700, fontSize: 15,
+                  cursor: 'pointer', letterSpacing: 0.5,
+                }}>
                 Próxima Mão →
               </button>
             )}
