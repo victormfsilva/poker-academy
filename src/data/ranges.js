@@ -193,7 +193,7 @@ export const RFI_RANGES = {
         'KQs','KJs','KTs','K9s','K8s','K7s',
         'QJs','QTs','Q9s','Q8s','Q5s','JTs','J9s','J8s',
         'T9s','T8s','98s','97s','87s','86s','76s','75s','65s','64s','54s',
-        'AKo','AQo','AJo','ATo',
+        'AKo','AQo','AJo','ATo','A9o',
         'KQo','KJo',
       ],
       mix: ['44','A4s','A3s','A2s','K6s','Q7s','Q6s','J7s','T7s','96s','85s','74s','63s','53s','43s','A8o'],
