@@ -1,6 +1,17 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { supabase } from '../lib/supabase'
 
 const STORAGE_KEY = 'poker_academy_progress'
+const USER_ID_KEY = 'poker_academy_user_id'
+
+function getUserId() {
+  let id = localStorage.getItem(USER_ID_KEY)
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem(USER_ID_KEY, id)
+  }
+  return id
+}
 
 const defaultProgress = {
   modules: {
@@ -19,27 +30,65 @@ const defaultProgress = {
   }
 }
 
+function mergeProgress(saved) {
+  if (!saved) return defaultProgress
+  return {
+    ...defaultProgress,
+    ...saved,
+    modules: { ...defaultProgress.modules, ...saved.modules }
+  }
+}
+
 const ProgressContext = createContext(null)
 
 export function ProgressProvider({ children }) {
+  const userId = getUserId()
+  const syncTimer = useRef(null)
+
   const [progress, setProgress] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        // merge com default para garantir campos novos
-        return {
-          ...defaultProgress,
-          ...parsed,
-          modules: { ...defaultProgress.modules, ...parsed.modules }
-        }
-      }
+      if (saved) return mergeProgress(JSON.parse(saved))
     } catch {}
     return defaultProgress
   })
 
+  // Carrega do Supabase ao iniciar
+  useEffect(() => {
+    async function loadFromCloud() {
+      try {
+        const { data } = await supabase
+          .from('progress')
+          .select('data')
+          .eq('user_id', userId)
+          .single()
+
+        if (data?.data) {
+          const cloud = mergeProgress(data.data)
+          // Usa o mais recente comparando totalHands
+          const local = progress
+          if ((cloud.globalStats?.totalHands || 0) >= (local.globalStats?.totalHands || 0)) {
+            setProgress(cloud)
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud))
+          }
+        }
+      } catch {}
+    }
+    loadFromCloud()
+  }, [])
+
+  // Salva no localStorage e agenda sync com Supabase
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+
+    if (syncTimer.current) clearTimeout(syncTimer.current)
+    syncTimer.current = setTimeout(() => {
+      supabase.from('progress').upsert({
+        user_id: userId,
+        data: progress,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' }).then(() => {})
+    }, 1500)
   }, [progress])
 
   function markLessonRead(moduleId) {
@@ -83,12 +132,10 @@ export function ProgressProvider({ children }) {
     })
   }
 
-  // Chamado quando o usuário completa uma sessão (10/10 seguidos)
   function recordSession(moduleId, accuracy) {
     setProgress(prev => {
       const mod = prev.modules[moduleId]
       const sessions = [...(mod.trainerSessions || []), { accuracy, date: Date.now() }]
-      // últimas 2 sessões com 90%+ desbloqueia o próximo módulo
       const lastTwo = sessions.slice(-2)
       const moduleCompleted = lastTwo.length === 2 && lastTwo.every(s => s.accuracy >= 90)
 
