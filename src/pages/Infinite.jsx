@@ -217,12 +217,7 @@ function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards, betAmt }) {
         <span style={{ fontSize: 9, color: '#666', lineHeight: 1.2 }}>{stack}</span>
       </div>
 
-      {/* Cartas do herói abaixo do assento */}
-      {isHero && cards && (
-        <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
-          {cards.map((c, i) => <HeroCard key={i} card={c} />)}
-        </div>
-      )}
+      {/* Cartas renderizadas fora — ver PokerTable */}
     </div>
   )
 }
@@ -438,7 +433,7 @@ export default function Infinite() {
 
   return (
     <div className="min-h-screen pb-28 md:pb-8 md:pt-20" style={{ background: '#121212' }}>
-      <div className="max-w-md mx-auto px-4 pt-6">
+      <div className="max-w-2xl mx-auto px-4 pt-6">
 
         {/* Stats bar */}
         <div className="grid grid-cols-3 gap-2 mb-5">
@@ -455,7 +450,7 @@ export default function Infinite() {
         </div>
 
         {/* Card principal */}
-        <div className="rounded-2xl overflow-hidden mb-4"
+        <div className="rounded-2xl mb-4"
           style={{ background: '#121212', border: `1px solid ${result ? (result.isCorrect ? '#00ac8d55' : '#F03C3C55') : '#262626'}` }}>
 
           {/* Label do cenário */}
@@ -465,7 +460,12 @@ export default function Infinite() {
 
           {/* Mesa */}
           <div className="px-2 pt-1 pb-1">
-            <PokerTable scenario={scenario} cards={cards} />
+            <PokerTable scenario={scenario} cards={null} />
+          </div>
+
+          {/* Cartas do herói — fora do container da mesa para não sobrepor */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: -8, marginBottom: 12 }}>
+            {cards.map((c, i) => <HeroCard key={i} card={c} />)}
           </div>
 
           {/* Mão highlight — nome grande + contexto */}
