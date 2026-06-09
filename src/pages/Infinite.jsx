@@ -264,11 +264,11 @@ function PokerTable({ scenario, cards }) {
       position: 'relative', width: '100%', paddingBottom: '72%',
       userSelect: 'none', overflow: 'visible',
     }}>
-      {/* Oval da mesa */}
+      {/* Mesa — retângulo arredondado horizontal igual GTO Wizard */}
       <div style={{
         position: 'absolute',
         top: '12%', left: '5%', right: '5%', bottom: '14%',
-        borderRadius: '50%',
+        borderRadius: 999,
         border: '2px solid #3a3a3a',
         background: 'transparent',
       }} />
