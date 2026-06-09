@@ -183,7 +183,7 @@ function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards }) {
         boxShadow: isHero ? '0 0 8px #00ac8d40' : isRaiser ? '0 0 8px #ff8f0040' : 'none',
       }}>
         <span style={{ fontSize: posLabel.length > 3 ? 7 : 10, color: nameColor, fontWeight: 700, lineHeight: 1 }}>{posLabel}</span>
-        <span style={{ fontSize: 8, color: '#555', marginTop: 1 }}>{stack}bb</span>
+        <span style={{ fontSize: 8, color: '#555', marginTop: 1 }}>{stack}</span>
       </div>
       {/* Chips de blind */}
       {(isSB || isBB) && (
@@ -207,55 +207,43 @@ function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, cards }) {
 // Ordem fixa da mesa, sentido horário
 const ALL_SEATS_ORDER = ['UTG','UTG+1','LJ','HJ','CO','BTN','SB','BB']
 
-// 8 slots CSS do GTO Wizard — herói sempre no slot 5 (bottom-center)
-const SLOT_CSS = [
-  'top-left-end',    // 0
-  'top-center',      // 1
-  'top-right-end',   // 2
-  'right-center',    // 3
-  'bottom-right-end',// 4
-  'bottom-center',   // 5  ← HERÓI
-  'bottom-left-end', // 6
-  'left-center',     // 7
+// 8 slots — slot 5 = bottom-center = HERÓI
+// Posições em % do container (deixa espaço pras cartas em baixo)
+const SLOT_POS = [
+  { top: '8%',  left: '25%' },  // 0 top-left
+  { top: '4%',  left: '50%' },  // 1 top-center
+  { top: '8%',  left: '75%' },  // 2 top-right
+  { top: '42%', left: '90%' },  // 3 right
+  { top: '76%', left: '75%' },  // 4 bottom-right
+  { top: '82%', left: '50%' },  // 5 bottom-center ← HERÓI
+  { top: '76%', left: '25%' },  // 6 bottom-left
+  { top: '42%', left: '10%' },  // 7 left
 ]
-
-// Posições absolutas correspondentes aos slots do GTO Wizard
-const SLOT_POS = {
-  'top-left-end':    { top: '4%',  left: '22%' },
-  'top-center':      { top: '2%',  left: '50%' },
-  'top-right-end':   { top: '4%',  left: '78%' },
-  'right-center':    { top: '42%', left: '92%' },
-  'bottom-right-end':{ top: '80%', left: '78%' },
-  'bottom-center':   { top: '88%', left: '50%' },
-  'bottom-left-end': { top: '80%', left: '22%' },
-  'left-center':     { top: '42%', left: '8%'  },
-}
 
 function PokerTable({ scenario, cards }) {
   const heroPos   = scenario.type === 'bb' ? 'BB' : scenario.pos
   const raiserPos = scenario.type === 'bb' ? scenario.pos : null
 
-  // Rotacionar: herói fica no slot 5 (bottom-center)
+  // Rotacionar: herói sempre no slot 5
   const heroIdx = ALL_SEATS_ORDER.indexOf(heroPos)
-  const rotated = SLOT_CSS.map((_, i) =>
+  const rotated = SLOT_POS.map((_, i) =>
     ALL_SEATS_ORDER[(heroIdx + i - 5 + 8) % 8]
   )
 
-  // Dealer button: colado ao slot onde está o BTN
-  const btnSlot    = rotated.indexOf('BTN')
-  const btnSlotKey = SLOT_CSS[btnSlot]
-  const btnPos     = SLOT_POS[btnSlotKey]
+  // Dealer button: colado ao BTN
+  const btnSlotIdx = rotated.indexOf('BTN')
+  const btnPos     = SLOT_POS[btnSlotIdx]
 
   const typeLabel = scenario.type === 'rfi' ? 'Raise First In'
     : scenario.type === 'pushfold' ? 'Push / Fold' : 'BB vs RFI'
 
   return (
-    <div style={{ position: 'relative', width: '100%', paddingBottom: '72%', userSelect: 'none', background: '#141414', borderRadius: 12 }}>
+    <div style={{ position: 'relative', width: '100%', paddingBottom: '80%', userSelect: 'none', background: '#141414', borderRadius: 12 }}>
 
-      {/* Mesa oval — fundo preto, outline cinza igual GTO Wizard */}
+      {/* Mesa oval */}
       <div style={{
         position: 'absolute',
-        top: '14%', left: '10%', right: '10%', bottom: '14%',
+        top: '10%', left: '8%', right: '8%', bottom: '10%',
         borderRadius: '50%',
         background: '#141414',
         border: '2px solid #4D4D4D',
@@ -263,7 +251,7 @@ function PokerTable({ scenario, cards }) {
 
       {/* Info central */}
       <div style={{
-        position: 'absolute', top: '44%', left: '50%',
+        position: 'absolute', top: '42%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center', pointerEvents: 'none',
       }}>
@@ -276,7 +264,7 @@ function PokerTable({ scenario, cards }) {
         <div style={{
           position: 'absolute',
           top: btnPos.top, left: btnPos.left,
-          transform: 'translate(20px, -22px)',
+          transform: 'translate(22px, -20px)',
           width: 16, height: 16, borderRadius: '50%',
           background: '#e0e0e0', color: '#111',
           fontSize: 8, fontWeight: 900,
@@ -287,8 +275,7 @@ function PokerTable({ scenario, cards }) {
 
       {/* Assentos */}
       {rotated.map((pos, slotIdx) => {
-        const slotKey = SLOT_CSS[slotIdx]
-        const p = SLOT_POS[slotKey]
+        const p = SLOT_POS[slotIdx]
         return (
           <div key={pos} style={{
             position: 'absolute',
