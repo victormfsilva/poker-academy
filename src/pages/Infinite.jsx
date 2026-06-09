@@ -268,7 +268,7 @@ export default function Infinite() {
           {/* Cartas + mão */}
           <div className="px-5 pt-6 pb-4 text-center">
             <div className="flex justify-center gap-3 mb-3">
-              {cards.map((c, i) => <Card key={i} rank={c.rank} suit={c.suit} />)}
+              {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
             </div>
             <div style={{ color: 'white', fontSize: 26, fontWeight: 800, letterSpacing: 1 }}>
               {scenario.hand}
