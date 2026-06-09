@@ -257,20 +257,22 @@ function PokerTable({ scenario, cards }) {
   const btnSlotIdx = rotated.indexOf('BTN')
   const btnPos     = SLOT_POS[btnSlotIdx]
 
-  // Pot central: blind total + aposta do raiser
-  const potBB  = scenario.stack
-  const potAmt = raiserPos ? (potBB * 2.5).toFixed(1) : (potBB * 1.5).toFixed(1)
-  const startPot = (potBB * 0.5).toFixed(1)
+  // Stack padrão 100bb quando não definido (BB vs RFI)
+  const stack = scenario.stack || 100
+
+  // Pot central
+  const potAmt   = raiserPos ? (stack * 2.5).toFixed(1) : (stack * 1.5).toFixed(1)
+  const startPot = (stack * 0.5).toFixed(1)
 
   return (
     <div style={{
-      position: 'relative', width: '100%', paddingBottom: '68%',
-      userSelect: 'none',
+      position: 'relative', width: '100%', paddingBottom: '72%',
+      userSelect: 'none', overflow: 'visible',
     }}>
-      {/* Oval da mesa — borda cinza, fundo transparente igual GTO Wizard */}
+      {/* Oval da mesa */}
       <div style={{
         position: 'absolute',
-        top: '16%', left: '5%', right: '5%', bottom: '8%',
+        top: '12%', left: '5%', right: '5%', bottom: '14%',
         borderRadius: '50%',
         border: '2px solid #3a3a3a',
         background: 'transparent',
@@ -278,21 +280,21 @@ function PokerTable({ scenario, cards }) {
 
       {/* Pot central */}
       <div style={{
-        position: 'absolute', top: '38%', left: '50%',
+        position: 'absolute', top: '40%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center', pointerEvents: 'none',
       }}>
-        <div style={{ color: '#555', fontSize: 10, fontWeight: 600 }}>{potBB}bb</div>
+        <div style={{ color: '#555', fontSize: 10, fontWeight: 600 }}>{stack}bb</div>
         <div style={{ color: '#ccc', fontSize: 15, fontWeight: 800 }}>{potAmt} bb</div>
         <div style={{ color: '#555', fontSize: 10 }}>{startPot} bb</div>
       </div>
 
-      {/* Dealer button — ao lado do BTN */}
+      {/* Dealer button — ao lado esquerdo do BTN */}
       {btnPos && (
         <div style={{
           position: 'absolute',
           top: btnPos.top, left: btnPos.left,
-          transform: 'translate(-28px, -28px)',
+          transform: 'translate(-36px, 0px)',
           width: 18, height: 18, borderRadius: '50%',
           background: '#d0d0d0', color: '#111',
           fontSize: 9, fontWeight: 900,
@@ -307,10 +309,9 @@ function PokerTable({ scenario, cards }) {
         const isRaiser = pos === raiserPos
         const isSB     = pos === 'SB'
         const isBB     = pos === 'BB'
-        // Valor apostado para mostrar ao lado
-        const betAmt   = isRaiser ? `${(potBB * 2).toFixed(0)}`
-                       : isSB     ? `${(potBB * 0.5).toFixed(1)}`
-                       : isBB     ? `${potBB}`
+        const betAmt   = isRaiser ? `${(stack * 2).toFixed(0)}`
+                       : isSB     ? `${(stack * 0.5).toFixed(1)}`
+                       : isBB     ? `${stack}`
                        : null
         return (
           <div key={pos} style={{
@@ -325,7 +326,7 @@ function PokerTable({ scenario, cards }) {
               isRaiser={isRaiser}
               isSB={isSB}
               isBB={isBB}
-              stack={scenario.stack}
+              stack={stack}
               cards={pos === heroPos ? cards : null}
               betAmt={betAmt}
             />
