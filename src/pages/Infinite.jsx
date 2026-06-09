@@ -138,99 +138,138 @@ function evaluate(scenario, action) {
   return { correct, isCorrect, isMix: false }
 }
 
-// ─── Mesa de Poker ───────────────────────────────────────────────
-// Posições em sentido horário: BTN(direita), CO, HJ, LJ, UTG+1, UTG, BB(baixo), SB(baixo-direita)
-const SEAT_POSITIONS = {
-  'BTN':   { x: 82, y: 50 },
-  'CO':    { x: 74, y: 22 },
-  'HJ':    { x: 50, y: 10 },
-  'LJ':    { x: 26, y: 22 },
-  'UTG+1': { x: 18, y: 50 },
-  'UTG':   { x: 26, y: 78 },
-  'SB':    { x: 50, y: 90 },
-  'BB':    { x: 74, y: 78 },
+// ─── Mesa de Poker estilo GTO Wizard ─────────────────────────────
+// Posições em sentido horário começando do topo
+const SEAT_COORDS = {
+  'UTG':   { x: 50, y: 8  },
+  'UTG+1': { x: 79, y: 18 },
+  'LJ':    { x: 93, y: 44 },
+  'HJ':    { x: 85, y: 72 },
+  'CO':    { x: 60, y: 88 },
+  'BTN':   { x: 33, y: 88 },
+  'SB':    { x: 10, y: 72 },
+  'BB':    { x: 5,  y: 44 },
 }
 
-function PokerTable({ scenario }) {
-  // Quem é "você" e quem é o raiser
-  let heroPos = null
-  let raiserPos = null
-  let heroLabel = 'Você'
+// Converte notação para mini-card display: "As" → {rank:'A', suit:'s'}
+function miniCard(str) {
+  if (!str || str.length < 2) return null
+  return { rank: str[0] === 'T' ? '10' : str[0], suit: str.slice(-1) }
+}
+const SUIT_COLOR = { s: '#aaa', h: '#e94560', d: '#e94560', c: '#aaa' }
+const SUIT_SYM   = { s: '♠', h: '♥', d: '♦', c: '♣' }
 
-  if (scenario.type === 'rfi') {
-    heroPos = scenario.pos
-  } else if (scenario.type === 'pushfold') {
-    heroPos = scenario.pos
-  } else if (scenario.type === 'bb') {
-    heroPos = 'BB'
-    raiserPos = scenario.pos
-  }
+function PokerTable({ scenario, cards }) {
+  let heroPos = scenario.type === 'bb' ? 'BB' : scenario.pos
+  let raiserPos = scenario.type === 'bb' ? scenario.pos : null
 
-  const allSeats = Object.keys(SEAT_POSITIONS)
+  // Posições que já agiram (todas exceto hero e raiser = fold)
+  const allSeats = Object.keys(SEAT_COORDS)
 
   return (
-    <div style={{ width: '100%', maxWidth: 320, margin: '0 auto' }}>
+    <div style={{ width: '100%', maxWidth: 340, margin: '0 auto' }}>
       <svg viewBox="0 0 100 100" style={{ width: '100%', height: 'auto' }}>
-        {/* Mesa */}
-        <ellipse cx="50" cy="50" rx="38" ry="28" fill="#1a4d2e" stroke="#2d7a4f" strokeWidth="2" />
-        <ellipse cx="50" cy="50" rx="34" ry="24" fill="#1e5c36" stroke="#3a9460" strokeWidth="0.5" />
+        {/* Fundo escuro */}
+        <rect width="100" height="100" fill="#0a0a0f" />
 
-        {/* Logo central */}
-        <text x="50" y="48" textAnchor="middle" style={{ fontSize: 3.5, fill: '#2d7a4f', fontWeight: 700 }}>POKER</text>
-        <text x="50" y="53" textAnchor="middle" style={{ fontSize: 3, fill: '#2d7a4f' }}>ACADEMY BR</text>
+        {/* Mesa oval */}
+        <ellipse cx="50" cy="50" rx="36" ry="30" fill="#1a3a28" stroke="#2a5a3a" strokeWidth="1.5" />
+        <ellipse cx="50" cy="50" rx="32" ry="26" fill="#1e4430" stroke="#336644" strokeWidth="0.5" />
 
-        {/* Assentos */}
+        {/* Stack no centro */}
+        <text x="50" y="47" textAnchor="middle" style={{ fontSize: 2.8, fill: '#3a7a50', fontWeight: 700 }}>
+          {scenario.stack}bb
+        </text>
+        <text x="50" y="52" textAnchor="middle" style={{ fontSize: 2, fill: '#2a5a38' }}>
+          {scenario.type === 'rfi' ? 'RFI' : scenario.type === 'pushfold' ? 'PUSH/FOLD' : 'BB vs RFI'}
+        </text>
+
         {allSeats.map(pos => {
-          const { x, y } = SEAT_POSITIONS[pos]
-          const isHero = pos === heroPos
+          const { x, y } = SEAT_COORDS[pos]
+          const isHero   = pos === heroPos
           const isRaiser = pos === raiserPos
-          const isOther = !isHero && !isRaiser
+          const isFold   = !isHero && !isRaiser
 
-          const bgColor = isHero ? '#e94560' : isRaiser ? '#f5a623' : '#12121a'
-          const borderColor = isHero ? '#ff6b84' : isRaiser ? '#ffc555' : '#2e2e3e'
-          const textColor = isHero || isRaiser ? '#0a0a0f' : '#666'
-          const labelColor = isHero ? '#e94560' : isRaiser ? '#f5a623' : '#444'
+          // Cores do círculo
+          const fill   = isHero ? '#1e1e2e' : isRaiser ? '#1e1e2e' : '#111118'
+          const stroke = isHero ? '#e94560' : isRaiser ? '#f5a623' : '#222230'
+          const sw     = isHero || isRaiser ? 1 : 0.5
+
+          // Stack fictício para parecer real
+          const fakeStack = isHero ? scenario.stack : Math.floor(Math.random() * 60 + 10)
 
           return (
             <g key={pos}>
-              {/* Círculo do assento */}
-              <circle cx={x} cy={y} r="7.5" fill={bgColor} stroke={borderColor} strokeWidth={isHero || isRaiser ? 0.8 : 0.5} />
+              {/* Círculo principal */}
+              <circle cx={x} cy={y} r="8" fill={fill} stroke={stroke} strokeWidth={sw} />
 
               {/* Nome da posição */}
-              <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
-                style={{ fontSize: pos === 'UTG+1' ? 2.2 : 2.8, fill: textColor, fontWeight: 700 }}>
+              <text x={x} y={y - 1.5} textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: pos === 'UTG+1' ? 2 : 2.6, fill: isHero ? '#e94560' : isRaiser ? '#f5a623' : '#555', fontWeight: 700 }}>
                 {pos}
               </text>
 
-              {/* Label abaixo: Você / Raise */}
-              {(isHero || isRaiser) && (
-                <text x={x} y={y + 11} textAnchor="middle"
-                  style={{ fontSize: 2.5, fill: labelColor, fontWeight: 700 }}>
-                  {isHero ? 'VOCÊ' : 'RAISE'}
+              {/* Stack do jogador */}
+              <text x={x} y={y + 3} textAnchor="middle"
+                style={{ fontSize: 2.2, fill: isHero ? '#aaa' : isRaiser ? '#aaa' : '#333' }}>
+                {isHero ? `${scenario.stack}` : '—'}
+              </text>
+
+              {/* Label FOLD acima dos outros */}
+              {isFold && (
+                <text x={x} y={y - 11} textAnchor="middle"
+                  style={{ fontSize: 2.2, fill: '#333', fontWeight: 600 }}>
+                  Fold
                 </text>
               )}
 
-              {/* Seta do raiser apontando para o centro */}
+              {/* Label RAISE do raiser */}
               {isRaiser && (
-                <line
-                  x1={x + (50 - x) * 0.35}
-                  y1={y + (50 - y) * 0.35}
-                  x2={x + (50 - x) * 0.65}
-                  y2={y + (50 - y) * 0.65}
-                  stroke="#f5a623" strokeWidth="0.8" strokeDasharray="1,0.5"
-                  markerEnd="url(#arrowOrange)"
-                />
+                <>
+                  <rect x={x - 6} y={y - 17} width="12" height="5.5" rx="1.5" fill="#f5a62322" stroke="#f5a62366" strokeWidth="0.4" />
+                  <text x={x} y={y - 13.5} textAnchor="middle"
+                    style={{ fontSize: 2.5, fill: '#f5a623', fontWeight: 700 }}>
+                    RAISE
+                  </text>
+                </>
+              )}
+
+              {/* Cartas do herói em cima do assento */}
+              {isHero && cards && (
+                <g>
+                  {cards.map((c, i) => {
+                    const parsed = miniCard(c)
+                    if (!parsed) return null
+                    const cx = x - 4 + i * 5
+                    const cy2 = y - 20
+                    return (
+                      <g key={i}>
+                        <rect x={cx - 2.8} y={cy2 - 4} width="5.5" height="7.5" rx="1" fill="white" stroke="#ccc" strokeWidth="0.3" />
+                        <text x={cx} y={cy2 - 0.5} textAnchor="middle"
+                          style={{ fontSize: 2.5, fill: SUIT_COLOR[parsed.suit] || '#333', fontWeight: 800 }}>
+                          {parsed.rank}
+                        </text>
+                        <text x={cx} y={cy2 + 2.5} textAnchor="middle"
+                          style={{ fontSize: 2, fill: SUIT_COLOR[parsed.suit] || '#333' }}>
+                          {SUIT_SYM[parsed.suit]}
+                        </text>
+                      </g>
+                    )
+                  })}
+                </g>
+              )}
+
+              {/* Dealer button no BTN */}
+              {pos === 'BTN' && (
+                <g>
+                  <circle cx={x + 9} cy={y} r="2.5" fill="#ddd" stroke="#aaa" strokeWidth="0.3" />
+                  <text x={x + 9} y={y + 0.8} textAnchor="middle"
+                    style={{ fontSize: 1.8, fill: '#333', fontWeight: 700 }}>D</text>
+                </g>
               )}
             </g>
           )
         })}
-
-        {/* Definição da seta */}
-        <defs>
-          <marker id="arrowOrange" markerWidth="3" markerHeight="3" refX="1.5" refY="1.5" orient="auto">
-            <polygon points="0 0, 3 1.5, 0 3" fill="#f5a623" />
-          </marker>
-        </defs>
       </svg>
     </div>
   )
@@ -363,20 +402,17 @@ export default function Infinite() {
             <ScenarioLabel scenario={scenario} />
           </div>
 
-          {/* Mesa */}
-          <div className="px-4 pt-4">
-            <PokerTable scenario={scenario} />
+          {/* Mesa estilo GTO Wizard */}
+          <div className="px-2 pt-3 pb-1">
+            <PokerTable scenario={scenario} cards={cards} />
           </div>
 
-          {/* Cartas + mão */}
-          <div className="px-5 pt-2 pb-4 text-center">
-            <div className="flex justify-center gap-3 mb-3">
-              {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
-            </div>
-            <div style={{ color: 'white', fontSize: 26, fontWeight: 800, letterSpacing: 1 }}>
+          {/* Mão em texto */}
+          <div className="px-5 pb-4 text-center">
+            <div style={{ color: 'white', fontSize: 24, fontWeight: 800, letterSpacing: 1 }}>
               {scenario.hand}
             </div>
-            <div style={{ color: '#444', fontSize: 13, marginTop: 4 }}>
+            <div style={{ color: '#444', fontSize: 13, marginTop: 2 }}>
               {scenario.type === 'rfi' && `${scenario.pos} · ${scenario.stack}bb — Raise First In`}
               {scenario.type === 'pushfold' && `${scenario.pos} · ${scenario.stack}bb — Push ou Fold?`}
               {scenario.type === 'bb' && `BB · raise do ${scenario.pos} — Qual a ação?`}
