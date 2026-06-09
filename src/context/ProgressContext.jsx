@@ -2,16 +2,6 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 const STORAGE_KEY = 'poker_academy_progress'
-const USER_ID_KEY = 'poker_academy_user_id'
-
-function getUserId() {
-  let id = localStorage.getItem(USER_ID_KEY)
-  if (!id) {
-    id = crypto.randomUUID()
-    localStorage.setItem(USER_ID_KEY, id)
-  }
-  return id
-}
 
 const defaultProgress = {
   modules: {
@@ -41,8 +31,7 @@ function mergeProgress(saved) {
 
 const ProgressContext = createContext(null)
 
-export function ProgressProvider({ children }) {
-  const userId = getUserId()
+export function ProgressProvider({ children, userId }) {
   const syncTimer = useRef(null)
 
   const [progress, setProgress] = useState(() => {
@@ -53,8 +42,9 @@ export function ProgressProvider({ children }) {
     return defaultProgress
   })
 
-  // Carrega do Supabase ao iniciar
+  // Carrega progresso da nuvem quando userId estiver disponível
   useEffect(() => {
+    if (!userId) return
     async function loadFromCloud() {
       try {
         const { data } = await supabase
@@ -65,21 +55,18 @@ export function ProgressProvider({ children }) {
 
         if (data?.data) {
           const cloud = mergeProgress(data.data)
-          // Usa o mais recente comparando totalHands
-          const local = progress
-          if ((cloud.globalStats?.totalHands || 0) >= (local.globalStats?.totalHands || 0)) {
-            setProgress(cloud)
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud))
-          }
+          setProgress(cloud)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud))
         }
       } catch {}
     }
     loadFromCloud()
-  }, [])
+  }, [userId])
 
-  // Salva no localStorage e agenda sync com Supabase
+  // Salva no localStorage e sincroniza com Supabase
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+    if (!userId) return
 
     if (syncTimer.current) clearTimeout(syncTimer.current)
     syncTimer.current = setTimeout(() => {
@@ -89,7 +76,7 @@ export function ProgressProvider({ children }) {
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' }).then(() => {})
     }, 1500)
-  }, [progress])
+  }, [progress, userId])
 
   function markLessonRead(moduleId) {
     setProgress(prev => ({
@@ -104,10 +91,6 @@ export function ProgressProvider({ children }) {
   function recordAnswer(moduleId, correct, streak) {
     setProgress(prev => {
       const mod = prev.modules[moduleId]
-      const newTotal = mod.totalAnswered + 1
-      const newCorrect = mod.totalCorrect + (correct ? 1 : 0)
-      const newBestStreak = Math.max(mod.bestStreak, streak)
-
       const globalStats = {
         ...prev.globalStats,
         totalHands: prev.globalStats.totalHands + 1,
@@ -115,7 +98,6 @@ export function ProgressProvider({ children }) {
         bestStreak: Math.max(prev.globalStats.bestStreak, streak),
         currentStreak: correct ? prev.globalStats.currentStreak + 1 : 0,
       }
-
       return {
         ...prev,
         globalStats,
@@ -123,9 +105,9 @@ export function ProgressProvider({ children }) {
           ...prev.modules,
           [moduleId]: {
             ...mod,
-            totalAnswered: newTotal,
-            totalCorrect: newCorrect,
-            bestStreak: newBestStreak,
+            totalAnswered: mod.totalAnswered + 1,
+            totalCorrect: mod.totalCorrect + (correct ? 1 : 0),
+            bestStreak: Math.max(mod.bestStreak, streak),
           }
         }
       }
@@ -148,11 +130,7 @@ export function ProgressProvider({ children }) {
         ...prev,
         modules: {
           ...nextModules,
-          [moduleId]: {
-            ...mod,
-            trainerSessions: sessions,
-            completed: moduleCompleted,
-          }
+          [moduleId]: { ...mod, trainerSessions: sessions, completed: moduleCompleted }
         }
       }
     })

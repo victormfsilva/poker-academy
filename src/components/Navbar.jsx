@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 const links = [
   { to: '/', label: 'Dashboard', icon: '📊' },
@@ -6,8 +7,12 @@ const links = [
   { to: '/ferramentas', label: 'Ferramentas', icon: '🧮' },
 ]
 
-export default function Navbar() {
+export default function Navbar({ user }) {
   const location = useLocation()
+
+  function handleLogout() {
+    supabase.auth.signOut()
+  }
 
   return (
     <>
@@ -20,7 +25,7 @@ export default function Navbar() {
             Poker Academy <span style={{ color: '#e94560' }}>BR</span>
           </span>
         </Link>
-        <div className="flex gap-6">
+        <div className="flex items-center gap-4">
           {links.map(l => (
             <Link
               key={l.to}
@@ -36,6 +41,13 @@ export default function Navbar() {
               <span>{l.label}</span>
             </Link>
           ))}
+          <button
+            onClick={handleLogout}
+            className="px-3 py-2 rounded-lg text-sm"
+            style={{ color: '#666', border: '1px solid #1e1e2e' }}
+          >
+            Sair
+          </button>
         </div>
       </nav>
 
@@ -56,6 +68,14 @@ export default function Navbar() {
             </Link>
           )
         })}
+        <button
+          onClick={handleLogout}
+          className="flex-1 flex flex-col items-center py-3 gap-1"
+          style={{ color: '#666' }}
+        >
+          <span style={{ fontSize: 20 }}>🚪</span>
+          <span style={{ fontSize: 11 }}>Sair</span>
+        </button>
       </nav>
     </>
   )

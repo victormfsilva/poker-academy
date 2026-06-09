@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { supabase } from './lib/supabase'
 import { ProgressProvider } from './context/ProgressContext'
 import Navbar from './components/Navbar'
+import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import Modules from './pages/Modules'
 import Module1 from './pages/modules/Module1'
@@ -12,10 +15,36 @@ import Module6 from './pages/modules/Module6'
 import Tools from './pages/Tools'
 
 function App() {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+        <div style={{ color: '#666' }}>Carregando...</div>
+      </div>
+    )
+  }
+
+  if (!user) return <Auth />
+
   return (
-    <ProgressProvider>
+    <ProgressProvider userId={user.id}>
       <BrowserRouter>
-        <Navbar />
+        <Navbar user={user} />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/modulos" element={<Modules />} />
