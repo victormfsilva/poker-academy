@@ -147,7 +147,7 @@ function Trainer() {
   const [sessionDone, setSessionDone] = useState(false)
 
   function newHand() {
-    if (feedback?.isLast) { setSessionDone(true); return }
+    if (sessionTotal >= 10) { setSessionDone(true); return }
     const positions = filterPos === 'Todas' ? RAISER_POSITIONS : [filterPos]
     const raiser = positions[Math.floor(Math.random() * positions.length)]
     setCurrentRaiser(raiser)

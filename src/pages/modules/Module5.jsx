@@ -134,7 +134,7 @@ function Trainer() {
   const [sessionDone, setSessionDone] = useState(false)
 
   function newHand() {
-    if (feedback?.isLast) { setSessionDone(true); return }
+    if (sessionTotal >= 10) { setSessionDone(true); return }
     setCurrentHand(randomHandForScenario(scenario)); setFeedback(null)
   }
 

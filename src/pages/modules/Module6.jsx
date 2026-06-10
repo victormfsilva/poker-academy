@@ -122,7 +122,7 @@ function Trainer() {
   const availableRaisers = myPos === 'BTN' ? BTN_RAISERS : SB_RAISERS
 
   function newHand() {
-    if (feedback?.isLast) { setSessionDone(true); return }
+    if (sessionTotal >= 10) { setSessionDone(true); return }
     const raisers = filterRaiser === 'Todas' ? availableRaisers : [filterRaiser]
     const raiser = raisers[Math.floor(Math.random() * raisers.length)]
     setCurrentRaiser(raiser)
