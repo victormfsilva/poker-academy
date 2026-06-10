@@ -162,12 +162,15 @@ function Lesson({ onComplete }) {
         <Section title="Quem Conecta Mais com o Flop?">
           Pensa assim: se você abriu de uma posição fechada (como UTG) e o flop vem com Ás-Rei-Valete, você provavelmente tem mais mãos grandes do que o adversário — aposte com confiança. Mas se o flop vem 9-8-7, o adversário do Big Blind pode ter muitas mãos conectadas que você não tem. Aposte menos.
         </Section>
+        <Section title="Flop Seco Sem Mão — Aposta Mesmo Assim!">
+          Esse é o conceito mais contraintuitivo do módulo: <strong style={{ color: '#e94560' }}>no flop seco, você aposta mesmo sem ter nada.</strong><br /><br />
+          Por quê? Porque num flop como A-7-2 com naipes diferentes, o adversário também dificilmente acertou algo — e uma aposta pequena de 33% vai fazer ele foldar a maioria das mãos fracas. Você não precisa ter mão para apostar, precisa ter <strong style={{ color: '#00d4aa' }}>uma boa razão para apostar</strong> — e "ele provavelmente não tem nada" é uma boa razão.
+        </Section>
         <Section title="Quando Passar a Vez (não apostar)">
           <ul className="space-y-1 mt-2" style={{ color: '#ccc', fontSize: 14 }}>
-            <li>• Flop conectado e você não tem nada — não gaste fichas à toa</li>
+            <li>• Flop conectado (ex: 9-8-7) e você não tem nada — aí sim, não aposte</li>
             <li>• Mais de 2 jogadores no pote — alguém quase certamente acertou algo</li>
             <li>• Adversário que já relançou antes — cuidado, ele pode estar esperando</li>
-            <li>• Você não tem nem par nem draw — sem razão para apostar</li>
           </ul>
         </Section>
         <Section title="Apostando com Mão vs Apostando sem Mão">
