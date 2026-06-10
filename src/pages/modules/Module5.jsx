@@ -133,17 +133,22 @@ function Trainer() {
   const [streak, setStreak] = useState(0)
   const [sessionDone, setSessionDone] = useState(false)
 
-  function newHand() { setCurrentHand(randomHandForScenario(scenario)); setFeedback(null) }
+  function newHand() {
+    if (feedback?.isLast) { setSessionDone(true); return }
+    setCurrentHand(randomHandForScenario(scenario)); setFeedback(null)
+  }
 
   function answer(action) {
     if (!currentHand || feedback) return
     const fb = getFeedback(currentHand, action, scenario)
     const newStreak = fb.isCorrect ? streak + 1 : 0
-    setStreak(newStreak); setFeedback(fb)
+    setStreak(newStreak)
     const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (fb.isCorrect ? 1 : 0)
     setSessionTotal(newTotal); setSessionCorrect(newCorrect)
     recordAnswer(5, fb.isCorrect, newStreak)
-    if (newTotal >= 10) { recordSession(5, Math.round((newCorrect / newTotal) * 100)); setSessionDone(true) }
+    const isLast = newTotal >= 10
+    if (isLast) recordSession(5, Math.round((newCorrect / newTotal) * 100))
+    setFeedback({ ...fb, isLast })
   }
 
   function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setCurrentHand(null) }

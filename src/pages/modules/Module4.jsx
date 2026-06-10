@@ -210,6 +210,7 @@ function Trainer() {
   const [sessionDone, setSessionDone] = useState(false)
 
   function newHand() {
+    if (feedback?.isLast) { setSessionDone(true); return }
     const f = randomFlop()
     const h = randomHoleCards(f)
     setFlop(f); setHole(h); setFeedback(null)
@@ -218,15 +219,15 @@ function Trainer() {
   function answer(action, sizing) {
     if (!flop || feedback) return
     const correct = getCorrectAction(hole, flop)
-    // Se a ação é bet, o sizing também precisa estar correto
     const isCorrect = action === correct.action && (action === 'check' || sizing === correct.sizing)
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
-    setFeedback({ ...correct, userAction: action, isCorrect })
     const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (isCorrect ? 1 : 0)
     setSessionTotal(newTotal); setSessionCorrect(newCorrect)
     recordAnswer(4, isCorrect, newStreak)
-    if (newTotal >= 10) { recordSession(4, Math.round((newCorrect / newTotal) * 100)); setSessionDone(true) }
+    const isLast = newTotal >= 10
+    if (isLast) recordSession(4, Math.round((newCorrect / newTotal) * 100))
+    setFeedback({ ...correct, userAction: action, isCorrect, isLast })
   }
 
   function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setFlop(null); setHole(null) }

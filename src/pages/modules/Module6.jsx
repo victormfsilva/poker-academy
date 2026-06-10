@@ -122,6 +122,7 @@ function Trainer() {
   const availableRaisers = myPos === 'BTN' ? BTN_RAISERS : SB_RAISERS
 
   function newHand() {
+    if (feedback?.isLast) { setSessionDone(true); return }
     const raisers = filterRaiser === 'Todas' ? availableRaisers : [filterRaiser]
     const raiser = raisers[Math.floor(Math.random() * raisers.length)]
     setCurrentRaiser(raiser)
@@ -133,11 +134,13 @@ function Trainer() {
     if (!currentHand || feedback) return
     const fb = getFeedback(currentHand, action, myPos, currentRaiser)
     const newStreak = fb.isCorrect ? streak + 1 : 0
-    setStreak(newStreak); setFeedback(fb)
+    setStreak(newStreak)
     const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (fb.isCorrect ? 1 : 0)
     setSessionTotal(newTotal); setSessionCorrect(newCorrect)
     recordAnswer(6, fb.isCorrect, newStreak)
-    if (newTotal >= 10) { recordSession(6, Math.round((newCorrect / newTotal) * 100)); setSessionDone(true) }
+    const isLast = newTotal >= 10
+    if (isLast) recordSession(6, Math.round((newCorrect / newTotal) * 100))
+    setFeedback({ ...fb, isLast })
   }
 
   function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setCurrentHand(null) }

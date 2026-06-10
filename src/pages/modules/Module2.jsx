@@ -168,6 +168,7 @@ function Trainer() {
   const [sessionDone, setSessionDone] = useState(false)
 
   function newHand() {
+    if (feedback?.isLast) { setSessionDone(true); return }
     const positions = filterPos === 'Todas' ? POSITIONS : [filterPos]
     const stacks = filterStack === 'Todos' ? STACKS_OPTIONS : [parseInt(filterStack)]
     const pos = positions[Math.floor(Math.random() * positions.length)]
@@ -183,16 +184,14 @@ function Trainer() {
     const fb = getFeedback(currentHand, action, currentPos, currentStack)
     const newStreak = fb.isCorrect ? streak + 1 : 0
     setStreak(newStreak)
-    setFeedback(fb)
     const newTotal = sessionTotal + 1
     const newCorrect = sessionCorrect + (fb.isCorrect ? 1 : 0)
     setSessionTotal(newTotal)
     setSessionCorrect(newCorrect)
     recordAnswer(2, fb.isCorrect, newStreak)
-    if (newTotal >= 10) {
-      recordSession(2, Math.round((newCorrect / newTotal) * 100))
-      setSessionDone(true)
-    }
+    const isLast = newTotal >= 10
+    if (isLast) recordSession(2, Math.round((newCorrect / newTotal) * 100))
+    setFeedback({ ...fb, isLast })
   }
 
   function restart() {

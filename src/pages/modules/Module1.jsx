@@ -325,6 +325,7 @@ function Trainer() {
   const mod = progress.modules[1]
 
   function newHand() {
+    if (feedback?.isLast) { setSessionDone(true); return }
     const positions = filterPos === 'Todas' ? POSITIONS : [filterPos]
     const stacks = filterStack === 'Todos' ? STACKS : [parseInt(filterStack)]
     const pos = positions[Math.floor(Math.random() * positions.length)]
@@ -345,7 +346,6 @@ function Trainer() {
 
     const newStreak = correct ? streak + 1 : 0
     setStreak(newStreak)
-    setFeedback({ ...fb, userAction: action, isCorrect: correct })
 
     const newTotal = sessionTotal + 1
     const newCorrect = sessionCorrect + (correct ? 1 : 0)
@@ -354,12 +354,13 @@ function Trainer() {
 
     recordAnswer(1, correct, newStreak)
 
-    // 10 mãos = sessão completa
-    if (newTotal >= 10) {
+    // Marca como última mão mas só mostra resultado após "Próxima Mão"
+    const isLast = newTotal >= 10
+    if (isLast) {
       const accuracy = Math.round((newCorrect / newTotal) * 100)
       recordSession(1, accuracy)
-      setSessionDone(true)
     }
+    setFeedback({ ...fb, userAction: action, isCorrect: correct, isLast })
   }
 
   function restart() {
