@@ -55,10 +55,11 @@ function hasFlushDraw(hole, flop) {
 }
 
 function hasStraightDraw(hole, flop) {
+  // Só conta como draw se tiver 4 cartas num intervalo de 5 (open-ended ou gutshot forte)
   const allRanks = [...hole, ...flop].map(c => RANKS.indexOf(c.slice(0, -1)))
   const unique = [...new Set(allRanks)].sort((a, b) => a - b)
-  for (let i = 0; i < unique.length - 2; i++) {
-    if (unique[i + 2] - unique[i] <= 4) return true
+  for (let i = 0; i < unique.length - 3; i++) {
+    if (unique[i + 3] - unique[i] <= 4) return true
   }
   return false
 }
