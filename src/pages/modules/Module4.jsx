@@ -85,17 +85,26 @@ function getCorrectAction(hole, flop) {
   // Mão muito forte (dois pares ou set): bet 75% em board úmido, 50% em seco
   const flopRanks = flop.map(c => c.slice(0, -1))
   const holeRanks = hole.map(c => c.slice(0, -1))
-  const hasSet = holeRanks[0] === holeRanks[1] && flopRanks.includes(holeRanks[0])
-  const matchingFlopRanks = holeRanks.filter(r => flopRanks.includes(r))
-  const hasTwoPair = matchingFlopRanks.length === 2
+  const isPocketPair = holeRanks[0] === holeRanks[1]
+  const hasSet = isPocketPair && flopRanks.includes(holeRanks[0])
+  const matchingFlopRanks = [...new Set(holeRanks)].filter(r => flopRanks.includes(r))
+  const hasTwoPair = !isPocketPair && matchingFlopRanks.length === 2
   const hasPair = hasAnyPair(hole, flop)
 
-  // Set ou dois pares: bet grande
-  if (hasSet || hasTwoPair) {
+  // Set (trinca): sempre aposta grande
+  if (hasSet) {
     if (texture.isWet) {
-      return { action: 'bet', sizing: '75%', reason: 'Você tem uma mão muito forte (set ou dois pares) num flop perigoso — aposte grande (75%) para proteger e extrair valor antes que o adversário complete um draw.' }
+      return { action: 'bet', sizing: '75%', reason: 'Você fez trinca (set)! Num flop perigoso, aposte grande (75%) — proteja sua mão e extraia valor antes que o adversário complete um draw.' }
     }
-    return { action: 'bet', sizing: '50%', reason: 'Você tem uma mão muito forte (set ou dois pares) — aposte para extrair valor. 50% é ideal em flop seco.' }
+    return { action: 'bet', sizing: '75%', reason: 'Você fez trinca (set)! Mão muito forte — aposte grande (75%) para construir o pote e extrair o máximo.' }
+  }
+
+  // Dois pares: bet grande em úmido, 50% em seco
+  if (hasTwoPair) {
+    if (texture.isWet) {
+      return { action: 'bet', sizing: '75%', reason: 'Você tem dois pares num flop perigoso — aposte grande (75%) para proteger e extrair valor antes que o adversário complete um draw.' }
+    }
+    return { action: 'bet', sizing: '50%', reason: 'Você tem dois pares — aposte 50% para extrair valor.' }
   }
 
   // Top pair: bet 50%
@@ -103,22 +112,34 @@ function getCorrectAction(hole, flop) {
     return { action: 'bet', sizing: '50%', reason: 'Você acertou o par mais alto do flop — aposte 50% para extrair valor e proteger sua mão.' }
   }
 
+  // Par de bolso acima do flop (overpair): bet 50% para valor/proteção
+  if (isPocketPair && !hasSet) {
+    const pocketRankIdx = RANKS.indexOf(holeRanks[0])
+    const topFlopRankIdx = Math.min(...flopRanks.map(r => RANKS.indexOf(r)))
+    if (pocketRankIdx < topFlopRankIdx) {
+      // Overpair (par de bolso acima de todas as cartas do flop)
+      if (texture.isWet) {
+        return { action: 'bet', sizing: '75%', reason: 'Você tem um par de bolso acima de todas as cartas do flop (overpair) num board perigoso — aposte grande (75%) para proteger.' }
+      }
+      return { action: 'bet', sizing: '50%', reason: 'Você tem um par de bolso acima de todas as cartas do flop (overpair) — aposte 50% para extrair valor. Sua mão provavelmente é a melhor.' }
+    }
+    // Par de bolso abaixo do flop: trata como par médio
+  }
+
   // Semi-draw (flush ou straight draw): bet 50%
   if (hasFlush || hasStraight) {
     return { action: 'bet', sizing: '50%', reason: 'Você está próximo de completar uma cor ou sequência — aposte 50% mesmo sem ter mão agora. Você tem dois caminhos para ganhar: o adversário pode foldar agora, ou você completa o draw.' }
   }
 
-  // Par médio/baixo em flop seco: bet 50% (tem valor, pouco risco)
-  if (hasPair && texture.isDry) {
+  // Par médio/baixo (incluindo par de bolso abaixo do flop): bet 50%
+  if (hasPair || isPocketPair) {
+    if (texture.isWet) {
+      return { action: 'bet', sizing: '50%', reason: 'Você tem um par num flop perigoso — aposte 50% para proteger. Deixar o adversário ver cartas de graça pode custar caro se ele tiver draw.' }
+    }
     return { action: 'bet', sizing: '50%', reason: 'Você tem um par no flop seco — aposte 50% para extrair valor. Com poucas ameaças de draw, sua mão provavelmente está na frente.' }
   }
 
-  // Par médio/baixo em flop úmido: bet 50% para proteger
-  if (hasPair && texture.isWet) {
-    return { action: 'bet', sizing: '50%', reason: 'Você tem um par num flop perigoso — aposte 50% para proteger. Deixar o adversário ver cartas de graça pode custar caro se ele tiver draw.' }
-  }
-
-  // Board seco sem equidade nenhuma: bet 33% (blefe barato)
+  // Board seco sem equidade: bet 33% (blefe barato, range advantage)
   if (texture.isDry) {
     return { action: 'bet', sizing: '33%', reason: 'Flop seco e o adversário checou para você. Aposte barato (33%) — com poucas possibilidades de draw, ele provavelmente vai foldar.' }
   }
@@ -317,10 +338,13 @@ function Trainer() {
             <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #4a90e230' }}>
               <div style={{ color: '#4a90e2', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>📋 Regra geral CBet IP</div>
               <div style={{ color: '#ccc', fontSize: 12, lineHeight: 1.7 }}>
-                <div>• <strong style={{ color: '#00d4aa' }}>Flop seco sem mão</strong> → BET 33% (blefe barato)</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Top pair</strong> → BET 50%</div>
+                <div>• <strong style={{ color: '#e94560' }}>Set (trinca)</strong> → BET 75%</div>
+                <div>• <strong style={{ color: '#e94560' }}>Dois pares em flop úmido</strong> → BET 75%</div>
+                <div>• <strong style={{ color: '#e94560' }}>Overpair em flop úmido</strong> → BET 75%</div>
+                <div>• <strong style={{ color: '#f5a623' }}>Top pair / overpair seco / dois pares seco</strong> → BET 50%</div>
                 <div>• <strong style={{ color: '#f5a623' }}>Draw de cor ou sequência</strong> → BET 50%</div>
-                <div>• <strong style={{ color: '#e94560' }}>Set ou dois pares (flop úmido)</strong> → BET 75%</div>
+                <div>• <strong style={{ color: '#f5a623' }}>Qualquer par</strong> → BET 50%</div>
+                <div>• <strong style={{ color: '#00d4aa' }}>Flop seco sem nada</strong> → BET 33% (blefe barato)</div>
                 <div>• <strong style={{ color: '#888' }}>Flop úmido sem nada</strong> → CHECK</div>
               </div>
             </div>
