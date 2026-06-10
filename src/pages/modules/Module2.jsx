@@ -56,15 +56,15 @@ function getFeedback(hand, action, pos, stack) {
   const rank1 = hand[0], rank2 = hand[1], type = hand.length > 2 ? hand[2] : ''
 
   if (shouldPush) {
-    if (hand.length === 2) reason = `Par de ${rank1}s com ${stack}bb em ${pos} — push automático.`
-    else if (rank1 === 'A') reason = `Mão com Ás (${hand}) — blocker forte, vai all-in em ${pos} com ${stack}bb.`
-    else reason = `${hand} está no range de push de ${pos} com ${stack}bb — força relativa suficiente.`
+    if (hand.length === 2) reason = `Par de ${rank1}s com ${stack} fichas em ${pos} — vai all-in. Pares sempre atacam.`
+    else if (rank1 === 'A') reason = `${hand} tem Ás com ${stack} fichas em ${pos} — vai all-in. O Ás reduz a chance de alguém te chamar com mão forte.`
+    else reason = `${hand} entra no range de ataque de ${pos} com ${stack} fichas — vai all-in, a mão tem força relativa suficiente.`
   } else {
-    reason = `${hand} não está no range de push de ${pos} com ${stack}bb. Folde e aguarde mão melhor. Com ${stack}bb você ainda tem tempo.`
+    reason = `${hand} está fora do range de ataque de ${pos} com ${stack} fichas. Folde e espere uma mão melhor — você ainda tem tempo.`
   }
 
   if (stack <= 8) {
-    reason += ' Stack crítico — push range amplia muito, seja agressivo.'
+    reason += ' Com tão poucas fichas, o range de ataque abre muito — seja agressivo antes que os blinds te comam.'
   }
 
   return { correct, isCorrect, reason }
@@ -74,59 +74,62 @@ function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
-        💥 Módulo 2 — Push/Fold (Short Stack)
+        💥 Módulo 2 — Poucas Fichas (Push/Fold)
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Abaixo de 15bb — só duas opções existem</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Quando suas fichas estão acabando, o jogo vira outra coisa</p>
 
       <div className="space-y-4">
-        <Section title="Quando Usar Push/Fold?">
-          Quando seu stack cai abaixo de <strong style={{ color: '#e94560' }}>15 big blinds</strong>, o jogo muda completamente. Você não tem mais fichas suficientes para fazer raise e foldar depois — então ou vai all-in (push) ou folda.
+        <Section title="Quando Isso Acontece?">
+          Imagina que você estava bem no torneio, mas foi perdendo aos poucos. Agora você tem <strong style={{ color: '#e94560' }}>menos de 15 fichas grandes</strong> (big blinds). Nesse momento, o jogo muda completamente — só existem duas opções: ir <strong style={{ color: '#00d4aa' }}>all-in</strong> ou <strong style={{ color: '#e94560' }}>foldar</strong>. Acabou a opção de "dar um raise pequeno e ver o que acontece".
         </Section>
 
-        <Section title="Por Que Não Fazer Raise Normal?">
-          Com 10bb, se você faz raise de 2.5x (= 25% do stack), e alguém 3-bets, você não tem como foldar. Então está num spot ruim. O <strong style={{ color: '#00d4aa' }}>open shove</strong> resolve isso: ou você toma o pote agora, ou vai a showdown com máxima equidade.
+        <Section title="Por Que Não Posso Apostar Pequeno?">
+          Simples: com poucas fichas, se você apostar pequeno e alguém relançar, você vai ser forçado a ir all-in de qualquer jeito — mas numa posição pior. É como tentar ameaçar sem poder cumprir. <br /><br />
+          A solução é ir all-in direto: ou todo mundo folda e você ganha as fichas agora, ou vai pra showdown e tem a chance de dobrar. Sem meios-termos.
         </Section>
 
-        <Section title="O Efetivo — Stack que Importa">
-          O efetivo é o <strong style={{ color: '#f5a623' }}>menor dos dois stacks</strong> entre você e o adversário. Se você tem 20bb mas o BB tem 10bb, o pote máximo é de 10bb. Jogue como se tivesse 10bb.
+        <Section title="As Fichas que Importam Não São as Suas">
+          Aqui tem um detalhe importante: o que define o tamanho do confronto é o <strong style={{ color: '#f5a623' }}>menor stack entre você e o adversário</strong>. <br /><br />
+          Exemplo: você tem 20 fichas grandes, mas o Big Blind tem 10. O confronto máximo é de 10 fichas — o Big Blind não pode te dever mais do que ele tem. Então jogue como se você tivesse 10.
         </Section>
 
-        <Section title="Ranges de Push — Como Variam">
+        <Section title="Quanto Menos Fichas, Mais Você Pode Atacar">
           <div className="space-y-2 mt-2">
-            <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="grid grid-cols-3 gap-2 text-center">
               {STACKS_OPTIONS.map(s => (
                 <div key={s} className="rounded-lg p-2" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
-                  <div style={{ color: '#e94560', fontWeight: 700 }}>{s}bb</div>
+                  <div style={{ color: '#e94560', fontWeight: 700 }}>{s} fichas</div>
                   <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>
-                    {s <= 5 ? 'Quase tudo' : s <= 8 ? 'Amplo' : 'Fechado'}
+                    {s <= 5 ? 'Vai all-in com quase tudo' : s <= 8 ? 'Range bem amplo' : 'Mais seletivo'}
                   </div>
                 </div>
               ))}
             </div>
-            <p style={{ color: '#888', fontSize: 13 }}>Quanto menor o stack, mais largo o range de push. Com 5bb, você pusha quase qualquer duas cartas decentes.</p>
+            <p style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
+              Com 5 fichas, você não tem luxo de esperar a mão perfeita — vai all-in com qualquer mão razoável antes que os blinds te comam.
+            </p>
           </div>
         </Section>
 
-        <Section title="Chamar All-in do Adversário">
-          Quando o adversário vai all-in em você, a decisão muda: agora você precisa de <strong style={{ color: '#f5a623' }}>mais equidade</strong> para chamar do que para push. Ranges de call são mais fechados que ranges de push.
+        <Section title="Quando o Adversário for All-in em Você">
+          Isso é diferente de você atacar. Quando é o adversário que vai all-in, você precisa de <strong style={{ color: '#f5a623' }}>uma mão mais forte</strong> para chamar do que para atacar. Por quê? Porque quem ataca primeiro tem a vantagem de fazer todo mundo foldar — quem chama não tem essa vantagem, só pode ganhar no showdown.
           <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f' }}>
             <div style={{ color: '#ccc', fontSize: 13 }}>
-              Regra geral: call com top ~15% das mãos quando BB tiver stack padrão e push for UTG.<br />
-              Na BTN ou SB você pode chamar mais largo (adversário pusha mais largo também).
+              Regra simples: para chamar, exija mais da sua mão do que para atacar. Se você atacaria com A7, talvez precise de AJ para chamar.
             </div>
           </div>
         </Section>
 
-        <Section title="Blocker com Stack Curto">
-          <strong style={{ color: '#e94560' }}>A5s com 10bb:</strong> O Ás é um blocker — reduz a chance do adversário ter AA, AK, AQ para chamar seu push. Por isso A5s pusha mais frequentemente que K5s com o mesmo stack.
+        <Section title="O Poder do Ás com Poucas Fichas">
+          Sabe por que A5 vai all-in mais fácil que K5 com as mesmas fichas? Porque o Ás na sua mão <strong style={{ color: '#e94560' }}>reduz a chance do adversário ter Ás</strong> — o que significa menos chance de alguém ter uma mão forte o suficiente para te chamar. É um efeito sutil mas real, e o GTO leva isso em conta.
         </Section>
 
-        <Section title="Dica Mental">
+        <Section title="Mentalidade">
           <ul className="space-y-1" style={{ color: '#ccc', fontSize: 14 }}>
-            <li>⚡ Decida ANTES da ação — não pense na hora, execute o range</li>
-            <li>⚡ Com 10bb, você ainda tem tempo. Com 8bb, é urgência</li>
-            <li>⚡ Nunca rebuy emocional — se foi, foi. Faz parte</li>
-            <li>⚡ ICM importa muito na bolha — feche mais o range perto do dinheiro</li>
+            <li>⚡ Decida qual mão você vai atacar ANTES de ver as cartas — não na hora</li>
+            <li>⚡ Com 10 fichas, você ainda tem tempo. Com 8, já é urgência</li>
+            <li>⚡ Se perdeu e saiu, faz parte — nunca compre fichas no emocional</li>
+            <li>⚡ Perto do prêmio: feche mais o range, sobreviver tem valor</li>
           </ul>
         </Section>
       </div>

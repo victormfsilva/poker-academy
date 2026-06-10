@@ -49,11 +49,11 @@ function getFeedback(hand, action, raisedFrom) {
   let reason = ''
 
   if (correct === '3bet') {
-    reason = `${hand} é forte o suficiente para 3-bet vs ${raisedFrom}. O raise adversário vem de uma posição ${raisedFrom === 'UTG' ? 'muito fechada' : 'razoável'}, então seu 3-bet tem muito valor.`
+    reason = `${hand} é forte o suficiente para relançar contra ${raisedFrom}. ${raisedFrom === 'UTG' ? 'Mesmo ele atacando de posição cedo (mãos boas), sua mão é boa demais para só chamar.' : 'Ele atacou de uma posição razoável — sua mão tem vantagem, relance para pressionar.'}`
   } else if (correct === 'call') {
-    reason = `${hand} está no range de defesa do BB vs ${raisedFrom}. Você já investiu 1bb — defend este call com pot odds favoráveis.`
+    reason = `${hand} é uma boa defesa no Big Blind contra ${raisedFrom}. Você já pagou parte obrigatória — complementar o call faz sentido com essa mão.`
   } else {
-    reason = `${hand} está fora do range de defesa do BB contra raise de ${raisedFrom}. A posição do adversário é ${raisedFrom === 'BTN' || raisedFrom === 'CO' ? 'ampla, mas esta mão específica não tem equidade suficiente' : 'fechada, então o range adversário é forte'}.`
+    reason = `${hand} está fora do range de defesa no BB contra ${raisedFrom}. ${raisedFrom === 'BTN' || raisedFrom === 'CO' ? 'Mesmo ele atacando com mãos fracas nessa posição, essa mão específica não tem chance suficiente de ganhar.' : 'Ele atacou de uma posição cedo, então provavelmente tem mãos boas — folde.'}`
   }
 
   return { correct, isCorrect, reason }
@@ -62,47 +62,61 @@ function getFeedback(hand, action, raisedFrom) {
 function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🛡️ Módulo 3 — BB vs RFI</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Como defender o Big Blind contra raises</p>
+      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🛡️ Módulo 3 — Big Blind vs Raise</h1>
+      <p style={{ color: '#888', marginBottom: 24 }}>Você já pagou obrigatório — agora aprenda a usar isso a seu favor</p>
       <div className="space-y-4">
-        <Section title="Por Que BB é Posição Especial?">
-          O BB já investiu 1 big blind obrigatório. Isso muda os pot odds — você precisa de <strong style={{ color: '#e94560' }}>menos equidade</strong> para defender do que em outras posições. Por isso o BB defende MUITO mais mãos que qualquer outra posição.
+        <Section title="Por Que o Big Blind é Diferente?">
+          No Big Blind, você é obrigado a colocar uma ficha na mesa antes de ver as cartas. Isso parece ruim — mas na verdade te dá uma vantagem: quando alguém faz um raise e chega em você, <strong style={{ color: '#e94560' }}>você já pagou parte do preço</strong>. <br /><br />
+          É como se você tivesse comprado meia entrada pro show — complementar é mais barato do que comprar do zero. Por isso o Big Blind pode entrar no pote com muito mais mãos do que qualquer outra posição.
         </Section>
-        <Section title="Suas 3 Opções no BB">
+        <Section title="Suas 3 Opções">
           <div className="grid grid-cols-3 gap-3 mt-2">
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
               <div style={{ color: '#e94560', fontWeight: 700 }}>FOLD</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mãos fracas sem equidade</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito fraca — sem chance de ganhar</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: "1px solid #00d4aa" }}>
               <div style={{ color: '#00d4aa', fontWeight: 700 }}>CALL</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mãos com potencial de pós-flop</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão razoável — paga e vê o flop</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700 }}>3-BET</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mãos premium + blefes polarizados</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito forte — relança para pressionar</div>
             </div>
           </div>
         </Section>
-        <Section title="Quanto Defender Depende de Onde Vem o Raise">
-          <div className="space-y-2 mt-2">
+        <Section title="De Onde Vem o Raise Muda Tudo">
+          <p style={{ color: '#ccc', fontSize: 14, marginBottom: 12 }}>
+            Pensa assim: se o cara que atacou está nas primeiras posições da mesa (UTG), ele só ataca com as melhores mãos. Você precisa respeitar isso. Já se ele está no fim da mesa (BTN, SB), ele ataca com muito mais mãos — incluindo fracas. Aí você pode defender mais.
+          </p>
+          <div className="space-y-2">
             {[
-              { pos: 'UTG', desc: 'Range muito fechado — defenda menos, ele tem mãos fortes' },
-              { pos: 'HJ/CO', desc: 'Range médio — defenda razoavelmente' },
-              { pos: 'BTN/SB', desc: 'Range amplo — defenda muito mais, ele está forzando com mãos fracas' },
+              { pos: 'UTG', desc: 'Atacou cedo — só tem mãos boas. Defenda menos, só com suas melhores.' },
+              { pos: 'HJ / CO', desc: 'Posição do meio — range razoável. Defenda com mãos medianas.' },
+              { pos: 'BTN / SB', desc: 'Atacou tarde — usa mãos fracas também. Você pode defender muito mais.' },
             ].map(r => (
-              <div key={r.pos} className="flex gap-3 items-start">
-                <div style={{ color: '#e94560', fontWeight: 600, width: 60, flexShrink: 0 }}>{r.pos}</div>
+              <div key={r.pos} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+                <div style={{ color: '#e94560', fontWeight: 700, width: 65, flexShrink: 0 }}>{r.pos}</div>
                 <div style={{ color: '#ccc', fontSize: 14 }}>{r.desc}</div>
               </div>
             ))}
           </div>
         </Section>
-        <Section title="BB vs RFI Multiway">
-          Quando há múltiplos jogadores no pote (multiway), você precisa de mais equidade para continuar. Feche o range de call — priorize mãos que jogam bem em multiway: pares, suited connectors fortes.
+        <Section title="Quando Mais de Um Jogador Entra no Pote">
+          Se além do raise original, outro jogador também entrou, agora você está competindo contra duas pessoas. Com mais adversários, você precisa de uma mão mais forte para continuar — folde mais e priorize pares e mãos do mesmo naipe.
         </Section>
-        <Section title="3-bet no BB — Quando?">
-          Use 3-bet com mãos premium (AA, KK, QQ, AKs/AKo) <strong style={{ color: '#00d4aa' }}>para valor</strong>, e com mãos de blocker como A5s, A4s, A2s <strong style={{ color: '#f5a623' }}>como semi-blefe</strong> (blockers contra AK, AA do adversário).
+        <Section title="Quando Relançar (3-Bet)?">
+          Você relança quando quer pressionar o adversário e forçar ele a tomar uma decisão difícil. Isso acontece com dois tipos de mão:
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
+              <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>Mãos Muito Fortes</div>
+              <div style={{ color: '#ccc', fontSize: 13 }}>AA, KK, QQ, AK — você relança porque quer colocar mais dinheiro com a melhor mão.</div>
+            </div>
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+              <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Mãos com Ás Medio</div>
+              <div style={{ color: '#ccc', fontSize: 13 }}>A5, A4, A2 do mesmo naipe — o Ás na sua mão reduz a chance do adversário ter Ás. Você relança como blefe inteligente.</div>
+            </div>
+          </div>
         </Section>
       </div>
       <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
