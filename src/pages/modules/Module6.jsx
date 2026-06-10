@@ -47,46 +47,48 @@ function getFeedback(hand, action, myPos, raiserPos) {
   const isCorrect = action === correct
   const isIP = myPos === 'BTN'
   let reason = ''
-  if (correct === '3bet') reason = `${hand} — 3-bet do ${myPos} vs ${raiserPos}. Você ${isIP ? 'está IP (vantagem pós-flop) e' : 'será OOP mas'} tem mão forte o suficiente para reraiser.`
-  else if (correct === 'call') reason = `${hand} — call do ${myPos} vs ${raiserPos}. ${isIP ? 'IP, você pode ver o flop e jogar com informação.' : 'Mesmo OOP, a mão tem equidade suficiente para defender.'}`
-  else reason = `${hand} — fold do ${myPos} vs ${raiserPos}. ${isIP ? 'Mesmo IP, esta mão específica não tem equidade suficiente.' : 'OOP sem muito potencial — economize.'}`
+  if (correct === '3bet') reason = `${hand} — relance do ${myPos} vs ${raiserPos}. ${isIP ? 'Você age por último no flop e tem mão forte — aproveite para construir o pote.' : 'Mesmo agindo primeiro no flop, a mão é boa demais para só chamar — relance para pressionar.'}`
+  else if (correct === 'call') reason = `${hand} — chame do ${myPos} vs ${raiserPos}. ${isIP ? 'Você age por último no flop — pode entrar e decidir depois com informação.' : 'Mesmo agindo primeiro no flop, a mão tem potencial suficiente para entrar.'}`
+  else reason = `${hand} — folde do ${myPos} vs ${raiserPos}. ${isIP ? 'Mesmo com a vantagem de agir por último, essa mão específica não tem potencial suficiente.' : 'Agindo primeiro no flop sem boa mão — economize fichas.'}`
   return { correct, isCorrect, reason }
 }
 
 function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🃏 Módulo 6 — SB e BTN vs RFI</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Como jogar quando alguém já abriu o pote</p>
+      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🃏 Módulo 6 — BTN e SB Respondendo ao Raise</h1>
+      <p style={{ color: '#888', marginBottom: 24 }}>Alguém já atacou — e agora você está no BTN ou no SB. O que fazer?</p>
       <div className="space-y-4">
-        <Section title="BTN vs RFI — A Posição Mais Vantajosa">
-          O Button está <strong style={{ color: '#00d4aa' }}>IP (em posição)</strong> em relação a todo mundo. Quando alguém abre e você chama ou re-raise no BTN, você vai agir depois no flop, turn e river. Isso vale muito — o BTN pode defender muito mais mãos que qualquer outra posição.
+        <Section title="BTN — A Melhor Posição da Mesa">
+          O Button (BTN) é a posição mais privilegiada do poker. Por quê? Porque depois do flop, o BTN age por último em todas as rodadas — vê o que todo mundo faz antes de decidir. <br /><br />
+          Isso significa que quando alguém atacou antes de você e você está no BTN, pode entrar com muitas mãos diferentes — porque a vantagem de agir por último no flop compensa muito.
         </Section>
-        <Section title="SB vs RFI — O Dilema">
-          O SB paga metade do BB, mas está <strong style={{ color: '#e94560' }}>OOP (fora de posição)</strong> pós-flop. Isso é ruim. Por isso o SB precisa de mãos mais fortes para chamar do que o BTN precisaria. Se o SB vai chamar, muitas vezes vale mais fazer 3-bet para compensar a desvantagem posicional.
+        <Section title="SB — O Dilema">
+          O SB paga meia ficha obrigatória, o que parece uma vantagem (desconto). Mas tem um problema: depois que o flop sai, o SB age antes de todo mundo — não tem informação. <br /><br />
+          Por isso o SB entra em confrontos com mãos mais fortes que o BTN. Às vezes até vale mais relançar (atacar de volta) do que só chamar, porque relançar pode fazer o adversário desistir — o que compensa a desvantagem de agir primeiro.
         </Section>
-        <Section title="IP vs OOP — A Diferença Real">
+        <Section title="A Diferença de Agir Primeiro ou Por Último">
           <div className="grid grid-cols-2 gap-3 mt-2">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 600 }}>IP (BTN)</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você age depois — vê o check/bet do adversário antes de decidir. Informação = poder.</div>
+              <div style={{ color: '#00d4aa', fontWeight: 600 }}>BTN — age por último</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você vê o que o adversário faz antes de decidir. É como jogar cartas com a mão aberta — você sabe mais que ele.</div>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 600 }}>OOP (SB)</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você age antes — revela informação sem saber o que o adversário fará. Desvantagem permanente.</div>
+              <div style={{ color: '#e94560', fontWeight: 600 }}>SB — age primeiro</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você decide no escuro — não sabe se o adversário vai apostar ou passar. Desvantagem em cada rodada.</div>
             </div>
           </div>
         </Section>
-        <Section title="Quando 3-bet vs Quando Call">
+        <Section title="Quando Relançar e Quando Só Chamar">
           <ul className="space-y-2 mt-2" style={{ color: '#ccc', fontSize: 14 }}>
-            <li><strong style={{ color: '#f5a623' }}>3-bet para valor:</strong> AA, KK, QQ, JJ, AKs, AKo — mãos que dominam o range do adversário</li>
-            <li><strong style={{ color: '#4a90e2' }}>3-bet como semi-blefe:</strong> A5s, A4s, A3s — blockers que reduzem a chance do adversário ter AA/AK</li>
-            <li><strong style={{ color: '#00d4aa' }}>Call:</strong> Mãos médias com bom potencial de pós-flop (suited connectors, pares médios, Ax suited)</li>
-            <li><strong style={{ color: '#e94560' }}>Fold:</strong> Mãos sem equidade suficiente — mesmo IP, não defenda tudo</li>
+            <li><strong style={{ color: '#f5a623' }}>Relança com mão muito boa:</strong> AA, KK, QQ, JJ, AK — você quer o pote maior porque provavelmente tem a melhor mão</li>
+            <li><strong style={{ color: '#4a90e2' }}>Relança com Ás médio (blefe inteligente):</strong> A5, A4, A3 do mesmo naipe — o Ás na sua mão reduz a chance do adversário ter mão forte</li>
+            <li><strong style={{ color: '#00d4aa' }}>Só chama:</strong> Mãos médias com bom potencial (mãos conectadas do mesmo naipe, pares médios, Ás com naipe)</li>
+            <li><strong style={{ color: '#e94560' }}>Folda:</strong> Mesmo no BTN, mãos muito fracas não valem a entrada</li>
           </ul>
         </Section>
-        <Section title="Spots Mais Frequentes">
-          Comece praticando os spots mais comuns: <strong style={{ color: '#00d4aa' }}>BTN vs CO</strong> e <strong style={{ color: '#00d4aa' }}>BTN vs HJ</strong>. São os que você vai enfrentar com mais frequência em torneios.
+        <Section title="Por Onde Começar?">
+          Pratique primeiro os confrontos mais comuns: <strong style={{ color: '#00d4aa' }}>BTN vs CO</strong> e <strong style={{ color: '#00d4aa' }}>BTN vs HJ</strong>. São os que você vai encontrar toda hora nos torneios.
         </Section>
       </div>
       <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>

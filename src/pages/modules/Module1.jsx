@@ -126,23 +126,23 @@ function Lesson({ onComplete }) {
       {tab === 'conceitos' && (
         <div className="space-y-4">
           <Section title="O que é RFI?">
-            RFI (Raise First In) é quando <strong style={{ color: '#e94560' }}>ninguém abriu o pote ainda</strong> e você faz o primeiro raise. É o spot mais frequente e importante no pôquer de torneios — você vai viver disso.
+            RFI significa "Raise First In" — em português, <strong style={{ color: '#e94560' }}>você é o primeiro a apostar na rodada</strong>. Ninguém abriu antes de você. É a situação mais comum no poker de torneios e a mais importante de dominar.
           </Section>
 
-          <Section title="A Grande Regra — Stack e Tipo de Mão">
+          <Section title="Fichas na Mesa — Quanto Importa">
             <div className="grid grid-cols-2 gap-3 mt-2">
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-                <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>Stack Grande (50-100bb)</div>
-                <div style={{ color: '#ccc', fontSize: 14 }}>Priorize <strong>suited connectors</strong> (87s, T9s) — você vai ver o flop e tem pilha para jogar pós-flop.</div>
+                <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>Muitas fichas (50-100bb)</div>
+                <div style={{ color: '#ccc', fontSize: 14 }}>Você pode se dar ao luxo de entrar com mãos conectadas do mesmo naipe (tipo 8♠7♠) — tem fichas para jogar depois do flop.</div>
               </div>
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
-                <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Stack Curto (15-25bb)</div>
-                <div style={{ color: '#ccc', fontSize: 14 }}>Priorize <strong>top pairs</strong> (AK, AQ, KQ) — com stack curto, você quer showdown value, não draws.</div>
+                <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Poucas fichas (15-25bb)</div>
+                <div style={{ color: '#ccc', fontSize: 14 }}>Priorize mãos grandes e fortes (AK, AQ, KQ) — com poucas fichas, você quer ganhar na hora, não depender do flop.</div>
               </div>
             </div>
           </Section>
 
-          <Section title="Como o Range Varia por Posição">
+          <Section title="Sua Posição na Mesa Muda Tudo">
             <div className="space-y-2 mt-2">
               {POSITIONS.map(pos => (
                 <div key={pos} className="flex items-center gap-3">
@@ -161,22 +161,22 @@ function Lesson({ onComplete }) {
               ))}
             </div>
             <p style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
-              ↑ O range aumenta ~3% por posição. HJ tem salto de +5% em relação ao LJ. CO tem salto de +10% em relação ao HJ.
+              Quanto mais tarde você age, mais mãos você pode abrir — porque tem menos gente para te desafiar depois.
             </p>
           </Section>
 
-          <Section title="Blocker — Conceito com Stack Curto">
-            Com stack curto, certas mãos têm valor de <strong style={{ color: '#f5a623' }}>blocker</strong>: elas bloqueiam o adversário de ter mãos fortes para chamar seu all-in. <br /><br />
-            Exemplo: <strong style={{ color: '#e94560' }}>A5s com 12bb</strong> — o Ás bloqueia o adversário de ter AA, AK, AQ. Você push mais frequentemente do que faria com K5s.
+          <Section title="O Truque do Ás com Poucas Fichas">
+            Quando você tem poucas fichas e vai all-in, ter um Ás na mão é valioso não só pelo Ás em si — ele <strong style={{ color: '#f5a623' }}>reduz a chance do adversário também ter um Ás</strong>, o que significa menos chance de ele te chamar com mão forte. <br /><br />
+            Exemplo: <strong style={{ color: '#e94560' }}>A5 do mesmo naipe com 12 fichas</strong> — mesmo sendo uma mão mediana, vai all-in mais que K5 por causa desse efeito.
           </Section>
 
-          <Section title="Jogadores Que Ainda Falam">
-            Quanto mais cedo você age, mais jogadores podem entrar depois. Isso significa mais chance de ser re-raisado ou de entrar em multiway. Por isso UTG é a posição mais fechada.
+          <Section title="Quantos Jogadores Podem Te Atrapalhar?">
+            Quanto mais cedo você age na mesa, mais jogadores têm a chance de entrar no pote depois de você — e isso é ruim. Por isso quando você está nas primeiras posições (UTG), só abre com as melhores mãos.
             <div className="grid grid-cols-3 gap-2 mt-3">
               {POSITIONS.map(pos => (
                 <div key={pos} className="text-center rounded-lg p-2" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
                   <div style={{ color: POSITION_INFO[pos].color, fontWeight: 700 }}>{pos}</div>
-                  <div style={{ color: '#888', fontSize: 12 }}>{POSITION_INFO[pos].playersAfter} após</div>
+                  <div style={{ color: '#888', fontSize: 12 }}>{POSITION_INFO[pos].playersAfter} jogadores depois</div>
                 </div>
               ))}
             </div>
@@ -187,7 +187,7 @@ function Lesson({ onComplete }) {
       {tab === 'ranges' && (
         <div>
           <p style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>
-            Tabela de ranges de RFI por posição e stack. <span style={{ color: '#00d4aa' }}>Verde</span> = abre, <span style={{ color: '#f5a623' }}>Amarelo</span> = mix, cinza = folda.
+            Aqui você vê quantas mãos cada posição pode abrir dependendo de quantas fichas você tem. <span style={{ color: '#00d4aa' }}>Verde</span> = abre, <span style={{ color: '#f5a623' }}>Amarelo</span> = depende do contexto, cinza = folda.
           </p>
           <div className="overflow-x-auto">
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -226,13 +226,13 @@ function Lesson({ onComplete }) {
           </div>
 
           <div className="mt-6">
-            <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 12 }}>Exemplos de Range — BTN 100bb</h3>
+            <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 12 }}>Exemplo: Mãos do BTN com 100 fichas</h3>
             <div className="rounded-lg p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-              <div style={{ color: '#00d4aa', fontSize: 13, marginBottom: 8 }}>✓ ABRE (exemplos)</div>
+              <div style={{ color: '#00d4aa', fontSize: 13, marginBottom: 8 }}>✓ ABRE (você está no BTN — pode abrir bastante)</div>
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.8 }}>
                 Todos os pares • AKs-A2s • KQs-K2s • QJs-Q5s • JTs-J6s • T9s-T6s • 98s-95s • 87s-84s • 76s-74s • 65s-63s • 54s-52s • AKo-A5o • KQo-K9o • QJo-Q9o • JTo-J9o • T9o-T8o • 98o-97o • 87o-86o • 76o
               </div>
-              <div style={{ color: '#f5a623', fontSize: 13, marginBottom: 8, marginTop: 12 }}>~ MIX (exemplos)</div>
+              <div style={{ color: '#f5a623', fontSize: 13, marginBottom: 8, marginTop: 12 }}>~ DEPENDE DO CONTEXTO (às vezes abre, às vezes folda)</div>
               <div style={{ color: '#ccc', fontSize: 13 }}>
                 K2s • Q4s • J5s • T5s • 94s • 83s • A4o-A3o • K8o • Q8o
               </div>
@@ -243,43 +243,46 @@ function Lesson({ onComplete }) {
 
       {tab === 'sizing' && (
         <div className="space-y-4">
-          <Section title="Sizing de RFI — 2x a 2.5x o BB">
-            <div className="grid grid-cols-2 gap-3 mt-2">
+          <Section title="Quanto Apostar ao Abrir?">
+            Quando você decide abrir o pote, aposta entre 2x e 2.5x a ficha grande. Não mais que isso.
+            <div className="grid grid-cols-2 gap-3 mt-3">
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
-                <div style={{ color: '#f5a623', fontWeight: 600 }}>2x BB</div>
-                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Mais frequente em torneios. Menor custo, mesma pressão.</div>
+                <div style={{ color: '#f5a623', fontWeight: 600 }}>2x (aposta menor)</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Mais comum em torneios. Custa menos mas cria a mesma pressão.</div>
               </div>
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
-                <div style={{ color: '#f5a623', fontWeight: 600 }}>2.5x BB</div>
-                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Usado com stacks mais profundos ou contra players que defendem muito.</div>
+                <div style={{ color: '#f5a623', fontWeight: 600 }}>2.5x (aposta maior)</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Quando você tem muitas fichas ou o adversário entra fácil demais.</div>
               </div>
             </div>
           </Section>
 
-          <Section title="O Efetivo — Stack que Importa">
-            O tamanho do stack que importa para o sizing pós-flop é o <strong style={{ color: '#e94560' }}>stack dos blinds</strong>, não o seu. Se você tem 200bb mas o BB tem 30bb, o efetivo é 30bb — jogue como se você tivesse 30bb.
+          <Section title="As Fichas do Adversário São o Que Importa">
+            Aqui tem um ponto importante: quando você abre o pote, as fichas que definem o "tamanho do jogo" são as do Big Blind — não as suas. <br /><br />
+            Se você tem 200 fichas mas o BB tem 30, o confronto máximo é de 30 fichas. Não adianta ter mais — você só pode ganhar o que ele tem. Então pense e jogue como se você tivesse 30.
           </Section>
 
-          <Section title="ChipEV vs ICM">
-            <div className="grid grid-cols-2 gap-3 mt-2">
+          <Section title="Início vs Final do Torneio">
+            O jogo muda conforme o torneio avança:
+            <div className="grid grid-cols-2 gap-3 mt-3">
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-                <div style={{ color: '#00d4aa', fontWeight: 600 }}>Início do Torneio</div>
-                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Use ChipEV — maximize chips. ICM ainda não importa muito.</div>
+                <div style={{ color: '#00d4aa', fontWeight: 600 }}>No começo</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Foco em acumular fichas. Jogue para ganhar o maior pote possível.</div>
               </div>
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-                <div style={{ color: '#e94560', fontWeight: 600 }}>Na Bolha / ITM</div>
-                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Use ICM — sobreviver vale mais que acumular. Feche o range.</div>
+                <div style={{ color: '#e94560', fontWeight: 600 }}>Perto do prêmio</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sobreviver vale dinheiro. Feche o range — só jogue com mãos boas.</div>
               </div>
             </div>
           </Section>
 
           <Section title="Dicas de Ouro">
             <ul className="space-y-2 mt-2" style={{ color: '#ccc', fontSize: 14 }}>
-              <li>⚡ Memorize o range de uma posição por vez — comece pelo BTN</li>
+              <li>⚡ Aprenda o range de uma posição por vez — comece pelo BTN</li>
               <li>⚡ Meta: 300 mãos treinadas antes de jogar dinheiro real</li>
-              <li>⚡ Foco em 90%+ de acerto em 2 sessões seguidas para passar de módulo</li>
-              <li>⚡ Em micro stakes: value bet, raramente blefe</li>
-              <li>⚡ Tilt = stop. 3 perdas no dia = para de jogar</li>
+              <li>⚡ 90%+ de acerto em 2 sessões seguidas para passar de módulo</li>
+              <li>⚡ Apostas baixas: aposte quando tem mão, raramente blefe</li>
+              <li>⚡ Sentiu raiva? Para de jogar. 3 derrotas no dia = encerra a sessão</li>
             </ul>
           </Section>
         </div>

@@ -50,16 +50,16 @@ function getFeedback(hand, action, scenario) {
     const correct = getSBAction(hand)
     const isCorrect = action === correct || (action === 'complete' && correct === 'complete') || (action === 'raise' && correct === 'raise') || (action === 'fold' && correct === 'fold')
     let reason = ''
-    if (correct === 'raise') reason = `${hand} — raise do SB vs BB. Você tem posição relativa pré-flop mas será OOP pós-flop. Raise com mãos fortes o suficiente.`
-    else if (correct === 'complete') reason = `${hand} — complete (limp) do SB. Mão com potencial mas não forte o suficiente para raise. Entre barato e veja o flop.`
-    else reason = `${hand} — fold do SB. Mão fraca demais mesmo com desconto. Economize para situações melhores.`
+    if (correct === 'raise') reason = `${hand} — atacar do SB vs BB. Você tem mão boa o suficiente para pressionar — construa o pote antes do flop.`
+    else if (correct === 'complete') reason = `${hand} — entrar completando do SB. Mão com potencial mas não forte para atacar. Entre barato e veja as cartas do flop.`
+    else reason = `${hand} — foldar do SB. Mão fraca demais mesmo pagando menos. Economize para uma mão melhor.`
     return { correct, isCorrect, reason }
   } else {
     const correct = getBBAction(hand)
     const isCorrect = action === correct
     let reason = ''
-    if (correct === 'bet') reason = `${hand} — você está no BB, SB completou. Aposte para construir o pote com mão premium.`
-    else reason = `${hand} — check no BB vs complete do SB. Veja o flop gratuitamente e jogue com base no board.`
+    if (correct === 'bet') reason = `${hand} — você está no BB e o SB só completou. Mão boa — aposte para construir o pote.`
+    else reason = `${hand} — passe a vez no BB vs complete do SB. Veja o flop de graça e decida depois.`
     return { correct, isCorrect, reason }
   }
 }
@@ -67,43 +67,43 @@ function getFeedback(hand, action, scenario) {
 function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>⚔️ Módulo 5 — Blind Wars</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>SB vs BB — o confronto mais frequente e complexo</p>
+      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>⚔️ Módulo 5 — Duelo dos Blinds</h1>
+      <p style={{ color: '#888', marginBottom: 24 }}>Todos foldaram — só você e o outro blind restaram</p>
       <div className="space-y-4">
-        <Section title="O que são Blind Wars?">
-          Quando todos os outros jogadores foldaram, sobram apenas SB e BB. É um confronto direto entre dois jogadores, cada um com <strong style={{ color: '#e94560' }}>posições especiais</strong>: o SB age primeiro pré-flop mas <strong>perde a posição pós-flop</strong>. O BB age por último pré-flop mas tem posição pós-flop.
+        <Section title="Quando Isso Acontece?">
+          Às vezes todo mundo folda e sobram só o Small Blind e o Big Blind. É um confronto direto de dois jogadores. Parece simples, mas tem um detalhe importante: <strong style={{ color: '#e94560' }}>quem age primeiro antes do flop perde a vantagem depois dele</strong>. O SB fala primeiro antes das cartas comunitárias serem reveladas, mas depois do flop o BB sempre age por último — e agir por último é uma vantagem enorme.
         </Section>
-        <Section title="SB — Suas Opções">
+        <Section title="Se Você é o Small Blind, Tem 3 Opções">
           <div className="grid grid-cols-3 gap-2 mt-2">
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700 }}>FOLD</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mãos fracas — não desperdice fichas</div>
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+              <div style={{ color: '#e94560', fontWeight: 700 }}>FOLD</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito fraca — desiste e pronto</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700 }}>COMPLETE</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mãos médias — entre barato</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Completa o valor do BB sem raise — entra barato para ver o flop</div>
             </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700 }}>RAISE</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mãos fortes — construa o pote</div>
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
+              <div style={{ color: '#00d4aa', fontWeight: 700 }}>RAISE</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão boa — ataca para construir o pote</div>
             </div>
           </div>
         </Section>
-        <Section title="Por Que Posição Importa Tanto Aqui?">
-          O SB sempre age <strong style={{ color: '#e94560' }}>primeiro</strong> no flop, turn e river. Isso é uma <strong>desvantagem enorme</strong> — você revela informação sem saber o que o BB fará. Por isso o SB precisa de mãos mais fortes para chamar do que o BTN precisaria na mesma situação.
+        <Section title="Por Que o SB Precisa de Mãos Melhores?">
+          O SB paga metade de uma ficha e age antes de todo mundo no flop. Isso parece ok, mas na prática você fica em desvantagem permanente depois que as cartas saem — age primeiro, revela informação, e o Big Blind pode reagir. Por isso o SB é mais seletivo e não entra fácil.
         </Section>
-        <Section title="BB vs Complete do SB">
-          Quando o SB completa, o BB pode apostar (squeeze) com mãos premium ou checar para ver o flop. Com mãos médias, prefira check — você já tem informação pelo complete do SB (range amplo).
+        <Section title="Se Você é o Big Blind e o SB Completou">
+          Quando o SB entra sem atacar (só completa), o BB tem uma opção extra: apostar para pressionar. Com mãos boas, aposte. Com mãos medianas, passe a vez e veja o flop de graça — afinal, o SB que completou provavelmente não tem mão forte.
         </Section>
-        <Section title="BB vs Raise do SB">
-          O SB levanta com range amplo (ele está tentando roubar). O BB pode defender muito — inclusive com 3-bet. Pense como se fosse BTN vs CO, mas com posição invertida no pós-flop.
+        <Section title="Se Você é o Big Blind e o SB Atacou">
+          O SB ataca com um range bem variado nesse spot — ele está tentando roubar o pote com facilidade. Por isso o BB pode se defender com muitas mãos, inclusive relançando com as melhores. Não folde fácil.
         </Section>
-        <Section title="Dica Prática">
+        <Section title="Dicas Práticas">
           <ul className="space-y-1" style={{ color: '#ccc', fontSize: 14 }}>
-            <li>⚡ SB com mãos medianas — complete, não folde de graça</li>
-            <li>⚡ BB vs complete — check com a maioria, bet só com premium</li>
-            <li>⚡ BB vs raise — defenda largo, o SB abusa com range amplo</li>
-            <li>⚡ No pós-flop, o BB tem posição — use para controlar o pote</li>
+            <li>⚡ SB com mão mediana — entre completando, não jogue fora de graça</li>
+            <li>⚡ BB vs complete — passe a vez com a maioria, aposte só com mão boa</li>
+            <li>⚡ BB vs ataque do SB — defenda bastante, ele está atacando com muitas mãos</li>
+            <li>⚡ Depois do flop, o BB age por último — aproveite essa vantagem</li>
           </ul>
         </Section>
       </div>
