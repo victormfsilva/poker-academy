@@ -69,20 +69,43 @@ function getCorrectAction(hole, flop) {
   const hasFlush = hasFlushDraw(hole, flop)
   const hasStraight = hasStraightDraw(hole, flop)
 
-  // Regras simplificadas de CBet IP
-  if (texture.isDry) {
-    return { action: 'bet', sizing: '33%', reason: 'Flop seco — poucas chances de draw pro adversário. Aposte barato (33% do pote) para pressionar com custo baixo.' }
+  // Regras CBet IP — seguindo a aula:
+  // 33% → board seco (blefe barato, range advantage)
+  // 50% → top pair ou melhor, ou semi-draw (flush/straight draw)
+  // 75% → mão muito forte (dois pares, set) em board úmido
+  // check → board úmido sem equidade nenhuma
+
+  // Mão muito forte (dois pares ou set): bet 75% em board úmido, 50% em seco
+  const flopRanks = flop.map(c => c.slice(0, -1))
+  const holeRanks = hole.map(c => c.slice(0, -1))
+  const hasSet = holeRanks[0] === holeRanks[1] && flopRanks.includes(holeRanks[0])
+  const matchingFlopRanks = holeRanks.filter(r => flopRanks.includes(r))
+  const hasTwoPair = matchingFlopRanks.length === 2
+
+  if (hasSet || hasTwoPair) {
+    if (texture.isWet) {
+      return { action: 'bet', sizing: '75%', reason: 'Você tem uma mão muito forte (set ou dois pares) num flop perigoso — aposte grande (75%) para proteger e extrair valor antes que o adversário complete um draw.' }
+    }
+    return { action: 'bet', sizing: '50%', reason: 'Você tem uma mão muito forte (set ou dois pares) — aposte para extrair valor. 50% é ideal em flop seco.' }
   }
+
+  // Top pair: bet 50%
   if (hasTop) {
-    return { action: 'bet', sizing: '50%', reason: 'Você acertou o par mais alto do flop — aposte para extrair valor. Tamanho médio (50%) é ideal.' }
+    return { action: 'bet', sizing: '50%', reason: 'Você acertou o par mais alto do flop — aposte 50% para extrair valor e proteger sua mão.' }
   }
+
+  // Semi-draw (flush ou straight draw): bet 50%
   if (hasFlush || hasStraight) {
-    return { action: 'bet', sizing: '50%', reason: 'Você está próximo de completar uma sequência ou cor — aposte mesmo sem ter mão agora. Se errar, ainda pode completar.' }
+    return { action: 'bet', sizing: '50%', reason: 'Você está próximo de completar uma cor ou sequência — aposte 50% mesmo sem ter mão agora. Você tem dois caminhos para ganhar: o adversário pode foldar agora, ou você completa o draw.' }
   }
-  if (texture.isWet && !hasTop) {
-    return { action: 'check', sizing: null, reason: 'Flop conectado e você não acertou nada. Não gaste fichas sem motivo — passe a vez e veja o que acontece.' }
+
+  // Board seco sem equidade: bet 33% (blefe barato)
+  if (texture.isDry) {
+    return { action: 'bet', sizing: '33%', reason: 'Flop seco e o adversário checou para você. Aposte barato (33%) — com poucas possibilidades de draw, ele provavelmente vai foldar.' }
   }
-  return { action: 'check', sizing: null, reason: 'Você não conectou com o flop e não tem draw. Com flop conectado, passe a vez — economize fichas para quando tiver mão.' }
+
+  // Board úmido sem equidade nenhuma: check
+  return { action: 'check', sizing: null, reason: 'Flop conectado e você não tem nada — nem par, nem draw. Não gaste fichas sem motivo. Passe a vez e veja o que acontece.' }
 }
 
 function Lesson({ onComplete }) {
@@ -176,7 +199,8 @@ function Trainer() {
   function answer(action, sizing) {
     if (!flop || feedback) return
     const correct = getCorrectAction(hole, flop)
-    const isCorrect = action === correct.action
+    // Se a ação é bet, o sizing também precisa estar correto
+    const isCorrect = action === correct.action && (action === 'check' || sizing === correct.sizing)
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
     setFeedback({ ...correct, userAction: action, isCorrect })
@@ -263,16 +287,18 @@ function Trainer() {
           </div>
           <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mão →</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
-          {feedback.sizing && <div style={{ color: '#f5a623', fontSize: 13, marginTop: 8 }}>Sizing ideal: <strong>{feedback.sizing}</strong></div>}
+          <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
+            Correto: <strong style={{ color: '#f5a623' }}>{feedback.action === 'check' ? 'CHECK' : `BET ${feedback.sizing}`}</strong>
+          </div>
           {!feedback.isCorrect && (
             <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #4a90e230' }}>
               <div style={{ color: '#4a90e2', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>📋 Regra geral CBet IP</div>
               <div style={{ color: '#ccc', fontSize: 12, lineHeight: 1.7 }}>
-                <div>• <strong style={{ color: '#00d4aa' }}>Board seco</strong> (A72 rainbow, K82 sem flush) → Bet 33%</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Top pair ou melhor</strong> → Bet 50%</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Semi-draw</strong> (flush/straight draw) → Bet 50%</div>
-                <div>• <strong style={{ color: '#e94560' }}>Board úmido sem equidade</strong> → Check</div>
-                <div>• <strong style={{ color: '#e94560' }}>Multiway sem top pair</strong> → Check</div>
+                <div>• <strong style={{ color: '#00d4aa' }}>Flop seco sem mão</strong> → BET 33% (blefe barato)</div>
+                <div>• <strong style={{ color: '#f5a623' }}>Top pair</strong> → BET 50%</div>
+                <div>• <strong style={{ color: '#f5a623' }}>Draw de cor ou sequência</strong> → BET 50%</div>
+                <div>• <strong style={{ color: '#e94560' }}>Set ou dois pares (flop úmido)</strong> → BET 75%</div>
+                <div>• <strong style={{ color: '#888' }}>Flop úmido sem nada</strong> → CHECK</div>
               </div>
             </div>
           )}
