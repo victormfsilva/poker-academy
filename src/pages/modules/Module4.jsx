@@ -43,8 +43,14 @@ function getBoardTexture(flop) {
 function hasTopPair(hole, flop) {
   const flopRanks = flop.map(c => c.slice(0, -1))
   const holeRanks = hole.map(c => c.slice(0, -1))
-  const topFlopRank = flopRanks.sort((a, b) => RANKS.indexOf(a) - RANKS.indexOf(b))[0]
+  const topFlopRank = [...flopRanks].sort((a, b) => RANKS.indexOf(a) - RANKS.indexOf(b))[0]
   return holeRanks.includes(topFlopRank)
+}
+
+function hasAnyPair(hole, flop) {
+  const flopRanks = flop.map(c => c.slice(0, -1))
+  const holeRanks = hole.map(c => c.slice(0, -1))
+  return holeRanks.some(r => flopRanks.includes(r))
 }
 
 function hasFlushDraw(hole, flop) {
@@ -82,7 +88,9 @@ function getCorrectAction(hole, flop) {
   const hasSet = holeRanks[0] === holeRanks[1] && flopRanks.includes(holeRanks[0])
   const matchingFlopRanks = holeRanks.filter(r => flopRanks.includes(r))
   const hasTwoPair = matchingFlopRanks.length === 2
+  const hasPair = hasAnyPair(hole, flop)
 
+  // Set ou dois pares: bet grande
   if (hasSet || hasTwoPair) {
     if (texture.isWet) {
       return { action: 'bet', sizing: '75%', reason: 'Você tem uma mão muito forte (set ou dois pares) num flop perigoso — aposte grande (75%) para proteger e extrair valor antes que o adversário complete um draw.' }
@@ -100,7 +108,17 @@ function getCorrectAction(hole, flop) {
     return { action: 'bet', sizing: '50%', reason: 'Você está próximo de completar uma cor ou sequência — aposte 50% mesmo sem ter mão agora. Você tem dois caminhos para ganhar: o adversário pode foldar agora, ou você completa o draw.' }
   }
 
-  // Board seco sem equidade: bet 33% (blefe barato)
+  // Par médio/baixo em flop seco: bet 50% (tem valor, pouco risco)
+  if (hasPair && texture.isDry) {
+    return { action: 'bet', sizing: '50%', reason: 'Você tem um par no flop seco — aposte 50% para extrair valor. Com poucas ameaças de draw, sua mão provavelmente está na frente.' }
+  }
+
+  // Par médio/baixo em flop úmido: bet 50% para proteger
+  if (hasPair && texture.isWet) {
+    return { action: 'bet', sizing: '50%', reason: 'Você tem um par num flop perigoso — aposte 50% para proteger. Deixar o adversário ver cartas de graça pode custar caro se ele tiver draw.' }
+  }
+
+  // Board seco sem equidade nenhuma: bet 33% (blefe barato)
   if (texture.isDry) {
     return { action: 'bet', sizing: '33%', reason: 'Flop seco e o adversário checou para você. Aposte barato (33%) — com poucas possibilidades de draw, ele provavelmente vai foldar.' }
   }
