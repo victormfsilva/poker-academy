@@ -4,11 +4,11 @@ import { useProgress } from '../context/ProgressContext'
 const MODULES = [
   { id: 1, name: 'RFI ChipEV', desc: 'Raise First In — o spot mais importante', icon: '🎯' },
   { id: 2, name: 'Push/Fold', desc: 'Short stack abaixo de 15bb', icon: '💥' },
-  { id: 3, name: 'Pot Odds e Outs', desc: 'A matematica por tras de cada decisao', icon: '🧮' },
+  { id: 3, name: 'Pot Odds e Outs', desc: 'A matemática por trás de cada decisão', icon: '🧮' },
   { id: 4, name: 'BB vs RFI', desc: 'Defender o Big Blind', icon: '🛡️' },
-  { id: 5, name: 'CBet Flop IP', desc: 'Aposta de continuacao em posicao', icon: '⚡' },
+  { id: 5, name: 'CBet Flop IP', desc: 'Aposta de continuação em posição', icon: '⚡' },
   { id: 6, name: 'Blind Wars', desc: 'SB vs BB — confronto direto', icon: '⚔️' },
-  { id: 7, name: 'SB/BTN vs RFI', desc: 'Jogar nas posicoes mais tardias', icon: '🃏' },
+  { id: 7, name: 'SB/BTN vs RFI', desc: 'Jogar nas posições mais tardias', icon: '🃏' },
 ]
 
 function motivationalMessage(globalStats) {
@@ -34,7 +34,7 @@ export default function Dashboard() {
   }) || MODULES[MODULES.length - 1]
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         {/* Header */}
         <div className="mb-6">

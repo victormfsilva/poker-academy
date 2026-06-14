@@ -35,17 +35,20 @@ function analyzeDraws(hole, board) {
   const values = [...new Set(all.map(c => RANK_VALUES[c.rank]))].sort((a, b) => a - b)
   if (values.includes(14)) values.unshift(1)
 
+  // Verifica se ja tem straight completa (5 consecutivas)
+  let hasStraightMade = false
+  for (let i = 0; i <= values.length - 5; i++) {
+    if (values[i+1] === values[i]+1 && values[i+2] === values[i]+2 && values[i+3] === values[i]+3 && values[i+4] === values[i]+4) {
+      hasStraightMade = true; break
+    }
+  }
+
   let hasOESD = false
-  for (let i = 0; i <= values.length - 4; i++) {
-    if (values[i+1] === values[i]+1 && values[i+2] === values[i]+2 && values[i+3] === values[i]+3) {
-      // Verifica que nao e straight completa (5 consecutivas)
-      const low = values[i]
-      const high = values[i+3]
-      if (!(values.includes(low - 1) || values.includes(high + 1))) {
-        // Nao ha extensao, entao e OESD
+  if (!hasStraightMade) {
+    for (let i = 0; i <= values.length - 4; i++) {
+      if (values[i+1] === values[i]+1 && values[i+2] === values[i]+2 && values[i+3] === values[i]+3) {
+        hasOESD = true; break
       }
-      hasOESD = true
-      break
     }
   }
 
@@ -74,24 +77,24 @@ function analyzeDraws(hole, board) {
     return { type: 'Duas Overcards + Gutshot', outs: 10, explanation: `Duas overcards (${overcards.map(c => c.rank).join(' e ')}, 6 outs) + gutshot (4 outs) = 10 outs.` }
   }
   if (hasFlushDraw) {
-    return { type: 'Flush Draw', outs: 9, explanation: `Voce tem 4 cartas de ${suitName(flushEntry[0])}. Faltam 9 cartas desse naipe no baralho (13 - 4 = 9).` }
+    return { type: 'Flush Draw', outs: 9, explanation: `Você tem 4 cartas de ${suitName(flushEntry[0])}. Faltam 9 cartas desse naipe no baralho (13 - 4 = 9).` }
   }
   if (hasOESD) {
-    return { type: 'Straight Aberto (OESD)', outs: 8, explanation: 'Voce tem 4 cartas em sequencia. Qualquer carta em cada ponta completa = 8 outs.' }
+    return { type: 'Straight Aberto (OESD)', outs: 8, explanation: 'Você tem 4 cartas em sequência. Qualquer carta em cada ponta completa = 8 outs.' }
   }
   if (overcards.length > 0) {
     const outs = overcards.length * 3
     return {
       type: overcards.length === 2 ? 'Duas Overcards' : 'Uma Overcard',
       outs,
-      explanation: `${overcards.map(c => c.rank).join(' e ')} ${overcards.length > 1 ? 'sao maiores' : 'e maior'} que todas as cartas do board. Cada uma tem 3 outs = ${outs} outs.`
+      explanation: `${overcards.map(c => c.rank).join(' e ')} ${overcards.length > 1 ? 'são maiores' : 'é maior'} que todas as cartas do board. Cada uma tem 3 outs = ${outs} outs.`
     }
   }
   if (hasGutshot) {
-    return { type: 'Gutshot (Furo no Meio)', outs: 4, explanation: 'Voce tem 4 cartas quase em sequencia, mas falta uma no meio. So 1 valor completa = 4 outs.' }
+    return { type: 'Gutshot (Furo no Meio)', outs: 4, explanation: 'Você tem 4 cartas quase em sequência, mas falta uma no meio. Só 1 valor completa = 4 outs.' }
   }
 
-  return { type: 'Sem Draw Significativo', outs: 0, explanation: 'Voce nao tem draw de flush, straight ou overcards relevantes.' }
+  return { type: 'Sem Draw Significativo', outs: 0, explanation: 'Você não tem draw de flush, straight ou overcards relevantes.' }
 }
 
 // Gera cenario
@@ -194,9 +197,9 @@ function Lesson({ onComplete }) {
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <div className="mb-6">
         <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700 }}>
-          🧮 Modulo 3 — Pot Odds, Outs e Matematica
+          🧮 Módulo 3 — Pot Odds, Outs e Matemática
         </h1>
-        <p style={{ color: '#888', marginTop: 4 }}>A matematica por tras de cada decisao no poker</p>
+        <p style={{ color: '#888', marginTop: 4 }}>A matemática por trás de cada decisão no poker</p>
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -205,7 +208,7 @@ function Lesson({ onComplete }) {
           { id: 'potodds', label: 'Pot Odds' },
           { id: 'implied', label: 'Implied Odds' },
           { id: 'ev', label: 'EV' },
-          { id: 'pratica', label: 'Na Pratica' },
+          { id: 'pratica', label: 'Na Prática' },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className="px-4 py-2 rounded-lg text-sm font-semibold"
@@ -217,20 +220,20 @@ function Lesson({ onComplete }) {
 
       {tab === 'outs' && (
         <div className="space-y-4">
-          <Section title="O que sao Outs?">
-            Outs sao as <strong style={{ color: '#e94560' }}>cartas que faltam no baralho e que melhoram sua mao</strong>. Se voce tem 4 cartas do mesmo naipe e precisa de mais uma para fazer flush, as cartas que faltam desse naipe sao seus outs.
+          <Section title="O que são Outs?">
+            Outs são as <strong style={{ color: '#e94560' }}>cartas que faltam no baralho e que melhoram sua mão</strong>. Se você tem 4 cartas do mesmo naipe e precisa de mais uma para fazer flush, as cartas que faltam desse naipe são seus outs.
             <br /><br />
-            Pense assim: voce esta esperando um onibus. Os outs sao quantos onibus diferentes podem te levar ao destino. Quanto mais outs, mais chance de pegar um.
+            Pense assim: você está esperando um ônibus. Os outs são quantos ônibus diferentes podem te levar ao destino. Quanto mais outs, mais chance de pegar um.
           </Section>
 
-          <Section title="Quantos Outs em Cada Situacao?">
+          <Section title="Quantos Outs em Cada Situação?">
             <div className="space-y-3 mt-2">
               {[
-                { name: 'Flush Draw', outs: 9, desc: '4 cartas do mesmo naipe — faltam 9 (13 do naipe - 4 visiveis)', color: '#4a90e2' },
-                { name: 'Straight Aberto (OESD)', outs: 8, desc: '4 cartas em sequencia — falta 1 carta em cada ponta', color: '#00d4aa' },
+                { name: 'Flush Draw', outs: 9, desc: '4 cartas do mesmo naipe — faltam 9 (13 do naipe - 4 visíveis)', color: '#4a90e2' },
+                { name: 'Straight Aberto (OESD)', outs: 8, desc: '4 cartas em sequência — falta 1 carta em cada ponta', color: '#00d4aa' },
                 { name: 'Duas Overcards', outs: 6, desc: 'Suas 2 cartas maiores que o board — 3 de cada no baralho', color: '#f5a623' },
-                { name: 'Gutshot (Furo no Meio)', outs: 4, desc: 'Quase uma sequencia, mas falta 1 carta no meio', color: '#e94560' },
-                { name: 'Flush + Straight Aberto', outs: 15, desc: 'Combinacao monstro! 9 + 8 - 2 repetidas = 15', color: '#00d4aa' },
+                { name: 'Gutshot (Furo no Meio)', outs: 4, desc: 'Quase uma sequência, mas falta 1 carta no meio', color: '#e94560' },
+                { name: 'Flush + Straight Aberto', outs: 15, desc: 'Combinação monstro! 9 + 8 - 2 repetidas = 15', color: '#00d4aa' },
                 { name: 'Flush + Gutshot', outs: 12, desc: 'Flush draw + furo no meio: 9 + 4 - 1 = 12', color: '#4a90e2' },
               ].map(d => (
                 <div key={d.name} className="flex items-start gap-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: `1px solid ${d.color}33` }}>
@@ -246,8 +249,8 @@ function Lesson({ onComplete }) {
             </div>
           </Section>
 
-          <Section title="Regra do x2 e x4 — Calculo Rapido">
-            Essa e a regra mais util do poker:
+          <Section title="Regra do x2 e x4 — Cálculo Rápido">
+            Essa é a regra mais útil do poker:
             <div className="grid grid-cols-2 gap-3 mt-3">
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
                 <div style={{ color: '#00d4aa', fontWeight: 600 }}>No Flop (x4)</div>
@@ -256,7 +259,7 @@ function Lesson({ onComplete }) {
               </div>
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600 }}>No Turn (x2)</div>
-                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>So vem 1 carta (river). Multiplique seus outs por 2.</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Só vem 1 carta (river). Multiplique seus outs por 2.</div>
                 <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>9 outs x 2 = ~18%</div>
               </div>
             </div>
@@ -266,52 +269,52 @@ function Lesson({ onComplete }) {
 
       {tab === 'potodds' && (
         <div className="space-y-4">
-          <Section title="O que sao Pot Odds?">
-            Pot odds e a <strong style={{ color: '#e94560' }}>relacao entre o que voce precisa pagar e o que pode ganhar</strong>. E como calcular se vale a pena pagar para ver a proxima carta.
+          <Section title="O que são Pot Odds?">
+            Pot odds é a <strong style={{ color: '#e94560' }}>relação entre o que você precisa pagar e o que pode ganhar</strong>. É como calcular se vale a pena pagar para ver a próxima carta.
             <br /><br />
-            Imagine que alguem te oferece: pague R$10 para concorrer a R$100. Voce so precisa acertar 1 em 11 vezes para sair no lucro. Isso e pot odds.
+            Imagine que alguém te oferece: pague R$10 para concorrer a R$100. Você só precisa acertar 1 em 11 vezes para sair no lucro. Isso é pot odds.
           </Section>
 
           <Section title="Como Calcular">
             <div className="rounded-lg p-4 mt-2" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
               <div style={{ color: '#4a90e2', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
-                Formula: quanto voce paga / pote total apos seu call
+                Fórmula: quanto você paga / pote total após seu call
               </div>
               <div style={{ color: '#ccc', fontSize: 14 }}>
                 <strong>Exemplo passo a passo:</strong>
                 <ol className="mt-2 space-y-2" style={{ paddingLeft: 20 }}>
                   <li>1. Pote atual: R$100</li>
-                  <li>2. Adversario aposta: R$50</li>
-                  <li>3. Pote total apos seu call: R$100 + R$50 + R$50 = R$200</li>
-                  <li>4. Voce paga R$50 de R$200 = <strong style={{ color: '#e94560' }}>25%</strong></li>
-                  <li>5. Voce precisa ganhar 25% das vezes para empatar</li>
+                  <li>2. Adversário aposta: R$50</li>
+                  <li>3. Pote total após seu call: R$100 + R$50 + R$50 = R$200</li>
+                  <li>4. Você paga R$50 de R$200 = <strong style={{ color: '#e94560' }}>25%</strong></li>
+                  <li>5. Você precisa ganhar 25% das vezes para empatar</li>
                 </ol>
               </div>
             </div>
           </Section>
 
-          <Section title="A Decisao: Outs vs Pot Odds">
+          <Section title="A Decisão: Outs vs Pot Odds">
             <div className="grid grid-cols-2 gap-3 mt-2">
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
                 <div style={{ color: '#00d4aa', fontWeight: 600 }}>CALL</div>
-                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sua % de outs e <strong>MAIOR</strong> que a % de pot odds.</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>36% de chance vs 25% necessario = CALL</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sua % de outs é <strong>MAIOR</strong> que a % de pot odds.</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>36% de chance vs 25% necessário = CALL</div>
               </div>
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
                 <div style={{ color: '#e94560', fontWeight: 600 }}>FOLD</div>
-                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sua % de outs e <strong>MENOR</strong> que a % de pot odds.</div>
-                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>16% de chance vs 25% necessario = FOLD</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sua % de outs é <strong>MENOR</strong> que a % de pot odds.</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>16% de chance vs 25% necessário = FOLD</div>
               </div>
             </div>
           </Section>
 
-          <Section title="Tabela Rapida por Tamanho de Aposta">
+          <Section title="Tabela Rápida por Tamanho de Aposta">
             <div className="overflow-x-auto mt-2">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
                     <th style={{ color: '#888', padding: 8, textAlign: 'left', fontSize: 13 }}>Aposta</th>
-                    <th style={{ color: '#888', padding: 8, textAlign: 'center', fontSize: 13 }}>% necessaria</th>
+                    <th style={{ color: '#888', padding: 8, textAlign: 'center', fontSize: 13 }}>% necessária</th>
                     <th style={{ color: '#888', padding: 8, textAlign: 'center', fontSize: 13 }}>Outs min (flop)</th>
                     <th style={{ color: '#888', padding: 8, textAlign: 'center', fontSize: 13 }}>Outs min (turn)</th>
                   </tr>
@@ -340,10 +343,10 @@ function Lesson({ onComplete }) {
 
       {tab === 'implied' && (
         <div className="space-y-4">
-          <Section title="O que sao Implied Odds?">
-            Implied odds sao o <strong style={{ color: '#e94560' }}>dinheiro extra que voce pode ganhar no futuro</strong> se completar seu draw. E um bonus alem do pote atual.
+          <Section title="O que são Implied Odds?">
+            Implied odds são o <strong style={{ color: '#e94560' }}>dinheiro extra que você pode ganhar no futuro</strong> se completar seu draw. É um bônus além do pote atual.
             <br /><br />
-            Pense assim: voce compra um bilhete barato. O premio atual nao e grande, mas se voce ganhar, o adversario provavelmente vai pagar mais apostas no turn e river — ai o premio final fica enorme.
+            Pense assim: você compra um bilhete barato. O prêmio atual não é grande, mas se você ganhar, o adversário provavelmente vai pagar mais apostas no turn e river — aí o prêmio final fica enorme.
           </Section>
 
           <Section title="Quando Contar com Implied Odds">
@@ -351,17 +354,17 @@ function Lesson({ onComplete }) {
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
                 <div style={{ color: '#00d4aa', fontWeight: 600 }}>Boas Implied Odds</div>
                 <ul className="mt-2 space-y-1" style={{ color: '#ccc', fontSize: 13 }}>
-                  <li>- Adversario tem muitas fichas (pode pagar mais depois)</li>
-                  <li>- Seu draw e discreto (adversario nao percebe)</li>
-                  <li>- Gutshot que completa straight — dificil de detectar</li>
+                  <li>- Adversário tem muitas fichas (pode pagar mais depois)</li>
+                  <li>- Seu draw é discreto (adversário não percebe)</li>
+                  <li>- Gutshot que completa straight — difícil de detectar</li>
                 </ul>
               </div>
               <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-                <div style={{ color: '#e94560', fontWeight: 600 }}>Mas Implied Odds</div>
+                <div style={{ color: '#e94560', fontWeight: 600 }}>Más Implied Odds</div>
                 <ul className="mt-2 space-y-1" style={{ color: '#ccc', fontSize: 13 }}>
-                  <li>- Adversario tem poucas fichas (nao pode pagar mais)</li>
-                  <li>- Seu draw e obvio (3 cartas do mesmo naipe no board)</li>
-                  <li>- Adversario e bom e vai foldar quando voce completar</li>
+                  <li>- Adversário tem poucas fichas (não pode pagar mais)</li>
+                  <li>- Seu draw é óbvio (3 cartas do mesmo naipe no board)</li>
+                  <li>- Adversário é bom e vai foldar quando você completar</li>
                 </ul>
               </div>
             </div>
@@ -371,8 +374,8 @@ function Lesson({ onComplete }) {
 
       {tab === 'ev' && (
         <div className="space-y-4">
-          <Section title="O que e EV (Valor Esperado)?">
-            EV e o <strong style={{ color: '#e94560' }}>quanto uma jogada vale no longo prazo</strong>. Se voce repetisse a mesma situacao 1000 vezes, o EV mostra se voce sairia no lucro ou no prejuizo.
+          <Section title="O que é EV (Valor Esperado)?">
+            EV é o <strong style={{ color: '#e94560' }}>quanto uma jogada vale no longo prazo</strong>. Se você repetisse a mesma situação 1000 vezes, o EV mostra se você sairia no lucro ou no prejuízo.
             <br /><br />
             <strong style={{ color: '#f5a623' }}>EV positivo (+EV)</strong> = jogada lucrativa
             <br />
@@ -396,20 +399,20 @@ function Lesson({ onComplete }) {
             </div>
           </Section>
 
-          <Section title="Decisao Certa com Resultado Ruim">
-            Ponto importante: <strong style={{ color: '#e94560' }}>uma decisao certa pode dar resultado ruim numa mao especifica</strong>, e tudo bem.
+          <Section title="Decisão Certa com Resultado Ruim">
+            Ponto importante: <strong style={{ color: '#e94560' }}>uma decisão certa pode dar resultado ruim numa mão específica</strong>, e tudo bem.
             <br /><br />
-            Se voce tem 70% de chance e perde, voce nao errou — voce so caiu nos 30%. No longo prazo, tomar essa decisao sempre te deixa no lucro.
+            Se você tem 70% de chance e perde, você não errou — você só caiu nos 30%. No longo prazo, tomar essa decisão sempre te deixa no lucro.
             <br /><br />
-            Poker nao e sobre ganhar toda mao. E sobre tomar a melhor decisao toda vez.
+            Poker não é sobre ganhar toda mão. É sobre tomar a melhor decisão toda vez.
           </Section>
         </div>
       )}
 
       {tab === 'pratica' && (
         <div className="space-y-4">
-          <Section title="Calculo Mental Rapido na Mesa">
-            Na mesa voce nao tem tempo para calculos exatos. Use estas aproximacoes:
+          <Section title="Cálculo Mental Rápido na Mesa">
+            Na mesa você não tem tempo para cálculos exatos. Use estas aproximações:
             <div className="mt-3 space-y-2">
               {[
                 { sit: 'Flush draw no flop', outs: 9, flop: '~36%', turn: '~18%' },
@@ -437,19 +440,19 @@ function Lesson({ onComplete }) {
               <div style={{ color: '#ccc', fontSize: 14 }}>
                 1. Conte seus outs<br />
                 2. Multiplique por 4 (flop) ou 2 (turn)<br />
-                3. Compare com a % que voce precisa pagar<br />
-                4. Sua chance e maior → call. Menor → fold.
+                3. Compare com a % que você precisa pagar<br />
+                4. Sua chance é maior → call. Menor → fold.
               </div>
             </div>
           </Section>
 
           <Section title="Dicas Finais">
             <ul className="space-y-2 mt-2" style={{ color: '#ccc', fontSize: 14 }}>
-              <li>- Pratique contar outs — vai ficar automatico</li>
-              <li>- Nao conte outs "sujos" (cartas que melhoram voce mas podem dar mao melhor ao adversario)</li>
-              <li>- Com implied odds fortes, pode chamar com menos outs que o necessario</li>
-              <li>- Flush draws sao os melhores draws — 9 outs no flop = ~36%</li>
-              <li>- Gutshots parecem fracos (4 outs) mas sao discretos — otimas implied odds</li>
+              <li>- Pratique contar outs — vai ficar automático</li>
+              <li>- Não conte outs "sujos" (cartas que melhoram você mas podem dar mão melhor ao adversário)</li>
+              <li>- Com implied odds fortes, pode chamar com menos outs que o necessário</li>
+              <li>- Flush draws são os melhores draws — 9 outs no flop = ~36%</li>
+              <li>- Gutshots parecem fracos (4 outs) mas são discretos — ótimas implied odds</li>
             </ul>
           </Section>
         </div>
@@ -514,13 +517,13 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{accuracy >= 90 ? '🎉' : accuracy >= 70 ? '👍' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: '#888', marginTop: 8 }}>{sessionCorrect}/{sessionTotal} acertos</div>
         <div style={{ color: accuracy >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700, marginTop: 8 }}>{accuracy}%</div>
         {accuracy >= 90
-          ? <p style={{ color: '#00d4aa', marginTop: 8 }}>Excelente! Sessao conta para desbloquear o proximo modulo.</p>
+          ? <p style={{ color: '#00d4aa', marginTop: 8 }}>Excelente! Sessão conta para desbloquear o próximo módulo.</p>
           : <p style={{ color: '#888', marginTop: 8 }}>Treine mais para chegar a 90%.</p>}
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -531,7 +534,7 @@ function Trainer() {
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       {/* Progresso */}
       <div className="rounded-xl p-3 mb-4 flex justify-between items-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Sequencia: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Sequência: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 (90%+)</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
@@ -544,7 +547,7 @@ function Trainer() {
           background: exercise.type === 'outs' ? '#4a90e222' : exercise.type === 'potodds' ? '#f5a62322' : exercise.type === 'ev' ? '#00d4aa22' : '#e9456022',
           color: exercise.type === 'outs' ? '#4a90e2' : exercise.type === 'potodds' ? '#f5a623' : exercise.type === 'ev' ? '#00d4aa' : '#e94560',
         }}>
-          {exercise.type === 'outs' ? 'Contar Outs' : exercise.type === 'potodds' ? 'Pot Odds' : exercise.type === 'ev' ? 'Valor Esperado (EV)' : 'Decisao Completa'}
+          {exercise.type === 'outs' ? 'Contar Outs' : exercise.type === 'potodds' ? 'Pot Odds' : exercise.type === 'ev' ? 'Valor Esperado (EV)' : 'Decisão Completa'}
         </span>
       </div>
 
@@ -562,7 +565,7 @@ function Trainer() {
             </div>
           </div>
           <div className="text-center mb-4">
-            <div style={{ color: 'white', fontWeight: 600 }}>Quantos outs voce tem?</div>
+            <div style={{ color: 'white', fontWeight: 600 }}>Quantos outs você tem?</div>
           </div>
           {!feedback && (
             <div className="grid grid-cols-4 gap-3 mb-4">
@@ -593,7 +596,7 @@ function Trainer() {
             </div>
           </div>
           <div className="text-center mb-4">
-            <div style={{ color: 'white', fontWeight: 600 }}>Qual a % necessaria para justificar o call?</div>
+            <div style={{ color: 'white', fontWeight: 600 }}>Qual a % necessária para justificar o call?</div>
             <div style={{ color: '#888', fontSize: 13 }}>seu call / (pote + aposta + seu call)</div>
           </div>
           {!feedback && (
@@ -640,7 +643,7 @@ function Trainer() {
       {exercise.type === 'ev' && (
         <div>
           <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-            <div className="text-center mb-4"><div style={{ color: '#888', fontSize: 12 }}>SITUACAO DE ALL-IN</div></div>
+            <div className="text-center mb-4"><div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO DE ALL-IN</div></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #00d4aa33' }}>
                 <div style={{ color: '#00d4aa', fontSize: 14, fontWeight: 600 }}>Se ganhar</div>
@@ -674,7 +677,7 @@ function Trainer() {
             {feedback.correct ? '✓ Correto!' : '✗ Incorreto'}
           </div>
           <button onClick={newExercise} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>
-            Proximo Exercicio →
+            Próximo Exercício →
           </button>
 
           {exercise.type === 'outs' && (

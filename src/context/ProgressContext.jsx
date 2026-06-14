@@ -23,7 +23,8 @@ const defaultProgress = {
 
 function migrateModules(modules) {
   // Migração v2: módulos 3-6 viraram 4-7 (inserção do Módulo 3 Pot Odds)
-  if (modules && modules[3] && !modules[7] && !modules._migrated_v2) {
+  // Migrar se: tem dados no módulo 3 antigo (com totalAnswered) E não foi migrado ainda
+  if (modules && modules[3]?.totalAnswered > 0 && !modules._migrated_v2) {
     const migrated = { ...modules, _migrated_v2: true }
     // Shift 6→7, 5→6, 4→5, 3→4 (ordem reversa para não sobrescrever)
     if (modules[6]) migrated[7] = modules[6]
