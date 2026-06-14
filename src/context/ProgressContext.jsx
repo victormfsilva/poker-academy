@@ -11,6 +11,7 @@ const defaultProgress = {
     4: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     5: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     6: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    7: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
   },
   globalStats: {
     totalHands: 0,
@@ -20,12 +21,31 @@ const defaultProgress = {
   }
 }
 
+function migrateModules(modules) {
+  // Migração v2: módulos 3-6 viraram 4-7 (inserção do Módulo 3 Pot Odds)
+  if (modules && modules[3] && !modules[7] && !modules._migrated_v2) {
+    const migrated = { ...modules, _migrated_v2: true }
+    // Shift 6→7, 5→6, 4→5, 3→4 (ordem reversa para não sobrescrever)
+    if (modules[6]) migrated[7] = modules[6]
+    if (modules[5]) migrated[6] = modules[5]
+    if (modules[4]) migrated[5] = modules[4]
+    if (modules[3]) migrated[4] = modules[3]
+    // Módulo 3 novo começa vazio
+    migrated[3] = { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false }
+    // Desbloquear módulo 3 se módulo 2 está completo
+    if (migrated[2]?.completed) migrated[3].unlocked = true
+    return migrated
+  }
+  return modules
+}
+
 function mergeProgress(saved) {
   if (!saved) return defaultProgress
+  const migratedModules = migrateModules(saved.modules)
   return {
     ...defaultProgress,
     ...saved,
-    modules: { ...defaultProgress.modules, ...saved.modules }
+    modules: { ...defaultProgress.modules, ...migratedModules }
   }
 }
 
@@ -122,7 +142,7 @@ export function ProgressProvider({ children, userId }) {
       const moduleCompleted = lastTwo.length === 2 && lastTwo.every(s => s.accuracy >= 90)
 
       const nextModules = { ...prev.modules }
-      if (moduleCompleted && moduleId < 6) {
+      if (moduleCompleted && moduleId < 7) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
       }
 

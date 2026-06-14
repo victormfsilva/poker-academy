@@ -1,130 +1,180 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
-import { BB_VS_RFI } from '../../data/ranges'
-import Card, { handToCards } from '../../components/Card'
-import RangeViewer from '../../components/RangeViewer'
+import Card from '../../components/Card'
 
-const RAISER_POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB']
-const RAISER_KEYS = { UTG: 'vsUTG', 'UTG+1': 'vsUTG1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
+// ==================== DADOS E LOGICA ====================
 
-function generateAllHands() {
-  const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
-  const hands = []
-  for (let i = 0; i < ranks.length; i++) {
-    hands.push(ranks[i] + ranks[i])
-    for (let j = i + 1; j < ranks.length; j++) {
-      hands.push(ranks[i] + ranks[j] + 's')
-      hands.push(ranks[i] + ranks[j] + 'o')
+const SUITS = ['h', 'd', 'c', 's']
+const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
+const RANK_VALUES = { A:14, K:13, Q:12, J:11, T:10, 9:9, 8:8, 7:7, 6:6, 5:5, 4:4, 3:3, 2:2 }
+
+function randomCard(exclude = []) {
+  const excSet = new Set(exclude.map(c => c.rank + c.suit))
+  let card
+  do {
+    card = { rank: RANKS[Math.floor(Math.random() * 13)], suit: SUITS[Math.floor(Math.random() * 4)] }
+  } while (excSet.has(card.rank + card.suit))
+  return card
+}
+
+function suitName(s) {
+  return { h: 'copas', d: 'ouros', c: 'paus', s: 'espadas' }[s] || s
+}
+
+// Analisa draws e retorna { type, outs, explanation }
+function analyzeDraws(hole, board) {
+  const all = [...hole, ...board]
+
+  // Flush draw
+  const suitCounts = {}
+  all.forEach(c => { suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1 })
+  const flushEntry = Object.entries(suitCounts).find(([, count]) => count === 4)
+  const hasFlushDraw = !!flushEntry
+
+  // Straight draws
+  const values = [...new Set(all.map(c => RANK_VALUES[c.rank]))].sort((a, b) => a - b)
+  if (values.includes(14)) values.unshift(1)
+
+  let hasOESD = false
+  for (let i = 0; i <= values.length - 4; i++) {
+    if (values[i+1] === values[i]+1 && values[i+2] === values[i]+2 && values[i+3] === values[i]+3) {
+      // Verifica que nao e straight completa (5 consecutivas)
+      const low = values[i]
+      const high = values[i+3]
+      if (!(values.includes(low - 1) || values.includes(high + 1))) {
+        // Nao ha extensao, entao e OESD
+      }
+      hasOESD = true
+      break
     }
   }
-  return hands
-}
 
-function getAction(hand, raisedFrom) {
-  const key = RAISER_KEYS[raisedFrom]
-  const range = BB_VS_RFI[key]
-  if (!range) return 'fold'
-  if (range.threebet?.includes(hand)) return '3bet'
-  if (range.call?.includes(hand)) return 'call'
-  return 'fold'
-}
-
-function randomHand(raisedFrom) {
-  const all = generateAllHands()
-  const dice = Math.random()
-  const key = RAISER_KEYS[raisedFrom]
-  const range = BB_VS_RFI[key]
-  if (!range) return all[Math.floor(Math.random() * all.length)]
-  if (dice < 0.3 && range.threebet?.length) return range.threebet[Math.floor(Math.random() * range.threebet.length)]
-  if (dice < 0.6 && range.call?.length) return range.call[Math.floor(Math.random() * range.call.length)]
-  const callAndThreebet = [...(range.call || []), ...(range.threebet || [])]
-  const foldHands = all.filter(h => !callAndThreebet.includes(h))
-  if (foldHands.length) return foldHands[Math.floor(Math.random() * foldHands.length)]
-  return all[Math.floor(Math.random() * all.length)]
-}
-
-function getFeedback(hand, action, raisedFrom) {
-  const correct = getAction(hand, raisedFrom)
-  const isCorrect = action === correct
-  let reason = ''
-
-  if (correct === '3bet') {
-    reason = `${hand} é forte o suficiente para relançar contra ${raisedFrom}. ${raisedFrom === 'UTG' ? 'Mesmo ele atacando de posição cedo (mãos boas), sua mão é boa demais para só chamar.' : 'Ele atacou de uma posição razoável — sua mão tem vantagem, relance para pressionar.'}`
-  } else if (correct === 'call') {
-    reason = `${hand} é uma boa defesa no Big Blind contra ${raisedFrom}. Você já pagou parte obrigatória — complementar o call faz sentido com essa mão.`
-  } else {
-    reason = `${hand} está fora do range de defesa no BB contra ${raisedFrom}. ${raisedFrom === 'BTN' || raisedFrom === 'CO' ? 'Mesmo ele atacando com mãos fracas nessa posição, essa mão específica não tem chance suficiente de ganhar.' : 'Ele atacou de uma posição cedo, então provavelmente tem mãos boas — folde.'}`
+  let hasGutshot = false
+  if (!hasOESD) {
+    for (let start = 1; start <= 10; start++) {
+      const window = [start, start+1, start+2, start+3, start+4]
+      const count = window.filter(v => values.includes(v)).length
+      if (count === 4) { hasGutshot = true; break }
+    }
   }
 
-  return { correct, isCorrect, reason }
+  // Overcards
+  const boardValues = board.map(c => RANK_VALUES[c.rank])
+  const maxBoard = Math.max(...boardValues)
+  const overcards = hole.filter(c => RANK_VALUES[c.rank] > maxBoard)
+
+  // Combinacoes
+  if (hasFlushDraw && hasOESD) {
+    return { type: 'Flush Draw + Straight Aberto', outs: 15, explanation: `Flush draw (9 outs) + straight aberto (8 outs) - 2 cartas que servem para ambos = 15 outs. Draw monstro!` }
+  }
+  if (hasFlushDraw && hasGutshot) {
+    return { type: 'Flush Draw + Gutshot', outs: 12, explanation: `Flush draw (9 outs) + gutshot (4 outs) - 1 carta repetida = 12 outs. Draw muito forte!` }
+  }
+  if (overcards.length === 2 && hasGutshot) {
+    return { type: 'Duas Overcards + Gutshot', outs: 10, explanation: `Duas overcards (${overcards.map(c => c.rank).join(' e ')}, 6 outs) + gutshot (4 outs) = 10 outs.` }
+  }
+  if (hasFlushDraw) {
+    return { type: 'Flush Draw', outs: 9, explanation: `Voce tem 4 cartas de ${suitName(flushEntry[0])}. Faltam 9 cartas desse naipe no baralho (13 - 4 = 9).` }
+  }
+  if (hasOESD) {
+    return { type: 'Straight Aberto (OESD)', outs: 8, explanation: 'Voce tem 4 cartas em sequencia. Qualquer carta em cada ponta completa = 8 outs.' }
+  }
+  if (overcards.length > 0) {
+    const outs = overcards.length * 3
+    return {
+      type: overcards.length === 2 ? 'Duas Overcards' : 'Uma Overcard',
+      outs,
+      explanation: `${overcards.map(c => c.rank).join(' e ')} ${overcards.length > 1 ? 'sao maiores' : 'e maior'} que todas as cartas do board. Cada uma tem 3 outs = ${outs} outs.`
+    }
+  }
+  if (hasGutshot) {
+    return { type: 'Gutshot (Furo no Meio)', outs: 4, explanation: 'Voce tem 4 cartas quase em sequencia, mas falta uma no meio. So 1 valor completa = 4 outs.' }
+  }
+
+  return { type: 'Sem Draw Significativo', outs: 0, explanation: 'Voce nao tem draw de flush, straight ou overcards relevantes.' }
 }
 
-function Lesson({ onComplete }) {
-  return (
-    <div style={{ maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🛡️ Módulo 3 — Big Blind vs Raise</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Você já pagou obrigatório — agora aprenda a usar isso a seu favor</p>
-      <div className="space-y-4">
-        <Section title="Por Que o Big Blind é Diferente?">
-          No Big Blind, você é obrigado a colocar uma ficha na mesa antes de ver as cartas. Isso parece ruim — mas na verdade te dá uma vantagem: quando alguém faz um raise e chega em você, <strong style={{ color: '#e94560' }}>você já pagou parte do preço</strong>. <br /><br />
-          É como se você tivesse comprado meia entrada pro show — complementar é mais barato do que comprar do zero. Por isso o Big Blind pode entrar no pote com muito mais mãos do que qualquer outra posição.
-        </Section>
-        <Section title="Suas 3 Opções">
-          <div className="grid grid-cols-3 gap-3 mt-2">
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700 }}>FOLD</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito fraca — sem chance de ganhar</div>
-            </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: "1px solid #00d4aa" }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700 }}>CALL</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão razoável — paga e vê o flop</div>
-            </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
-              <div style={{ color: '#f5a623', fontWeight: 700 }}>3-BET</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito forte — relança para pressionar</div>
-            </div>
-          </div>
-        </Section>
-        <Section title="De Onde Vem o Raise Muda Tudo">
-          <p style={{ color: '#ccc', fontSize: 14, marginBottom: 12 }}>
-            Pensa assim: se o cara que atacou está nas primeiras posições da mesa (UTG), ele só ataca com as melhores mãos. Você precisa respeitar isso. Já se ele está no fim da mesa (BTN, SB), ele ataca com muito mais mãos — incluindo fracas. Aí você pode defender mais.
-          </p>
-          <div className="space-y-2">
-            {[
-              { pos: 'UTG', desc: 'Atacou cedo — só tem mãos boas. Defenda menos, só com suas melhores.' },
-              { pos: 'HJ / CO', desc: 'Posição do meio — range razoável. Defenda com mãos medianas.' },
-              { pos: 'BTN / SB', desc: 'Atacou tarde — usa mãos fracas também. Você pode defender muito mais.' },
-            ].map(r => (
-              <div key={r.pos} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
-                <div style={{ color: '#e94560', fontWeight: 700, width: 65, flexShrink: 0 }}>{r.pos}</div>
-                <div style={{ color: '#ccc', fontSize: 14 }}>{r.desc}</div>
-              </div>
-            ))}
-          </div>
-        </Section>
-        <Section title="Quando Mais de Um Jogador Entra no Pote">
-          Se além do raise original, outro jogador também entrou, agora você está competindo contra duas pessoas. Com mais adversários, você precisa de uma mão mais forte para continuar — folde mais e priorize pares e mãos do mesmo naipe.
-        </Section>
-        <Section title="Quando Relançar (3-Bet)?">
-          Você relança quando quer pressionar o adversário e forçar ele a tomar uma decisão difícil. Isso acontece com dois tipos de mão:
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>Mãos Muito Fortes</div>
-              <div style={{ color: '#ccc', fontSize: 13 }}>AA, KK, QQ, AK — você relança porque quer colocar mais dinheiro com a melhor mão.</div>
-            </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
-              <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Mãos com Ás Medio</div>
-              <div style={{ color: '#ccc', fontSize: 13 }}>A5, A4, A2 do mesmo naipe — o Ás na sua mão reduz a chance do adversário ter Ás. Você relança como blefe inteligente.</div>
-            </div>
-          </div>
-        </Section>
-      </div>
-      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
-        Entendi — Quero Treinar 🛡️
-      </button>
-    </div>
-  )
+// Gera cenario
+function generateScenario() {
+  const exclude = []
+  const hole = []
+  for (let i = 0; i < 2; i++) { const c = randomCard(exclude); hole.push(c); exclude.push(c) }
+
+  const boardSize = Math.random() > 0.4 ? 3 : 4
+  const board = []
+  for (let i = 0; i < boardSize; i++) { const c = randomCard(exclude); board.push(c); exclude.push(c) }
+
+  const draw = analyzeDraws(hole, board)
+  const street = board.length === 3 ? 'flop' : 'turn'
+  const multiplier = street === 'flop' ? 4 : 2
+  const equity = Math.min(draw.outs * multiplier, 100)
+
+  const potSizes = [80, 100, 120, 150, 200]
+  const pot = potSizes[Math.floor(Math.random() * potSizes.length)]
+  const betPercents = [33, 50, 66, 75, 100]
+  const betPct = betPercents[Math.floor(Math.random() * betPercents.length)]
+  const bet = Math.round(pot * betPct / 100)
+  const totalPot = pot + bet
+  const potOdds = Math.round((bet / (totalPot + bet)) * 100)
+
+  return { hole, board, draw, street, multiplier, equity, pot, bet, betPct, totalPot, potOdds }
 }
+
+// Gera opcoes numericas
+function generateNumericOptions(correct, min = 0, max = 60, spread = 8) {
+  const opts = new Set([correct])
+  while (opts.size < 4) {
+    const delta = Math.floor(Math.random() * spread * 2) - spread
+    const val = Math.max(min, Math.min(max, correct + delta))
+    if (val !== correct) opts.add(val)
+  }
+  return [...opts].sort((a, b) => a - b)
+}
+
+// Exercicios
+function generateOutsExercise() {
+  let s, attempts = 0
+  do { s = generateScenario(); attempts++ } while (s.draw.outs === 0 && attempts < 30)
+  if (s.draw.outs === 0) return generateEVExercise()
+  return { ...s, type: 'outs', options: generateNumericOptions(s.draw.outs, 0, 20, 5), correctAnswer: s.draw.outs }
+}
+
+function generatePotOddsExercise() {
+  const s = generateScenario()
+  return { ...s, type: 'potodds', options: generateNumericOptions(s.potOdds, 5, 50, 8), correctAnswer: s.potOdds }
+}
+
+function generateDecisionExercise() {
+  let s, attempts = 0
+  do { s = generateScenario(); attempts++ } while (s.draw.outs === 0 && attempts < 30)
+  if (s.draw.outs === 0) return generateEVExercise()
+  return { ...s, type: 'decision', correctAnswer: s.equity >= s.potOdds ? 'call' : 'fold' }
+}
+
+function generateEVExercise() {
+  const winPcts = [25, 30, 35, 40, 45, 50, 55, 60]
+  const winPct = winPcts[Math.floor(Math.random() * winPcts.length)]
+  const losePct = 100 - winPct
+  const winAmounts = [100, 150, 200, 250, 300]
+  const loseAmounts = [50, 80, 100, 120, 150]
+  const winAmount = winAmounts[Math.floor(Math.random() * winAmounts.length)]
+  const loseAmount = loseAmounts[Math.floor(Math.random() * loseAmounts.length)]
+  const ev = (winPct / 100 * winAmount) - (losePct / 100 * loseAmount)
+  return { type: 'ev', winPct, losePct, winAmount, loseAmount, ev: Math.round(ev), correctAnswer: ev > 0 ? 'positivo' : 'negativo' }
+}
+
+function generateExercise() {
+  const types = ['outs', 'outs', 'potodds', 'potodds', 'decision', 'decision', 'decision', 'ev']
+  const t = types[Math.floor(Math.random() * types.length)]
+  switch (t) {
+    case 'outs': return generateOutsExercise()
+    case 'potodds': return generatePotOddsExercise()
+    case 'decision': return generateDecisionExercise()
+    default: return generateEVExercise()
+  }
+}
+
+// ==================== COMPONENTES ====================
 
 function Section({ title, children }) {
   return (
@@ -135,138 +185,570 @@ function Section({ title, children }) {
   )
 }
 
+// ==================== AULA ====================
+
+function Lesson({ onComplete }) {
+  const [tab, setTab] = useState('outs')
+
+  return (
+    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+      <div className="mb-6">
+        <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700 }}>
+          🧮 Modulo 3 — Pot Odds, Outs e Matematica
+        </h1>
+        <p style={{ color: '#888', marginTop: 4 }}>A matematica por tras de cada decisao no poker</p>
+      </div>
+
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {[
+          { id: 'outs', label: 'Outs' },
+          { id: 'potodds', label: 'Pot Odds' },
+          { id: 'implied', label: 'Implied Odds' },
+          { id: 'ev', label: 'EV' },
+          { id: 'pratica', label: 'Na Pratica' },
+        ].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: tab === t.id ? '#e94560' : '#12121a', color: tab === t.id ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'outs' && (
+        <div className="space-y-4">
+          <Section title="O que sao Outs?">
+            Outs sao as <strong style={{ color: '#e94560' }}>cartas que faltam no baralho e que melhoram sua mao</strong>. Se voce tem 4 cartas do mesmo naipe e precisa de mais uma para fazer flush, as cartas que faltam desse naipe sao seus outs.
+            <br /><br />
+            Pense assim: voce esta esperando um onibus. Os outs sao quantos onibus diferentes podem te levar ao destino. Quanto mais outs, mais chance de pegar um.
+          </Section>
+
+          <Section title="Quantos Outs em Cada Situacao?">
+            <div className="space-y-3 mt-2">
+              {[
+                { name: 'Flush Draw', outs: 9, desc: '4 cartas do mesmo naipe — faltam 9 (13 do naipe - 4 visiveis)', color: '#4a90e2' },
+                { name: 'Straight Aberto (OESD)', outs: 8, desc: '4 cartas em sequencia — falta 1 carta em cada ponta', color: '#00d4aa' },
+                { name: 'Duas Overcards', outs: 6, desc: 'Suas 2 cartas maiores que o board — 3 de cada no baralho', color: '#f5a623' },
+                { name: 'Gutshot (Furo no Meio)', outs: 4, desc: 'Quase uma sequencia, mas falta 1 carta no meio', color: '#e94560' },
+                { name: 'Flush + Straight Aberto', outs: 15, desc: 'Combinacao monstro! 9 + 8 - 2 repetidas = 15', color: '#00d4aa' },
+                { name: 'Flush + Gutshot', outs: 12, desc: 'Flush draw + furo no meio: 9 + 4 - 1 = 12', color: '#4a90e2' },
+              ].map(d => (
+                <div key={d.name} className="flex items-start gap-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: `1px solid ${d.color}33` }}>
+                  <div className="rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 44, height: 44, background: `${d.color}22`, color: d.color, fontWeight: 700, fontSize: 18 }}>
+                    {d.outs}
+                  </div>
+                  <div>
+                    <div style={{ color: d.color, fontWeight: 600, fontSize: 14 }}>{d.name}</div>
+                    <div style={{ color: '#999', fontSize: 13 }}>{d.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Section title="Regra do x2 e x4 — Calculo Rapido">
+            Essa e a regra mais util do poker:
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
+                <div style={{ color: '#00d4aa', fontWeight: 600 }}>No Flop (x4)</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ainda vem 2 cartas (turn + river). Multiplique seus outs por 4.</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>9 outs x 4 = ~36%</div>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+                <div style={{ color: '#f5a623', fontWeight: 600 }}>No Turn (x2)</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>So vem 1 carta (river). Multiplique seus outs por 2.</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>9 outs x 2 = ~18%</div>
+              </div>
+            </div>
+          </Section>
+        </div>
+      )}
+
+      {tab === 'potodds' && (
+        <div className="space-y-4">
+          <Section title="O que sao Pot Odds?">
+            Pot odds e a <strong style={{ color: '#e94560' }}>relacao entre o que voce precisa pagar e o que pode ganhar</strong>. E como calcular se vale a pena pagar para ver a proxima carta.
+            <br /><br />
+            Imagine que alguem te oferece: pague R$10 para concorrer a R$100. Voce so precisa acertar 1 em 11 vezes para sair no lucro. Isso e pot odds.
+          </Section>
+
+          <Section title="Como Calcular">
+            <div className="rounded-lg p-4 mt-2" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
+              <div style={{ color: '#4a90e2', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
+                Formula: quanto voce paga / pote total apos seu call
+              </div>
+              <div style={{ color: '#ccc', fontSize: 14 }}>
+                <strong>Exemplo passo a passo:</strong>
+                <ol className="mt-2 space-y-2" style={{ paddingLeft: 20 }}>
+                  <li>1. Pote atual: R$100</li>
+                  <li>2. Adversario aposta: R$50</li>
+                  <li>3. Pote total apos seu call: R$100 + R$50 + R$50 = R$200</li>
+                  <li>4. Voce paga R$50 de R$200 = <strong style={{ color: '#e94560' }}>25%</strong></li>
+                  <li>5. Voce precisa ganhar 25% das vezes para empatar</li>
+                </ol>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="A Decisao: Outs vs Pot Odds">
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
+                <div style={{ color: '#00d4aa', fontWeight: 600 }}>CALL</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sua % de outs e <strong>MAIOR</strong> que a % de pot odds.</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>36% de chance vs 25% necessario = CALL</div>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+                <div style={{ color: '#e94560', fontWeight: 600 }}>FOLD</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sua % de outs e <strong>MENOR</strong> que a % de pot odds.</div>
+                <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>16% de chance vs 25% necessario = FOLD</div>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Tabela Rapida por Tamanho de Aposta">
+            <div className="overflow-x-auto mt-2">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ color: '#888', padding: 8, textAlign: 'left', fontSize: 13 }}>Aposta</th>
+                    <th style={{ color: '#888', padding: 8, textAlign: 'center', fontSize: 13 }}>% necessaria</th>
+                    <th style={{ color: '#888', padding: 8, textAlign: 'center', fontSize: 13 }}>Outs min (flop)</th>
+                    <th style={{ color: '#888', padding: 8, textAlign: 'center', fontSize: 13 }}>Outs min (turn)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { bet: '33% do pote', pct: 20, outsF: 5, outsT: 10 },
+                    { bet: '50% do pote', pct: 25, outsF: 7, outsT: 13 },
+                    { bet: '66% do pote', pct: 28, outsF: 7, outsT: 14 },
+                    { bet: '75% do pote', pct: 30, outsF: 8, outsT: 15 },
+                    { bet: '100% do pote', pct: 33, outsF: 9, outsT: 17 },
+                  ].map(r => (
+                    <tr key={r.bet} style={{ borderTop: '1px solid #1e1e2e' }}>
+                      <td style={{ color: '#ccc', padding: 8, fontSize: 13 }}>{r.bet}</td>
+                      <td style={{ color: '#f5a623', padding: 8, textAlign: 'center', fontWeight: 600 }}>{r.pct}%</td>
+                      <td style={{ color: '#00d4aa', padding: 8, textAlign: 'center' }}>{r.outsF}+</td>
+                      <td style={{ color: '#4a90e2', padding: 8, textAlign: 'center' }}>{r.outsT}+</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        </div>
+      )}
+
+      {tab === 'implied' && (
+        <div className="space-y-4">
+          <Section title="O que sao Implied Odds?">
+            Implied odds sao o <strong style={{ color: '#e94560' }}>dinheiro extra que voce pode ganhar no futuro</strong> se completar seu draw. E um bonus alem do pote atual.
+            <br /><br />
+            Pense assim: voce compra um bilhete barato. O premio atual nao e grande, mas se voce ganhar, o adversario provavelmente vai pagar mais apostas no turn e river — ai o premio final fica enorme.
+          </Section>
+
+          <Section title="Quando Contar com Implied Odds">
+            <div className="space-y-3 mt-2">
+              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
+                <div style={{ color: '#00d4aa', fontWeight: 600 }}>Boas Implied Odds</div>
+                <ul className="mt-2 space-y-1" style={{ color: '#ccc', fontSize: 13 }}>
+                  <li>- Adversario tem muitas fichas (pode pagar mais depois)</li>
+                  <li>- Seu draw e discreto (adversario nao percebe)</li>
+                  <li>- Gutshot que completa straight — dificil de detectar</li>
+                </ul>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+                <div style={{ color: '#e94560', fontWeight: 600 }}>Mas Implied Odds</div>
+                <ul className="mt-2 space-y-1" style={{ color: '#ccc', fontSize: 13 }}>
+                  <li>- Adversario tem poucas fichas (nao pode pagar mais)</li>
+                  <li>- Seu draw e obvio (3 cartas do mesmo naipe no board)</li>
+                  <li>- Adversario e bom e vai foldar quando voce completar</li>
+                </ul>
+              </div>
+            </div>
+          </Section>
+        </div>
+      )}
+
+      {tab === 'ev' && (
+        <div className="space-y-4">
+          <Section title="O que e EV (Valor Esperado)?">
+            EV e o <strong style={{ color: '#e94560' }}>quanto uma jogada vale no longo prazo</strong>. Se voce repetisse a mesma situacao 1000 vezes, o EV mostra se voce sairia no lucro ou no prejuizo.
+            <br /><br />
+            <strong style={{ color: '#f5a623' }}>EV positivo (+EV)</strong> = jogada lucrativa
+            <br />
+            <strong style={{ color: '#e94560' }}>EV negativo (-EV)</strong> = jogada que perde dinheiro
+          </Section>
+
+          <Section title="Como Calcular">
+            <div className="rounded-lg p-4 mt-2" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
+              <div style={{ color: '#4a90e2', fontWeight: 700, marginBottom: 8 }}>
+                EV = (% de ganhar x quanto ganha) - (% de perder x quanto perde)
+              </div>
+              <div style={{ color: '#ccc', fontSize: 14 }}>
+                <strong>Exemplo:</strong>
+                <ul className="mt-2 space-y-1">
+                  <li>40% de chance de ganhar R$200</li>
+                  <li>60% de chance de perder R$100</li>
+                  <li>EV = (0.40 x 200) - (0.60 x 100) = 80 - 60 = <strong style={{ color: '#00d4aa' }}>+R$20</strong></li>
+                  <li>No longo prazo, essa jogada ganha R$20 por vez!</li>
+                </ul>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Decisao Certa com Resultado Ruim">
+            Ponto importante: <strong style={{ color: '#e94560' }}>uma decisao certa pode dar resultado ruim numa mao especifica</strong>, e tudo bem.
+            <br /><br />
+            Se voce tem 70% de chance e perde, voce nao errou — voce so caiu nos 30%. No longo prazo, tomar essa decisao sempre te deixa no lucro.
+            <br /><br />
+            Poker nao e sobre ganhar toda mao. E sobre tomar a melhor decisao toda vez.
+          </Section>
+        </div>
+      )}
+
+      {tab === 'pratica' && (
+        <div className="space-y-4">
+          <Section title="Calculo Mental Rapido na Mesa">
+            Na mesa voce nao tem tempo para calculos exatos. Use estas aproximacoes:
+            <div className="mt-3 space-y-2">
+              {[
+                { sit: 'Flush draw no flop', outs: 9, flop: '~36%', turn: '~18%' },
+                { sit: 'Straight aberto no flop', outs: 8, flop: '~32%', turn: '~16%' },
+                { sit: 'Duas overcards no flop', outs: 6, flop: '~24%', turn: '~12%' },
+                { sit: 'Gutshot no flop', outs: 4, flop: '~16%', turn: '~8%' },
+                { sit: 'Flush + straight aberto', outs: 15, flop: '~60%', turn: '~30%' },
+              ].map(s => (
+                <div key={s.sit} className="flex items-center justify-between rounded-lg p-2" style={{ background: '#0a0a0f' }}>
+                  <span style={{ color: '#ccc', fontSize: 13 }}>{s.sit}</span>
+                  <div className="flex gap-3">
+                    <span style={{ color: '#00d4aa', fontSize: 13 }}>Flop: {s.flop}</span>
+                    <span style={{ color: '#f5a623', fontSize: 13 }}>Turn: {s.turn}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Section title="Regra de Ouro">
+            <div className="rounded-lg p-4 mt-2" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+              <div style={{ color: '#e94560', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
+                Se seus outs x multiplicador {'>'} pot odds → CALL
+              </div>
+              <div style={{ color: '#ccc', fontSize: 14 }}>
+                1. Conte seus outs<br />
+                2. Multiplique por 4 (flop) ou 2 (turn)<br />
+                3. Compare com a % que voce precisa pagar<br />
+                4. Sua chance e maior → call. Menor → fold.
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Dicas Finais">
+            <ul className="space-y-2 mt-2" style={{ color: '#ccc', fontSize: 14 }}>
+              <li>- Pratique contar outs — vai ficar automatico</li>
+              <li>- Nao conte outs "sujos" (cartas que melhoram voce mas podem dar mao melhor ao adversario)</li>
+              <li>- Com implied odds fortes, pode chamar com menos outs que o necessario</li>
+              <li>- Flush draws sao os melhores draws — 9 outs no flop = ~36%</li>
+              <li>- Gutshots parecem fracos (4 outs) mas sao discretos — otimas implied odds</li>
+            </ul>
+          </Section>
+        </div>
+      )}
+
+      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
+        Entendi — Quero Treinar
+      </button>
+    </div>
+  )
+}
+
+// ==================== TRAINER ====================
+
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
-  const [filterPos, setFilterPos] = useState('Todas')
-  const [currentHand, setCurrentHand] = useState(null)
-  const [currentRaiser, setCurrentRaiser] = useState(null)
+  const [exercise, setExercise] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [sessionTotal, setSessionTotal] = useState(0)
   const [streak, setStreak] = useState(0)
   const [sessionDone, setSessionDone] = useState(false)
 
-  function newHand() {
+  function newExercise() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const positions = filterPos === 'Todas' ? RAISER_POSITIONS : [filterPos]
-    const raiser = positions[Math.floor(Math.random() * positions.length)]
-    setCurrentRaiser(raiser)
-    setCurrentHand(randomHand(raiser))
+    setExercise(generateExercise())
     setFeedback(null)
   }
 
-  function answer(action) {
-    if (!currentHand || feedback) return
-    const fb = getFeedback(currentHand, action, currentRaiser)
-    const newStreak = fb.isCorrect ? streak + 1 : 0
+  function answer(userAnswer) {
+    if (!exercise || feedback) return
+    let correct = false
+    if (exercise.type === 'outs') correct = parseInt(userAnswer) === exercise.correctAnswer
+    else if (exercise.type === 'potodds') correct = parseInt(userAnswer) === exercise.correctAnswer
+    else if (exercise.type === 'decision') correct = userAnswer === exercise.correctAnswer
+    else if (exercise.type === 'ev') correct = userAnswer === exercise.correctAnswer
+
+    const newStreak = correct ? streak + 1 : 0
     setStreak(newStreak)
-    const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (fb.isCorrect ? 1 : 0)
-    setSessionTotal(newTotal); setSessionCorrect(newCorrect)
-    recordAnswer(3, fb.isCorrect, newStreak)
+    const newTotal = sessionTotal + 1
+    const newCorrect = sessionCorrect + (correct ? 1 : 0)
+    setSessionTotal(newTotal)
+    setSessionCorrect(newCorrect)
+    recordAnswer(3, correct, newStreak)
+
     const isLast = newTotal >= 10
-    if (isLast) recordSession(3, Math.round((newCorrect / newTotal) * 100))
-    setFeedback({ ...fb, isLast })
+    if (isLast) {
+      const accuracy = Math.round((newCorrect / newTotal) * 100)
+      recordSession(3, accuracy)
+    }
+    setFeedback({ correct, userAnswer, isLast })
   }
 
-  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setCurrentHand(null) }
+  function restart() {
+    setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setExercise(null)
+  }
 
-  if (!currentHand && !sessionDone) newHand()
+  if (!exercise && !sessionDone) newExercise()
 
   if (sessionDone) {
-    const acc = Math.round((sessionCorrect / sessionTotal) * 100)
+    const accuracy = Math.round((sessionCorrect / sessionTotal) * 100)
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
-        <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
-        <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
+        <div style={{ fontSize: 60 }}>{accuracy >= 90 ? '🎉' : accuracy >= 70 ? '👍' : '💪'}</div>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <div style={{ color: '#888', marginTop: 8 }}>{sessionCorrect}/{sessionTotal} acertos</div>
+        <div style={{ color: accuracy >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700, marginTop: 8 }}>{accuracy}%</div>
+        {accuracy >= 90
+          ? <p style={{ color: '#00d4aa', marginTop: 8 }}>Excelente! Sessao conta para desbloquear o proximo modulo.</p>
+          : <p style={{ color: '#888', marginTop: 8 }}>Treine mais para chegar a 90%.</p>}
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
       </div>
     )
   }
 
-  const cards = currentHand ? handToCards(currentHand) : []
+  if (!exercise) return null
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
-      <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>POSIÇÃO DO RAISE</div>
-        <div className="flex flex-wrap gap-2">
-          {['Todas', ...RAISER_POSITIONS].map(p => (
-            <button key={p} onClick={() => { setFilterPos(p); setFeedback(null); setCurrentHand(null) }}
-              className="px-3 py-1 rounded-lg text-sm"
-              style={{ background: filterPos === p ? '#e94560' : '#12121a', color: filterPos === p ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
+      {/* Progresso */}
+      <div className="rounded-xl p-3 mb-4 flex justify-between items-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Sequencia: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 (90%+)</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
-      {currentRaiser && (
-        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-          <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-          <div style={{ color: '#e94560', fontSize: 22, fontWeight: 700 }}>Você está no BB</div>
-          <div style={{ color: '#ccc', fontSize: 14, marginTop: 4 }}>{currentRaiser} fez raise. Todos foldaram. O que fazer?</div>
-        </div>
-      )}
-      <div className="flex justify-center gap-4 mb-6">
-        {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
+
+      {/* Badge tipo */}
+      <div className="mb-4 text-center">
+        <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{
+          background: exercise.type === 'outs' ? '#4a90e222' : exercise.type === 'potodds' ? '#f5a62322' : exercise.type === 'ev' ? '#00d4aa22' : '#e9456022',
+          color: exercise.type === 'outs' ? '#4a90e2' : exercise.type === 'potodds' ? '#f5a623' : exercise.type === 'ev' ? '#00d4aa' : '#e94560',
+        }}>
+          {exercise.type === 'outs' ? 'Contar Outs' : exercise.type === 'potodds' ? 'Pot Odds' : exercise.type === 'ev' ? 'Valor Esperado (EV)' : 'Decisao Completa'}
+        </span>
       </div>
-      {currentHand && <div className="text-center mb-4"><span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span></div>}
-      {!feedback && (
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {[['fold', 'FOLD ✕', '#e94560', 'white'], ['call', 'CALL →', '#4a90e2', 'white'], ['3bet', '3-BET ↑↑', '#f5a623', '#0a0a0f']].map(([action, label, bg, color]) => (
-            <button key={action} onClick={() => answer(action)} className="py-4 rounded-xl font-bold" style={{ background: bg, color }}>{label}</button>
-          ))}
+
+      {/* OUTS */}
+      {exercise.type === 'outs' && (
+        <div>
+          <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>SUAS CARTAS</div>
+            <div className="flex justify-center gap-3 mb-4">
+              {exercise.hole.map((c, i) => <Card key={i} card={c} size="lg" />)}
+            </div>
+            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>{exercise.street === 'flop' ? 'FLOP' : 'FLOP + TURN'}</div>
+            <div className="flex justify-center gap-2">
+              {exercise.board.map((c, i) => <Card key={i} card={c} size="md" />)}
+            </div>
+          </div>
+          <div className="text-center mb-4">
+            <div style={{ color: 'white', fontWeight: 600 }}>Quantos outs voce tem?</div>
+          </div>
+          {!feedback && (
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {exercise.options.map(opt => (
+                <button key={opt} onClick={() => answer(opt)} className="py-4 rounded-xl font-bold text-lg" style={{ background: '#1e1e2e', color: 'white', border: '1px solid #333' }}>{opt}</button>
+              ))}
+            </div>
+          )}
         </div>
       )}
-      {feedback && (
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
-          <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
-            {feedback.isCorrect ? '✓ Correto!' : '✗ Incorreto'}
+
+      {/* POT ODDS */}
+      {exercise.type === 'potodds' && (
+        <div>
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div style={{ color: '#888', fontSize: 12 }}>POTE</div>
+                <div style={{ color: '#f5a623', fontSize: 24, fontWeight: 700 }}>{exercise.pot}</div>
+              </div>
+              <div>
+                <div style={{ color: '#888', fontSize: 12 }}>APOSTA</div>
+                <div style={{ color: '#e94560', fontSize: 24, fontWeight: 700 }}>{exercise.bet}</div>
+              </div>
+            </div>
+            <div className="text-center mt-3">
+              <span style={{ color: '#888', fontSize: 12 }}>Aposta = {exercise.betPct}% do pote</span>
+            </div>
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mão →</button>
-          <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
-          <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Correto: <strong style={{ color: '#f5a623' }}>{feedback.correct.toUpperCase()}</strong></div>
-          {!feedback.isCorrect && (() => {
-            const key = RAISER_KEYS[currentRaiser]
-            const range = BB_VS_RFI[key] || {}
-            return (
-              <RangeViewer
-                customRange={{ threebet: range.threebet || [], call: range.call || [] }}
-                label={`Ver range BB vs ${currentRaiser}`}
-                legend={[['threebet', '3-Bet'], ['call', 'Call'], ['fold', 'Fold']]}
-                highlightHand={currentHand}
-              />
-            )
-          })()}
+          <div className="text-center mb-4">
+            <div style={{ color: 'white', fontWeight: 600 }}>Qual a % necessaria para justificar o call?</div>
+            <div style={{ color: '#888', fontSize: 13 }}>seu call / (pote + aposta + seu call)</div>
+          </div>
+          {!feedback && (
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {exercise.options.map(opt => (
+                <button key={opt} onClick={() => answer(opt)} className="py-4 rounded-xl font-bold text-lg" style={{ background: '#1e1e2e', color: 'white', border: '1px solid #333' }}>{opt}%</button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* DECISAO */}
+      {exercise.type === 'decision' && (
+        <div>
+          <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>SUAS CARTAS</div>
+            <div className="flex justify-center gap-3 mb-4">
+              {exercise.hole.map((c, i) => <Card key={i} card={c} size="lg" />)}
+            </div>
+            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>{exercise.street === 'flop' ? 'FLOP' : 'FLOP + TURN'}</div>
+            <div className="flex justify-center gap-2 mb-4">
+              {exercise.board.map((c, i) => <Card key={i} card={c} size="md" />)}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><div style={{ color: '#888', fontSize: 12 }}>POTE</div><div style={{ color: '#f5a623', fontSize: 20, fontWeight: 700 }}>{exercise.pot}</div></div>
+              <div><div style={{ color: '#888', fontSize: 12 }}>APOSTA</div><div style={{ color: '#e94560', fontSize: 20, fontWeight: 700 }}>{exercise.bet}</div></div>
+            </div>
+          </div>
+          <div className="text-center mb-4">
+            <div style={{ color: 'white', fontWeight: 600 }}>Call ou Fold?</div>
+            <div style={{ color: '#888', fontSize: 13 }}>Conte outs, calcule chance, compare com pot odds</div>
+          </div>
+          {!feedback && (
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <button onClick={() => answer('call')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#00d4aa', color: '#0a0a0f' }}>CALL</button>
+              <button onClick={() => answer('fold')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#e94560', color: 'white' }}>FOLD</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* EV */}
+      {exercise.type === 'ev' && (
+        <div>
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+            <div className="text-center mb-4"><div style={{ color: '#888', fontSize: 12 }}>SITUACAO DE ALL-IN</div></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #00d4aa33' }}>
+                <div style={{ color: '#00d4aa', fontSize: 14, fontWeight: 600 }}>Se ganhar</div>
+                <div style={{ color: '#00d4aa', fontSize: 24, fontWeight: 700 }}>+R${exercise.winAmount}</div>
+                <div style={{ color: '#888', fontSize: 13 }}>{exercise.winPct}% de chance</div>
+              </div>
+              <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e9456033' }}>
+                <div style={{ color: '#e94560', fontSize: 14, fontWeight: 600 }}>Se perder</div>
+                <div style={{ color: '#e94560', fontSize: 24, fontWeight: 700 }}>-R${exercise.loseAmount}</div>
+                <div style={{ color: '#888', fontSize: 13 }}>{exercise.losePct}% de chance</div>
+              </div>
+            </div>
+          </div>
+          <div className="text-center mb-4">
+            <div style={{ color: 'white', fontWeight: 600 }}>Esse call tem EV positivo ou negativo?</div>
+            <div style={{ color: '#888', fontSize: 13 }}>(% ganhar x valor) - (% perder x valor)</div>
+          </div>
+          {!feedback && (
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <button onClick={() => answer('positivo')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#00d4aa', color: '#0a0a0f' }}>+EV</button>
+              <button onClick={() => answer('negativo')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#e94560', color: 'white' }}>-EV</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* FEEDBACK */}
+      {feedback && (
+        <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.correct ? '#00d4aa' : '#e94560'}` }}>
+          <div style={{ color: feedback.correct ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+            {feedback.correct ? '✓ Correto!' : '✗ Incorreto'}
+          </div>
+          <button onClick={newExercise} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>
+            Proximo Exercicio →
+          </button>
+
+          {exercise.type === 'outs' && (
+            <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>
+              <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Resposta: {exercise.correctAnswer} outs — {exercise.draw.type}</div>
+              {exercise.draw.explanation}
+              <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>No {exercise.street}: {exercise.correctAnswer} x {exercise.multiplier} = ~{exercise.equity}%</div>
+            </div>
+          )}
+
+          {exercise.type === 'potodds' && (
+            <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>
+              <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Resposta: {exercise.correctAnswer}%</div>
+              Pote: {exercise.pot} + Aposta: {exercise.bet} = Total: {exercise.totalPot}<br />
+              Seu call: {exercise.bet}<br />
+              Pot odds: {exercise.bet} / ({exercise.totalPot} + {exercise.bet}) = <strong>{exercise.correctAnswer}%</strong>
+            </div>
+          )}
+
+          {exercise.type === 'decision' && (
+            <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>
+              <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Resposta: {exercise.correctAnswer === 'call' ? 'CALL' : 'FOLD'}</div>
+              <strong>Outs:</strong> {exercise.draw.outs} ({exercise.draw.type})<br />
+              <strong>Chance:</strong> {exercise.draw.outs} x {exercise.multiplier} = ~{exercise.equity}%<br />
+              <strong>Pot odds:</strong> {exercise.potOdds}%<br />
+              <div className="rounded-lg p-2 mt-2" style={{ background: exercise.correctAnswer === 'call' ? '#00d4aa11' : '#e9456011', border: `1px solid ${exercise.correctAnswer === 'call' ? '#00d4aa33' : '#e9456033'}` }}>
+                {exercise.equity}% {exercise.equity >= exercise.potOdds ? '>' : '<'} {exercise.potOdds}% →{' '}
+                <strong style={{ color: exercise.correctAnswer === 'call' ? '#00d4aa' : '#e94560' }}>
+                  {exercise.correctAnswer === 'call' ? 'CALL' : 'FOLD'}
+                </strong>
+              </div>
+            </div>
+          )}
+
+          {exercise.type === 'ev' && (
+            <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>
+              <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Resposta: {exercise.correctAnswer === 'positivo' ? '+EV' : '-EV'}</div>
+              ({exercise.winPct}% x R${exercise.winAmount}) - ({exercise.losePct}% x R${exercise.loseAmount})<br />
+              = R${Math.round(exercise.winPct / 100 * exercise.winAmount)} - R${Math.round(exercise.losePct / 100 * exercise.loseAmount)}<br />
+              = <strong style={{ color: exercise.ev >= 0 ? '#00d4aa' : '#e94560' }}>{exercise.ev >= 0 ? '+' : ''}R${exercise.ev}</strong>
+            </div>
+          )}
         </div>
       )}
     </div>
   )
 }
 
+// ==================== EXPORT ====================
+
 export default function Module3() {
   const { progress, markLessonRead } = useProgress()
-  const [view, setView] = useState(progress.modules[3].lessonRead ? 'trainer' : 'lesson')
-  if (!progress.modules[3].unlocked) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 2 para desbloquear.</p></div>
-    </div>
-  )
+  const [view, setView] = useState(progress.modules[3]?.lessonRead ? 'trainer' : 'lesson')
+
+  function onLessonComplete() {
+    markLessonRead(3)
+    setView('trainer')
+  }
+
   return (
     <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>📖 Aula</button>
-          <button onClick={() => progress.modules[3].lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[3].lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[3].lessonRead ? 'pointer' : 'not-allowed' }}>🎯 Trainer {!progress.modules[3].lessonRead && '🔒'}</button>
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
+            📖 Aula
+          </button>
+          <button onClick={() => progress.modules[3]?.lessonRead && setView('trainer')}
+            className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[3]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[3]?.lessonRead ? 'pointer' : 'not-allowed' }}>
+            🎯 Trainer {!progress.modules[3]?.lessonRead && '🔒'}
+          </button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(3); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' ? <Lesson onComplete={onLessonComplete} /> : <Trainer />}
       </div>
     </div>
   )

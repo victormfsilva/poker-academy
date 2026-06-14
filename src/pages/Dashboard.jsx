@@ -4,10 +4,11 @@ import { useProgress } from '../context/ProgressContext'
 const MODULES = [
   { id: 1, name: 'RFI ChipEV', desc: 'Raise First In — o spot mais importante', icon: '🎯' },
   { id: 2, name: 'Push/Fold', desc: 'Short stack abaixo de 15bb', icon: '💥' },
-  { id: 3, name: 'BB vs RFI', desc: 'Defender o Big Blind', icon: '🛡️' },
-  { id: 4, name: 'CBet Flop IP', desc: 'Continuation bet em posição', icon: '⚡' },
-  { id: 5, name: 'Blind Wars', desc: 'SB vs BB — confronto direto', icon: '⚔️' },
-  { id: 6, name: 'SB/BTN vs RFI', desc: 'Jogar nas posições mais tardias', icon: '🃏' },
+  { id: 3, name: 'Pot Odds e Outs', desc: 'A matematica por tras de cada decisao', icon: '🧮' },
+  { id: 4, name: 'BB vs RFI', desc: 'Defender o Big Blind', icon: '🛡️' },
+  { id: 5, name: 'CBet Flop IP', desc: 'Aposta de continuacao em posicao', icon: '⚡' },
+  { id: 6, name: 'Blind Wars', desc: 'SB vs BB — confronto direto', icon: '⚔️' },
+  { id: 7, name: 'SB/BTN vs RFI', desc: 'Jogar nas posicoes mais tardias', icon: '🃏' },
 ]
 
 function motivationalMessage(globalStats) {

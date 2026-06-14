@@ -2,12 +2,13 @@ import { Link } from 'react-router-dom'
 import { useProgress } from '../context/ProgressContext'
 
 const MODULES = [
-  { id: 1, name: 'RFI ChipEV', desc: 'Raise First In — o spot mais importante do pôquer de torneios', icon: '🎯', color: '#e94560' },
-  { id: 2, name: 'Push/Fold', desc: 'Short stack — abaixo de 15bb existem apenas 2 opções', icon: '💥', color: '#f5a623' },
-  { id: 3, name: 'BB vs RFI', desc: 'Como defender o Big Blind contra qualquer raise', icon: '🛡️', color: '#4a90e2' },
-  { id: 4, name: 'CBet Flop IP', desc: 'Continuation bet quando você está em posição', icon: '⚡', color: '#00d4aa' },
-  { id: 5, name: 'Blind Wars', desc: 'SB vs BB — o confronto mais complexo do poker', icon: '⚔️', color: '#f5a623' },
-  { id: 6, name: 'SB/BTN vs RFI', desc: 'Jogar quando alguém já abriu — posições IP e OOP', icon: '🃏', color: '#e94560' },
+  { id: 1, name: 'RFI ChipEV', desc: 'Raise First In — o spot mais importante do poker de torneios', icon: '🎯', color: '#e94560' },
+  { id: 2, name: 'Push/Fold', desc: 'Short stack — abaixo de 15bb existem apenas 2 opcoes', icon: '💥', color: '#f5a623' },
+  { id: 3, name: 'Pot Odds e Outs', desc: 'A matematica por tras de cada decisao no poker', icon: '🧮', color: '#4a90e2' },
+  { id: 4, name: 'BB vs RFI', desc: 'Como defender o Big Blind contra qualquer raise', icon: '🛡️', color: '#00d4aa' },
+  { id: 5, name: 'CBet Flop IP', desc: 'Aposta de continuacao quando voce esta em posicao', icon: '⚡', color: '#f5a623' },
+  { id: 6, name: 'Blind Wars', desc: 'SB vs BB — o confronto mais complexo do poker', icon: '⚔️', color: '#e94560' },
+  { id: 7, name: 'SB/BTN vs RFI', desc: 'Jogar quando alguem ja abriu — posicoes IP e OOP', icon: '🃏', color: '#00d4aa' },
 ]
 
 export default function Modules() {

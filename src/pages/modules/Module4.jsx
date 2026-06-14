@@ -1,214 +1,126 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
-import Card, { randomCard } from '../../components/Card'
+import { BB_VS_RFI } from '../../data/ranges'
+import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
 
-const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
-const SUITS = ['s','h','d','c']
+const RAISER_POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB']
+const RAISER_KEYS = { UTG: 'vsUTG', 'UTG+1': 'vsUTG1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
 
-function randomFlop() {
-  const cards = []
-  while (cards.length < 3) {
-    const r = RANKS[Math.floor(Math.random() * RANKS.length)]
-    const s = SUITS[Math.floor(Math.random() * SUITS.length)]
-    const c = r + s
-    if (!cards.includes(c)) cards.push(c)
-  }
-  return cards
-}
-
-function randomHoleCards(exclude) {
-  const cards = []
-  while (cards.length < 2) {
-    const r = RANKS[Math.floor(Math.random() * RANKS.length)]
-    const s = SUITS[Math.floor(Math.random() * SUITS.length)]
-    const c = r + s
-    if (!cards.includes(c) && !exclude.includes(c)) cards.push(c)
-  }
-  return cards
-}
-
-function getBoardTexture(flop) {
-  const ranks = flop.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const suits = flop.map(c => c.slice(-1))
-  const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
-  const sorted = [...ranks].sort((a, b) => a - b)
-  const connected = (sorted[2] - sorted[0]) <= 4
-  const paired = ranks[0] === ranks[1] || ranks[1] === ranks[2] || ranks[0] === ranks[2]
-  const highCard = Math.min(...ranks) // menor índice = carta mais alta
-
-  return { suited, connected, paired, highCard, isWet: suited || connected, isDry: !suited && !connected }
-}
-
-function hasTopPair(hole, flop) {
-  const flopRanks = flop.map(c => c.slice(0, -1))
-  const holeRanks = hole.map(c => c.slice(0, -1))
-  const topFlopRank = [...flopRanks].sort((a, b) => RANKS.indexOf(a) - RANKS.indexOf(b))[0]
-  return holeRanks.includes(topFlopRank)
-}
-
-function hasAnyPair(hole, flop) {
-  const flopRanks = flop.map(c => c.slice(0, -1))
-  const holeRanks = hole.map(c => c.slice(0, -1))
-  return holeRanks.some(r => flopRanks.includes(r))
-}
-
-function hasFlushDraw(hole, flop) {
-  const allCards = [...hole, ...flop]
-  const suitCounts = {}
-  allCards.forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  return Object.values(suitCounts).some(v => v >= 4)
-}
-
-function hasStraightDraw(hole, flop) {
-  // Só conta como draw se tiver 4 cartas num intervalo de 5 (open-ended ou gutshot forte)
-  const allRanks = [...hole, ...flop].map(c => RANKS.indexOf(c.slice(0, -1)))
-  const unique = [...new Set(allRanks)].sort((a, b) => a - b)
-  for (let i = 0; i < unique.length - 3; i++) {
-    if (unique[i + 3] - unique[i] <= 4) return true
-  }
-  return false
-}
-
-function getCorrectAction(hole, flop) {
-  const texture = getBoardTexture(flop)
-  const hasTop = hasTopPair(hole, flop)
-  const hasFlush = hasFlushDraw(hole, flop)
-  const hasStraight = hasStraightDraw(hole, flop)
-
-  // Regras CBet IP — seguindo a aula:
-  // 33% → board seco (blefe barato, range advantage)
-  // 50% → top pair ou melhor, ou semi-draw (flush/straight draw)
-  // 75% → mão muito forte (dois pares, set) em board úmido
-  // check → board úmido sem equidade nenhuma
-
-  // Mão muito forte (dois pares ou set): bet 75% em board úmido, 50% em seco
-  const flopRanks = flop.map(c => c.slice(0, -1))
-  const holeRanks = hole.map(c => c.slice(0, -1))
-  const isPocketPair = holeRanks[0] === holeRanks[1]
-  const hasSet = isPocketPair && flopRanks.includes(holeRanks[0])
-  const matchingFlopRanks = [...new Set(holeRanks)].filter(r => flopRanks.includes(r))
-  const hasTwoPair = !isPocketPair && matchingFlopRanks.length === 2
-  const hasPair = hasAnyPair(hole, flop)
-
-  // Set (trinca): sempre aposta grande
-  if (hasSet) {
-    if (texture.isWet) {
-      return { action: 'bet', sizing: '75%', reason: 'Você fez trinca (set)! Num flop perigoso, aposte grande (75%) — proteja sua mão e extraia valor antes que o adversário complete um draw.' }
+function generateAllHands() {
+  const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
+  const hands = []
+  for (let i = 0; i < ranks.length; i++) {
+    hands.push(ranks[i] + ranks[i])
+    for (let j = i + 1; j < ranks.length; j++) {
+      hands.push(ranks[i] + ranks[j] + 's')
+      hands.push(ranks[i] + ranks[j] + 'o')
     }
-    return { action: 'bet', sizing: '75%', reason: 'Você fez trinca (set)! Mão muito forte — aposte grande (75%) para construir o pote e extrair o máximo.' }
+  }
+  return hands
+}
+
+function getAction(hand, raisedFrom) {
+  const key = RAISER_KEYS[raisedFrom]
+  const range = BB_VS_RFI[key]
+  if (!range) return 'fold'
+  if (range.threebet?.includes(hand)) return '3bet'
+  if (range.call?.includes(hand)) return 'call'
+  return 'fold'
+}
+
+function randomHand(raisedFrom) {
+  const all = generateAllHands()
+  const dice = Math.random()
+  const key = RAISER_KEYS[raisedFrom]
+  const range = BB_VS_RFI[key]
+  if (!range) return all[Math.floor(Math.random() * all.length)]
+  if (dice < 0.3 && range.threebet?.length) return range.threebet[Math.floor(Math.random() * range.threebet.length)]
+  if (dice < 0.6 && range.call?.length) return range.call[Math.floor(Math.random() * range.call.length)]
+  const callAndThreebet = [...(range.call || []), ...(range.threebet || [])]
+  const foldHands = all.filter(h => !callAndThreebet.includes(h))
+  if (foldHands.length) return foldHands[Math.floor(Math.random() * foldHands.length)]
+  return all[Math.floor(Math.random() * all.length)]
+}
+
+function getFeedback(hand, action, raisedFrom) {
+  const correct = getAction(hand, raisedFrom)
+  const isCorrect = action === correct
+  let reason = ''
+
+  if (correct === '3bet') {
+    reason = `${hand} é forte o suficiente para relançar contra ${raisedFrom}. ${raisedFrom === 'UTG' ? 'Mesmo ele atacando de posição cedo (mãos boas), sua mão é boa demais para só chamar.' : 'Ele atacou de uma posição razoável — sua mão tem vantagem, relance para pressionar.'}`
+  } else if (correct === 'call') {
+    reason = `${hand} é uma boa defesa no Big Blind contra ${raisedFrom}. Você já pagou parte obrigatória — complementar o call faz sentido com essa mão.`
+  } else {
+    reason = `${hand} está fora do range de defesa no BB contra ${raisedFrom}. ${raisedFrom === 'BTN' || raisedFrom === 'CO' ? 'Mesmo ele atacando com mãos fracas nessa posição, essa mão específica não tem chance suficiente de ganhar.' : 'Ele atacou de uma posição cedo, então provavelmente tem mãos boas — folde.'}`
   }
 
-  // Dois pares: bet grande em úmido, 50% em seco
-  if (hasTwoPair) {
-    if (texture.isWet) {
-      return { action: 'bet', sizing: '75%', reason: 'Você tem dois pares num flop perigoso — aposte grande (75%) para proteger e extrair valor antes que o adversário complete um draw.' }
-    }
-    return { action: 'bet', sizing: '50%', reason: 'Você tem dois pares — aposte 50% para extrair valor.' }
-  }
-
-  // Top pair: bet 50%
-  if (hasTop) {
-    return { action: 'bet', sizing: '50%', reason: 'Você acertou o par mais alto do flop — aposte 50% para extrair valor e proteger sua mão.' }
-  }
-
-  // Par de bolso acima do flop (overpair): bet 50% para valor/proteção
-  if (isPocketPair && !hasSet) {
-    const pocketRankIdx = RANKS.indexOf(holeRanks[0])
-    const topFlopRankIdx = Math.min(...flopRanks.map(r => RANKS.indexOf(r)))
-    if (pocketRankIdx < topFlopRankIdx) {
-      // Overpair (par de bolso acima de todas as cartas do flop)
-      if (texture.isWet) {
-        return { action: 'bet', sizing: '75%', reason: 'Você tem um par de bolso acima de todas as cartas do flop (overpair) num board perigoso — aposte grande (75%) para proteger.' }
-      }
-      return { action: 'bet', sizing: '50%', reason: 'Você tem um par de bolso acima de todas as cartas do flop (overpair) — aposte 50% para extrair valor. Sua mão provavelmente é a melhor.' }
-    }
-    // Par de bolso abaixo do flop: trata como par médio
-  }
-
-  // Semi-draw (flush ou straight draw): bet 50%
-  if (hasFlush || hasStraight) {
-    return { action: 'bet', sizing: '50%', reason: 'Você está próximo de completar uma cor ou sequência — aposte 50% mesmo sem ter mão agora. Você tem dois caminhos para ganhar: o adversário pode foldar agora, ou você completa o draw.' }
-  }
-
-  // Par médio/baixo (incluindo par de bolso abaixo do flop): bet 50%
-  if (hasPair || isPocketPair) {
-    if (texture.isWet) {
-      return { action: 'bet', sizing: '50%', reason: 'Você tem um par num flop perigoso — aposte 50% para proteger. Deixar o adversário ver cartas de graça pode custar caro se ele tiver draw.' }
-    }
-    return { action: 'bet', sizing: '50%', reason: 'Você tem um par no flop seco — aposte 50% para extrair valor. Com poucas ameaças de draw, sua mão provavelmente está na frente.' }
-  }
-
-  // Board seco sem equidade: bet 33% (blefe barato, range advantage)
-  if (texture.isDry) {
-    return { action: 'bet', sizing: '33%', reason: 'Flop seco e o adversário checou para você. Aposte barato (33%) — com poucas possibilidades de draw, ele provavelmente vai foldar.' }
-  }
-
-  // Board úmido sem equidade nenhuma: check
-  return { action: 'check', sizing: null, reason: 'Flop conectado e você não tem nada — nem par, nem draw. Não gaste fichas sem motivo. Passe a vez e veja o que acontece.' }
+  return { correct, isCorrect, reason }
 }
 
 function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>⚡ Módulo 4 — Apostar no Flop (em Posição)</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Você abriu o pote — agora o flop saiu. O que fazer?</p>
+      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🛡️ Módulo 4 — Big Blind vs Raise</h1>
+      <p style={{ color: '#888', marginBottom: 24 }}>Você já pagou obrigatório — agora aprenda a usar isso a seu favor</p>
       <div className="space-y-4">
-        <Section title="O que é essa Aposta?">
-          Quando você é o primeiro a apostar antes do flop e o flop sai, os adversários tendem a esperar que você aposte de novo — porque foi você que atacou primeiro. Essa aposta de continuação existe justamente pra aproveitar essa expectativa e pressionar o adversário.
+        <Section title="Por Que o Big Blind é Diferente?">
+          No Big Blind, você é obrigado a colocar uma ficha na mesa antes de ver as cartas. Isso parece ruim — mas na verdade te dá uma vantagem: quando alguém faz um raise e chega em você, <strong style={{ color: '#e94560' }}>você já pagou parte do preço</strong>. <br /><br />
+          É como se você tivesse comprado meia entrada pro show — complementar é mais barato do que comprar do zero. Por isso o Big Blind pode entrar no pote com muito mais mãos do que qualquer outra posição.
         </Section>
-        <Section title="O Flop Favorece Você ou o Adversário?">
-          A primeira coisa que você analisa é: as cartas do flop combinam mais com as mãos que você teria ou com as mãos que o adversário teria?
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 600 }}>Flop Seco</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ex: A♠ 7♦ 2♣ (naipes diferentes)<br />Poucas chances de draw. Aposte frequente e barato (33% do pote).</div>
+        <Section title="Suas 3 Opções">
+          <div className="grid grid-cols-3 gap-3 mt-2">
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+              <div style={{ color: '#e94560', fontWeight: 700 }}>FOLD</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito fraca — sem chance de ganhar</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: "1px solid #e94560" }}>
-              <div style={{ color: '#e94560', fontWeight: 600 }}>Flop Conectado</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ex: 9♠ 8♥ 7♠<br />Muitos draws possíveis. Só aposte se tiver boa mão — caso contrário, passe a vez.</div>
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: "1px solid #00d4aa" }}>
+              <div style={{ color: '#00d4aa', fontWeight: 700 }}>CALL</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão razoável — paga e vê o flop</div>
+            </div>
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+              <div style={{ color: '#f5a623', fontWeight: 700 }}>3-BET</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito forte — relança para pressionar</div>
             </div>
           </div>
         </Section>
-        <Section title="Quanto Apostar?">
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {[['33%', '#00d4aa', 'Flop seco, aposta barata com muitas mãos'], ['50%', '#f5a623', 'Aposta padrão quando tem mão razoável'], ['75%', '#e94560', 'Mão muito forte ou flop perigoso que você conectou bem']].map(([s, c, d]) => (
-              <div key={s} className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: `1px solid ${c}` }}>
-                <div style={{ color: c, fontWeight: 700, fontSize: 18 }}>{s}</div>
-                <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>{d}</div>
+        <Section title="De Onde Vem o Raise Muda Tudo">
+          <p style={{ color: '#ccc', fontSize: 14, marginBottom: 12 }}>
+            Pensa assim: se o cara que atacou está nas primeiras posições da mesa (UTG), ele só ataca com as melhores mãos. Você precisa respeitar isso. Já se ele está no fim da mesa (BTN, SB), ele ataca com muito mais mãos — incluindo fracas. Aí você pode defender mais.
+          </p>
+          <div className="space-y-2">
+            {[
+              { pos: 'UTG', desc: 'Atacou cedo — só tem mãos boas. Defenda menos, só com suas melhores.' },
+              { pos: 'HJ / CO', desc: 'Posição do meio — range razoável. Defenda com mãos medianas.' },
+              { pos: 'BTN / SB', desc: 'Atacou tarde — usa mãos fracas também. Você pode defender muito mais.' },
+            ].map(r => (
+              <div key={r.pos} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+                <div style={{ color: '#e94560', fontWeight: 700, width: 65, flexShrink: 0 }}>{r.pos}</div>
+                <div style={{ color: '#ccc', fontSize: 14 }}>{r.desc}</div>
               </div>
             ))}
           </div>
         </Section>
-        <Section title="Quem Conecta Mais com o Flop?">
-          Pensa assim: se você abriu de uma posição fechada (como UTG) e o flop vem com Ás-Rei-Valete, você provavelmente tem mais mãos grandes do que o adversário — aposte com confiança. Mas se o flop vem 9-8-7, o adversário do Big Blind pode ter muitas mãos conectadas que você não tem. Aposte menos.
+        <Section title="Quando Mais de Um Jogador Entra no Pote">
+          Se além do raise original, outro jogador também entrou, agora você está competindo contra duas pessoas. Com mais adversários, você precisa de uma mão mais forte para continuar — folde mais e priorize pares e mãos do mesmo naipe.
         </Section>
-        <Section title="Flop Seco Sem Mão — Aposta Mesmo Assim!">
-          Esse é o conceito mais contraintuitivo do módulo: <strong style={{ color: '#e94560' }}>no flop seco, você aposta mesmo sem ter nada.</strong><br /><br />
-          Por quê? Porque num flop como A-7-2 com naipes diferentes, o adversário também dificilmente acertou algo — e uma aposta pequena de 33% vai fazer ele foldar a maioria das mãos fracas. Você não precisa ter mão para apostar, precisa ter <strong style={{ color: '#00d4aa' }}>uma boa razão para apostar</strong> — e "ele provavelmente não tem nada" é uma boa razão.
-        </Section>
-        <Section title="Quando Passar a Vez (não apostar)">
-          <ul className="space-y-1 mt-2" style={{ color: '#ccc', fontSize: 14 }}>
-            <li>• Flop conectado (ex: 9-8-7) e você não tem nada — aí sim, não aposte</li>
-            <li>• Mais de 2 jogadores no pote — alguém quase certamente acertou algo</li>
-            <li>• Adversário que já relançou antes — cuidado, ele pode estar esperando</li>
-          </ul>
-        </Section>
-        <Section title="Apostando com Mão vs Apostando sem Mão">
-          <div className="grid grid-cols-2 gap-3 mt-2">
+        <Section title="Quando Relançar (3-Bet)?">
+          Você relança quando quer pressionar o adversário e forçar ele a tomar uma decisão difícil. Isso acontece com dois tipos de mão:
+          <div className="grid grid-cols-2 gap-3 mt-3">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 600 }}>Com mão boa</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você quer que o adversário chame. Tem par forte, dois pares, trinca. Aposta média a grande.</div>
+              <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>Mãos Muito Fortes</div>
+              <div style={{ color: '#ccc', fontSize: 13 }}>AA, KK, QQ, AK — você relança porque quer colocar mais dinheiro com a melhor mão.</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 600 }}>Sem mão (mas com chance)</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você quer que foldem ou está tentando completar um draw. Aposta pequena (33%) é mais eficiente.</div>
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+              <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Mãos com Ás Medio</div>
+              <div style={{ color: '#ccc', fontSize: 13 }}>A5, A4, A2 do mesmo naipe — o Ás na sua mão reduz a chance do adversário ter Ás. Você relança como blefe inteligente.</div>
             </div>
           </div>
         </Section>
       </div>
       <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
-        Entendi — Quero Treinar ⚡
+        Entendi — Quero Treinar 🛡️
       </button>
     </div>
   )
@@ -225,8 +137,9 @@ function Section({ title, children }) {
 
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
-  const [flop, setFlop] = useState(null)
-  const [hole, setHole] = useState(null)
+  const [filterPos, setFilterPos] = useState('Todas')
+  const [currentHand, setCurrentHand] = useState(null)
+  const [currentRaiser, setCurrentRaiser] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [sessionTotal, setSessionTotal] = useState(0)
@@ -235,28 +148,29 @@ function Trainer() {
 
   function newHand() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const f = randomFlop()
-    const h = randomHoleCards(f)
-    setFlop(f); setHole(h); setFeedback(null)
+    const positions = filterPos === 'Todas' ? RAISER_POSITIONS : [filterPos]
+    const raiser = positions[Math.floor(Math.random() * positions.length)]
+    setCurrentRaiser(raiser)
+    setCurrentHand(randomHand(raiser))
+    setFeedback(null)
   }
 
-  function answer(action, sizing) {
-    if (!flop || feedback) return
-    const correct = getCorrectAction(hole, flop)
-    const isCorrect = action === correct.action && (action === 'check' || sizing === correct.sizing)
-    const newStreak = isCorrect ? streak + 1 : 0
+  function answer(action) {
+    if (!currentHand || feedback) return
+    const fb = getFeedback(currentHand, action, currentRaiser)
+    const newStreak = fb.isCorrect ? streak + 1 : 0
     setStreak(newStreak)
-    const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (isCorrect ? 1 : 0)
+    const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (fb.isCorrect ? 1 : 0)
     setSessionTotal(newTotal); setSessionCorrect(newCorrect)
-    recordAnswer(4, isCorrect, newStreak)
+    recordAnswer(4, fb.isCorrect, newStreak)
     const isLast = newTotal >= 10
     if (isLast) recordSession(4, Math.round((newCorrect / newTotal) * 100))
-    setFeedback({ ...correct, userAction: action, isCorrect, isLast })
+    setFeedback({ ...fb, isLast })
   }
 
-  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setFlop(null); setHole(null) }
+  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setCurrentHand(null) }
 
-  if (!flop && !sessionDone) newHand()
+  if (!currentHand && !sessionDone) newHand()
 
   if (sessionDone) {
     const acc = Math.round((sessionCorrect / sessionTotal) * 100)
@@ -270,10 +184,22 @@ function Trainer() {
     )
   }
 
-  const texture = flop ? getBoardTexture(flop) : null
+  const cards = currentHand ? handToCards(currentHand) : []
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div className="mb-4">
+        <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>POSIÇÃO DO RAISE</div>
+        <div className="flex flex-wrap gap-2">
+          {['Todas', ...RAISER_POSITIONS].map(p => (
+            <button key={p} onClick={() => { setFilterPos(p); setFeedback(null); setCurrentHand(null) }}
+              className="px-3 py-1 rounded-lg text-sm"
+              style={{ background: filterPos === p ? '#e94560' : '#12121a', color: filterPos === p ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
@@ -281,49 +207,24 @@ function Trainer() {
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
-
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        <div style={{ color: '#4a90e2', fontSize: 18, fontWeight: 700 }}>Você está IP (em posição)</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Você fez o raise pré-flop. Adversário checou para você no flop.</div>
-        {texture && (
-          <div className="mt-2 flex gap-2 justify-center flex-wrap">
-            <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#00d4aa22' : '#e9456022', color: texture.isDry ? '#00d4aa' : '#e94560' }}>
-              {texture.isDry ? 'Board Seco' : 'Board Úmido'}
-            </span>
-            {texture.suited && <span className="px-2 py-1 rounded text-xs" style={{ background: '#4a90e222', color: '#4a90e2' }}>Flush Draw</span>}
-            {texture.connected && <span className="px-2 py-1 rounded text-xs" style={{ background: '#f5a62322', color: '#f5a623' }}>Conectado</span>}
-            {texture.paired && <span className="px-2 py-1 rounded text-xs" style={{ background: '#88888822', color: '#888' }}>Pareado</span>}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>SUAS CARTAS</div>
-        <div className="flex justify-center gap-3 mb-4">
-          {hole?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>FLOP</div>
-        <div className="flex justify-center gap-3">
-          {flop?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-      </div>
-
-      {!feedback && (
-        <div className="space-y-3 mb-4">
-          <button onClick={() => answer('check')} className="w-full py-4 rounded-xl font-bold text-xl" style={{ background: '#4a90e2', color: 'white' }}>
-            CHECK ✓
-          </button>
-          <div className="grid grid-cols-3 gap-2">
-            {[['33%', '#00d4aa'], ['50%', '#f5a623'], ['75%', '#e94560']].map(([s, c]) => (
-              <button key={s} onClick={() => answer('bet', s)} className="py-3 rounded-xl font-bold" style={{ background: c, color: '#0a0a0f' }}>
-                BET {s}
-              </button>
-            ))}
-          </div>
+      {currentRaiser && (
+        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+          <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
+          <div style={{ color: '#e94560', fontSize: 22, fontWeight: 700 }}>Você está no BB</div>
+          <div style={{ color: '#ccc', fontSize: 14, marginTop: 4 }}>{currentRaiser} fez raise. Todos foldaram. O que fazer?</div>
         </div>
       )}
-
+      <div className="flex justify-center gap-4 mb-6">
+        {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
+      </div>
+      {currentHand && <div className="text-center mb-4"><span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span></div>}
+      {!feedback && (
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[['fold', 'FOLD ✕', '#e94560', 'white'], ['call', 'CALL →', '#4a90e2', 'white'], ['3bet', '3-BET ↑↑', '#f5a623', '#0a0a0f']].map(([action, label, bg, color]) => (
+            <button key={action} onClick={() => answer(action)} className="py-4 rounded-xl font-bold" style={{ background: bg, color }}>{label}</button>
+          ))}
+        </div>
+      )}
       {feedback && (
         <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
@@ -331,24 +232,19 @@ function Trainer() {
           </div>
           <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mão →</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
-          <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
-            Correto: <strong style={{ color: '#f5a623' }}>{feedback.action === 'check' ? 'CHECK' : `BET ${feedback.sizing}`}</strong>
-          </div>
-          {!feedback.isCorrect && (
-            <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #4a90e230' }}>
-              <div style={{ color: '#4a90e2', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>📋 Regra geral CBet IP</div>
-              <div style={{ color: '#ccc', fontSize: 12, lineHeight: 1.7 }}>
-                <div>• <strong style={{ color: '#e94560' }}>Set (trinca)</strong> → BET 75%</div>
-                <div>• <strong style={{ color: '#e94560' }}>Dois pares em flop úmido</strong> → BET 75%</div>
-                <div>• <strong style={{ color: '#e94560' }}>Overpair em flop úmido</strong> → BET 75%</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Top pair / overpair seco / dois pares seco</strong> → BET 50%</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Draw de cor ou sequência</strong> → BET 50%</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Qualquer par</strong> → BET 50%</div>
-                <div>• <strong style={{ color: '#00d4aa' }}>Flop seco sem nada</strong> → BET 33% (blefe barato)</div>
-                <div>• <strong style={{ color: '#888' }}>Flop úmido sem nada</strong> → CHECK</div>
-              </div>
-            </div>
-          )}
+          <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Correto: <strong style={{ color: '#f5a623' }}>{feedback.correct.toUpperCase()}</strong></div>
+          {!feedback.isCorrect && (() => {
+            const key = RAISER_KEYS[currentRaiser]
+            const range = BB_VS_RFI[key] || {}
+            return (
+              <RangeViewer
+                customRange={{ threebet: range.threebet || [], call: range.call || [] }}
+                label={`Ver range BB vs ${currentRaiser}`}
+                legend={[['threebet', '3-Bet'], ['call', 'Call'], ['fold', 'Fold']]}
+                highlightHand={currentHand}
+              />
+            )
+          })()}
         </div>
       )}
     </div>

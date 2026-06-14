@@ -111,7 +111,7 @@ function newScenario(unlockedModules) {
   const pool = []
   if (unlockedModules.includes(1)) pool.push('rfi')
   if (unlockedModules.includes(2)) pool.push('pushfold')
-  if (unlockedModules.includes(3)) pool.push('bb')
+  if (unlockedModules.includes(4)) pool.push('bb')
   if (!pool.length) return rfiRandomScenario()
   const type = pool[Math.floor(Math.random() * pool.length)]
   if (type === 'rfi') return rfiRandomScenario()
@@ -377,7 +377,7 @@ function ActionButtons({ onAnswer }) {
 export default function Infinite() {
   const { recordAnswer, getModuleProgress } = useProgress()
 
-  const unlockedModules = [1,2,3,4,5,6].filter(id => getModuleProgress(id).unlocked)
+  const unlockedModules = [1,2,3,4,5,6,7].filter(id => getModuleProgress(id).unlocked)
 
   const [scenario, setScenario] = useState(() => newScenario(unlockedModules))
   const [result, setResult] = useState(null)
@@ -387,7 +387,7 @@ export default function Infinite() {
   const handleAnswer = useCallback((action) => {
     if (result) return
     const { isCorrect, correct, isMix } = evaluate(scenario, action)
-    const moduleId = scenario.type === 'rfi' ? 1 : scenario.type === 'pushfold' ? 2 : 3
+    const moduleId = scenario.type === 'rfi' ? 1 : scenario.type === 'pushfold' ? 2 : 4
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
     setSessionStats(s => ({ total: s.total + 1, correct: s.correct + (isCorrect ? 1 : 0) }))
