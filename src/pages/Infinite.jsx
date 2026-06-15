@@ -130,7 +130,7 @@ function ChipDot({ color }) {
   )
 }
 
-function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, betAmt }) {
+function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, betAmt, actionLabel }) {
   const posLabel = pos === 'UTG+1' ? 'UTG1' : pos
   const border = isHero ? '2px solid #00ac8d'
                : isRaiser ? '2px solid #ff8f00'
@@ -139,12 +139,20 @@ function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, betAmt }) {
   const txtCol = isHero ? '#00ac8d'
                : isRaiser ? '#ff8f00'
                : '#ccc'
-  const hasBet = isRaiser || isSB || isBB
+  const hasBet = isRaiser || isSB || isBB || betAmt
   const chipColor = isRaiser ? '#ff8f00' : isSB ? '#5ab966' : '#4a9eff'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-      {hasBet && (
+      {/* Action label (CHECK, BET etc) above bet chips */}
+      {actionLabel && !betAmt && (
+        <div style={{
+          fontSize: 9, fontWeight: 800, color: '#888',
+          background: '#1a1a24', borderRadius: 4, padding: '1px 5px',
+          letterSpacing: 0.5,
+        }}>{actionLabel}</div>
+      )}
+      {hasBet && betAmt && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <ChipDot color={chipColor} />
           <span style={{ fontSize: 11, fontWeight: 700, color: '#ddd' }}>{betAmt}</span>
@@ -179,41 +187,35 @@ const SLOT_POS = [
 ]
 
 function PokerTable({ scenario }) {
+  const ctx = scenario.tableContext || {}
+
   // Determinar posicao do heroi e do raiser baseado no tipo
-  let heroPos, raiserPos
-  if (scenario.type === 'rfi') {
-    heroPos = scenario.pos
-    raiserPos = null
-  } else if (scenario.type === 'pushfold') {
-    heroPos = scenario.pos
-    raiserPos = null
-  } else if (scenario.type === 'bb') {
-    heroPos = 'BB'
-    raiserPos = scenario.pos
-  } else if (scenario.type === 'blindwars') {
-    heroPos = scenario.label?.includes('SB') ? 'SB' : 'BB'
-    raiserPos = heroPos === 'BB' ? 'SB' : null
-  } else if (scenario.type === 'range') {
-    // SB vs RFI, BTN vs RFI, 3-Bet
-    const label = scenario.label || ''
-    if (label.includes('SB vs')) { heroPos = 'SB'; raiserPos = scenario.pos }
-    else if (label.includes('BTN vs')) { heroPos = 'BTN'; raiserPos = scenario.pos }
-    else { heroPos = label.match(/(\w+) vs/)?.[1] || 'BB'; raiserPos = scenario.pos }
-  } else if (scenario.type === 'board') {
-    // Board modules: hero IP (BTN by default), or context from label
-    heroPos = 'BTN'
-    raiserPos = null
-    const label = scenario.label || ''
-    if (label.includes('Defesa') || label.includes('Check-Raise') || label.includes('Donk')) {
+  let heroPos = ctx.heroPos || 'BTN'
+  let raiserPos = ctx.villainPos || null
+  let villainAction = ctx.villainAction || null // 'check', 'bet', 'raise'
+  let villainBetBB = ctx.villainBetBB || null
+  let potBB = ctx.potBB || null
+
+  // Fallback: determinar do tipo se nao tem tableContext
+  if (!scenario.tableContext) {
+    if (scenario.type === 'rfi') {
+      heroPos = scenario.pos
+      raiserPos = null
+    } else if (scenario.type === 'pushfold') {
+      heroPos = scenario.pos
+      raiserPos = null
+    } else if (scenario.type === 'bb') {
       heroPos = 'BB'
-      raiserPos = 'CO'
+      raiserPos = scenario.pos
+    } else if (scenario.type === 'blindwars') {
+      heroPos = scenario.label?.includes('SB') ? 'SB' : 'BB'
+      raiserPos = heroPos === 'BB' ? 'SB' : null
+    } else if (scenario.type === 'range') {
+      const label = scenario.label || ''
+      if (label.includes('SB vs')) { heroPos = 'SB'; raiserPos = scenario.pos }
+      else if (label.includes('BTN vs')) { heroPos = 'BTN'; raiserPos = scenario.pos }
+      else { heroPos = label.match(/(\w+) vs/)?.[1] || 'BB'; raiserPos = scenario.pos }
     }
-  } else if (scenario.type === 'potodds') {
-    heroPos = 'BB'
-    raiserPos = 'CO'
-  } else {
-    heroPos = 'BTN'
-    raiserPos = null
   }
 
   const heroIdx = ALL_SEATS_ORDER.indexOf(heroPos)
@@ -225,8 +227,13 @@ function PokerTable({ scenario }) {
   const btnPos = SLOT_POS[btnSlotIdx]
 
   const stack = scenario.stack || 100
-  const potAmt = raiserPos ? (stack * 2.5).toFixed(1) : (stack * 1.5).toFixed(1)
-  const startPot = (stack * 0.5).toFixed(1)
+
+  // Pot display
+  const displayPot = potBB
+    ? `${potBB} bb`
+    : raiserPos
+      ? `${(stack * 2.5).toFixed(1)} bb`
+      : `${(stack * 1.5).toFixed(1)} bb`
 
   // Board cards no centro da mesa
   const boardCards = scenario.board || null
@@ -261,13 +268,12 @@ function PokerTable({ scenario }) {
                 </div>
               ))}
             </div>
-            <div style={{ color: '#ccc', fontSize: 13, fontWeight: 800 }}>{potAmt} bb</div>
+            <div style={{ color: '#ccc', fontSize: 13, fontWeight: 800 }}>{displayPot}</div>
           </>
         ) : (
           <>
             <div style={{ color: '#555', fontSize: 10, fontWeight: 600 }}>{stack}bb</div>
-            <div style={{ color: '#ccc', fontSize: 15, fontWeight: 800 }}>{potAmt} bb</div>
-            <div style={{ color: '#555', fontSize: 10 }}>{startPot} bb</div>
+            <div style={{ color: '#ccc', fontSize: 15, fontWeight: 800 }}>{displayPot}</div>
           </>
         )}
       </div>
@@ -289,13 +295,27 @@ function PokerTable({ scenario }) {
       {/* Assentos */}
       {rotated.map((pos, slotIdx) => {
         const p = SLOT_POS[slotIdx]
-        const isRaiser = pos === raiserPos
+        const isVillain = pos === raiserPos
         const isSB = pos === 'SB'
         const isBB = pos === 'BB'
-        const betAmt = isRaiser ? `${(stack * 2).toFixed(0)}`
-                     : isSB ? `${(stack * 0.5).toFixed(1)}`
-                     : isBB ? `${stack}`
-                     : null
+
+        // Bet amount: villain bet, preflop raise, or blind
+        let betAmt = null
+        let actionLabel = null
+
+        if (isVillain && villainAction === 'bet' && villainBetBB) {
+          betAmt = `${villainBetBB}`
+        } else if (isVillain && villainAction === 'check') {
+          actionLabel = 'CHECK'
+        } else if (isVillain && !villainAction) {
+          // Preflop raiser (no tableContext)
+          betAmt = `${(stack * 2).toFixed(0)}`
+        } else if (isSB && !boardCards) {
+          betAmt = `${(stack * 0.5).toFixed(1)}`
+        } else if (isBB && !boardCards) {
+          betAmt = `${stack}`
+        }
+
         return (
           <div key={pos} style={{
             position: 'absolute',
@@ -306,11 +326,12 @@ function PokerTable({ scenario }) {
             <Seat
               pos={pos}
               isHero={pos === heroPos}
-              isRaiser={isRaiser}
-              isSB={isSB}
-              isBB={isBB}
+              isRaiser={isVillain && villainAction === 'bet'}
+              isSB={isSB && !boardCards}
+              isBB={isBB && !boardCards}
               stack={stack}
               betAmt={betAmt}
+              actionLabel={actionLabel}
             />
           </div>
         )
@@ -402,10 +423,18 @@ function potoddsScenario() {
   const betPct = betPcts[Math.floor(Math.random() * betPcts.length)]
   const potOdds = Math.round((betPct / (100 + betPct)) * 100)
   const correct = equity >= potOdds ? 'call' : 'fold'
+  // Pot after preflop: ~6.5bb (2.5bb raise + call + blinds)
+  const potPreflop = 6.5
+  const villainBet = +(potPreflop * betPct / 100).toFixed(1)
+  const totalPot = +(potPreflop + villainBet).toFixed(1)
   return {
     moduleId: 3, type: 'potodds', hand: null, board: flop, hole,
     label: `Pot Odds · Aposta ${betPct}%`,
     extraInfo: `${outs} outs · ${equity}% equity · Pot odds: ${potOdds}%`,
+    tableContext: {
+      heroPos: 'BB', villainPos: 'CO', villainAction: 'bet',
+      villainBetBB: villainBet, potBB: totalPot,
+    },
     buttons: [
       { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
       { id: 'call', label: 'Call', bg: '#5ab966' },
@@ -474,6 +503,10 @@ function cbetFlopScenario() {
   return {
     moduleId: 5, type: 'board', hand: null, board: flop, hole,
     label: `CBet Flop IP · ${tex.isWet ? 'Wet' : 'Dry'}`,
+    tableContext: {
+      heroPos: 'BTN', villainPos: 'BB', villainAction: 'check',
+      potBB: 6.5,
+    },
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet33', label: '33%', bg: '#5ab966' }, { id: 'bet50', label: '50%', bg: '#F03C3C' }, { id: 'bet75', label: '75%', bg: '#ff8f00' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel, isMix: false })
   }
@@ -582,6 +615,10 @@ function defenseCbetScenario() {
   const hole = randomCards(2, flop)
   const sizes = ['33%', '50%', '75%']
   const cbetSize = sizes[Math.floor(Math.random() * sizes.length)]
+  const cbetPct = parseInt(cbetSize)
+  const potPreflop = 6.5
+  const villainBet = +(potPreflop * cbetPct / 100).toFixed(1)
+  const totalPot = +(potPreflop + villainBet).toFixed(1)
   let correctAction
   if (hasSet(hole, flop) || hasTwoPair(hole, flop) || hasMadeFlush(hole, flop)) correctAction = 'raise'
   else if (hasTopPair(hole, flop) || hasOverpair(hole, flop)) correctAction = 'call'
@@ -592,6 +629,10 @@ function defenseCbetScenario() {
   return {
     moduleId: 10, type: 'board', hand: null, board: flop, hole,
     label: `Defesa vs CBet ${cbetSize}`,
+    tableContext: {
+      heroPos: 'BB', villainPos: 'CO', villainAction: 'bet',
+      villainBetBB: villainBet, potBB: totalPot,
+    },
     buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }, { id: 'raise', label: 'Check-Raise', bg: '#F03C3C' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'raise' ? 'Check-Raise' : correctAction, isMix: false })
   }
@@ -613,9 +654,14 @@ function checkRaiseScenario() {
   else if (hasAnyPair(hole, flop) && tex.isDry) correctAction = 'call'
   else if (hasFlushDraw(hole, flop)) correctAction = 'call'
   else correctAction = 'fold'
+  const cbetBB = +(6.5 * 0.5).toFixed(1) // villain bets 50%
   return {
     moduleId: 11, type: 'board', hand: null, board: flop, hole,
     label: `Check-Raise · ${tex.isWet ? 'Wet' : 'Dry'}`,
+    tableContext: {
+      heroPos: 'BB', villainPos: 'BTN', villainAction: 'bet',
+      villainBetBB: cbetBB, potBB: +(6.5 + cbetBB).toFixed(1),
+    },
     buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }, { id: 'raise', label: 'Check-Raise', bg: '#F03C3C' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'raise' ? 'Check-Raise' : correctAction, isMix: false })
   }
@@ -641,6 +687,10 @@ function betSizingScenario() {
   return {
     moduleId: 12, type: 'board', hand: null, board: flop, hole,
     label: `Bet Sizing · ${tex.isWet ? 'Wet' : 'Dry'}`,
+    tableContext: {
+      heroPos: 'BTN', villainPos: 'BB', villainAction: 'check',
+      potBB: 6.5,
+    },
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet33', label: '33%', bg: '#5ab966' }, { id: 'bet50', label: '50%', bg: '#F03C3C' }, { id: 'bet75', label: '75%', bg: '#ff8f00' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'check' ? 'Check' : correctAction.replace('bet', 'Bet '), isMix: false })
   }
@@ -663,6 +713,10 @@ function donkBetScenario() {
   return {
     moduleId: 13, type: 'board', hand: null, board: flop, hole,
     label: `Donk Bet · ${tex.lowBoard ? 'Low' : 'High'} board`,
+    tableContext: {
+      heroPos: 'BB', villainPos: 'CO',
+      potBB: 6.5,
+    },
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'donk', label: 'Donk Bet', bg: '#F03C3C' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'donk' ? 'Donk Bet' : 'Check', isMix: false })
   }
@@ -695,6 +749,10 @@ function cbetTurnScenario() {
   return {
     moduleId: 14, type: 'board', hand: null, board, hole, flop, turnCard: turn,
     label: `CBet Turn · ${scary ? 'Scary' : 'Brick'}`,
+    tableContext: {
+      heroPos: 'BTN', villainPos: 'BB', villainAction: 'check',
+      potBB: 13, // after flop cbet + call
+    },
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet', label: 'Double Barrel', bg: '#F03C3C' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'bet' ? 'Double Barrel' : 'Check', isMix: false })
   }
@@ -728,6 +786,10 @@ function riverPlayScenario() {
   return {
     moduleId: 15, type: 'board', hand: null, board, hole, flop,
     label: 'River Play',
+    tableContext: {
+      heroPos: 'BTN', villainPos: 'BB', villainAction: 'check',
+      potBB: 26, // after flop + turn action
+    },
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'value-med', label: 'Value Med', bg: '#5ab966' }, { id: 'value-big', label: 'Value Big', bg: '#F03C3C' }, { id: 'bluff', label: 'Blefe', bg: '#ff8f00' }],
     evaluate: (action) => ({
       isCorrect: action === correctAction,
