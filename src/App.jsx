@@ -16,6 +16,9 @@ import Module7 from './pages/modules/Module7'
 import Module8 from './pages/modules/Module8'
 import Module9 from './pages/modules/Module9'
 import Module10 from './pages/modules/Module10'
+import Module11 from './pages/modules/Module11'
+import Module12 from './pages/modules/Module12'
+import Module13 from './pages/modules/Module13'
 import Tools from './pages/Tools'
 import Infinite from './pages/Infinite'
 
@@ -63,6 +66,9 @@ function App() {
           <Route path="/modulos/8" element={<Module8 />} />
           <Route path="/modulos/9" element={<Module9 />} />
           <Route path="/modulos/10" element={<Module10 />} />
+          <Route path="/modulos/11" element={<Module11 />} />
+          <Route path="/modulos/12" element={<Module12 />} />
+          <Route path="/modulos/13" element={<Module13 />} />
           <Route path="/ferramentas" element={<Tools />} />
           <Route path="/infinito" element={<Infinite />} />
         </Routes>

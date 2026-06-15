@@ -12,6 +12,9 @@ const MODULES = [
   { id: 8, name: 'SB vs RFI', desc: 'Defendendo o Small Blind contra raises', icon: '🛡️' },
   { id: 9, name: 'BTN vs RFI', desc: 'A melhor posição da mesa contra raises', icon: '👑' },
   { id: 10, name: '3-Bet Ranges', desc: 'Quando relançar pre-flop — valor e blefe', icon: '🔥' },
+  { id: 11, name: 'Defesa vs CBet', desc: 'O que fazer quando apostam em você no flop', icon: '🛡️' },
+  { id: 12, name: 'Check-Raise', desc: 'A arma mais poderosa fora de posição', icon: '⚡' },
+  { id: 13, name: 'Bet Sizing', desc: 'Quanto apostar em cada situação', icon: '📐' },
 ]
 
 function motivationalMessage(globalStats) {
