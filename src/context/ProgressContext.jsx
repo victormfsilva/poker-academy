@@ -25,7 +25,6 @@ const defaultProgress = {
     18: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     19: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     20: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
-    21: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
   },
   globalStats: {
     totalHands: 0,
@@ -36,21 +35,63 @@ const defaultProgress = {
 }
 
 function migrateModules(modules) {
+  if (!modules) return modules
+
   // Migração v2: módulos 3-6 viraram 4-7 (inserção do Módulo 3 Pot Odds)
-  // Migrar se: tem dados no módulo 3 antigo (com totalAnswered) E não foi migrado ainda
-  if (modules && modules[3]?.totalAnswered > 0 && !modules._migrated_v2) {
+  if (modules[3]?.totalAnswered > 0 && !modules._migrated_v2) {
     const migrated = { ...modules, _migrated_v2: true }
-    // Shift 6→7, 5→6, 4→5, 3→4 (ordem reversa para não sobrescrever)
     if (modules[6]) migrated[7] = modules[6]
     if (modules[5]) migrated[6] = modules[5]
     if (modules[4]) migrated[5] = modules[4]
     if (modules[3]) migrated[4] = modules[3]
-    // Módulo 3 novo começa vazio
     migrated[3] = { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false }
-    // Desbloquear módulo 3 se módulo 2 está completo
     if (migrated[2]?.completed) migrated[3].unlocked = true
-    return migrated
+    modules = migrated
   }
+
+  // Migração v3: removido Módulo 7 (SB/BTN vs RFI), tudo 8-21 vira 7-20
+  // Dados do antigo 7 são distribuídos metade pro novo 7 (antigo 8, SB vs RFI) e metade pro novo 8 (antigo 9, BTN vs RFI)
+  if (modules[21] && !modules._migrated_v3) {
+    const migrated = { ...modules, _migrated_v3: true }
+    const emptyMod = { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false }
+    const old7 = modules[7] || emptyMod
+
+    // Distribuir dados do antigo 7 metade pra cada
+    const halfAnswered = Math.floor(old7.totalAnswered / 2)
+    const halfCorrect = Math.floor(old7.totalCorrect / 2)
+
+    function mergeHalf(target, half) {
+      return {
+        ...target,
+        totalAnswered: target.totalAnswered + half,
+        totalCorrect: target.totalCorrect + Math.min(halfCorrect, half),
+        bestStreak: Math.max(target.bestStreak, old7.bestStreak),
+        lessonRead: target.lessonRead || old7.lessonRead,
+        unlocked: target.unlocked || old7.unlocked,
+        completed: target.completed,
+        trainerSessions: target.trainerSessions || [],
+      }
+    }
+
+    const old8 = modules[8] || emptyMod
+    const old9 = modules[9] || emptyMod
+
+    // Shift 8→7, 9→8, ..., 21→20 com merge dos dados do 7
+    migrated[7] = mergeHalf(old8, halfAnswered)
+    migrated[8] = mergeHalf(old9, old7.totalAnswered - halfAnswered)
+    for (let i = 10; i <= 21; i++) {
+      migrated[i - 1] = modules[i] || emptyMod
+    }
+
+    // Limpar antigo slot 21
+    delete migrated[21]
+
+    // Se módulo 6 completou, desbloquear 7
+    if (migrated[6]?.completed) migrated[7].unlocked = true
+
+    modules = migrated
+  }
+
   return modules
 }
 
@@ -158,7 +199,7 @@ export function ProgressProvider({ children, userId }) {
       const moduleCompleted = mod.completed || justCompleted
 
       const nextModules = { ...prev.modules }
-      if (justCompleted && moduleId < 21) {
+      if (justCompleted && moduleId < 20) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
       }
 

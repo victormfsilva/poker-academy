@@ -14,21 +14,6 @@ function randomCards(n, exclude = []) {
   return cards
 }
 
-function getBoardTexture(cards) {
-  const ranks = cards.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const suits = cards.map(c => c.slice(-1))
-  const suitCounts = {}
-  suits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  const flushPossible = Object.values(suitCounts).some(v => v >= 3)
-  const flushComplete = Object.values(suitCounts).some(v => v >= 4)
-  const sorted = [...new Set(ranks)].sort((a, b) => a - b)
-  let straightPossible = false
-  for (let i = 0; i < sorted.length - 2; i++) {
-    if (sorted[i + 2] - sorted[i] <= 4) { straightPossible = true; break }
-  }
-  return { flushPossible, flushComplete, straightPossible }
-}
-
 function hasTopPair(hole, board) {
   const boardRanks = board.map(c => c.slice(0, -1))
   const holeRanks = hole.map(c => c.slice(0, -1))
@@ -41,16 +26,24 @@ function hasAnyPair(hole, board) {
   return hole.map(c => c.slice(0, -1)).some(r => boardRanks.includes(r))
 }
 
-function hasFlushDraw(hole, board) {
-  const suitCounts = {}
-  ;[...hole, ...board].forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  return Object.values(suitCounts).some(v => v === 4)
-}
-
 function hasMadeFlush(hole, board) {
   const suitCounts = {}
   ;[...hole, ...board].forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
   return Object.values(suitCounts).some(v => v >= 5)
+}
+
+function hasMadeStraight(hole, board) {
+  const allRanks = [...new Set([...hole, ...board].map(c => RANKS.indexOf(c.slice(0, -1))))].sort((a, b) => a - b)
+  const holeRankIdx = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
+  for (let i = 0; i <= allRanks.length - 5; i++) {
+    if (allRanks[i + 4] - allRanks[i] === 4) {
+      const window = allRanks.slice(i, i + 5)
+      if (holeRankIdx.some(r => window.includes(r))) return true
+    }
+  }
+  // Wheel
+  if ([0, 9, 10, 11, 12].every(v => allRanks.includes(v)) && holeRankIdx.some(r => [0, 9, 10, 11, 12].includes(r))) return true
+  return false
 }
 
 function hasSetFn(hole, board) {
@@ -74,172 +67,167 @@ function hasOverpair(hole, board) {
   return pocketIdx < topBoardIdx
 }
 
-function hasStraightDraw(hole, board) {
-  const holeRankIdx = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const allRanks = [...hole, ...board].map(c => RANKS.indexOf(c.slice(0, -1)))
-  const unique = [...new Set(allRanks)].sort((a, b) => a - b)
-  for (let i = 0; i <= unique.length - 5; i++) {
-    if (unique[i + 4] - unique[i] === 4) return false
-  }
-  for (let i = 0; i < unique.length - 3; i++) {
-    if (unique[i + 3] - unique[i] <= 4) {
-      const windowRanks = unique.slice(i, i + 4)
-      if (holeRankIdx.some(r => windowRanks.includes(r))) return true
-    }
+function hasFlushDrawMissed(hole, board) {
+  // Tinha flush draw no turn (4 cartas do mesmo naipe) mas não completou no river
+  const suitCounts = {}
+  ;[...hole, ...board].forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
+  // Se tivesse 4 no turn (hole+flop+turn) é agora tem 4 (não 5), o draw falhou
+  return Object.values(suitCounts).some(v => v === 4)
+}
+
+function boardHasFlushComplete(board) {
+  const suitCounts = {}
+  board.forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
+  return Object.values(suitCounts).some(v => v >= 3)
+}
+
+function boardHasStraightPossible(board) {
+  const ranks = [...new Set(board.map(c => RANKS.indexOf(c.slice(0, -1))))].sort((a, b) => a - b)
+  for (let i = 0; i < ranks.length - 2; i++) {
+    if (ranks[i + 2] - ranks[i] <= 4) return true
   }
   return false
 }
 
-// Turn card types
-function isTurnScary(flop, turn) {
-  const turnRank = RANKS.indexOf(turn.slice(0, -1))
-  const turnSuit = turn.slice(-1)
-  const flopSuits = flop.map(c => c.slice(-1))
-  const flopRanks = flop.map(c => RANKS.indexOf(c.slice(0, -1)))
+// River: você está IP, pot control até aqui ou apostou flop+turn. River saiu. Valor, blefe ou check?
+function getCorrectAction(hole, board) {
+  const flushOnBoard = boardHasFlushComplete(board)
+  const straightOnBoard = boardHasStraightPossible(board)
 
-  // Flush completing card
-  const suitCounts = {}
-  flopSuits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  if (suitCounts[turnSuit] >= 2) return { scary: true, type: 'flush', desc: 'Carta do mesmo naipe — possível flush completado' }
-
-  // Straight completing card
-  const allRanks = [...flopRanks, turnRank]
-  const sorted = [...new Set(allRanks)].sort((a, b) => a - b)
-  for (let i = 0; i <= sorted.length - 4; i++) {
-    if (sorted[i + 3] - sorted[i] <= 4) return { scary: true, type: 'straight', desc: 'Carta conectada — possível straight completado' }
+  // Nuts ou perto: value bet grande
+  if (hasMadeFlush(hole, board)) {
+    return { action: 'value-big', reason: 'Flush completo no river! Value bet grande (75-100%). Mao nuts — extraia o máximo. Adversario pode pagar com top pair ou dois pares.' }
+  }
+  if (hasMadeStraight(hole, board)) {
+    if (flushOnBoard) {
+      return { action: 'value-small', reason: 'Straight no river mas flush possível no board. Value bet menor (50%) — você pode estar atras se adversário tem flush. Cuidado.' }
+    }
+    return { action: 'value-big', reason: 'Straight no river! Value bet grande (75%). Mao muito forte — adversário pode pagar com pares e dois pares.' }
+  }
+  if (hasSetFn(hole, board)) {
+    return { action: 'value-big', reason: 'Set no river — value bet grande (75%). Mao muito forte. Adversario que pagou até aqui provavelmente tem algo que paga.' }
   }
 
-  // Overcard
-  if (turnRank < Math.min(...flopRanks)) return { scary: true, type: 'overcard', desc: 'Overcard — carta mais alta que o flop' }
-
-  return { scary: false, type: 'brick', desc: 'Brick — carta inofensiva que não muda nada' }
-}
-
-// CBet turn IP: você apostou no flop, adversário chamou. Turn saiu. Double barrel ou check?
-function getCorrectAction(hole, flop, turn) {
-  const board = [...flop, turn]
-  const turnInfo = isTurnScary(flop, turn)
-
-  // Mao muito forte: sempre barrel
-  if (hasMadeFlush(hole, board) || hasSetFn(hole, board) || hasTwoPairFn(hole, board)) {
-    return { action: 'bet', sizing: '66%', reason: 'Mao muito forte no turn — aposte! Continue construindo pote. Você quer ser pago.' }
+  // Dois pares ou overpair: value bet médio
+  if (hasTwoPairFn(hole, board)) {
+    if (flushOnBoard || straightOnBoard) {
+      return { action: 'check', reason: 'Dois pares mas board perigoso (flush/straight possível). Check — se apostar é levar raise, está em situação horrivel.' }
+    }
+    return { action: 'value-small', reason: 'Dois pares no river — value bet médio (50%). Mao boa mas não nuts. Adversario paga com pares inferiores.' }
   }
-
-  // Overpair
   if (hasOverpair(hole, board)) {
-    if (turnInfo.scary && turnInfo.type === 'flush') {
-      return { action: 'check', reason: 'Overpair mas turn completou possível flush. Check pra controlar o pote — se o adversário apostar grande, pode estar com flush.' }
+    if (flushOnBoard) {
+      return { action: 'check', reason: 'Overpair mas flush possível no board. Check — não aposte valor quando pode estar dominado.' }
     }
-    return { action: 'bet', sizing: '66%', reason: 'Overpair — continue apostando no turn. Sua mão provavelmente ainda é a melhor. Aposte 66% pra valor é proteção.' }
+    return { action: 'value-small', reason: 'Overpair no river — value bet fino (50%). Pode extrair de pares menores. Não aposte muito grande.' }
   }
 
-  // Top pair
+  // Top pair: check na maioria (pot control) ou thin value em board limpo
   if (hasTopPair(hole, board)) {
-    if (turnInfo.scary) {
-      return { action: 'check', reason: `Turn assustador (${turnInfo.desc}). Com top pair, check pra controlar o pote. Se o adversário melhorou, você economiza fichas.` }
+    if (flushOnBoard || straightOnBoard) {
+      return { action: 'check', reason: 'Top pair em board perigoso — check. Board tem muitas mãos que te vencem. Controle o pote.' }
     }
-    return { action: 'bet', sizing: '50%', reason: 'Top pair em turn brick — continue apostando (50%). O adversário provavelmente ainda tem pior e pode pagar com draws ou pares inferiores.' }
+    return { action: 'value-small', reason: 'Top pair em board limpo — thin value bet (33-50%). Adversario pode pagar com pares menores. Mas não exagere no sizing.' }
   }
 
-  // Flush draw: barrel como semi-blefe
-  if (hasFlushDraw(hole, board)) {
-    return { action: 'bet', sizing: '50%', reason: 'Flush draw no turn — double barrel como semi-blefe! Você tem 9 outs (~20% no river). Se ele foldar, você ganha na hora. Se chamar, você ainda pode completar.' }
-  }
-
-  // Straight draw: depende do turn
-  if (hasStraightDraw(hole, board)) {
-    if (!turnInfo.scary) {
-      return { action: 'bet', sizing: '33%', reason: 'Straight draw em turn brick — barrel pequeno (33%) como semi-blefe. Mantem a pressao sem arriscar muito.' }
-    }
-    return { action: 'check', reason: 'Straight draw mas turn assustador — check. O adversário pode ter melhorado e seu draw pode não ser suficiente.' }
-  }
-
-  // Par médio/baixo
+  // Par médio/baixo: check
   if (hasAnyPair(hole, board)) {
-    return { action: 'check', reason: 'Par médio/baixo no turn — check. Sua mão não é forte o bastante pra apostar duas ruas. Controle o pote.' }
+    return { action: 'check', reason: 'Par médio/baixo no river — check. Sua mão tem showdown value mas não aguenta apostar é ser chamada por melhor.' }
   }
 
-  // Turn é uma boa carta pra blefe (overcard scare card)
-  if (turnInfo.scary && turnInfo.type === 'overcard') {
-    return { action: 'bet', sizing: '50%', reason: `Turn trouxe overcard — bom pra blefar! Você pode representar que acertou a carta alta. Aposte 50% como blefe.` }
+  // Sem nada: blefe ou give up
+  if (flushOnBoard && !hasMadeFlush(hole, board)) {
+    // Pode blefar representando flush
+    const holeSuits = hole.map(c => c.slice(-1))
+    const boardSuits = board.map(c => c.slice(-1))
+    const suitCounts = {}
+    boardSuits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
+    const flushSuit = Object.keys(suitCounts).find(s => suitCounts[s] >= 3)
+    if (flushSuit && holeSuits.includes(flushSuit)) {
+      return { action: 'bluff', reason: 'Sem mão mas você pode representar o flush! Blefe grande (75%) — você tem uma carta do naipe que completou. Adversario com pares vai ter dificuldade de chamar.' }
+    }
   }
 
-  // Nada: check
-  return { action: 'check', reason: 'Sem mão, sem draw, turn não ajuda pra blefe. Check — não desperdice mais fichas.' }
+  if (hasFlushDrawMissed(hole, board)) {
+    return { action: 'bluff', reason: 'Flush draw que não completou — blefe no river! Você não tem showdown value nenhum, então a unica forma de ganhar é fazendo o adversário foldar. Aposte grande.' }
+  }
+
+  return { action: 'check', reason: 'Sem mão e sem historia pra blefar. Check e desista — dar give up no river é correto quando não tem motivo pra apostar.' }
 }
 
 function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
-        CBet Turn IP — Double Barrel
+        River Play — A Decisao Final
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Você apostou no flop é chamaram. O turn saiu. Continuar ou frear?</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>No river não tem mais cartas. Value bet, blefe ou check?</p>
       <div className="space-y-4">
-        <Section title="O Que é Double Barrel?">
-          Double barrel é apostar no flop E no turn. E uma continuacao da sua agressividade pré-flop.<br /><br />
-          <strong style={{ color: '#f5a623' }}>Não é obrigatorio.</strong> Muitos jogadores erram apostando mecanicamente em todas as ruas. A chave é entender QUANDO continuar.
-        </Section>
-        <Section title="A Carta do Turn Muda Tudo">
-          <div className="grid grid-cols-2 gap-3 mt-2">
+        <Section title="Por Que River é Diferente?">
+          No river, não existem mais draws. Não existe "proteção". Toda aposta é por um de dois motivos:<br /><br />
+          <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 600 }}>Boas pra barrel</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>
-                • Brick (carta baixa sem conexao)<br />
-                • Overcard que você pode representar<br />
-                • Carta que completa SEU draw
-              </div>
+              <div style={{ color: '#00d4aa', fontWeight: 700 }}>Value Bet</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você tem mão forte é quer que chamem</div>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 600 }}>Ruins pra barrel</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>
-                • Completa flush draw obvio<br />
-                • Completa straight draw obvio<br />
-                • Carta que ajuda o range do adversário
-              </div>
+              <div style={{ color: '#e94560', fontWeight: 700 }}>Blefe</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você não tem nada é quer que foldem</div>
             </div>
           </div>
+          <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #888' }}>
+            <div style={{ color: '#888', fontSize: 13 }}>Não existe "aposta de proteção" no river — não tem mais cartas pra proteger contra.</div>
+          </div>
         </Section>
-        <Section title="Quando Double Barrel">
+        <Section title="Value Bet no River">
           <div className="space-y-2">
             {[
-              'Mao forte (set, dois pares, overpair) — sempre continue apostando',
-              'Top pair em turn brick — continue extraindo valor',
-              'Flush draw — semi-blefe, você tem outs',
-              'Turn e overcard e você pode representar — bom blefe',
+              { hand: 'Nuts (flush, straight, set)', sizing: '75-100%', color: '#00d4aa' },
+              { hand: 'Dois pares, overpair', sizing: '50%', color: '#f5a623' },
+              { hand: 'Top pair bom kicker', sizing: '33-50%', color: '#f5a623' },
+            ].map(r => (
+              <div key={r.hand} className="flex justify-between items-center rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+                <span style={{ color: '#ccc', fontSize: 13 }}>{r.hand}</span>
+                <span style={{ color: r.color, fontWeight: 700, fontSize: 14 }}>{r.sizing}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
+            Regra: aposte mais quando tem mão mais forte. Quanto mais nuts, maior o sizing.
+          </div>
+        </Section>
+        <Section title="Blefe no River">
+          Blefar no river funciona quando:<br /><br />
+          <div className="space-y-2">
+            {[
+              'Você pode representar uma mão forte (flush/straight completou)',
+              'Seu draw não completou e você não tem showdown value',
+              'O adversário tem range capped (não pode ter mão forte)',
+              'Você apostou flop e turn — a historia faz sentido',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
-                <span style={{ color: '#00d4aa' }}>✓</span>
+                <span style={{ color: '#f5a623' }}>•</span>
                 <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
               </div>
             ))}
           </div>
+          <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+            <div style={{ color: '#e94560', fontWeight: 600, fontSize: 13 }}>Sizing do blefe: GRANDE (75%+)</div>
+            <div style={{ color: '#ccc', fontSize: 12, marginTop: 2 }}>Blefes pequenos no river não funcionam — o adversário tem pot odds bons demais pra foldar.</div>
+          </div>
         </Section>
-        <Section title="Quando Frear (Check no Turn)">
+        <Section title="Quando Check (Give Up)">
           <div className="space-y-2">
             {[
-              'Par médio/baixo — controle o pote, você não aguenta raise',
-              'Turn completou draw obvio — adversário pode ter melhorado',
-              'Sem mão e turn não ajuda pra blefe — economize fichas',
-              'Top pair em turn assustador — cautela, check e reavalie',
+              'Par médio/baixo — tem showdown value, não transforme em blefe',
+              'Board perigoso e você tem mão boa mas não nuts — controle',
+              'Sem mão e sem historia pra blefar — aceite o give up',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
-                <span style={{ color: '#e94560' }}>✗</span>
+                <span style={{ color: '#888' }}>✓</span>
                 <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
               </div>
             ))}
-          </div>
-        </Section>
-        <Section title="Sizing no Turn">
-          <div className="grid grid-cols-2 gap-3 mt-2">
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
-              <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 20 }}>50-66%</div>
-              <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Padrao — valor e semi-blefe</div>
-            </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700, fontSize: 20 }}>33%</div>
-              <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Blefe barato ou thin value</div>
-            </div>
           </div>
         </Section>
       </div>
@@ -261,8 +249,7 @@ function Section({ title, children }) {
 
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
-  const [flop, setFlop] = useState(null)
-  const [turn, setTurn] = useState(null)
+  const [board, setBoard] = useState(null)
   const [hole, setHole] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [sessionCorrect, setSessionCorrect] = useState(0)
@@ -272,15 +259,14 @@ function Trainer() {
 
   function newHand() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const f = randomCards(3)
-    const [t] = randomCards(1, f)
-    const h = randomCards(2, [...f, t])
-    setFlop(f); setTurn(t); setHole(h); setFeedback(null)
+    const b = randomCards(5)
+    const h = randomCards(2, b)
+    setBoard(b); setHole(h); setFeedback(null)
   }
 
   function answer(action) {
-    if (!flop || feedback) return
-    const correct = getCorrectAction(hole, flop, turn)
+    if (!board || feedback) return
+    const correct = getCorrectAction(hole, board)
     const isCorrect = action === correct.action
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
@@ -292,11 +278,9 @@ function Trainer() {
     setFeedback({ ...correct, isCorrect, isLast })
   }
 
-  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setFlop(null) }
+  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setBoard(null) }
 
-  if (!flop && !sessionDone) newHand()
-
-  const turnInfo = flop && turn ? isTurnScary(flop, turn) : null
+  if (!board && !sessionDone) newHand()
 
   if (sessionDone) {
     const acc = Math.round((sessionCorrect / sessionTotal) * 100)
@@ -308,6 +292,13 @@ function Trainer() {
         <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
+  }
+
+  const ACTION_LABELS = {
+    'value-big': 'VALUE BET GRANDE',
+    'value-small': 'VALUE BET MEDIO',
+    'bluff': 'BLEFE',
+    'check': 'CHECK'
   }
 
   return (
@@ -322,18 +313,8 @@ function Trainer() {
 
       <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
         <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Você está IP — Turn</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Você c-betou no flop e chamaram. Turn saiu. Double barrel?</div>
-        {turnInfo && (
-          <div className="mt-2">
-            <span className="px-2 py-1 rounded text-xs" style={{
-              background: turnInfo.scary ? '#e9456022' : '#00d4aa22',
-              color: turnInfo.scary ? '#e94560' : '#00d4aa'
-            }}>
-              {turnInfo.desc}
-            </span>
-          </div>
-        )}
+        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Você está IP — River</div>
+        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Todas as cartas foram reveladas. Qual sua ação final?</div>
       </div>
 
       <div className="mb-4">
@@ -341,18 +322,25 @@ function Trainer() {
         <div className="flex justify-center gap-3 mb-4">
           {hole?.map((c, i) => <Card key={i} card={c} size="md" />)}
         </div>
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>FLOP + TURN</div>
-        <div className="flex justify-center gap-3">
-          {flop?.map((c, i) => <Card key={i} card={c} size="md" />)}
-          {turn && <div style={{ borderLeft: '2px solid #333', margin: '0 4px' }} />}
-          {turn && <Card card={turn} size="md" />}
+        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>BOARD COMPLETO</div>
+        <div className="flex justify-center gap-2">
+          {board?.slice(0, 3).map((c, i) => <Card key={i} card={c} size="md" />)}
+          {board && <div style={{ borderLeft: '2px solid #333', margin: '0 2px' }} />}
+          {board?.[3] && <Card card={board[3]} size="md" />}
+          {board && <div style={{ borderLeft: '2px solid #333', margin: '0 2px' }} />}
+          {board?.[4] && <Card card={board[4]} size="md" />}
         </div>
       </div>
 
       {!feedback && (
         <div className="grid grid-cols-2 gap-3 mb-4">
-          {[['check', 'CHECK', '#4a90e2', 'white'], ['bet', 'BET (BARREL)', '#f5a623', '#0a0a0f']].map(([action, label, bg, color]) => (
-            <button key={action} onClick={() => answer(action)} className="py-4 rounded-xl font-bold text-lg" style={{ background: bg, color }}>{label}</button>
+          {[
+            ['value-big', 'VALUE BIG', '#00d4aa', '#0a0a0f'],
+            ['value-small', 'VALUE MEDIO', '#f5a623', '#0a0a0f'],
+            ['bluff', 'BLEFE', '#e94560', 'white'],
+            ['check', 'CHECK', '#4a90e2', 'white'],
+          ].map(([action, label, bg, color]) => (
+            <button key={action} onClick={() => answer(action)} className="py-4 rounded-xl font-bold text-sm" style={{ background: bg, color }}>{label}</button>
           ))}
         </div>
       )}
@@ -365,7 +353,7 @@ function Trainer() {
           <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
-            Correto: <strong style={{ color: '#f5a623' }}>{feedback.action === 'check' ? 'CHECK' : `BET ${feedback.sizing}`}</strong>
+            Correto: <strong style={{ color: '#f5a623' }}>{ACTION_LABELS[feedback.action]}</strong>
           </div>
         </div>
       )}
@@ -373,10 +361,10 @@ function Trainer() {
   )
 }
 
-export default function Module15() {
+export default function Module16() {
   const { progress, markLessonRead } = useProgress()
-  const [view, setView] = useState(progress.modules[15]?.lessonRead ? 'trainer' : 'lesson')
-  if (!progress.modules[15]?.unlocked) return (
+  const [view, setView] = useState(progress.modules[16]?.lessonRead ? 'trainer' : 'lesson')
+  if (!progress.modules[16]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 14 para desbloquear.</p></div>
     </div>
@@ -386,9 +374,9 @@ export default function Module15() {
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
           <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[15]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[15]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[15]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[15]?.lessonRead && '🔒'}</button>
+          <button onClick={() => progress.modules[16]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[16]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[16]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[16]?.lessonRead && '🔒'}</button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(15); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(16); setView('trainer') }} /> : <Trainer />}
       </div>
     </div>
   )

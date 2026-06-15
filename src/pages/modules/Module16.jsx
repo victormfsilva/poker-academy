@@ -1,233 +1,173 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
-import Card from '../../components/Card'
 
-const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
-const SUITS = ['s','h','d','c']
-
-function randomCards(n, exclude = []) {
-  const cards = []
-  while (cards.length < n) {
-    const c = RANKS[Math.floor(Math.random() * RANKS.length)] + SUITS[Math.floor(Math.random() * SUITS.length)]
-    if (!cards.includes(c) && !exclude.includes(c)) cards.push(c)
-  }
-  return cards
-}
-
-function hasTopPair(hole, board) {
-  const boardRanks = board.map(c => c.slice(0, -1))
-  const holeRanks = hole.map(c => c.slice(0, -1))
-  const topRank = [...boardRanks].sort((a, b) => RANKS.indexOf(a) - RANKS.indexOf(b))[0]
-  return holeRanks.includes(topRank)
-}
-
-function hasAnyPair(hole, board) {
-  const boardRanks = board.map(c => c.slice(0, -1))
-  return hole.map(c => c.slice(0, -1)).some(r => boardRanks.includes(r))
-}
-
-function hasMadeFlush(hole, board) {
-  const suitCounts = {}
-  ;[...hole, ...board].forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  return Object.values(suitCounts).some(v => v >= 5)
-}
-
-function hasMadeStraight(hole, board) {
-  const allRanks = [...new Set([...hole, ...board].map(c => RANKS.indexOf(c.slice(0, -1))))].sort((a, b) => a - b)
-  const holeRankIdx = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
-  for (let i = 0; i <= allRanks.length - 5; i++) {
-    if (allRanks[i + 4] - allRanks[i] === 4) {
-      const window = allRanks.slice(i, i + 5)
-      if (holeRankIdx.some(r => window.includes(r))) return true
-    }
-  }
-  // Wheel
-  if ([0, 9, 10, 11, 12].every(v => allRanks.includes(v)) && holeRankIdx.some(r => [0, 9, 10, 11, 12].includes(r))) return true
-  return false
-}
-
-function hasSetFn(hole, board) {
-  const holeRanks = hole.map(c => c.slice(0, -1))
-  const boardRanks = board.map(c => c.slice(0, -1))
-  return holeRanks[0] === holeRanks[1] && boardRanks.includes(holeRanks[0])
-}
-
-function hasTwoPairFn(hole, board) {
-  const holeRanks = hole.map(c => c.slice(0, -1))
-  const boardRanks = board.map(c => c.slice(0, -1))
-  if (holeRanks[0] === holeRanks[1]) return false
-  return [...new Set(holeRanks)].filter(r => boardRanks.includes(r)).length === 2
-}
-
-function hasOverpair(hole, board) {
-  const holeRanks = hole.map(c => c.slice(0, -1))
-  if (holeRanks[0] !== holeRanks[1]) return false
-  const pocketIdx = RANKS.indexOf(holeRanks[0])
-  const topBoardIdx = Math.min(...board.map(c => RANKS.indexOf(c.slice(0, -1))))
-  return pocketIdx < topBoardIdx
-}
-
-function hasFlushDrawMissed(hole, board) {
-  // Tinha flush draw no turn (4 cartas do mesmo naipe) mas não completou no river
-  const suitCounts = {}
-  ;[...hole, ...board].forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  // Se tivesse 4 no turn (hole+flop+turn) é agora tem 4 (não 5), o draw falhou
-  return Object.values(suitCounts).some(v => v === 4)
-}
-
-function boardHasFlushComplete(board) {
-  const suitCounts = {}
-  board.forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  return Object.values(suitCounts).some(v => v >= 3)
-}
-
-function boardHasStraightPossible(board) {
-  const ranks = [...new Set(board.map(c => RANKS.indexOf(c.slice(0, -1))))].sort((a, b) => a - b)
-  for (let i = 0; i < ranks.length - 2; i++) {
-    if (ranks[i + 2] - ranks[i] <= 4) return true
-  }
-  return false
-}
-
-// River: você está IP, pot control até aqui ou apostou flop+turn. River saiu. Valor, blefe ou check?
-function getCorrectAction(hole, board) {
-  const flushOnBoard = boardHasFlushComplete(board)
-  const straightOnBoard = boardHasStraightPossible(board)
-
-  // Nuts ou perto: value bet grande
-  if (hasMadeFlush(hole, board)) {
-    return { action: 'value-big', reason: 'Flush completo no river! Value bet grande (75-100%). Mao nuts — extraia o máximo. Adversario pode pagar com top pair ou dois pares.' }
-  }
-  if (hasMadeStraight(hole, board)) {
-    if (flushOnBoard) {
-      return { action: 'value-small', reason: 'Straight no river mas flush possível no board. Value bet menor (50%) — você pode estar atras se adversário tem flush. Cuidado.' }
-    }
-    return { action: 'value-big', reason: 'Straight no river! Value bet grande (75%). Mao muito forte — adversário pode pagar com pares e dois pares.' }
-  }
-  if (hasSetFn(hole, board)) {
-    return { action: 'value-big', reason: 'Set no river — value bet grande (75%). Mao muito forte. Adversario que pagou até aqui provavelmente tem algo que paga.' }
-  }
-
-  // Dois pares ou overpair: value bet médio
-  if (hasTwoPairFn(hole, board)) {
-    if (flushOnBoard || straightOnBoard) {
-      return { action: 'check', reason: 'Dois pares mas board perigoso (flush/straight possível). Check — se apostar é levar raise, está em situação horrivel.' }
-    }
-    return { action: 'value-small', reason: 'Dois pares no river — value bet médio (50%). Mao boa mas não nuts. Adversario paga com pares inferiores.' }
-  }
-  if (hasOverpair(hole, board)) {
-    if (flushOnBoard) {
-      return { action: 'check', reason: 'Overpair mas flush possível no board. Check — não aposte valor quando pode estar dominado.' }
-    }
-    return { action: 'value-small', reason: 'Overpair no river — value bet fino (50%). Pode extrair de pares menores. Não aposte muito grande.' }
-  }
-
-  // Top pair: check na maioria (pot control) ou thin value em board limpo
-  if (hasTopPair(hole, board)) {
-    if (flushOnBoard || straightOnBoard) {
-      return { action: 'check', reason: 'Top pair em board perigoso — check. Board tem muitas mãos que te vencem. Controle o pote.' }
-    }
-    return { action: 'value-small', reason: 'Top pair em board limpo — thin value bet (33-50%). Adversario pode pagar com pares menores. Mas não exagere no sizing.' }
-  }
-
-  // Par médio/baixo: check
-  if (hasAnyPair(hole, board)) {
-    return { action: 'check', reason: 'Par médio/baixo no river — check. Sua mão tem showdown value mas não aguenta apostar é ser chamada por melhor.' }
-  }
-
-  // Sem nada: blefe ou give up
-  if (flushOnBoard && !hasMadeFlush(hole, board)) {
-    // Pode blefar representando flush
-    const holeSuits = hole.map(c => c.slice(-1))
-    const boardSuits = board.map(c => c.slice(-1))
-    const suitCounts = {}
-    boardSuits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
-    const flushSuit = Object.keys(suitCounts).find(s => suitCounts[s] >= 3)
-    if (flushSuit && holeSuits.includes(flushSuit)) {
-      return { action: 'bluff', reason: 'Sem mão mas você pode representar o flush! Blefe grande (75%) — você tem uma carta do naipe que completou. Adversario com pares vai ter dificuldade de chamar.' }
-    }
-  }
-
-  if (hasFlushDrawMissed(hole, board)) {
-    return { action: 'bluff', reason: 'Flush draw que não completou — blefe no river! Você não tem showdown value nenhum, então a unica forma de ganhar é fazendo o adversário foldar. Aposte grande.' }
-  }
-
-  return { action: 'check', reason: 'Sem mão e sem historia pra blefar. Check e desista — dar give up no river é correto quando não tem motivo pra apostar.' }
-}
+const SCENARIOS = [
+  {
+    situation: 'Você está no BTN com A5s. UTG (jogador tight que só abre 12%) fez raise. GTO diz 3-bet.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: '3-bet (GTO)', correct: false },
+      { id: 'exploit', label: 'Fold (Exploitative)', correct: true },
+    ],
+    explanation: 'GTO diz 3-bet com A5s do BTN vs UTG. Mas se o jogador é MUITO tight (12%), seu 3-bet de blefe perde valor — ele só continua com range forte. Fold explora a tendencia dele de abrir pouco.',
+    concept: 'Contra jogadores muito tight, reduza seus blefes. Eles não abrem o suficiente pra justificar 3-bet light.'
+  },
+  {
+    situation: 'Mesa de torneio. Jogador no BB defende 70%+ dos raises (chama com tudo). Você está no CO com K9o.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Fold (GTO)', correct: false },
+      { id: 'exploit', label: 'Raise (Exploitative)', correct: true },
+    ],
+    explanation: 'GTO foldaria K9o do CO. Mas se o BB defende 70%+ (muito frouxo), você pode abrir mais leve porque vai jogar pos-flop IP contra range fraco. Exploitative = aproveitar o erro dele.',
+    concept: 'Contra jogadores que chamam demais, amplie seu range de abertura. Você tem edge pos-flop.'
+  },
+  {
+    situation: 'Você está no BB com 87s. BTN (regular forte) fez raise. GTO diz call.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Call (GTO)', correct: true },
+      { id: 'exploit', label: 'Fold ou 3-bet', correct: false },
+    ],
+    explanation: 'Contra regulares fortes que jogam perto do GTO, a melhor estratégia é jogar GTO você também. 87s tem equity é jogabilidade suficiente pra call no BB. Desviar do GTO contra bons jogadores te torna exploravel.',
+    concept: 'Contra jogadores bons, fique no GTO. Desviar contra quem joga equilibrado cria leaks no seu jogo.'
+  },
+  {
+    situation: 'Cash game. Jogador no BTN c-beta 90% dos flops (aposta quase sempre). Você está no BB num flop A-7-2 com 65s.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Fold (GTO)', correct: false },
+      { id: 'exploit', label: 'Call ou Check-raise (Exploitative)', correct: true },
+    ],
+    explanation: 'GTO foldaria 65s num flop A-7-2. Mas se ele c-beta 90%, a maioria das vezes ele não tem nada. Você pode chamar leve ou check-raise de blefe porque o range dele é muito fraco.',
+    concept: 'Contra jogadores que apostam demais, defenda mais é check-raise blefe. A alta frequência de c-bet deles significa range fraco.'
+  },
+  {
+    situation: 'Torneio online. Jogador limpa (limp) no SB. Você está no BB com J4o.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Check (GTO)', correct: false },
+      { id: 'exploit', label: 'Raise grande (Exploitative)', correct: true },
+    ],
+    explanation: 'GTO checkaria J4o. Mas limpar do SB é um erro enorme — jogadores que limpam geralmente tem range fraco é foldham frequentemente a raises. Raise grande explora essa tendencia.',
+    concept: 'Contra limpers, raise mais que o normal. Limpar é um leak que você deve punir.'
+  },
+  {
+    situation: 'Mesa final de torneio. ICM pesado. Jogador short stack shova all-in. Você está no BB com AQo é tem stack médio.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Call (ChipEV)', correct: false },
+      { id: 'exploit', label: 'Fold (ICM)', correct: true },
+    ],
+    explanation: 'Em ChipEV puro, AQo é call fácil contra shove. Mas em mesa final com ICM, o custo de bustar é muito maior que o ganho de dobrar. ICM diz fold com muitas mãos que seriam call em ChipEV.',
+    concept: 'ICM muda drasticamente as decisões. Na bolha é mesa final, sobrevivencia vale mais que fichas.'
+  },
+  {
+    situation: 'Você está no BTN com QJs. Mesa de 6 jogadores, todos regulares competentes jogando GTO.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Raise (GTO padrão)', correct: true },
+      { id: 'exploit', label: 'Limp ou fold', correct: false },
+    ],
+    explanation: 'Contra mesa de regulares fortes, não tem leak pra explorar. QJs é raise padrão do BTN no GTO. Desviar aqui (limpar ou foldar) criaria um leak no SEU jogo que eles poderiam explorar.',
+    concept: 'Quando não sabe nada sobre o adversário, jogue GTO. E a estratégia mais segura — ninguem consegue explorar.'
+  },
+  {
+    situation: 'Você está no SB. BB é jogador recreativo que folda 80% a 3-bets (fold demais). Você tem K8s.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Complete ou fold (GTO)', correct: false },
+      { id: 'exploit', label: '3-bet (Exploitative)', correct: true },
+    ],
+    explanation: 'GTO não 3-betaria K8s no SB vs BB. Mas se o BB folda 80% a 3-bets, você lucra 3-betando com qualquer mão — ele desiste demais. K8s ainda tem equity de backup se chamar.',
+    concept: 'Contra jogadores que foldam demais a 3-bet, 3-bete mais. Você ganha na hora a maioria das vezes.'
+  },
+  {
+    situation: 'Você está IP no river com par médio (99 num board A-K-8-3-2). Adversario é um jogador passivo que raramente blefa.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Call se ele apostar (GTO)', correct: false },
+      { id: 'exploit', label: 'Fold se ele apostar (Exploitative)', correct: true },
+    ],
+    explanation: 'GTO teria que chamar com certa frequência pra não ser exploravel. Mas contra jogador passivo que raramente blefa, quando ele aposta no river geralmente TEM mão forte. Fold explora essa tendencia.',
+    concept: 'Contra jogadores passivos, respeite as apostas deles — geralmente significam força real.'
+  },
+  {
+    situation: 'Você abriu UTG com AKo. Jogador no BB (regular forte) fez 3-bet. GTO diz call.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'gto', label: 'Call (GTO)', correct: true },
+      { id: 'exploit', label: '4-bet ou fold', correct: false },
+    ],
+    explanation: 'Contra regular forte que 3-beta de forma equilibrada, AKo é call padrão vs 3-bet do BB. 4-bet transforma em blefe (ele pode ter AA/KK), é fold desperdiça equity enorme. GTO é o caminho.',
+    concept: 'Contra jogadores equilibrados, siga o GTO. Não tente "adivinhar" — jogue de forma solida.'
+  },
+]
 
 function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
-        River Play — A Decisao Final
+        GTO vs Exploitative — Quando Sair do Livro
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>No river não tem mais cartas. Value bet, blefe ou check?</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>GTO é o baseline. Exploitative é o ajuste. Saber quando usar cada um é o que separa bons jogadores de otimos.</p>
       <div className="space-y-4">
-        <Section title="Por Que River é Diferente?">
-          No river, não existem mais draws. Não existe "proteção". Toda aposta é por um de dois motivos:<br /><br />
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700 }}>Value Bet</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você tem mão forte é quer que chamem</div>
+        <Section title="O Que é GTO?">
+          <strong style={{ color: '#4a90e2' }}>Game Theory Optimal</strong> — a estratégia matematicamente perfeita que não pode ser explorada. Se você joga GTO perfeito, ninguem consegue lucrar contra você a longo prazo.<br /><br />
+          <strong style={{ color: '#888' }}>Problema:</strong> GTO não maximiza seus lucros contra jogadores fracos. E a estratégia mais SEGURA, não a mais LUCRATIVA.
+        </Section>
+        <Section title="O Que é Exploitative?">
+          <strong style={{ color: '#f5a623' }}>Exploitative</strong> — ajustar sua estratégia pra tirar vantagem dos erros específicos do adversário.<br /><br />
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
+              <div style={{ color: '#4a90e2', fontWeight: 700 }}>GTO</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Inexploravel. Seguro. Baseline.</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700 }}>Blefe</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você não tem nada é quer que foldem</div>
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+              <div style={{ color: '#f5a623', fontWeight: 700 }}>Exploitative</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Lucro máximo. Arriscado. Ajuste.</div>
             </div>
-          </div>
-          <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #888' }}>
-            <div style={{ color: '#888', fontSize: 13 }}>Não existe "aposta de proteção" no river — não tem mais cartas pra proteger contra.</div>
           </div>
         </Section>
-        <Section title="Value Bet no River">
+        <Section title="Quando Jogar GTO">
           <div className="space-y-2">
             {[
-              { hand: 'Nuts (flush, straight, set)', sizing: '75-100%', color: '#00d4aa' },
-              { hand: 'Dois pares, overpair', sizing: '50%', color: '#f5a623' },
-              { hand: 'Top pair bom kicker', sizing: '33-50%', color: '#f5a623' },
+              'Contra jogadores desconhecidos — não sabe os leaks deles',
+              'Contra regulares fortes — eles exploram seus desvios',
+              'Quando você não tem info suficiente — default seguro',
+              'Em mesas com muitos jogadores bons',
+            ].map((t, i) => (
+              <div key={i} className="flex gap-2 items-start">
+                <span style={{ color: '#4a90e2' }}>•</span>
+                <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+        <Section title="Quando Jogar Exploitative">
+          <div className="space-y-2">
+            {[
+              { leak: 'Jogador folda demais a 3-bet', adjust: '3-bete mais, especialmente como blefe' },
+              { leak: 'Jogador chama demais (calling station)', adjust: 'Menos blefe, mais value bet thin' },
+              { leak: 'Jogador c-beta 90%+ dos flops', adjust: 'Chame/raise mais, ele tem range fraco' },
+              { leak: 'Jogador passivo nunca blefa river', adjust: 'Fold quando ele aposta grande no river' },
+              { leak: 'Jogador limpa pre-flop', adjust: 'Raise grande — limpar é leak' },
             ].map(r => (
-              <div key={r.hand} className="flex justify-between items-center rounded-lg p-3" style={{ background: '#0a0a0f' }}>
-                <span style={{ color: '#ccc', fontSize: 13 }}>{r.hand}</span>
-                <span style={{ color: r.color, fontWeight: 700, fontSize: 14 }}>{r.sizing}</span>
+              <div key={r.leak} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+                <div style={{ color: '#e94560', fontWeight: 600, fontSize: 13 }}>Leak: {r.leak}</div>
+                <div style={{ color: '#00d4aa', fontSize: 13, marginTop: 4 }}>Ajuste: {r.adjust}</div>
               </div>
             ))}
-          </div>
-          <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
-            Regra: aposte mais quando tem mão mais forte. Quanto mais nuts, maior o sizing.
           </div>
         </Section>
-        <Section title="Blefe no River">
-          Blefar no river funciona quando:<br /><br />
-          <div className="space-y-2">
-            {[
-              'Você pode representar uma mão forte (flush/straight completou)',
-              'Seu draw não completou e você não tem showdown value',
-              'O adversário tem range capped (não pode ter mão forte)',
-              'Você apostou flop e turn — a historia faz sentido',
-            ].map((t, i) => (
-              <div key={i} className="flex gap-2 items-start">
-                <span style={{ color: '#f5a623' }}>•</span>
-                <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-            <div style={{ color: '#e94560', fontWeight: 600, fontSize: 13 }}>Sizing do blefe: GRANDE (75%+)</div>
-            <div style={{ color: '#ccc', fontSize: 12, marginTop: 2 }}>Blefes pequenos no river não funcionam — o adversário tem pot odds bons demais pra foldar.</div>
-          </div>
-        </Section>
-        <Section title="Quando Check (Give Up)">
-          <div className="space-y-2">
-            {[
-              'Par médio/baixo — tem showdown value, não transforme em blefe',
-              'Board perigoso e você tem mão boa mas não nuts — controle',
-              'Sem mão e sem historia pra blefar — aceite o give up',
-            ].map((t, i) => (
-              <div key={i} className="flex gap-2 items-start">
-                <span style={{ color: '#888' }}>✓</span>
-                <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
-              </div>
-            ))}
+        <Section title="A Regra de Ouro">
+          <div className="rounded-lg p-4 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+            <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 16 }}>
+              "Jogue GTO até ter motivo pra desviar."
+            </div>
+            <div style={{ color: '#ccc', fontSize: 13, marginTop: 8 }}>
+              Comece com GTO como baseline. Observe os adversarios. Quando identificar um leak claro, ajuste. Se não sabe, volte ao GTO.
+            </div>
           </div>
         </Section>
       </div>
@@ -249,25 +189,29 @@ function Section({ title, children }) {
 
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
-  const [board, setBoard] = useState(null)
-  const [hole, setHole] = useState(null)
+  const [scenarioIdx, setScenarioIdx] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [sessionTotal, setSessionTotal] = useState(0)
   const [streak, setStreak] = useState(0)
   const [sessionDone, setSessionDone] = useState(false)
+  const [usedIdxs, setUsedIdxs] = useState([])
 
-  function newHand() {
+  function newScenario() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const b = randomCards(5)
-    const h = randomCards(2, b)
-    setBoard(b); setHole(h); setFeedback(null)
+    const available = SCENARIOS.map((_, i) => i).filter(i => !usedIdxs.includes(i))
+    const pool = available.length > 0 ? available : SCENARIOS.map((_, i) => i)
+    const idx = pool[Math.floor(Math.random() * pool.length)]
+    setScenarioIdx(idx)
+    setUsedIdxs(prev => [...prev, idx])
+    setFeedback(null)
   }
 
-  function answer(action) {
-    if (!board || feedback) return
-    const correct = getCorrectAction(hole, board)
-    const isCorrect = action === correct.action
+  function answer(optionId) {
+    if (scenarioIdx === null || feedback) return
+    const scenario = SCENARIOS[scenarioIdx]
+    const chosen = scenario.options.find(o => o.id === optionId)
+    const isCorrect = chosen.correct
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
     const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (isCorrect ? 1 : 0)
@@ -275,12 +219,12 @@ function Trainer() {
     recordAnswer(16, isCorrect, newStreak)
     const isLast = newTotal >= 10
     if (isLast) recordSession(16, Math.round((newCorrect / newTotal) * 100))
-    setFeedback({ ...correct, isCorrect, isLast })
+    setFeedback({ isCorrect, explanation: scenario.explanation, concept: scenario.concept, correctLabel: scenario.options.find(o => o.correct).label, isLast })
   }
 
-  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setBoard(null) }
+  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setScenarioIdx(null); setUsedIdxs([]) }
 
-  if (!board && !sessionDone) newHand()
+  if (scenarioIdx === null && !sessionDone) newScenario()
 
   if (sessionDone) {
     const acc = Math.round((sessionCorrect / sessionTotal) * 100)
@@ -294,12 +238,7 @@ function Trainer() {
     )
   }
 
-  const ACTION_LABELS = {
-    'value-big': 'VALUE BET GRANDE',
-    'value-small': 'VALUE BET MEDIO',
-    'bluff': 'BLEFE',
-    'check': 'CHECK'
-  }
+  const scenario = scenarioIdx !== null ? SCENARIOS[scenarioIdx] : null
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
@@ -311,60 +250,51 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Você está IP — River</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Todas as cartas foram reveladas. Qual sua ação final?</div>
-      </div>
-
-      <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>SUAS CARTAS</div>
-        <div className="flex justify-center gap-3 mb-4">
-          {hole?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>BOARD COMPLETO</div>
-        <div className="flex justify-center gap-2">
-          {board?.slice(0, 3).map((c, i) => <Card key={i} card={c} size="md" />)}
-          {board && <div style={{ borderLeft: '2px solid #333', margin: '0 2px' }} />}
-          {board?.[3] && <Card card={board[3]} size="md" />}
-          {board && <div style={{ borderLeft: '2px solid #333', margin: '0 2px' }} />}
-          {board?.[4] && <Card card={board[4]} size="md" />}
-        </div>
-      </div>
-
-      {!feedback && (
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {[
-            ['value-big', 'VALUE BIG', '#00d4aa', '#0a0a0f'],
-            ['value-small', 'VALUE MEDIO', '#f5a623', '#0a0a0f'],
-            ['bluff', 'BLEFE', '#e94560', 'white'],
-            ['check', 'CHECK', '#4a90e2', 'white'],
-          ].map(([action, label, bg, color]) => (
-            <button key={action} onClick={() => answer(action)} className="py-4 rounded-xl font-bold text-sm" style={{ background: bg, color }}>{label}</button>
-          ))}
-        </div>
-      )}
-
-      {feedback && (
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
-          <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
-            {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
+      {scenario && (
+        <>
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>CENARIO</div>
+            <div style={{ color: '#ccc', fontSize: 15, lineHeight: 1.7 }}>{scenario.situation}</div>
+            <div style={{ color: 'white', fontWeight: 700, fontSize: 16, marginTop: 12 }}>{scenario.question}</div>
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
-          <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
-          <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
-            Correto: <strong style={{ color: '#f5a623' }}>{ACTION_LABELS[feedback.action]}</strong>
-          </div>
-        </div>
+
+          {!feedback && (
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {scenario.options.map(opt => (
+                <button key={opt.id} onClick={() => answer(opt.id)} className="py-4 rounded-xl font-bold text-sm"
+                  style={{ background: opt.id === 'gto' ? '#4a90e2' : '#f5a623', color: opt.id === 'gto' ? 'white' : '#0a0a0f' }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {feedback && (
+            <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
+              <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+                {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
+              </div>
+              <button onClick={newScenario} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proximo Cenario</button>
+              <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.explanation}</div>
+              <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a62330' }}>
+                <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13 }}>Conceito-chave</div>
+                <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>{feedback.concept}</div>
+              </div>
+              <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
+                Correto: <strong style={{ color: '#f5a623' }}>{feedback.correctLabel}</strong>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
 }
 
-export default function Module16() {
+export default function Module17() {
   const { progress, markLessonRead } = useProgress()
-  const [view, setView] = useState(progress.modules[16]?.lessonRead ? 'trainer' : 'lesson')
-  if (!progress.modules[16]?.unlocked) return (
+  const [view, setView] = useState(progress.modules[17]?.lessonRead ? 'trainer' : 'lesson')
+  if (!progress.modules[17]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 15 para desbloquear.</p></div>
     </div>
@@ -374,9 +304,9 @@ export default function Module16() {
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
           <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[16]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[16]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[16]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[16]?.lessonRead && '🔒'}</button>
+          <button onClick={() => progress.modules[17]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[17]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[17]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[17]?.lessonRead && '🔒'}</button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(16); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(17); setView('trainer') }} /> : <Trainer />}
       </div>
     </div>
   )

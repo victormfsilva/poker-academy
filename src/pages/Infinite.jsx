@@ -302,19 +302,15 @@ function blindWarsScenario() {
 function rangeScenario(moduleId) {
   let myPos, raiserPositions, dataSource
   if (moduleId === 7) {
-    myPos = Math.random() < 0.5 ? 'BTN' : 'SB'
-    dataSource = myPos === 'BTN' ? BTN_VS_RFI : SB_VS_RFI
-    raiserPositions = myPos === 'BTN' ? ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO'] : ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN']
-  } else if (moduleId === 8) {
     myPos = 'SB'
     dataSource = SB_VS_RFI
     raiserPositions = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN']
-  } else if (moduleId === 9) {
+  } else if (moduleId === 8) {
     myPos = 'BTN'
     dataSource = BTN_VS_RFI
     raiserPositions = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO']
   } else {
-    // Module 10 — 3-Bet from any position
+    // Module 9 — 3-Bet from any position
     const spots = [
       { myPos: 'BB', data: BB_VS_RFI, raisers: ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB'] },
       { myPos: 'SB', data: SB_VS_RFI, raisers: ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN'] },
@@ -340,7 +336,7 @@ function rangeScenario(moduleId) {
     hand = fold.length ? fold[Math.floor(Math.random() * fold.length)] : ALL_HANDS[0]
   }
   const correct = threebet.includes(hand) ? '3bet' : call.includes(hand) ? 'call' : 'fold'
-  const names = { 7: 'SB/BTN vs RFI', 8: 'SB vs RFI', 9: 'BTN vs RFI', 10: '3-Bet' }
+  const names = { 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet' }
   return {
     moduleId, type: 'range', hand, pos: raiser,
     label: `${names[moduleId]} · ${myPos} vs ${raiser}`,
@@ -519,7 +515,7 @@ function riverPlayScenario() {
 // MÓDULOS 17-21 — Scenario-based
 // ================================================================
 const SCENARIO_POOLS = {
-  17: [
+  16: [
     { q: 'BTN com A5s. UTG tight (12%) fez raise. GTO diz 3-bet.', opts: [{ id: 'a', label: '3-bet (GTO)', correct: false }, { id: 'b', label: 'Fold (Exploit)', correct: true }] },
     { q: 'BB defende 70%+ dos raises. Você CO com K9o.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: 'Raise (Exploit)', correct: true }] },
     { q: 'BB com 87s vs BTN regular forte. GTO diz call.', opts: [{ id: 'a', label: 'Call (GTO)', correct: true }, { id: 'b', label: 'Fold ou 3-bet', correct: false }] },
@@ -529,7 +525,7 @@ const SCENARIO_POOLS = {
     { q: 'BB folda 80% ao 3-bet. SB com K8s.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: '3-bet (Exploit)', correct: true }] },
     { q: 'River com par médio. Vilao passivo (AF 0.5) fez raise.', opts: [{ id: 'a', label: 'Call (pot odds)', correct: false }, { id: 'b', label: 'Fold (Exploit)', correct: true }] },
   ],
-  18: [
+  17: [
     { q: '4 restam, pagam 3. Você 20bb. Short 5bb. CO com AJo.', opts: [{ id: 'a', label: 'Raise', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
     { q: 'Mesa final 3-way. Você 15bb. Chip leader shova. QQ.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
     { q: 'Satelite 10 left, pagam 9. Você 25bb. Short 12bb shova. AKs.', opts: [{ id: 'a', label: 'Call', correct: false }, { id: 'b', label: 'Fold (ICM extremo)', correct: true }] },
@@ -539,7 +535,7 @@ const SCENARIO_POOLS = {
     { q: 'Inicio torneio. 100bb. UTG raise. AKo.', opts: [{ id: 'a', label: '3-bet (ChipEV)', correct: true }, { id: 'b', label: 'Fold (conservar)', correct: false }] },
     { q: 'Satelite 20 left, 10 pagam. 8bb. BTN com QJs.', opts: [{ id: 'a', label: 'Push', correct: false }, { id: 'b', label: 'Fold (sobreviver)', correct: true }] },
   ],
-  19: [
+  18: [
     { q: 'BTN JTs. UTG raise, HJ call. 3-way.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: '3-bet', correct: false }] },
     { q: '3-way flop K-8-3. BB com A3s. Todos checkam a você.', opts: [{ id: 'a', label: 'Check', correct: true }, { id: 'b', label: 'Bet', correct: false }] },
     { q: 'Flop Q-J-9, 3-way, IP com KTs (draw).', opts: [{ id: 'a', label: 'Check (multiway)', correct: true }, { id: 'b', label: 'Bet', correct: false }] },
@@ -549,7 +545,7 @@ const SCENARIO_POOLS = {
     { q: '3-way T-9-8. OOP com TT (set).', opts: [{ id: 'a', label: 'Bet/Raise (proteger)', correct: true }, { id: 'b', label: 'Check/Call (trap)', correct: false }] },
     { q: 'SB com AQo. 3 callers ja. Squeeze?', opts: [{ id: 'a', label: 'Squeeze (3-bet)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
   ],
-  20: [
+  19: [
     { q: 'River As5h. Board K-Q-7-3-2 sem flush. Vilao checkou 3 streets.', opts: [{ id: 'a', label: 'Blefe (As bloqueia AK/AQ)', correct: true }, { id: 'b', label: 'Check back', correct: false }] },
     { q: 'BTN KsQs vs UTG raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Não (bloqueia folds)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
     { q: 'BB Ah4d vs BTN raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Sim (bloqueia AA/AK)', correct: true }, { id: 'b', label: 'Nao', correct: false }] },
@@ -559,7 +555,7 @@ const SCENARIO_POOLS = {
     { q: 'River 9s8s. Board Q-J-T-4-2. Vilao checkou. Blefar?', opts: [{ id: 'a', label: 'Não (não bloqueia AK nuts)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
     { q: 'Flop Ad-Kd-3s. 7d6d. SB bet 33%.', opts: [{ id: 'a', label: 'Check-raise (blocker FD)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
   ],
-  21: [
+  20: [
     { q: 'Vilao VPIP 45 / PFR 8. Ele fez raise UTG.', opts: [{ id: 'a', label: 'Range muito forte (so raise premium)', correct: true }, { id: 'b', label: 'Range amplo', correct: false }] },
     { q: 'Vilao 22/19, 3-Bet 9%. Fez 3-bet do BTN.', opts: [{ id: 'a', label: 'Defender normal (equilibrado)', correct: true }, { id: 'b', label: 'Fold (muito forte)', correct: false }] },
     { q: 'BTN Fold to 3-Bet 75%. Você BB com K8s.', opts: [{ id: 'a', label: '3-bet blefe (75% fold)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
@@ -574,7 +570,7 @@ const SCENARIO_POOLS = {
 function scenarioQuestion(moduleId) {
   const pool = SCENARIO_POOLS[moduleId]
   const s = pool[Math.floor(Math.random() * pool.length)]
-  const names = { 17: 'GTO vs Exploit', 18: 'ICM', 19: 'Multiway', 20: 'Blockers', 21: 'HUD/Solver' }
+  const names = { 16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solver' }
   return {
     moduleId, type: 'scenario', hand: null, question: s.q,
     label: names[moduleId],
@@ -600,18 +596,17 @@ const GENERATORS = {
   7: () => rangeScenario(7),
   8: () => rangeScenario(8),
   9: () => rangeScenario(9),
-  10: () => rangeScenario(10),
-  11: defenseCbetScenario,
-  12: checkRaiseScenario,
-  13: betSizingScenario,
-  14: donkBetScenario,
-  15: cbetTurnScenario,
-  16: riverPlayScenario,
+  10: defenseCbetScenario,
+  11: checkRaiseScenario,
+  12: betSizingScenario,
+  13: donkBetScenario,
+  14: cbetTurnScenario,
+  15: riverPlayScenario,
+  16: () => scenarioQuestion(16),
   17: () => scenarioQuestion(17),
   18: () => scenarioQuestion(18),
   19: () => scenarioQuestion(19),
   20: () => scenarioQuestion(20),
-  21: () => scenarioQuestion(21),
 }
 
 function newScenario(unlockedIds) {
@@ -626,9 +621,9 @@ function newScenario(unlockedIds) {
 // ================================================================
 const MOD_COLORS = {
   1: '#e94560', 2: '#f5a623', 3: '#4a90e2', 4: '#00d4aa', 5: '#f5a623',
-  6: '#e94560', 7: '#00d4aa', 8: '#e94560', 9: '#00d4aa', 10: '#f5a623',
-  11: '#4a90e2', 12: '#f5a623', 13: '#00d4aa', 14: '#e94560', 15: '#f5a623',
-  16: '#4a90e2', 17: '#00d4aa', 18: '#f5a623', 19: '#4a90e2', 20: '#e94560', 21: '#00d4aa',
+  6: '#e94560', 7: '#00d4aa', 8: '#e94560', 9: '#f5a623', 10: '#4a90e2',
+  11: '#f5a623', 12: '#00d4aa', 13: '#e94560', 14: '#f5a623', 15: '#4a90e2',
+  16: '#00d4aa', 17: '#f5a623', 18: '#4a90e2', 19: '#e94560', 20: '#00d4aa',
 }
 
 // ================================================================
@@ -636,15 +631,15 @@ const MOD_COLORS = {
 // ================================================================
 const MOD_NAMES_SHORT = {
   1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet Flop',
-  6: 'Blind Wars', 7: 'SB/BTN vs RFI', 8: 'SB vs RFI', 9: 'BTN vs RFI', 10: '3-Bet',
-  11: 'Def vs CBet', 12: 'Check-Raise', 13: 'Bet Sizing', 14: 'Donk Bet', 15: 'CBet Turn',
-  16: 'River Play', 17: 'GTO vs Exploit', 18: 'ICM', 19: 'Multiway', 20: 'Blockers', 21: 'HUD/Solvers',
+  6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def vs CBet',
+  11: 'Check-Raise', 12: 'Bet Sizing', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
+  16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers',
 }
 
 export default function Infinite() {
   const { recordAnswer, getModuleProgress } = useProgress()
 
-  const unlockedIds = Array.from({ length: 21 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
+  const unlockedIds = Array.from({ length: 20 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
 
   const [selectedModules, setSelectedModules] = useState(() => new Set(unlockedIds))
   const [showFilter, setShowFilter] = useState(false)

@@ -1,107 +1,106 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 
-// ICM scenarios — situational decisions
 const SCENARIOS = [
   {
-    situation: 'Torneio de 9 jogadores. Pagam 3. Restam 4 jogadores. Você tem 20bb (2o maior stack). Short stack tem 5bb. Você está no CO com AJo.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'raise', label: 'Raise (ChipEV)', correct: false },
-      { id: 'fold', label: 'Fold (ICM)', correct: true },
-    ],
-    explanation: 'Em ChipEV, AJo é raise fácil do CO. Mas com ICM na bolha (4 jogadores, pagam 3), o short stack de 5bb vai bustar em breve. Sobreviver garante premiacao — não arrisque fichas desnecessariamente.',
-    concept: 'Na bolha, sobrevivencia vale mais que fichas. Deixe o short stack bustar.'
-  },
-  {
-    situation: 'Mesa final. 3 jogadores restantes. 1o lugar: $1000, 2o: $600, 3o: $400. Você tem 15bb (menor stack). BB (chip leader, 40bb) shova. Você tem QQ no SB.',
+    situation: 'Você está no BTN com JTs. UTG fez raise, HJ chamou. Você tem posição sobre ambos.',
     question: 'O que você faz?',
     options: [
       { id: 'call', label: 'Call', correct: true },
-      { id: 'fold', label: 'Fold (ICM)', correct: false },
+      { id: 'raise', label: '3-bet', correct: false },
     ],
-    explanation: 'QQ é forte demais pra foldar mesmo com ICM. Contra range de shove do chip leader (muito amplo), QQ tem equity enorme. ICM não significa foldar tudo — significa ajustar as margens.',
-    concept: 'ICM muda margens, não elimina mãos premium. QQ+ é AKs quase nunca são fold, mesmo em ICM pesado.'
+    explanation: 'Em potes multiway, 3-bet com JTs não faz sentido — você não vai fazer os 2 foldarem. Call é perfeito: mão com boa jogabilidade, posição, e implied odds altas em pote multi.',
+    concept: 'Em multiway, prefira call com mãos jogaveis (suited connectors, pares) ao inves de 3-bet light.'
   },
   {
-    situation: 'Bolha de satelite. 10 jogadores restam, 9 ganham vaga (premio igual pra todos). Você tem 25bb (acima da média). UTG shova 12bb. Você tem AKs no BB.',
+    situation: '3 jogadores no flop: K♠ 8♦ 3♣. Você está no BB com A3s. UTG checou, CO checou.',
     question: 'O que você faz?',
     options: [
-      { id: 'call', label: 'Call', correct: false },
-      { id: 'fold', label: 'Fold', correct: true },
+      { id: 'bet', label: 'Bet (c-bet)', correct: false },
+      { id: 'check', label: 'Check', correct: true },
     ],
-    explanation: 'Em satelite com premio igual, ICM é EXTREMO. Dobrar suas fichas não muda seu premio (já tem vaga garantida se sobreviver). Mas bustar significa perder tudo. Mesmo AKs é fold aqui.',
-    concept: 'Em satelites, sobrevivencia é TUDO. Não arrisque fichas quando já tem stack pra garantir a vaga.'
+    explanation: 'Em pote multiway, c-bet com par baixo é perigoso. Com 2 adversarios, a chance de alguem ter K ou melhor é alta. Check e controle o pote.',
+    concept: 'Em multiway, reduza drasticamente sua frequência de c-bet. So aposte com mãos fortes.'
   },
   {
-    situation: 'Torneio regular. Pagam 15%. Restam 30% do field. Você tem 30bb (média). BTN (20bb) fez raise. Você está no BB com 77.',
+    situation: 'Flop: Q♥ J♠ 9♦. Pote multiway (3 jogadores). Você está IP com KTs (straight draw + gutshot royal).',
     question: 'O que você faz?',
     options: [
-      { id: 'call', label: 'Call (ChipEV normal)', correct: true },
-      { id: 'fold', label: 'Fold (ICM)', correct: false },
+      { id: 'bet', label: 'Bet', correct: false },
+      { id: 'check', label: 'Check (ver carta gratis)', correct: true },
     ],
-    explanation: 'Longe da bolha (30% restam, pagam 15%), ICM tem pouco impacto. 77 é call padrão no BB vs BTN raise. Jogar ChipEV normal é correto quando a bolha está distante.',
-    concept: 'ICM só tem impacto significativo perto da bolha é na mesa final. Longe dela, jogue ChipEV.'
+    explanation: 'Board muito conectado com 3 jogadores. Alguem provavelmente acertou forte (QJ, Q9, sets, straights feitos). Seu draw é bom mas apostar aqui é arriscado — check e veja o turn grátis.',
+    concept: 'Em boards conectados multiway, check com draws. Alguem provavelmente tem mão forte.'
   },
   {
-    situation: 'Mesa final de 6. Você é chip leader (50bb). Todos os outros tem 10-15bb. 6o lugar: $200, 1o lugar: $5000. Você está no BTN com T8s.',
+    situation: '3 jogadores no flop: A♠ 7♦ 2♣ (board seco). Você foi o raiser pre-flop do CO. Você tem AKo.',
     question: 'O que você faz?',
     options: [
-      { id: 'raise', label: 'Raise (pressionar)', correct: true },
-      { id: 'fold', label: 'Fold (jogar safe)', correct: false },
-    ],
-    explanation: 'Como chip leader na mesa final, VOCE é quem pressiona. Os stacks medios não podem arriscar bustar porque perdem saltos de premiacao. T8s é raise — abuse da pressao ICM sobre eles.',
-    concept: 'Chip leader na mesa final deve AUMENTAR a agressividade — os outros não podem revidar.'
-  },
-  {
-    situation: 'Bolha. 5 jogadores, pagam 4. Short stack tem 3bb no BTN. Você tem 18bb no SB com K2o. Short stack foldou.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'raise', label: 'Raise/shove vs BB', correct: false },
-      { id: 'fold', label: 'Fold', correct: true },
-    ],
-    explanation: 'Na bolha com short stack prestes a bustar, K2o não vale o risco. Se o BB chamar e você perder, pode virar o short stack. Deixe o jogador de 3bb bustar naturalmente.',
-    concept: 'Na bolha, evite confrontos marginais. O short stack vai bustar — não assuma o risco por ele.'
-  },
-  {
-    situation: 'Inicio do torneio. 1000 jogadores, pagam 150. Você tem 100bb. UTG fez raise, você tem AKo no BTN.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'threebet', label: '3-bet (ChipEV)', correct: true },
-      { id: 'call', label: 'Flat call (conservador)', correct: false },
-    ],
-    explanation: 'No inicio do torneio, ICM é praticamente zero. Jogue ChipEV puro. AKo é 3-bet padrão do BTN vs UTG. Não jogue conservador sem motivo.',
-    concept: 'No inicio do torneio, ICM não existe. Jogue para maximizar fichas (ChipEV).'
-  },
-  {
-    situation: 'Final table. 4 jogadores. Você tem 12bb no BB. SB (chip leader, 45bb) completa. Você tem A3o.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'shove', label: 'Shove all-in', correct: true },
+      { id: 'bet', label: 'Bet 33-50%', correct: true },
       { id: 'check', label: 'Check', correct: false },
     ],
-    explanation: 'Quando o chip leader limpa do SB, ele tem range fraco. A3o é bom o suficiente pra shove — você precisa acumular fichas pra competir. ICM não significa nunca arriscar; significa escolher os spots certos.',
-    concept: 'Contra limps do chip leader, shove com range amplo. Limpar = range fraco = boa oportunidade.'
+    explanation: 'Excecao a regra: com top pair top kicker em board MUITO seco e você tem range advantage como raiser, pode apostar mesmo multiway. AK num A-7-2 rainbow é forte o suficiente.',
+    concept: 'Em multiway, aposte em boards secos quando tem mão forte + range advantage clara.'
   },
   {
-    situation: 'Satelite. 20 jogadores, 10 vagas. Você tem 8bb (abaixo da média). Folda até você no BTN. Você tem QJs.',
+    situation: 'Você está no CO com 55. UTG fez raise, HJ chamou, você quer entrar no pote.',
+    question: 'Qual o principal motivo de chamar?',
+    options: [
+      { id: 'implied', label: 'Implied odds (set mining)', correct: true },
+      { id: 'equity', label: 'Par é sempre forte', correct: false },
+    ],
+    explanation: '55 em multiway é puro set mining. Você acerta set ~12% das vezes (1 em 8 flops). Em pote multiway, quando acerta, extrai muito valor de multiplos jogadores. As implied odds justificam o call.',
+    concept: 'Pares baixos em multiway = set mining. Você entra pelos implied odds, não pela força do par.'
+  },
+  {
+    situation: 'Flop: 7♠ 6♠ 5♠. Pote multiway (4 jogadores). Você tem A♠ 2♠ (flush feito). Primeiro a agir.',
     question: 'O que você faz?',
     options: [
-      { id: 'shove', label: 'Shove', correct: false },
+      { id: 'bet', label: 'Bet grande (75%)', correct: true },
+      { id: 'check', label: 'Check (slow play)', correct: false },
+    ],
+    explanation: 'Com 4 jogadores num board monotone, alguem quase certamente tem flush draw ou mão forte. Não slow play — aposte grande. Em multiway, sempre proteja mãos fortes. Alguem vai pagar.',
+    concept: 'Em multiway com board perigoso, NUNCA slow play. Aposte grande pra proteger e extrair.'
+  },
+  {
+    situation: 'Você está no BB com Q7o. UTG fez raise, 3 jogadores chamaram. Você tem pot odds de 5:1.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'call', label: 'Call (pot odds)', correct: false },
       { id: 'fold', label: 'Fold', correct: true },
     ],
-    explanation: 'Em satelite com 20 restantes é 10 vagas, você ainda precisa que 10 bustem. Com 8bb você sobrevive muitas rodadas de blinds. QJs não vale o risco de bustar quando paciencia garante a vaga.',
-    concept: 'Em satelites, 8bb é um stack enorme quando metade do field ainda precisa bustar.'
+    explanation: 'Pot odds bons não compensam jogabilidade ruim. Q7o não tem conexao, não é suited, é vai ser dominada frequentemente. Em multiway, você precisa de mãos que podem fazer nuts — Q7o não faz.',
+    concept: 'Em multiway, jogabilidade importa mais que pot odds. Mãos desconectadas sem potencial de nuts são fold.'
   },
   {
-    situation: 'Bolha. 10 jogadores, pagam 9. Você tem 35bb (maior stack da mesa). Jogador de 8bb shova do CO. Você está no BB com A9o.',
+    situation: 'Flop: T♥ 9♥ 8♣. Pote multiway (3 jogadores). Você está OOP com TT (set).',
     question: 'O que você faz?',
     options: [
-      { id: 'call', label: 'Call', correct: true },
-      { id: 'fold', label: 'Fold', correct: false },
+      { id: 'bet', label: 'Bet/check-raise', correct: true },
+      { id: 'check', label: 'Check é call', correct: false },
     ],
-    explanation: 'Como maior stack na bolha, você pode chamar shoves mais leve — se perder, ainda tem 27bb. A9o tem boa equity contra range de shove de 8bb. Alem disso, eliminar alguem garante que a bolha estoura.',
-    concept: 'Stacks grandes na bolha podem chamar mais — o custo de perder é menor em ICM.'
+    explanation: 'Set em board MUITO úmido com 3 jogadores — você DEVE apostar ou check-raise. J7, QJ, 76 já tem straight. Qualquer carta de copas completa flush. Não de carta gratis!',
+    concept: 'Sets em boards umidos multiway devem ser jogados agressivamente. Protecao é prioridade.'
+  },
+  {
+    situation: 'Pre-flop. Você está no SB com AQo. UTG fez raise, HJ chamou, CO chamou.',
+    question: 'O que você faz?',
+    options: [
+      { id: 'squeeze', label: '3-bet (squeeze)', correct: false },
+      { id: 'fold', label: 'Fold', correct: true },
+    ],
+    explanation: 'AQo do SB contra raiser + 2 callers é uma situação complicada. Squeeze raramente funciona com 3 oponentes, é se chamar você joga OOP contra 3 ranges. Fold é o mais correto.',
+    concept: 'Em potes multiway, aperte seu range de 3-bet do SB. Mais jogadores = menos fold equity.'
+  },
+  {
+    situation: 'Você está no BTN com A♥ 5♥. 3 jogadores já chamaram o raise. Você decide chamar. Flop: K♥ 8♥ 2♦.',
+    question: 'Alguem aposta 33%. O que você faz?',
+    options: [
+      { id: 'call', label: 'Call', correct: true },
+      { id: 'raise', label: 'Raise', correct: false },
+    ],
+    explanation: 'Flush draw do nuts (A-high flush draw) em multiway — call. Não raise: em multiway, raise com draw é arriscado porque pode ter alguem com mão forte que re-raisa. Call é veja o turn.',
+    concept: 'Em multiway, não semi-blefe com raises. Multiplos oponentes reduzem sua fold equity a quase zero.'
   },
 ]
 
@@ -109,65 +108,52 @@ function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
-        ICM — Independent Chip Model
+        Multiway Pots — Quando Tem Mais de 2 Jogadores
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Por que fichas de torneio valem menos conforme você acumula mais</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Tudo muda quando o pote tem 3+ jogadores</p>
       <div className="space-y-4">
-        <Section title="O Que é ICM?">
-          Em cash game, cada ficha vale exatamente seu valor em dinheiro. 1000 fichas = $1000.<br /><br />
-          Em torneio, <strong style={{ color: '#e94560' }}>fichas NAO valem linearmente</strong>. Dobrar seu stack NAO dobra seu premio esperado. Isso porque a estrutura de premiacao não é linear (1o não ganha o dobro do 2o).<br /><br />
-          ICM é o modelo que converte fichas em valor real ($) baseado na estrutura de premiacao.
+        <Section title="Por Que Multiway é Diferente?">
+          Em potes heads-up (1v1), blefes funcionam ~50% das vezes. Em multiway com 3 jogadores, a chance de TODOS foldarem cai drasticamente.<br /><br />
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
+              <div style={{ color: '#4a90e2', fontWeight: 700 }}>Heads-up</div>
+              <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>~50%</div>
+              <div style={{ color: '#888', fontSize: 12 }}>fold equity do blefe</div>
+            </div>
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+              <div style={{ color: '#e94560', fontWeight: 700 }}>3 jogadores</div>
+              <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>~25%</div>
+              <div style={{ color: '#888', fontSize: 12 }}>fold equity do blefe</div>
+            </div>
+          </div>
         </Section>
-        <Section title="Por Que ICM Importa?">
+        <Section title="Regras de Multiway">
+          <div className="space-y-2">
+            {[
+              { rule: 'Reduza c-bets drasticamente', why: 'Com mais jogadores, alguem provavelmente acertou algo' },
+              { rule: 'Aposte apenas com mãos fortes', why: 'Blefes não funcionam contra multiplos oponentes' },
+              { rule: 'Proteja mãos fortes agressivamente', why: 'Mais jogadores = mais draws possíveis. Não de carta gratis' },
+              { rule: 'Nunca slow play', why: 'Com 3+ oponentes, alguem pode te ultrapassar' },
+              { rule: 'Prefira mãos com potencial de nuts', why: 'Suited connectors > offsuit desconectados' },
+              { rule: 'Set mining é lucrativo', why: 'Implied odds são maiores com mais jogadores pagando' },
+            ].map(r => (
+              <div key={r.rule} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+                <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13 }}>{r.rule}</div>
+                <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>{r.why}</div>
+              </div>
+            ))}
+          </div>
+        </Section>
+        <Section title="Mãos Boas pra Multiway">
           <div className="grid grid-cols-2 gap-3 mt-2">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700 }}>Ganhar fichas</div>
-              <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>+$X</div>
-              <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Valor marginal decrescente</div>
+              <div style={{ color: '#00d4aa', fontWeight: 600 }}>Boas</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Pares (set mining)<br />Suited connectors<br />Suited aces<br />Mãos que fazem nuts</div>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700 }}>Perder fichas</div>
-              <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>-$2X</div>
-              <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Perder custa MAIS que ganhar</div>
+              <div style={{ color: '#e94560', fontWeight: 600 }}>Ruins</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Offsuit desconectados<br />Mãos dominadas (KTo, Q9o)<br />Mãos que fazem 2o melhor<br />Anything sem potencial de nuts</div>
             </div>
-          </div>
-          <div style={{ color: '#ccc', fontSize: 13, marginTop: 8 }}>
-            Isso cria assimetria: o risco de bustar é desproporcional ao ganho de dobrar.
-          </div>
-        </Section>
-        <Section title="Onde ICM Tem Mais Impacto">
-          <div className="space-y-2">
-            {[
-              { spot: 'Bolha do torneio', impact: 'MAXIMO', color: '#e94560', desc: 'Diferenca entre ganhar premio é sair sem nada' },
-              { spot: 'Mesa final', impact: 'ALTO', color: '#f5a623', desc: 'Cada eliminacao = salto grande de premiacao' },
-              { spot: 'Satelites', impact: 'EXTREMO', color: '#e94560', desc: 'Premio igual = sobrevivencia é tudo' },
-              { spot: 'Inicio do torneio', impact: 'ZERO', color: '#00d4aa', desc: 'Jogue ChipEV puro' },
-            ].map(r => (
-              <div key={r.spot} className="flex justify-between items-center rounded-lg p-3" style={{ background: '#0a0a0f' }}>
-                <div>
-                  <div style={{ color: 'white', fontWeight: 600, fontSize: 13 }}>{r.spot}</div>
-                  <div style={{ color: '#888', fontSize: 12 }}>{r.desc}</div>
-                </div>
-                <span style={{ color: r.color, fontWeight: 700, fontSize: 13 }}>{r.impact}</span>
-              </div>
-            ))}
-          </div>
-        </Section>
-        <Section title="Regras Praticas de ICM">
-          <div className="space-y-2">
-            {[
-              'Na bolha, aperte seu range significativamente (fold mais)',
-              'Deixe short stacks bustarem antes de você arriscar',
-              'Como chip leader, AUMENTE agressividade — os outros não podem revidar',
-              'Mãos premium (QQ+, AKs) quase nunca são fold, mesmo em ICM pesado',
-              'Em satelites, sobrevivencia é TUDO — fold até garantir a vaga',
-              'Longe da bolha, jogue ChipEV normal',
-            ].map((t, i) => (
-              <div key={i} className="flex gap-2 items-start">
-                <span style={{ color: '#f5a623' }}>•</span>
-                <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
-              </div>
-            ))}
           </div>
         </Section>
       </div>
@@ -202,16 +188,13 @@ function Trainer() {
     const available = SCENARIOS.map((_, i) => i).filter(i => !usedIdxs.includes(i))
     const pool = available.length > 0 ? available : SCENARIOS.map((_, i) => i)
     const idx = pool[Math.floor(Math.random() * pool.length)]
-    setScenarioIdx(idx)
-    setUsedIdxs(prev => [...prev, idx])
-    setFeedback(null)
+    setScenarioIdx(idx); setUsedIdxs(prev => [...prev, idx]); setFeedback(null)
   }
 
   function answer(optionId) {
     if (scenarioIdx === null || feedback) return
     const scenario = SCENARIOS[scenarioIdx]
-    const chosen = scenario.options.find(o => o.id === optionId)
-    const isCorrect = chosen.correct
+    const isCorrect = scenario.options.find(o => o.id === optionId).correct
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
     const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (isCorrect ? 1 : 0)
@@ -249,26 +232,23 @@ function Trainer() {
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
-
       {scenario && (
         <>
           <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>CENARIO ICM</div>
+            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>CENARIO MULTIWAY</div>
             <div style={{ color: '#ccc', fontSize: 15, lineHeight: 1.7 }}>{scenario.situation}</div>
             <div style={{ color: 'white', fontWeight: 700, fontSize: 16, marginTop: 12 }}>{scenario.question}</div>
           </div>
-
           {!feedback && (
             <div className="grid grid-cols-2 gap-3 mb-4">
               {scenario.options.map(opt => (
                 <button key={opt.id} onClick={() => answer(opt.id)} className="py-4 rounded-xl font-bold text-sm"
-                  style={{ background: opt.id === 'fold' || opt.id === 'check' ? '#4a90e2' : '#f5a623', color: opt.id === 'fold' || opt.id === 'check' ? 'white' : '#0a0a0f' }}>
+                  style={{ background: '#1e1e2e', color: 'white', border: '1px solid #333' }}>
                   {opt.label}
                 </button>
               ))}
             </div>
           )}
-
           {feedback && (
             <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
               <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
@@ -288,10 +268,10 @@ function Trainer() {
   )
 }
 
-export default function Module18() {
+export default function Module19() {
   const { progress, markLessonRead } = useProgress()
-  const [view, setView] = useState(progress.modules[18]?.lessonRead ? 'trainer' : 'lesson')
-  if (!progress.modules[18]?.unlocked) return (
+  const [view, setView] = useState(progress.modules[19]?.lessonRead ? 'trainer' : 'lesson')
+  if (!progress.modules[19]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 17 para desbloquear.</p></div>
     </div>
@@ -301,9 +281,9 @@ export default function Module18() {
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
           <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[18]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[18]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[18]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[18]?.lessonRead && '🔒'}</button>
+          <button onClick={() => progress.modules[19]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[19]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[19]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[19]?.lessonRead && '🔒'}</button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(18); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(19); setView('trainer') }} /> : <Trainer />}
       </div>
     </div>
   )

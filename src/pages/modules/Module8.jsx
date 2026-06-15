@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
-import { SB_VS_RFI } from '../../data/ranges'
+import { BTN_VS_RFI } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
 
-const RAISER_POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN']
-const RAISER_KEYS = { UTG: 'vsUTG', 'UTG+1': 'vsUTG+1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN' }
+const RAISER_POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO']
+const RAISER_KEYS = { UTG: 'vsUTG', 'UTG+1': 'vsUTG+1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO' }
 
 function generateAllHands() {
   const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
@@ -22,7 +22,7 @@ function generateAllHands() {
 
 function getAction(hand, raisedFrom) {
   const key = RAISER_KEYS[raisedFrom]
-  const range = SB_VS_RFI[key]
+  const range = BTN_VS_RFI[key]
   if (!range) return 'fold'
   if (range.threebet?.includes(hand)) return '3bet'
   if (range.call?.includes(hand)) return 'call'
@@ -33,7 +33,7 @@ function randomHand(raisedFrom) {
   const all = generateAllHands()
   const dice = Math.random()
   const key = RAISER_KEYS[raisedFrom]
-  const range = SB_VS_RFI[key]
+  const range = BTN_VS_RFI[key]
   if (!range) return all[Math.floor(Math.random() * all.length)]
   if (dice < 0.3 && range.threebet?.length) return range.threebet[Math.floor(Math.random() * range.threebet.length)]
   if (dice < 0.6 && range.call?.length) return range.call[Math.floor(Math.random() * range.call.length)]
@@ -48,15 +48,15 @@ function getFeedback(hand, action, raisedFrom) {
   const isCorrect = action === correct
   let reason = ''
 
-  const isLate = raisedFrom === 'BTN' || raisedFrom === 'CO'
   const isEarly = raisedFrom === 'UTG' || raisedFrom === 'UTG+1'
+  const isLate = raisedFrom === 'CO'
 
   if (correct === '3bet') {
-    reason = `${hand} é forte o suficiente para 3-bet no SB contra ${raisedFrom}. ${isEarly ? 'Mesmo contra range forte de posição cedo, sua mão justifica relance para pressionar.' : 'Ele abriu de posição tardia com range mais largo — 3-bet para não jogar OOP com mão passiva.'}`
+    reason = `${hand} é forte o suficiente para 3-bet no BTN contra ${raisedFrom}. ${isEarly ? 'Mesmo contra range forte, você tem posição — 3-bet é lucrativo com mãos premium é blockers.' : 'Ele abriu de posição tardia — 3-bet para isolar é jogar IP com iniciativa.'}`
   } else if (correct === 'call') {
-    reason = `${hand} merece call no SB contra ${raisedFrom}. Você vai jogar fora de posição, então só chame com mãos que tem boa equity. ${isLate ? 'Ele abriu largo, sua mão tem chance suficiente.' : 'Range dele é mais forte, mas sua mão ainda vale o preço.'}`
+    reason = `${hand} merece call no BTN contra ${raisedFrom}. Você tem a melhor posição da mesa — jogar IP pos-flop compensa. ${isLate ? 'CO abriu mais largo, mas call ainda é melhor que 3-bet com essa mão especifica.' : 'Range dele é mais forte, mas posição compensa — chame é jogue bem pos-flop.'}`
   } else {
-    reason = `${hand} deve ser foldada no SB contra ${raisedFrom}. ${isEarly ? 'Ele abriu de posição cedo com range forte — sua mão não tem equity suficiente, e você ainda joga OOP.' : 'Mesmo ele abrindo mais largo, essa mão especifica não compensa o custo de jogar fora de posição.'}`
+    reason = `${hand} deve ser foldada no BTN contra ${raisedFrom}. ${isEarly ? 'Ele abriu de posição cedo com range forte — mesmo no BTN com posição, essa mão não tem equity suficiente.' : 'Mesmo com a vantagem de posição, essa mão especifica não tem jogabilidade suficiente.'}`
   }
 
   return { correct, isCorrect, reason }
@@ -66,40 +66,44 @@ function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
-        SB vs RFI — Defendendo o Small Blind
+        BTN vs RFI — A Melhor Posicao da Mesa
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>A pior posição da mesa — aprenda a minimizar perdas é encontrar spots lucrativos</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Você sempre joga em posição no pos-flop — aproveite ao máximo</p>
       <div className="space-y-4">
-        <Section title="Por Que o SB é a Pior Posicao?">
-          O Small Blind tem dois problemas graves:<br /><br />
-          <strong style={{ color: '#e94560' }}>1. Você paga metade do big blind obrigatoriamente</strong> — então já tem dinheiro investido.<br />
-          <strong style={{ color: '#e94560' }}>2. Você SEMPRE joga fora de posição no pos-flop</strong> — age primeiro em todas as ruas.<br /><br />
-          Isso significa que você precisa de mãos melhores para continuar. Diferente do BB (que já pagou o preço total é fecha a ação), o SB precisa completar o raise E ainda joga OOP.
+        <Section title="Por Que o BTN é a Melhor Posicao?">
+          O Button tem uma vantagem unica no poker:<br /><br />
+          <strong style={{ color: '#00d4aa' }}>Você SEMPRE age por ultimo no pos-flop.</strong><br /><br />
+          Isso significa que você vê o que todos fazem antes de tomar sua decisão. Você pode:<br />
+          - Controlar o tamanho do pote<br />
+          - Fazer blefes mais eficientes<br />
+          - Extrair mais valor com mãos fortes<br />
+          - Realizar equity gratis em posição
         </Section>
         <Section title="Suas 3 Opcoes">
           <div className="grid grid-cols-3 gap-3 mt-2">
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
               <div style={{ color: '#e94560', fontWeight: 700 }}>FOLD</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao fraca — não vale pagar pra jogar OOP</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao sem jogabilidade — mesmo IP não compensa</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 700 }}>CALL</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao com equity — paga é vê o flop</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao com equity — jogue IP é explore pos-flop</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700 }}>3-BET</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao forte ou blefe com blocker</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao premium ou blefe com blocker</div>
             </div>
           </div>
         </Section>
-        <Section title="SB Defende MENOS que BB">
+        <Section title="BTN Defende MUITO Mais">
           <p style={{ color: '#ccc', fontSize: 14, marginBottom: 12 }}>
-            Compare: o BB defende ~55-60% das mãos vs BTN. O SB defende apenas ~35-40% vs BTN. Por que?
+            Comparando as posições defensivas, o BTN é de longe o que mais joga:
           </p>
           <div className="space-y-2">
             {[
-              { label: 'BB', pct: '55-60%', reason: 'Ja pagou o preço total + fecha a ação pre-flop' },
-              { label: 'SB', pct: '35-40%', reason: 'Pagou metade + SEMPRE joga OOP pos-flop' },
+              { label: 'SB', pct: '35-40%', reason: 'Pagou metade + sempre OOP' },
+              { label: 'BB', pct: '55-60%', reason: 'Ja pagou preço total + fecha ação pre' },
+              { label: 'BTN', pct: '45-55%', reason: 'Posicao absoluta — sempre IP pos-flop' },
             ].map(r => (
               <div key={r.label} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: '#e94560', fontWeight: 700, width: 40, flexShrink: 0 }}>{r.label}</div>
@@ -111,10 +115,9 @@ function Lesson({ onComplete }) {
         <Section title="De Onde Vem o Raise Muda Tudo">
           <div className="space-y-2">
             {[
-              { pos: 'UTG', desc: 'Range mais forte. SB defende ~22% — só com as melhores mãos.' },
-              { pos: 'LJ / HJ', desc: 'Range médio. SB defende ~28-30% — adiciona suited connectors.' },
-              { pos: 'CO', desc: 'Range mais aberto. SB defende ~32% — mais mãos entram.' },
-              { pos: 'BTN', desc: 'Range mais largo. SB defende ~40% — defenda bastante, mas com cuidado OOP.' },
+              { pos: 'UTG', desc: 'Range mais forte. BTN defende ~35% — só mãos com boa equity.' },
+              { pos: 'LJ / HJ', desc: 'Range médio. BTN defende ~42-45% — muitos suited connectors entram.' },
+              { pos: 'CO', desc: 'Range mais aberto. BTN defende ~50%+ — defend amplo, você tem posição.' },
             ].map(r => (
               <div key={r.pos} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: '#e94560', fontWeight: 700, width: 65, flexShrink: 0 }}>{r.pos}</div>
@@ -123,18 +126,18 @@ function Lesson({ onComplete }) {
             ))}
           </div>
         </Section>
-        <Section title="3-Bet no SB: Valor + Blefe">
-          No SB, 3-bet é especialmente importante porque:<br /><br />
-          <strong style={{ color: '#00d4aa' }}>Se você só chama, joga OOP com iniciativa do adversário.</strong><br />
-          <strong style={{ color: '#f5a623' }}>Se você 3-bet, retoma a iniciativa e pode ganhar pre-flop.</strong><br /><br />
+        <Section title="3-Bet no BTN: Isolar é Dominar">
+          No BTN, 3-bet é poderoso porque:<br /><br />
+          <strong style={{ color: '#00d4aa' }}>Você isola o raiser é garante posição pos-flop.</strong><br />
+          <strong style={{ color: '#f5a623' }}>Os blinds geralmente foldham, e você joga HU em posição.</strong><br /><br />
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>3-Bet de Valor</div>
-              <div style={{ color: '#ccc', fontSize: 13 }}>AA, KK, QQ, AKs — relanca porque sua mão e premium e você quer construir pote.</div>
+              <div style={{ color: '#ccc', fontSize: 13 }}>AA, KK, QQ, JJ, TT, AKs, AQs — relanca porque sua mão e forte e você quer pote grande IP.</div>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>3-Bet Blefe</div>
-              <div style={{ color: '#ccc', fontSize: 13 }}>A5s, A4s, A3s — o As bloqueia AA é AK do adversário. Suited te da equity extra se chamarem.</div>
+              <div style={{ color: '#ccc', fontSize: 13 }}>A5s, A4s, A3s — blockers de AA/AK. Suited te da equity extra se chamarem. IP você navega melhor.</div>
             </div>
           </div>
         </Section>
@@ -230,7 +233,7 @@ function Trainer() {
       {currentRaiser && (
         <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
           <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-          <div style={{ color: '#e94560', fontSize: 22, fontWeight: 700 }}>Você está no SB</div>
+          <div style={{ color: '#00d4aa', fontSize: 22, fontWeight: 700 }}>Você está no BTN</div>
           <div style={{ color: '#ccc', fontSize: 14, marginTop: 4 }}>{currentRaiser} fez raise. O que fazer?</div>
         </div>
       )}
@@ -255,11 +258,11 @@ function Trainer() {
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Correto: <strong style={{ color: '#f5a623' }}>{feedback.correct.toUpperCase()}</strong></div>
           {!feedback.isCorrect && (() => {
             const key = RAISER_KEYS[currentRaiser]
-            const range = SB_VS_RFI[key] || {}
+            const range = BTN_VS_RFI[key] || {}
             return (
               <RangeViewer
                 customRange={{ threebet: range.threebet || [], call: range.call || [] }}
-                label={`Ver range SB vs ${currentRaiser}`}
+                label={`Ver range BTN vs ${currentRaiser}`}
                 legend={[['threebet', '3-Bet'], ['call', 'Call'], ['fold', 'Fold']]}
                 highlightHand={currentHand}
               />
@@ -271,10 +274,10 @@ function Trainer() {
   )
 }
 
-export default function Module8() {
+export default function Module9() {
   const { progress, markLessonRead } = useProgress()
-  const [view, setView] = useState(progress.modules[8]?.lessonRead ? 'trainer' : 'lesson')
-  if (!progress.modules[8]?.unlocked) return (
+  const [view, setView] = useState(progress.modules[9]?.lessonRead ? 'trainer' : 'lesson')
+  if (!progress.modules[9]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 7 para desbloquear.</p></div>
     </div>
@@ -284,9 +287,9 @@ export default function Module8() {
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
           <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[8]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[8]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[8]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[8]?.lessonRead && '🔒'}</button>
+          <button onClick={() => progress.modules[9]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[9]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[9]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[9]?.lessonRead && '🔒'}</button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(8); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(9); setView('trainer') }} /> : <Trainer />}
       </div>
     </div>
   )

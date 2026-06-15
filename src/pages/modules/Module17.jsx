@@ -1,106 +1,107 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 
+// ICM scenarios — situational decisions
 const SCENARIOS = [
   {
-    situation: 'Você está no BTN com A5s. UTG (jogador tight que só abre 12%) fez raise. GTO diz 3-bet.',
+    situation: 'Torneio de 9 jogadores. Pagam 3. Restam 4 jogadores. Você tem 20bb (2o maior stack). Short stack tem 5bb. Você está no CO com AJo.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: '3-bet (GTO)', correct: false },
-      { id: 'exploit', label: 'Fold (Exploitative)', correct: true },
+      { id: 'raise', label: 'Raise (ChipEV)', correct: false },
+      { id: 'fold', label: 'Fold (ICM)', correct: true },
     ],
-    explanation: 'GTO diz 3-bet com A5s do BTN vs UTG. Mas se o jogador é MUITO tight (12%), seu 3-bet de blefe perde valor — ele só continua com range forte. Fold explora a tendencia dele de abrir pouco.',
-    concept: 'Contra jogadores muito tight, reduza seus blefes. Eles não abrem o suficiente pra justificar 3-bet light.'
+    explanation: 'Em ChipEV, AJo é raise fácil do CO. Mas com ICM na bolha (4 jogadores, pagam 3), o short stack de 5bb vai bustar em breve. Sobreviver garante premiacao — não arrisque fichas desnecessariamente.',
+    concept: 'Na bolha, sobrevivencia vale mais que fichas. Deixe o short stack bustar.'
   },
   {
-    situation: 'Mesa de torneio. Jogador no BB defende 70%+ dos raises (chama com tudo). Você está no CO com K9o.',
+    situation: 'Mesa final. 3 jogadores restantes. 1o lugar: $1000, 2o: $600, 3o: $400. Você tem 15bb (menor stack). BB (chip leader, 40bb) shova. Você tem QQ no SB.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Fold (GTO)', correct: false },
-      { id: 'exploit', label: 'Raise (Exploitative)', correct: true },
+      { id: 'call', label: 'Call', correct: true },
+      { id: 'fold', label: 'Fold (ICM)', correct: false },
     ],
-    explanation: 'GTO foldaria K9o do CO. Mas se o BB defende 70%+ (muito frouxo), você pode abrir mais leve porque vai jogar pos-flop IP contra range fraco. Exploitative = aproveitar o erro dele.',
-    concept: 'Contra jogadores que chamam demais, amplie seu range de abertura. Você tem edge pos-flop.'
+    explanation: 'QQ é forte demais pra foldar mesmo com ICM. Contra range de shove do chip leader (muito amplo), QQ tem equity enorme. ICM não significa foldar tudo — significa ajustar as margens.',
+    concept: 'ICM muda margens, não elimina mãos premium. QQ+ é AKs quase nunca são fold, mesmo em ICM pesado.'
   },
   {
-    situation: 'Você está no BB com 87s. BTN (regular forte) fez raise. GTO diz call.',
+    situation: 'Bolha de satelite. 10 jogadores restam, 9 ganham vaga (premio igual pra todos). Você tem 25bb (acima da média). UTG shova 12bb. Você tem AKs no BB.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Call (GTO)', correct: true },
-      { id: 'exploit', label: 'Fold ou 3-bet', correct: false },
+      { id: 'call', label: 'Call', correct: false },
+      { id: 'fold', label: 'Fold', correct: true },
     ],
-    explanation: 'Contra regulares fortes que jogam perto do GTO, a melhor estratégia é jogar GTO você também. 87s tem equity é jogabilidade suficiente pra call no BB. Desviar do GTO contra bons jogadores te torna exploravel.',
-    concept: 'Contra jogadores bons, fique no GTO. Desviar contra quem joga equilibrado cria leaks no seu jogo.'
+    explanation: 'Em satelite com premio igual, ICM é EXTREMO. Dobrar suas fichas não muda seu premio (já tem vaga garantida se sobreviver). Mas bustar significa perder tudo. Mesmo AKs é fold aqui.',
+    concept: 'Em satelites, sobrevivencia é TUDO. Não arrisque fichas quando já tem stack pra garantir a vaga.'
   },
   {
-    situation: 'Cash game. Jogador no BTN c-beta 90% dos flops (aposta quase sempre). Você está no BB num flop A-7-2 com 65s.',
+    situation: 'Torneio regular. Pagam 15%. Restam 30% do field. Você tem 30bb (média). BTN (20bb) fez raise. Você está no BB com 77.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Fold (GTO)', correct: false },
-      { id: 'exploit', label: 'Call ou Check-raise (Exploitative)', correct: true },
+      { id: 'call', label: 'Call (ChipEV normal)', correct: true },
+      { id: 'fold', label: 'Fold (ICM)', correct: false },
     ],
-    explanation: 'GTO foldaria 65s num flop A-7-2. Mas se ele c-beta 90%, a maioria das vezes ele não tem nada. Você pode chamar leve ou check-raise de blefe porque o range dele é muito fraco.',
-    concept: 'Contra jogadores que apostam demais, defenda mais é check-raise blefe. A alta frequência de c-bet deles significa range fraco.'
+    explanation: 'Longe da bolha (30% restam, pagam 15%), ICM tem pouco impacto. 77 é call padrão no BB vs BTN raise. Jogar ChipEV normal é correto quando a bolha está distante.',
+    concept: 'ICM só tem impacto significativo perto da bolha é na mesa final. Longe dela, jogue ChipEV.'
   },
   {
-    situation: 'Torneio online. Jogador limpa (limp) no SB. Você está no BB com J4o.',
+    situation: 'Mesa final de 6. Você é chip leader (50bb). Todos os outros tem 10-15bb. 6o lugar: $200, 1o lugar: $5000. Você está no BTN com T8s.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Check (GTO)', correct: false },
-      { id: 'exploit', label: 'Raise grande (Exploitative)', correct: true },
+      { id: 'raise', label: 'Raise (pressionar)', correct: true },
+      { id: 'fold', label: 'Fold (jogar safe)', correct: false },
     ],
-    explanation: 'GTO checkaria J4o. Mas limpar do SB é um erro enorme — jogadores que limpam geralmente tem range fraco é foldham frequentemente a raises. Raise grande explora essa tendencia.',
-    concept: 'Contra limpers, raise mais que o normal. Limpar é um leak que você deve punir.'
+    explanation: 'Como chip leader na mesa final, VOCE é quem pressiona. Os stacks medios não podem arriscar bustar porque perdem saltos de premiacao. T8s é raise — abuse da pressao ICM sobre eles.',
+    concept: 'Chip leader na mesa final deve AUMENTAR a agressividade — os outros não podem revidar.'
   },
   {
-    situation: 'Mesa final de torneio. ICM pesado. Jogador short stack shova all-in. Você está no BB com AQo é tem stack médio.',
+    situation: 'Bolha. 5 jogadores, pagam 4. Short stack tem 3bb no BTN. Você tem 18bb no SB com K2o. Short stack foldou.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Call (ChipEV)', correct: false },
-      { id: 'exploit', label: 'Fold (ICM)', correct: true },
+      { id: 'raise', label: 'Raise/shove vs BB', correct: false },
+      { id: 'fold', label: 'Fold', correct: true },
     ],
-    explanation: 'Em ChipEV puro, AQo é call fácil contra shove. Mas em mesa final com ICM, o custo de bustar é muito maior que o ganho de dobrar. ICM diz fold com muitas mãos que seriam call em ChipEV.',
-    concept: 'ICM muda drasticamente as decisões. Na bolha é mesa final, sobrevivencia vale mais que fichas.'
+    explanation: 'Na bolha com short stack prestes a bustar, K2o não vale o risco. Se o BB chamar e você perder, pode virar o short stack. Deixe o jogador de 3bb bustar naturalmente.',
+    concept: 'Na bolha, evite confrontos marginais. O short stack vai bustar — não assuma o risco por ele.'
   },
   {
-    situation: 'Você está no BTN com QJs. Mesa de 6 jogadores, todos regulares competentes jogando GTO.',
+    situation: 'Inicio do torneio. 1000 jogadores, pagam 150. Você tem 100bb. UTG fez raise, você tem AKo no BTN.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Raise (GTO padrão)', correct: true },
-      { id: 'exploit', label: 'Limp ou fold', correct: false },
+      { id: 'threebet', label: '3-bet (ChipEV)', correct: true },
+      { id: 'call', label: 'Flat call (conservador)', correct: false },
     ],
-    explanation: 'Contra mesa de regulares fortes, não tem leak pra explorar. QJs é raise padrão do BTN no GTO. Desviar aqui (limpar ou foldar) criaria um leak no SEU jogo que eles poderiam explorar.',
-    concept: 'Quando não sabe nada sobre o adversário, jogue GTO. E a estratégia mais segura — ninguem consegue explorar.'
+    explanation: 'No inicio do torneio, ICM é praticamente zero. Jogue ChipEV puro. AKo é 3-bet padrão do BTN vs UTG. Não jogue conservador sem motivo.',
+    concept: 'No inicio do torneio, ICM não existe. Jogue para maximizar fichas (ChipEV).'
   },
   {
-    situation: 'Você está no SB. BB é jogador recreativo que folda 80% a 3-bets (fold demais). Você tem K8s.',
+    situation: 'Final table. 4 jogadores. Você tem 12bb no BB. SB (chip leader, 45bb) completa. Você tem A3o.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Complete ou fold (GTO)', correct: false },
-      { id: 'exploit', label: '3-bet (Exploitative)', correct: true },
+      { id: 'shove', label: 'Shove all-in', correct: true },
+      { id: 'check', label: 'Check', correct: false },
     ],
-    explanation: 'GTO não 3-betaria K8s no SB vs BB. Mas se o BB folda 80% a 3-bets, você lucra 3-betando com qualquer mão — ele desiste demais. K8s ainda tem equity de backup se chamar.',
-    concept: 'Contra jogadores que foldam demais a 3-bet, 3-bete mais. Você ganha na hora a maioria das vezes.'
+    explanation: 'Quando o chip leader limpa do SB, ele tem range fraco. A3o é bom o suficiente pra shove — você precisa acumular fichas pra competir. ICM não significa nunca arriscar; significa escolher os spots certos.',
+    concept: 'Contra limps do chip leader, shove com range amplo. Limpar = range fraco = boa oportunidade.'
   },
   {
-    situation: 'Você está IP no river com par médio (99 num board A-K-8-3-2). Adversario é um jogador passivo que raramente blefa.',
+    situation: 'Satelite. 20 jogadores, 10 vagas. Você tem 8bb (abaixo da média). Folda até você no BTN. Você tem QJs.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Call se ele apostar (GTO)', correct: false },
-      { id: 'exploit', label: 'Fold se ele apostar (Exploitative)', correct: true },
+      { id: 'shove', label: 'Shove', correct: false },
+      { id: 'fold', label: 'Fold', correct: true },
     ],
-    explanation: 'GTO teria que chamar com certa frequência pra não ser exploravel. Mas contra jogador passivo que raramente blefa, quando ele aposta no river geralmente TEM mão forte. Fold explora essa tendencia.',
-    concept: 'Contra jogadores passivos, respeite as apostas deles — geralmente significam força real.'
+    explanation: 'Em satelite com 20 restantes é 10 vagas, você ainda precisa que 10 bustem. Com 8bb você sobrevive muitas rodadas de blinds. QJs não vale o risco de bustar quando paciencia garante a vaga.',
+    concept: 'Em satelites, 8bb é um stack enorme quando metade do field ainda precisa bustar.'
   },
   {
-    situation: 'Você abriu UTG com AKo. Jogador no BB (regular forte) fez 3-bet. GTO diz call.',
+    situation: 'Bolha. 10 jogadores, pagam 9. Você tem 35bb (maior stack da mesa). Jogador de 8bb shova do CO. Você está no BB com A9o.',
     question: 'O que você faz?',
     options: [
-      { id: 'gto', label: 'Call (GTO)', correct: true },
-      { id: 'exploit', label: '4-bet ou fold', correct: false },
+      { id: 'call', label: 'Call', correct: true },
+      { id: 'fold', label: 'Fold', correct: false },
     ],
-    explanation: 'Contra regular forte que 3-beta de forma equilibrada, AKo é call padrão vs 3-bet do BB. 4-bet transforma em blefe (ele pode ter AA/KK), é fold desperdiça equity enorme. GTO é o caminho.',
-    concept: 'Contra jogadores equilibrados, siga o GTO. Não tente "adivinhar" — jogue de forma solida.'
+    explanation: 'Como maior stack na bolha, você pode chamar shoves mais leve — se perder, ainda tem 27bb. A9o tem boa equity contra range de shove de 8bb. Alem disso, eliminar alguem garante que a bolha estoura.',
+    concept: 'Stacks grandes na bolha podem chamar mais — o custo de perder é menor em ICM.'
   },
 ]
 
@@ -108,66 +109,65 @@ function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
-        GTO vs Exploitative — Quando Sair do Livro
+        ICM — Independent Chip Model
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>GTO é o baseline. Exploitative é o ajuste. Saber quando usar cada um é o que separa bons jogadores de otimos.</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Por que fichas de torneio valem menos conforme você acumula mais</p>
       <div className="space-y-4">
-        <Section title="O Que é GTO?">
-          <strong style={{ color: '#4a90e2' }}>Game Theory Optimal</strong> — a estratégia matematicamente perfeita que não pode ser explorada. Se você joga GTO perfeito, ninguem consegue lucrar contra você a longo prazo.<br /><br />
-          <strong style={{ color: '#888' }}>Problema:</strong> GTO não maximiza seus lucros contra jogadores fracos. E a estratégia mais SEGURA, não a mais LUCRATIVA.
+        <Section title="O Que é ICM?">
+          Em cash game, cada ficha vale exatamente seu valor em dinheiro. 1000 fichas = $1000.<br /><br />
+          Em torneio, <strong style={{ color: '#e94560' }}>fichas NAO valem linearmente</strong>. Dobrar seu stack NAO dobra seu premio esperado. Isso porque a estrutura de premiacao não é linear (1o não ganha o dobro do 2o).<br /><br />
+          ICM é o modelo que converte fichas em valor real ($) baseado na estrutura de premiacao.
         </Section>
-        <Section title="O Que é Exploitative?">
-          <strong style={{ color: '#f5a623' }}>Exploitative</strong> — ajustar sua estratégia pra tirar vantagem dos erros específicos do adversário.<br /><br />
+        <Section title="Por Que ICM Importa?">
           <div className="grid grid-cols-2 gap-3 mt-2">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
-              <div style={{ color: '#4a90e2', fontWeight: 700 }}>GTO</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Inexploravel. Seguro. Baseline.</div>
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
+              <div style={{ color: '#00d4aa', fontWeight: 700 }}>Ganhar fichas</div>
+              <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>+$X</div>
+              <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Valor marginal decrescente</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
-              <div style={{ color: '#f5a623', fontWeight: 700 }}>Exploitative</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Lucro máximo. Arriscado. Ajuste.</div>
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+              <div style={{ color: '#e94560', fontWeight: 700 }}>Perder fichas</div>
+              <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>-$2X</div>
+              <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Perder custa MAIS que ganhar</div>
             </div>
           </div>
+          <div style={{ color: '#ccc', fontSize: 13, marginTop: 8 }}>
+            Isso cria assimetria: o risco de bustar é desproporcional ao ganho de dobrar.
+          </div>
         </Section>
-        <Section title="Quando Jogar GTO">
+        <Section title="Onde ICM Tem Mais Impacto">
           <div className="space-y-2">
             {[
-              'Contra jogadores desconhecidos — não sabe os leaks deles',
-              'Contra regulares fortes — eles exploram seus desvios',
-              'Quando você não tem info suficiente — default seguro',
-              'Em mesas com muitos jogadores bons',
+              { spot: 'Bolha do torneio', impact: 'MAXIMO', color: '#e94560', desc: 'Diferenca entre ganhar premio é sair sem nada' },
+              { spot: 'Mesa final', impact: 'ALTO', color: '#f5a623', desc: 'Cada eliminacao = salto grande de premiacao' },
+              { spot: 'Satelites', impact: 'EXTREMO', color: '#e94560', desc: 'Premio igual = sobrevivencia é tudo' },
+              { spot: 'Inicio do torneio', impact: 'ZERO', color: '#00d4aa', desc: 'Jogue ChipEV puro' },
+            ].map(r => (
+              <div key={r.spot} className="flex justify-between items-center rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+                <div>
+                  <div style={{ color: 'white', fontWeight: 600, fontSize: 13 }}>{r.spot}</div>
+                  <div style={{ color: '#888', fontSize: 12 }}>{r.desc}</div>
+                </div>
+                <span style={{ color: r.color, fontWeight: 700, fontSize: 13 }}>{r.impact}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+        <Section title="Regras Praticas de ICM">
+          <div className="space-y-2">
+            {[
+              'Na bolha, aperte seu range significativamente (fold mais)',
+              'Deixe short stacks bustarem antes de você arriscar',
+              'Como chip leader, AUMENTE agressividade — os outros não podem revidar',
+              'Mãos premium (QQ+, AKs) quase nunca são fold, mesmo em ICM pesado',
+              'Em satelites, sobrevivencia é TUDO — fold até garantir a vaga',
+              'Longe da bolha, jogue ChipEV normal',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
-                <span style={{ color: '#4a90e2' }}>•</span>
+                <span style={{ color: '#f5a623' }}>•</span>
                 <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
               </div>
             ))}
-          </div>
-        </Section>
-        <Section title="Quando Jogar Exploitative">
-          <div className="space-y-2">
-            {[
-              { leak: 'Jogador folda demais a 3-bet', adjust: '3-bete mais, especialmente como blefe' },
-              { leak: 'Jogador chama demais (calling station)', adjust: 'Menos blefe, mais value bet thin' },
-              { leak: 'Jogador c-beta 90%+ dos flops', adjust: 'Chame/raise mais, ele tem range fraco' },
-              { leak: 'Jogador passivo nunca blefa river', adjust: 'Fold quando ele aposta grande no river' },
-              { leak: 'Jogador limpa pre-flop', adjust: 'Raise grande — limpar é leak' },
-            ].map(r => (
-              <div key={r.leak} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
-                <div style={{ color: '#e94560', fontWeight: 600, fontSize: 13 }}>Leak: {r.leak}</div>
-                <div style={{ color: '#00d4aa', fontSize: 13, marginTop: 4 }}>Ajuste: {r.adjust}</div>
-              </div>
-            ))}
-          </div>
-        </Section>
-        <Section title="A Regra de Ouro">
-          <div className="rounded-lg p-4 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
-            <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 16 }}>
-              "Jogue GTO até ter motivo pra desviar."
-            </div>
-            <div style={{ color: '#ccc', fontSize: 13, marginTop: 8 }}>
-              Comece com GTO como baseline. Observe os adversarios. Quando identificar um leak claro, ajuste. Se não sabe, volte ao GTO.
-            </div>
           </div>
         </Section>
       </div>
@@ -244,7 +244,7 @@ function Trainer() {
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenarios</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
@@ -253,7 +253,7 @@ function Trainer() {
       {scenario && (
         <>
           <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>CENARIO</div>
+            <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>CENARIO ICM</div>
             <div style={{ color: '#ccc', fontSize: 15, lineHeight: 1.7 }}>{scenario.situation}</div>
             <div style={{ color: 'white', fontWeight: 700, fontSize: 16, marginTop: 12 }}>{scenario.question}</div>
           </div>
@@ -262,7 +262,7 @@ function Trainer() {
             <div className="grid grid-cols-2 gap-3 mb-4">
               {scenario.options.map(opt => (
                 <button key={opt.id} onClick={() => answer(opt.id)} className="py-4 rounded-xl font-bold text-sm"
-                  style={{ background: opt.id === 'gto' ? '#4a90e2' : '#f5a623', color: opt.id === 'gto' ? 'white' : '#0a0a0f' }}>
+                  style={{ background: opt.id === 'fold' || opt.id === 'check' ? '#4a90e2' : '#f5a623', color: opt.id === 'fold' || opt.id === 'check' ? 'white' : '#0a0a0f' }}>
                   {opt.label}
                 </button>
               ))}
@@ -280,9 +280,6 @@ function Trainer() {
                 <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13 }}>Conceito-chave</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>{feedback.concept}</div>
               </div>
-              <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
-                Correto: <strong style={{ color: '#f5a623' }}>{feedback.correctLabel}</strong>
-              </div>
             </div>
           )}
         </>
@@ -291,10 +288,10 @@ function Trainer() {
   )
 }
 
-export default function Module17() {
+export default function Module18() {
   const { progress, markLessonRead } = useProgress()
-  const [view, setView] = useState(progress.modules[17]?.lessonRead ? 'trainer' : 'lesson')
-  if (!progress.modules[17]?.unlocked) return (
+  const [view, setView] = useState(progress.modules[18]?.lessonRead ? 'trainer' : 'lesson')
+  if (!progress.modules[18]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 16 para desbloquear.</p></div>
     </div>
@@ -304,9 +301,9 @@ export default function Module17() {
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
           <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[17]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[17]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[17]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[17]?.lessonRead && '🔒'}</button>
+          <button onClick={() => progress.modules[18]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[18]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[18]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[18]?.lessonRead && '🔒'}</button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(17); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(18); setView('trainer') }} /> : <Trainer />}
       </div>
     </div>
   )

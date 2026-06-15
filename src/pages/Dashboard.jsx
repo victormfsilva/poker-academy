@@ -8,21 +8,20 @@ const MODULES = [
   { id: 4, name: 'BB vs RFI', desc: 'Defender o Big Blind', icon: '🛡️' },
   { id: 5, name: 'CBet Flop IP', desc: 'Aposta de continuação em posição', icon: '⚡' },
   { id: 6, name: 'Blind Wars', desc: 'SB vs BB — confronto direto', icon: '⚔️' },
-  { id: 7, name: 'SB/BTN vs RFI', desc: 'Jogar nas posições mais tardias', icon: '🃏' },
-  { id: 8, name: 'SB vs RFI', desc: 'Defendendo o Small Blind contra raises', icon: '🛡️' },
-  { id: 9, name: 'BTN vs RFI', desc: 'A melhor posição da mesa contra raises', icon: '👑' },
-  { id: 10, name: '3-Bet Ranges', desc: 'Quando relançar pre-flop — valor e blefe', icon: '🔥' },
-  { id: 11, name: 'Defesa vs CBet', desc: 'O que fazer quando apostam em você no flop', icon: '🛡️' },
-  { id: 12, name: 'Check-Raise', desc: 'A arma mais poderosa fora de posição', icon: '⚡' },
-  { id: 13, name: 'Bet Sizing', desc: 'Quanto apostar em cada situação', icon: '📐' },
-  { id: 14, name: 'Donk Bet', desc: 'Quando apostar antes do raiser no flop', icon: '💣' },
-  { id: 15, name: 'CBet Turn', desc: 'Double barrel — continuar no turn', icon: '🔄' },
-  { id: 16, name: 'River Play', desc: 'Value bet, blefe ou check no river', icon: '🏁' },
-  { id: 17, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: '🧠' },
-  { id: 18, name: 'ICM', desc: 'Modelo de chip independente em torneios', icon: '🏆' },
-  { id: 19, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥' },
-  { id: 20, name: 'Blockers', desc: 'Card removal e decisões avançadas', icon: '🧩' },
-  { id: 21, name: 'HUD e Solvers', desc: 'Estatísticas e estudo com solver', icon: '📊' },
+  { id: 7, name: 'SB vs RFI', desc: 'Defendendo o Small Blind contra raises', icon: '🛡️' },
+  { id: 8, name: 'BTN vs RFI', desc: 'A melhor posição da mesa contra raises', icon: '👑' },
+  { id: 9, name: '3-Bet Ranges', desc: 'Quando relançar pre-flop — valor e blefe', icon: '🔥' },
+  { id: 10, name: 'Defesa vs CBet', desc: 'O que fazer quando apostam em você no flop', icon: '🛡️' },
+  { id: 11, name: 'Check-Raise', desc: 'A arma mais poderosa fora de posição', icon: '⚡' },
+  { id: 12, name: 'Bet Sizing', desc: 'Quanto apostar em cada situação', icon: '📐' },
+  { id: 13, name: 'Donk Bet', desc: 'Quando apostar antes do raiser no flop', icon: '💣' },
+  { id: 14, name: 'CBet Turn', desc: 'Double barrel — continuar no turn', icon: '🔄' },
+  { id: 15, name: 'River Play', desc: 'Value bet, blefe ou check no river', icon: '🏁' },
+  { id: 16, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: '🧠' },
+  { id: 17, name: 'ICM', desc: 'Modelo de chip independente em torneios', icon: '🏆' },
+  { id: 18, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥' },
+  { id: 19, name: 'Blockers', desc: 'Card removal e decisões avançadas', icon: '🧩' },
+  { id: 20, name: 'HUD e Solvers', desc: 'Estatísticas e estudo com solver', icon: '📊' },
 ]
 
 function motivationalMessage(globalStats) {
@@ -37,14 +36,14 @@ function motivationalMessage(globalStats) {
 
 function getBadge(completedIds) {
   const has = id => completedIds.includes(id)
-  const advancedDone = [14,15,16,17,18,19,20,21].every(has)
-  const intermediateDone = [8,9,10,11,12,13].every(has)
-  const basicDone = [1,2,3,4,5,6,7].every(has)
+  const advancedDone = [13,14,15,16,17,18,19,20].every(has)
+  const intermediateDone = [7,8,9,10,11,12].every(has)
+  const basicDone = [1,2,3,4,5,6].every(has)
 
-  if (advancedDone && intermediateDone && basicDone) return { name: 'Avançado', icon: '🏆', color: '#f5a623', desc: 'Todos os 21 módulos completos!' }
-  if (intermediateDone && basicDone) return { name: 'Intermediário Avançado', icon: '💎', color: '#4a90e2', desc: 'Modulos 1-13 completos' }
-  if (basicDone) return { name: 'Iniciante Sólido', icon: '⭐', color: '#00d4aa', desc: 'Modulos 1-7 completos' }
-  return { name: 'Aprendiz', icon: '📖', color: '#888', desc: 'Complete os módulos 1-7' }
+  if (advancedDone && intermediateDone && basicDone) return { name: 'Avançado', icon: '🏆', color: '#f5a623', desc: 'Todos os 20 módulos completos!' }
+  if (intermediateDone && basicDone) return { name: 'Intermediário Avançado', icon: '💎', color: '#4a90e2', desc: 'Módulos 1-12 completos' }
+  if (basicDone) return { name: 'Iniciante Sólido', icon: '⭐', color: '#00d4aa', desc: 'Módulos 1-6 completos' }
+  return { name: 'Aprendiz', icon: '📖', color: '#888', desc: 'Complete os módulos 1-6' }
 }
 
 export default function Dashboard() {
