@@ -56,35 +56,38 @@ export default function Card({ card, size = 'md' }) {
 
   const rankDisplay = rank === 'T' ? '10' : rank
 
+  if (size === 'sm') {
+    return (
+      <div
+        className="w-10 h-14 bg-white rounded-md flex flex-col items-center justify-center shadow-lg select-none overflow-hidden"
+        style={{ border: '1.5px solid #ddd', gap: 0 }}
+      >
+        <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 800, fontSize: 13, lineHeight: 1 }}>
+          {rankDisplay}
+        </div>
+        <div style={{ color, fontSize: 16, lineHeight: 1, marginTop: 1 }}>
+          {symbol}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
-      className={`${sizes[size]} bg-white ${size === 'xs' ? 'rounded' : 'rounded-lg'} flex flex-col ${size === 'xs' ? 'items-center justify-center' : 'justify-between'} ${size === 'xs' ? 'p-0.5' : 'p-1'} shadow-lg select-none`}
-      style={{ border: size === 'xs' ? '1.5px solid #ccc' : '2px solid #ddd' }}
+      className={`${sizes[size]} bg-white rounded-lg flex flex-col justify-between p-1 shadow-lg select-none overflow-hidden`}
+      style={{ border: '2px solid #ddd' }}
     >
-      {size === 'xs' ? (
-        <>
-          <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 700, lineHeight: 1, fontSize: 9 }}>
-            {rankDisplay}
-          </div>
-          <div style={{ color, fontSize: 14, textAlign: 'center', lineHeight: 1 }}>
-            {symbol}
-          </div>
-        </>
-      ) : (
-        <>
-          <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 700, lineHeight: 1 }}>
-            <div style={{ fontSize: size === 'sm' ? 12 : 16 }}>{rankDisplay}</div>
-            <div style={{ fontSize: size === 'sm' ? 10 : 14 }}>{symbol}</div>
-          </div>
-          <div style={{ color, fontSize: size === 'sm' ? 18 : 28, textAlign: 'center', lineHeight: 1 }}>
-            {symbol}
-          </div>
-          <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 700, lineHeight: 1, alignSelf: 'flex-end', transform: 'rotate(180deg)' }}>
-            <div style={{ fontSize: size === 'sm' ? 12 : 16 }}>{rankDisplay}</div>
-            <div style={{ fontSize: size === 'sm' ? 10 : 14 }}>{symbol}</div>
-          </div>
-        </>
-      )}
+      <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 700, lineHeight: 1 }}>
+        <div style={{ fontSize: 16 }}>{rankDisplay}</div>
+        <div style={{ fontSize: 14 }}>{symbol}</div>
+      </div>
+      <div style={{ color, fontSize: 28, textAlign: 'center', lineHeight: 1 }}>
+        {symbol}
+      </div>
+      <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 700, lineHeight: 1, alignSelf: 'flex-end', transform: 'rotate(180deg)' }}>
+        <div style={{ fontSize: 16 }}>{rankDisplay}</div>
+        <div style={{ fontSize: 14 }}>{symbol}</div>
+      </div>
     </div>
   )
 }
