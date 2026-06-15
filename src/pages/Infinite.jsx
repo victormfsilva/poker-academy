@@ -254,21 +254,21 @@ function PokerTable({ scenario }) {
 
       {/* Centro: pot + board cards */}
       <div style={{
-        position: 'absolute', top: boardCards ? '34%' : '40%', left: '50%',
+        position: 'absolute', top: boardCards ? '38%' : '40%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center', pointerEvents: 'none',
       }}>
         {boardCards ? (
           <>
-            <div style={{ display: 'flex', gap: 2, justifyContent: 'center', marginBottom: 3 }}>
+            <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginBottom: 5 }}>
               {boardCards.map((c, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                  <Card card={parseCard(c)} size="xs" />
-                  {scenario.flop && i === 2 && boardCards.length > 3 && <div style={{ width: 3 }} />}
+                  <Card card={parseCard(c)} size="sm" />
+                  {scenario.flop && i === 2 && boardCards.length > 3 && <div style={{ width: 6 }} />}
                 </div>
               ))}
             </div>
-            <div style={{ color: '#ccc', fontSize: 12, fontWeight: 800 }}>{displayPot}</div>
+            <div style={{ color: '#ccc', fontSize: 13, fontWeight: 800 }}>{displayPot}</div>
           </>
         ) : (
           <>
