@@ -9,6 +9,20 @@ const MODULES = [
   { id: 5, name: 'CBet Flop IP', desc: 'Aposta de continuação quando você está em posição', icon: '⚡', color: '#f5a623' },
   { id: 6, name: 'Blind Wars', desc: 'SB vs BB — o confronto mais complexo do poker', icon: '⚔️', color: '#e94560' },
   { id: 7, name: 'SB/BTN vs RFI', desc: 'Jogar quando alguém já abriu — posições IP e OOP', icon: '🃏', color: '#00d4aa' },
+  { id: 8, name: 'SB vs RFI', desc: 'Defendendo o Small Blind contra raises', icon: '🛡️', color: '#e94560' },
+  { id: 9, name: 'BTN vs RFI', desc: 'A melhor posição da mesa contra raises', icon: '👑', color: '#00d4aa' },
+  { id: 10, name: '3-Bet Ranges', desc: 'Quando relançar pre-flop — valor e blefe', icon: '🔥', color: '#f5a623' },
+  { id: 11, name: 'Defesa vs CBet', desc: 'O que fazer quando apostam em você no flop', icon: '🛡️', color: '#4a90e2' },
+  { id: 12, name: 'Check-Raise', desc: 'A arma mais poderosa fora de posição', icon: '⚡', color: '#f5a623' },
+  { id: 13, name: 'Bet Sizing', desc: 'Quanto apostar em cada situação', icon: '📐', color: '#00d4aa' },
+  { id: 14, name: 'Donk Bet', desc: 'Quando apostar antes do raiser no flop', icon: '💣', color: '#e94560' },
+  { id: 15, name: 'CBet Turn', desc: 'Double barrel — continuar no turn', icon: '🔄', color: '#f5a623' },
+  { id: 16, name: 'River Play', desc: 'Value bet, blefe ou check no river', icon: '🏁', color: '#4a90e2' },
+  { id: 17, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: '🧠', color: '#00d4aa' },
+  { id: 18, name: 'ICM', desc: 'Modelo de chip independente em torneios', icon: '🏆', color: '#f5a623' },
+  { id: 19, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥', color: '#4a90e2' },
+  { id: 20, name: 'Blockers', desc: 'Card removal e decisoes avancadas', icon: '🧩', color: '#e94560' },
+  { id: 21, name: 'HUD e Solvers', desc: 'Estatisticas e estudo com solver', icon: '📊', color: '#00d4aa' },
 ]
 
 export default function Modules() {

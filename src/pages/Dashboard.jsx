@@ -19,6 +19,10 @@ const MODULES = [
   { id: 15, name: 'CBet Turn', desc: 'Double barrel — continuar no turn', icon: '🔄' },
   { id: 16, name: 'River Play', desc: 'Value bet, blefe ou check no river', icon: '🏁' },
   { id: 17, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: '🧠' },
+  { id: 18, name: 'ICM', desc: 'Modelo de chip independente em torneios', icon: '🏆' },
+  { id: 19, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥' },
+  { id: 20, name: 'Blockers', desc: 'Card removal e decisoes avancadas', icon: '🧩' },
+  { id: 21, name: 'HUD e Solvers', desc: 'Estatisticas e estudo com solver', icon: '📊' },
 ]
 
 function motivationalMessage(globalStats) {

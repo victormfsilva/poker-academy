@@ -22,6 +22,10 @@ const defaultProgress = {
     15: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     16: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     17: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    18: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    19: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    20: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    21: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
   },
   globalStats: {
     totalHands: 0,
@@ -153,7 +157,7 @@ export function ProgressProvider({ children, userId }) {
       const moduleCompleted = lastTwo.length === 2 && lastTwo.every(s => s.accuracy >= 90)
 
       const nextModules = { ...prev.modules }
-      if (moduleCompleted && moduleId < 17) {
+      if (moduleCompleted && moduleId < 21) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
       }
 
