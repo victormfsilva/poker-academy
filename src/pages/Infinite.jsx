@@ -102,7 +102,7 @@ function hasMadeStraight(hole, board) {
   return false
 }
 
-// ─── Gerador de mãos texto ────────────────────────────────
+// ─── Gerador de maos texto ────────────────────────────────
 function generateAllHands() {
   const h = []
   for (let i = 0; i < RANKS.length; i++) {
@@ -117,7 +117,210 @@ function generateAllHands() {
 const ALL_HANDS = generateAllHands()
 
 // ================================================================
-// MÓDULO 1 — RFI
+// MESA ESTILO GTO WIZARD
+// ================================================================
+function ChipDot({ color }) {
+  return (
+    <div style={{
+      width: 10, height: 10, borderRadius: '50%',
+      background: color, border: '1px solid #0008',
+      boxShadow: `0 0 4px ${color}88`,
+      flexShrink: 0,
+    }} />
+  )
+}
+
+function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, betAmt }) {
+  const posLabel = pos === 'UTG+1' ? 'UTG1' : pos
+  const border = isHero ? '2px solid #00ac8d'
+               : isRaiser ? '2px solid #ff8f00'
+               : '2px solid #3a3a3a'
+  const bg = isHero ? '#1a2e2a' : '#2a2a2a'
+  const txtCol = isHero ? '#00ac8d'
+               : isRaiser ? '#ff8f00'
+               : '#ccc'
+  const hasBet = isRaiser || isSB || isBB
+  const chipColor = isRaiser ? '#ff8f00' : isSB ? '#5ab966' : '#4a9eff'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      {hasBet && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <ChipDot color={chipColor} />
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#ddd' }}>{betAmt}</span>
+        </div>
+      )}
+      <div style={{
+        width: 48, height: 48, borderRadius: '50%',
+        background: bg, border,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{ fontSize: posLabel.length > 3 ? 7.5 : 10, color: txtCol, fontWeight: 700, lineHeight: 1.1 }}>
+          {posLabel}
+        </span>
+        <span style={{ fontSize: 9, color: '#666', lineHeight: 1.2 }}>{stack}</span>
+      </div>
+    </div>
+  )
+}
+
+const ALL_SEATS_ORDER = ['UTG','UTG+1','LJ','HJ','CO','BTN','SB','BB']
+
+const SLOT_POS = [
+  { top: '10%', left: '22%' },
+  { top: '3%',  left: '50%' },
+  { top: '10%', left: '78%' },
+  { top: '50%', left: '93%' },
+  { top: '82%', left: '75%' },
+  { top: '88%', left: '50%' },
+  { top: '82%', left: '25%' },
+  { top: '50%', left: '7%'  },
+]
+
+function PokerTable({ scenario }) {
+  // Determinar posicao do heroi e do raiser baseado no tipo
+  let heroPos, raiserPos
+  if (scenario.type === 'rfi') {
+    heroPos = scenario.pos
+    raiserPos = null
+  } else if (scenario.type === 'pushfold') {
+    heroPos = scenario.pos
+    raiserPos = null
+  } else if (scenario.type === 'bb') {
+    heroPos = 'BB'
+    raiserPos = scenario.pos
+  } else if (scenario.type === 'blindwars') {
+    heroPos = scenario.label?.includes('SB') ? 'SB' : 'BB'
+    raiserPos = heroPos === 'BB' ? 'SB' : null
+  } else if (scenario.type === 'range') {
+    // SB vs RFI, BTN vs RFI, 3-Bet
+    const label = scenario.label || ''
+    if (label.includes('SB vs')) { heroPos = 'SB'; raiserPos = scenario.pos }
+    else if (label.includes('BTN vs')) { heroPos = 'BTN'; raiserPos = scenario.pos }
+    else { heroPos = label.match(/(\w+) vs/)?.[1] || 'BB'; raiserPos = scenario.pos }
+  } else if (scenario.type === 'board') {
+    // Board modules: hero IP (BTN by default), or context from label
+    heroPos = 'BTN'
+    raiserPos = null
+    const label = scenario.label || ''
+    if (label.includes('Defesa') || label.includes('Check-Raise') || label.includes('Donk')) {
+      heroPos = 'BB'
+      raiserPos = 'CO'
+    }
+  } else if (scenario.type === 'potodds') {
+    heroPos = 'BB'
+    raiserPos = 'CO'
+  } else {
+    heroPos = 'BTN'
+    raiserPos = null
+  }
+
+  const heroIdx = ALL_SEATS_ORDER.indexOf(heroPos)
+  const rotated = SLOT_POS.map((_, i) =>
+    ALL_SEATS_ORDER[(heroIdx + i - 5 + 8) % 8]
+  )
+
+  const btnSlotIdx = rotated.indexOf('BTN')
+  const btnPos = SLOT_POS[btnSlotIdx]
+
+  const stack = scenario.stack || 100
+  const potAmt = raiserPos ? (stack * 2.5).toFixed(1) : (stack * 1.5).toFixed(1)
+  const startPot = (stack * 0.5).toFixed(1)
+
+  // Board cards no centro da mesa
+  const boardCards = scenario.board || null
+
+  return (
+    <div style={{
+      position: 'relative', width: '100%', paddingBottom: '72%',
+      userSelect: 'none', overflow: 'visible',
+    }}>
+      {/* Mesa oval */}
+      <div style={{
+        position: 'absolute',
+        top: '12%', left: '5%', right: '5%', bottom: '14%',
+        borderRadius: 999,
+        border: '2px solid #3a3a3a',
+        background: 'transparent',
+      }} />
+
+      {/* Centro: pot + board cards */}
+      <div style={{
+        position: 'absolute', top: boardCards ? '34%' : '40%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        textAlign: 'center', pointerEvents: 'none',
+      }}>
+        {boardCards ? (
+          <>
+            <div style={{ display: 'flex', gap: 3, justifyContent: 'center', marginBottom: 4 }}>
+              {boardCards.map((c, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
+                  <Card card={parseCard(c)} size="sm" />
+                  {scenario.flop && i === 2 && boardCards.length > 3 && <div style={{ width: 4 }} />}
+                </div>
+              ))}
+            </div>
+            <div style={{ color: '#ccc', fontSize: 13, fontWeight: 800 }}>{potAmt} bb</div>
+          </>
+        ) : (
+          <>
+            <div style={{ color: '#555', fontSize: 10, fontWeight: 600 }}>{stack}bb</div>
+            <div style={{ color: '#ccc', fontSize: 15, fontWeight: 800 }}>{potAmt} bb</div>
+            <div style={{ color: '#555', fontSize: 10 }}>{startPot} bb</div>
+          </>
+        )}
+      </div>
+
+      {/* Dealer button */}
+      {btnPos && (
+        <div style={{
+          position: 'absolute',
+          top: btnPos.top, left: btnPos.left,
+          transform: 'translate(-36px, 0px)',
+          width: 18, height: 18, borderRadius: '50%',
+          background: '#d0d0d0', color: '#111',
+          fontSize: 9, fontWeight: 900,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: '1px solid #888', zIndex: 10,
+        }}>D</div>
+      )}
+
+      {/* Assentos */}
+      {rotated.map((pos, slotIdx) => {
+        const p = SLOT_POS[slotIdx]
+        const isRaiser = pos === raiserPos
+        const isSB = pos === 'SB'
+        const isBB = pos === 'BB'
+        const betAmt = isRaiser ? `${(stack * 2).toFixed(0)}`
+                     : isSB ? `${(stack * 0.5).toFixed(1)}`
+                     : isBB ? `${stack}`
+                     : null
+        return (
+          <div key={pos} style={{
+            position: 'absolute',
+            top: p.top, left: p.left,
+            transform: 'translate(-50%, -50%)',
+            zIndex: 5,
+          }}>
+            <Seat
+              pos={pos}
+              isHero={pos === heroPos}
+              isRaiser={isRaiser}
+              isSB={isSB}
+              isBB={isBB}
+              stack={stack}
+              betAmt={betAmt}
+            />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ================================================================
+// MODULO 1 — RFI
 // ================================================================
 const RFI_POS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN']
 const RFI_STACKS = [100, 50, 25, 15]
@@ -138,7 +341,12 @@ function rfiScenario() {
   return {
     moduleId: 1, type: 'rfi', hand, pos, stack,
     label: `RFI · ${pos} · ${stack}bb`,
-    buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'raise', label: 'Raise', bg: '#F03C3C' }],
+    buttons: [
+      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
+      { id: 'call', label: 'Call', bg: '#5ab966' },
+      { id: 'raise', label: 'Raise', bg: '#F03C3C' },
+      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+    ],
     evaluate: (action) => {
       const mapped = action === 'allin' ? 'raise' : action
       const isMix = correct === 'mix'
@@ -148,7 +356,7 @@ function rfiScenario() {
 }
 
 // ================================================================
-// MÓDULO 2 — Push/Fold
+// MODULO 2 — Push/Fold
 // ================================================================
 const PF_POS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB']
 const PF_STACKS = [5, 8, 10]
@@ -167,7 +375,12 @@ function pushfoldScenario() {
   return {
     moduleId: 2, type: 'pushfold', hand, pos, stack,
     label: `Push/Fold · ${pos} · ${stack}bb`,
-    buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'allin', label: 'All-in', bg: '#ff8f00' }],
+    buttons: [
+      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
+      { id: 'call', label: 'Call', bg: '#5ab966' },
+      { id: 'raise', label: 'Raise', bg: '#F03C3C' },
+      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+    ],
     evaluate: (action) => ({
       isCorrect: (action === 'allin' ? 'push' : 'fold') === correct,
       correctLabel: correct === 'push' ? 'All-in' : 'Fold', isMix: false
@@ -176,7 +389,7 @@ function pushfoldScenario() {
 }
 
 // ================================================================
-// MÓDULO 3 — Pot Odds (simplificado: call ou fold)
+// MODULO 3 — Pot Odds
 // ================================================================
 function potoddsScenario() {
   const flop = randomCards(3)
@@ -193,16 +406,21 @@ function potoddsScenario() {
     moduleId: 3, type: 'potodds', hand: null, board: flop, hole,
     label: `Pot Odds · Aposta ${betPct}%`,
     extraInfo: `${outs} outs · ${equity}% equity · Pot odds: ${potOdds}%`,
-    buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }],
+    buttons: [
+      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
+      { id: 'call', label: 'Call', bg: '#5ab966' },
+      { id: 'raise', label: 'Raise', bg: '#F03C3C' },
+      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+    ],
     evaluate: (action) => ({
-      isCorrect: action === correct,
+      isCorrect: (action === 'call' || action === 'raise' || action === 'allin' ? 'call' : 'fold') === correct,
       correctLabel: correct === 'call' ? `Call (${equity}% >= ${potOdds}%)` : `Fold (${equity}% < ${potOdds}%)`, isMix: false
     })
   }
 }
 
 // ================================================================
-// MÓDULO 4 — BB vs RFI
+// MODULO 4 — BB vs RFI
 // ================================================================
 const BB_POS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB']
 const BB_KEYS = { UTG: 'vsUTG', 'UTG+1': 'vsUTG1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
@@ -223,7 +441,12 @@ function bbScenario() {
   return {
     moduleId: 4, type: 'bb', hand, pos,
     label: `BB vs ${pos}`,
-    buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }, { id: 'raise', label: '3-Bet', bg: '#F03C3C' }],
+    buttons: [
+      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
+      { id: 'call', label: 'Call', bg: '#5ab966' },
+      { id: 'raise', label: '3-Bet', bg: '#F03C3C' },
+      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+    ],
     evaluate: (action) => {
       const mapped = action === 'raise' || action === 'allin' ? '3bet' : action
       return { isCorrect: mapped === correct, correctLabel: correct === '3bet' ? '3-Bet' : correct, isMix: false }
@@ -232,7 +455,7 @@ function bbScenario() {
 }
 
 // ================================================================
-// MÓDULO 5 — CBet Flop IP
+// MODULO 5 — CBet Flop IP
 // ================================================================
 function cbetFlopScenario() {
   const flop = randomCards(3)
@@ -257,12 +480,11 @@ function cbetFlopScenario() {
 }
 
 // ================================================================
-// MÓDULO 6 — Blind Wars
+// MODULO 6 — Blind Wars
 // ================================================================
 function blindWarsScenario() {
   const isSB = Math.random() < 0.5
   if (isSB) {
-    const range = BLIND_WARS?.SB_raise || BLIND_WARS?.SB_complete
     const raiseHands = BLIND_WARS?.SB_raise?.raise || []
     const completeHands = BLIND_WARS?.SB_complete?.complete || []
     const dice = Math.random()
@@ -297,7 +519,7 @@ function blindWarsScenario() {
 }
 
 // ================================================================
-// MÓDULOS 7-10 — Range-based (SB/BTN vs RFI, 3-Bet)
+// MODULOS 7-9 — Range-based (SB/BTN vs RFI, 3-Bet)
 // ================================================================
 function rangeScenario(moduleId) {
   let myPos, raiserPositions, dataSource
@@ -310,7 +532,6 @@ function rangeScenario(moduleId) {
     dataSource = BTN_VS_RFI
     raiserPositions = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO']
   } else {
-    // Module 9 — 3-Bet from any position
     const spots = [
       { myPos: 'BB', data: BB_VS_RFI, raisers: ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB'] },
       { myPos: 'SB', data: SB_VS_RFI, raisers: ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN'] },
@@ -340,7 +561,12 @@ function rangeScenario(moduleId) {
   return {
     moduleId, type: 'range', hand, pos: raiser,
     label: `${names[moduleId]} · ${myPos} vs ${raiser}`,
-    buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }, { id: 'raise', label: '3-Bet', bg: '#F03C3C' }],
+    buttons: [
+      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
+      { id: 'call', label: 'Call', bg: '#5ab966' },
+      { id: 'raise', label: '3-Bet', bg: '#F03C3C' },
+      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+    ],
     evaluate: (action) => {
       const mapped = action === 'raise' || action === 'allin' ? '3bet' : action
       return { isCorrect: mapped === correct, correctLabel: correct === '3bet' ? '3-Bet' : correct, isMix: false }
@@ -349,7 +575,7 @@ function rangeScenario(moduleId) {
 }
 
 // ================================================================
-// MÓDULO 11 — Defesa vs CBet
+// MODULO 10 — Defesa vs CBet (renumbered from 11)
 // ================================================================
 function defenseCbetScenario() {
   const flop = randomCards(3)
@@ -364,7 +590,7 @@ function defenseCbetScenario() {
   else if (hasAnyPair(hole, flop)) correctAction = cbetSize === '75%' ? 'fold' : 'call'
   else correctAction = 'fold'
   return {
-    moduleId: 11, type: 'board', hand: null, board: flop, hole,
+    moduleId: 10, type: 'board', hand: null, board: flop, hole,
     label: `Defesa vs CBet ${cbetSize}`,
     buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }, { id: 'raise', label: 'Check-Raise', bg: '#F03C3C' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'raise' ? 'Check-Raise' : correctAction, isMix: false })
@@ -372,7 +598,7 @@ function defenseCbetScenario() {
 }
 
 // ================================================================
-// MÓDULO 12 — Check-Raise
+// MODULO 11 — Check-Raise
 // ================================================================
 function checkRaiseScenario() {
   const flop = randomCards(3)
@@ -388,7 +614,7 @@ function checkRaiseScenario() {
   else if (hasFlushDraw(hole, flop)) correctAction = 'call'
   else correctAction = 'fold'
   return {
-    moduleId: 12, type: 'board', hand: null, board: flop, hole,
+    moduleId: 11, type: 'board', hand: null, board: flop, hole,
     label: `Check-Raise · ${tex.isWet ? 'Wet' : 'Dry'}`,
     buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }, { id: 'raise', label: 'Check-Raise', bg: '#F03C3C' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'raise' ? 'Check-Raise' : correctAction, isMix: false })
@@ -396,7 +622,7 @@ function checkRaiseScenario() {
 }
 
 // ================================================================
-// MÓDULO 13 — Bet Sizing
+// MODULO 12 — Bet Sizing
 // ================================================================
 function betSizingScenario() {
   const flop = randomCards(3)
@@ -413,7 +639,7 @@ function betSizingScenario() {
   else if (tex.isDry) correctAction = 'bet33'
   else correctAction = 'check'
   return {
-    moduleId: 13, type: 'board', hand: null, board: flop, hole,
+    moduleId: 12, type: 'board', hand: null, board: flop, hole,
     label: `Bet Sizing · ${tex.isWet ? 'Wet' : 'Dry'}`,
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet33', label: '33%', bg: '#5ab966' }, { id: 'bet50', label: '50%', bg: '#F03C3C' }, { id: 'bet75', label: '75%', bg: '#ff8f00' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'check' ? 'Check' : correctAction.replace('bet', 'Bet '), isMix: false })
@@ -421,7 +647,7 @@ function betSizingScenario() {
 }
 
 // ================================================================
-// MÓDULO 14 — Donk Bet
+// MODULO 13 — Donk Bet
 // ================================================================
 function donkBetScenario() {
   const flop = randomCards(3)
@@ -435,7 +661,7 @@ function donkBetScenario() {
   else if (hasTopPair(hole, flop) && tex.lowBoard) correctAction = 'donk'
   else correctAction = 'check'
   return {
-    moduleId: 14, type: 'board', hand: null, board: flop, hole,
+    moduleId: 13, type: 'board', hand: null, board: flop, hole,
     label: `Donk Bet · ${tex.lowBoard ? 'Low' : 'High'} board`,
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'donk', label: 'Donk Bet', bg: '#F03C3C' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'donk' ? 'Donk Bet' : 'Check', isMix: false })
@@ -443,7 +669,7 @@ function donkBetScenario() {
 }
 
 // ================================================================
-// MÓDULO 15 — CBet Turn
+// MODULO 14 — CBet Turn
 // ================================================================
 function cbetTurnScenario() {
   const flop = randomCards(3)
@@ -467,7 +693,7 @@ function cbetTurnScenario() {
   else if (scary && isOvercard) correctAction = 'bet'
   else correctAction = 'check'
   return {
-    moduleId: 15, type: 'board', hand: null, board, hole, flop, turnCard: turn,
+    moduleId: 14, type: 'board', hand: null, board, hole, flop, turnCard: turn,
     label: `CBet Turn · ${scary ? 'Scary' : 'Brick'}`,
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet', label: 'Double Barrel', bg: '#F03C3C' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'bet' ? 'Double Barrel' : 'Check', isMix: false })
@@ -475,7 +701,7 @@ function cbetTurnScenario() {
 }
 
 // ================================================================
-// MÓDULO 16 — River Play
+// MODULO 15 — River Play
 // ================================================================
 function riverPlayScenario() {
   const flop = randomCards(3)
@@ -500,7 +726,7 @@ function riverPlayScenario() {
     correctAction = missedFlush ? 'bluff' : 'check'
   }
   return {
-    moduleId: 16, type: 'board', hand: null, board, hole, flop,
+    moduleId: 15, type: 'board', hand: null, board, hole, flop,
     label: 'River Play',
     buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'value-med', label: 'Value Med', bg: '#5ab966' }, { id: 'value-big', label: 'Value Big', bg: '#F03C3C' }, { id: 'bluff', label: 'Blefe', bg: '#ff8f00' }],
     evaluate: (action) => ({
@@ -512,24 +738,24 @@ function riverPlayScenario() {
 }
 
 // ================================================================
-// MÓDULOS 17-21 — Scenario-based
+// MODULOS 16-20 — Scenario-based
 // ================================================================
 const SCENARIO_POOLS = {
   16: [
     { q: 'BTN com A5s. UTG tight (12%) fez raise. GTO diz 3-bet.', opts: [{ id: 'a', label: '3-bet (GTO)', correct: false }, { id: 'b', label: 'Fold (Exploit)', correct: true }] },
-    { q: 'BB defende 70%+ dos raises. Você CO com K9o.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: 'Raise (Exploit)', correct: true }] },
+    { q: 'BB defende 70%+ dos raises. Voce CO com K9o.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: 'Raise (Exploit)', correct: true }] },
     { q: 'BB com 87s vs BTN regular forte. GTO diz call.', opts: [{ id: 'a', label: 'Call (GTO)', correct: true }, { id: 'b', label: 'Fold ou 3-bet', correct: false }] },
     { q: 'BTN c-beta 90% dos flops. BB com 65s em A-7-2.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: 'Call/CR (Exploit)', correct: true }] },
     { q: 'SB limpa. BB com J4o.', opts: [{ id: 'a', label: 'Check (GTO)', correct: false }, { id: 'b', label: 'Raise grande (Exploit)', correct: true }] },
-    { q: 'Mesa final ICM. Short stack shova. BB com AQo stack médio.', opts: [{ id: 'a', label: 'Call (ChipEV)', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
+    { q: 'Mesa final ICM. Short stack shova. BB com AQo stack medio.', opts: [{ id: 'a', label: 'Call (ChipEV)', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
     { q: 'BB folda 80% ao 3-bet. SB com K8s.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: '3-bet (Exploit)', correct: true }] },
-    { q: 'River com par médio. Vilao passivo (AF 0.5) fez raise.', opts: [{ id: 'a', label: 'Call (pot odds)', correct: false }, { id: 'b', label: 'Fold (Exploit)', correct: true }] },
+    { q: 'River com par medio. Vilao passivo (AF 0.5) fez raise.', opts: [{ id: 'a', label: 'Call (pot odds)', correct: false }, { id: 'b', label: 'Fold (Exploit)', correct: true }] },
   ],
   17: [
-    { q: '4 restam, pagam 3. Você 20bb. Short 5bb. CO com AJo.', opts: [{ id: 'a', label: 'Raise', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
-    { q: 'Mesa final 3-way. Você 15bb. Chip leader shova. QQ.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
-    { q: 'Satelite 10 left, pagam 9. Você 25bb. Short 12bb shova. AKs.', opts: [{ id: 'a', label: 'Call', correct: false }, { id: 'b', label: 'Fold (ICM extremo)', correct: true }] },
-    { q: 'Longe da bolha (30% restam). 30bb. BTN raise, você 77.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
+    { q: '4 restam, pagam 3. Voce 20bb. Short 5bb. CO com AJo.', opts: [{ id: 'a', label: 'Raise', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
+    { q: 'Mesa final 3-way. Voce 15bb. Chip leader shova. QQ.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
+    { q: 'Satelite 10 left, pagam 9. Voce 25bb. Short 12bb shova. AKs.', opts: [{ id: 'a', label: 'Call', correct: false }, { id: 'b', label: 'Fold (ICM extremo)', correct: true }] },
+    { q: 'Longe da bolha (30% restam). 30bb. BTN raise, voce 77.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
     { q: 'Mesa final 6. Chip leader 50bb, demais 10-15bb. BTN com T8s.', opts: [{ id: 'a', label: 'Raise (pressionar)', correct: true }, { id: 'b', label: 'Fold (esperar)', correct: false }] },
     { q: 'Bolha 5 left (4 pagam). 18bb. Short 3bb shova. K2o.', opts: [{ id: 'a', label: 'Call', correct: false }, { id: 'b', label: 'Fold', correct: true }] },
     { q: 'Inicio torneio. 100bb. UTG raise. AKo.', opts: [{ id: 'a', label: '3-bet (ChipEV)', correct: true }, { id: 'b', label: 'Fold (conservar)', correct: false }] },
@@ -537,7 +763,7 @@ const SCENARIO_POOLS = {
   ],
   18: [
     { q: 'BTN JTs. UTG raise, HJ call. 3-way.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: '3-bet', correct: false }] },
-    { q: '3-way flop K-8-3. BB com A3s. Todos checkam a você.', opts: [{ id: 'a', label: 'Check', correct: true }, { id: 'b', label: 'Bet', correct: false }] },
+    { q: '3-way flop K-8-3. BB com A3s. Todos checkam a voce.', opts: [{ id: 'a', label: 'Check', correct: true }, { id: 'b', label: 'Bet', correct: false }] },
     { q: 'Flop Q-J-9, 3-way, IP com KTs (draw).', opts: [{ id: 'a', label: 'Check (multiway)', correct: true }, { id: 'b', label: 'Bet', correct: false }] },
     { q: '3-way A-7-2 dry. CO raiser com AKo.', opts: [{ id: 'a', label: 'Bet', correct: true }, { id: 'b', label: 'Check', correct: false }] },
     { q: 'CO com 55. UTG raise, HJ call. Set mine?', opts: [{ id: 'a', label: 'Call (set mine)', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
@@ -547,22 +773,22 @@ const SCENARIO_POOLS = {
   ],
   19: [
     { q: 'River As5h. Board K-Q-7-3-2 sem flush. Vilao checkou 3 streets.', opts: [{ id: 'a', label: 'Blefe (As bloqueia AK/AQ)', correct: true }, { id: 'b', label: 'Check back', correct: false }] },
-    { q: 'BTN KsQs vs UTG raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Não (bloqueia folds)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
+    { q: 'BTN KsQs vs UTG raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Nao (bloqueia folds)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
     { q: 'BB Ah4d vs BTN raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Sim (bloqueia AA/AK)', correct: true }, { id: 'b', label: 'Nao', correct: false }] },
     { q: 'River T9 straight. Board 5-6-7-8-J. Sizing?', opts: [{ id: 'a', label: 'Media (bloqueia T9 caller)', correct: true }, { id: 'b', label: 'Grande 75%+', correct: false }] },
-    { q: 'SB JsTs vs CO raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Não (melhor call)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
+    { q: 'SB JsTs vs CO raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Nao (melhor call)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
     { q: 'River Kh. Board A-K-8-5-2 com 3 copas. Vilao bet 75%.', opts: [{ id: 'a', label: 'Fold (bloqueia blefes)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
-    { q: 'River 9s8s. Board Q-J-T-4-2. Vilao checkou. Blefar?', opts: [{ id: 'a', label: 'Não (não bloqueia AK nuts)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
+    { q: 'River 9s8s. Board Q-J-T-4-2. Vilao checkou. Blefar?', opts: [{ id: 'a', label: 'Nao (nao bloqueia AK nuts)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
     { q: 'Flop Ad-Kd-3s. 7d6d. SB bet 33%.', opts: [{ id: 'a', label: 'Check-raise (blocker FD)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
   ],
   20: [
     { q: 'Vilao VPIP 45 / PFR 8. Ele fez raise UTG.', opts: [{ id: 'a', label: 'Range muito forte (so raise premium)', correct: true }, { id: 'b', label: 'Range amplo', correct: false }] },
     { q: 'Vilao 22/19, 3-Bet 9%. Fez 3-bet do BTN.', opts: [{ id: 'a', label: 'Defender normal (equilibrado)', correct: true }, { id: 'b', label: 'Fold (muito forte)', correct: false }] },
-    { q: 'BTN Fold to 3-Bet 75%. Você BB com K8s.', opts: [{ id: 'a', label: '3-bet blefe (75% fold)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
-    { q: 'Vilao CBet 85%. Ele checkou flop A-7-2. Você tem 65s.', opts: [{ id: 'a', label: 'Range de check muito fraco', correct: true }, { id: 'b', label: 'Pode ter mãos fortes', correct: false }] },
+    { q: 'BTN Fold to 3-Bet 75%. Voce BB com K8s.', opts: [{ id: 'a', label: '3-bet blefe (75% fold)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
+    { q: 'Vilao CBet 85%. Ele checkou flop A-7-2. Voce tem 65s.', opts: [{ id: 'a', label: 'Range de check muito fraco', correct: true }, { id: 'b', label: 'Pode ter maos fortes', correct: false }] },
     { q: 'Solver: check 60% bet 40% com top pair no flop.', opts: [{ id: 'a', label: 'Simplificar por textura', correct: true }, { id: 'b', label: 'Aleatorizar 60/40', correct: false }] },
-    { q: 'Solver: A5s é 3-bet 100% mas A8o é call. Por que?', opts: [{ id: 'a', label: 'A5s suited + backdoors + não domina calls', correct: true }, { id: 'b', label: 'A5s tem mais equity', correct: false }] },
-    { q: 'Seus stats: WTSD 35%, W$SD 45%.', opts: [{ id: 'a', label: 'Chamando demais (calling station)', correct: true }, { id: 'b', label: 'Números normais', correct: false }] },
+    { q: 'Solver: A5s e 3-bet 100% mas A8o e call. Por que?', opts: [{ id: 'a', label: 'A5s suited + backdoors + nao domina calls', correct: true }, { id: 'b', label: 'A5s tem mais equity', correct: false }] },
+    { q: 'Seus stats: WTSD 35%, W$SD 45%.', opts: [{ id: 'a', label: 'Chamando demais (calling station)', correct: true }, { id: 'b', label: 'Numeros normais', correct: false }] },
     { q: 'Vilao AF 0.8. Fez raise no river A-K-8-5-2.', opts: [{ id: 'a', label: 'MUITO forte (passivo nunca blefa)', correct: true }, { id: 'b', label: 'Pode ser blefe', correct: false }] },
   ],
 }
@@ -570,10 +796,9 @@ const SCENARIO_POOLS = {
 function scenarioQuestion(moduleId) {
   const pool = SCENARIO_POOLS[moduleId]
   const s = pool[Math.floor(Math.random() * pool.length)]
-  const names = { 16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solver' }
   return {
     moduleId, type: 'scenario', hand: null, question: s.q,
-    label: names[moduleId],
+    label: '',
     buttons: s.opts.map(o => ({ id: o.id, label: o.label, bg: o.correct ? '#5ab966' : '#3D7CB8' })),
     evaluate: (action) => {
       const chosen = s.opts.find(o => o.id === action)
@@ -584,7 +809,7 @@ function scenarioQuestion(moduleId) {
 }
 
 // ================================================================
-// Gerador de cenário por módulo
+// Gerador de cenario por modulo
 // ================================================================
 const GENERATORS = {
   1: rfiScenario,
@@ -617,7 +842,7 @@ function newScenario(unlockedIds) {
 }
 
 // ================================================================
-// MÓDULO COLORS
+// MODULE COLORS & NAMES
 // ================================================================
 const MOD_COLORS = {
   1: '#e94560', 2: '#f5a623', 3: '#4a90e2', 4: '#00d4aa', 5: '#f5a623',
@@ -626,9 +851,6 @@ const MOD_COLORS = {
   16: '#00d4aa', 17: '#f5a623', 18: '#4a90e2', 19: '#e94560', 20: '#00d4aa',
 }
 
-// ================================================================
-// COMPONENTE PRINCIPAL
-// ================================================================
 const MOD_NAMES_SHORT = {
   1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet Flop',
   6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def vs CBet',
@@ -636,6 +858,9 @@ const MOD_NAMES_SHORT = {
   16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers',
 }
 
+// ================================================================
+// COMPONENTE PRINCIPAL
+// ================================================================
 export default function Infinite() {
   const { recordAnswer, getModuleProgress } = useProgress()
 
@@ -687,10 +912,14 @@ export default function Infinite() {
 
   const acc = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
   const accColor = acc >= 90 ? '#00d4aa' : acc >= 70 ? '#f5a623' : '#e94560'
-  const modColor = MOD_COLORS[scenario.moduleId] || '#e94560'
 
   // Cards for hand-based scenarios
   const cards = scenario.hand ? handToCards(scenario.hand) : null
+
+  // Determine if we show the poker table (range/preflop scenarios) or just cards
+  const showTable = scenario.type === 'rfi' || scenario.type === 'pushfold' || scenario.type === 'bb'
+    || scenario.type === 'blindwars' || scenario.type === 'range'
+    || scenario.type === 'board' || scenario.type === 'potodds'
 
   return (
     <div className="min-h-screen pb-28 md:pb-8 md:pt-20" style={{ background: '#0a0a0f' }}>
@@ -699,9 +928,9 @@ export default function Infinite() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mb-5">
           {[
-            { label: 'Mãos', value: stats.total, color: '#e94560' },
-            { label: 'Acerto', value: stats.total ? `${acc}%` : '—', color: accColor },
-            { label: 'Sequência', value: streak, color: '#f5a623' },
+            { label: 'Maos', value: stats.total, color: '#e94560' },
+            { label: 'Acerto', value: stats.total ? `${acc}%` : '--', color: accColor },
+            { label: 'Sequencia', value: streak, color: '#f5a623' },
           ].map(s => (
             <div key={s.label} className="rounded-xl py-3 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
               <div style={{ color: s.color, fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{s.value}</div>
@@ -710,110 +939,102 @@ export default function Infinite() {
           ))}
         </div>
 
-        {/* Module badge */}
-        <div className="mb-4 flex items-center gap-2">
-          <span className="px-3 py-1 rounded-lg text-xs font-bold" style={{ background: `${modColor}22`, color: modColor }}>
-            Módulo {scenario.moduleId}
-          </span>
-          <span style={{ color: '#888', fontSize: 13 }}>{scenario.label}</span>
-        </div>
-
         {/* Card principal */}
-        <div className="rounded-2xl mb-4 p-5"
-          style={{ background: '#12121a', border: `1px solid ${result ? (result.isCorrect ? '#00d4aa44' : '#e9456044') : '#1e1e2e'}` }}>
+        <div className="rounded-2xl mb-4"
+          style={{ background: '#12121a', border: `1px solid ${result ? (result.isCorrect ? '#00ac8d55' : '#F03C3C55') : '#1e1e2e'}` }}>
 
-          {/* Board display for board-based modules */}
-          {scenario.board && (
-            <div className="mb-4">
-              <div style={{ color: '#666', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>BOARD</div>
-              <div className="flex gap-2 flex-wrap">
-                {scenario.board.map((c, i) => (
-                  <div key={i} className="flex items-center">
-                    <Card card={parseCard(c)} size="md" />
-                    {scenario.flop && i === 2 && scenario.board.length > 3 && (
-                      <div style={{ width: 8 }} />
-                    )}
-                  </div>
-                ))}
-              </div>
+          <div style={{ height: 12 }} />
+
+          {/* Poker Table for all non-scenario types */}
+          {showTable && (
+            <div className="px-2 pt-1 pb-1">
+              <PokerTable scenario={scenario} />
             </div>
           )}
 
-          {/* Hole cards for board-based */}
-          {scenario.hole && (
-            <div className="mb-4">
-              <div style={{ color: '#666', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>SUA MÃO</div>
-              <div className="flex gap-2">
+          {/* Hero cards below table for hand-based */}
+          {cards && showTable && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: -8, marginBottom: 12 }}>
+                {cards.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
+              </div>
+              <div className="px-5 pb-3 text-center">
+                <div style={{ color: '#ffb800', fontSize: 26, fontWeight: 800, letterSpacing: 2, textShadow: '0 0 12px #ffb80060' }}>
+                  {scenario.hand}
+                </div>
+                <div style={{ color: '#444', fontSize: 12, marginTop: 2 }}>
+                  {scenario.stack ? `${scenario.stack}bb` : '100bb'}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Hole cards for board-based (shown below table) */}
+          {scenario.hole && showTable && (
+            <div className="px-5 pb-3">
+              <div style={{ color: '#666', fontSize: 11, fontWeight: 600, marginBottom: 8, textAlign: 'center' }}>SUA MAO</div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
                 {scenario.hole.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
               </div>
             </div>
           )}
 
-          {/* Hand display for range-based */}
-          {cards && (
-            <div className="text-center mb-4">
-              <div className="flex justify-center gap-2 mb-2">
-                {cards.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
-              </div>
-              <div style={{ color: '#ffb800', fontSize: 26, fontWeight: 800, letterSpacing: 2 }}>{scenario.hand}</div>
-              {scenario.stack && <div style={{ color: '#555', fontSize: 12 }}>{scenario.stack}bb</div>}
-            </div>
-          )}
-
-          {/* Scenario question for text-based */}
-          {scenario.question && (
-            <div className="mb-4">
+          {/* Scenario question for text-based (no table) */}
+          {scenario.type === 'scenario' && (
+            <div className="px-5 pb-3">
               <p style={{ color: '#ccc', fontSize: 15, lineHeight: 1.6 }}>{scenario.question}</p>
             </div>
           )}
 
-          {/* Extra info */}
+          {/* Extra info (pot odds etc) */}
           {scenario.extraInfo && (
-            <div className="mb-4 rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+            <div className="mx-4 mb-3 rounded-lg p-3" style={{ background: '#0a0a0f' }}>
               <div style={{ color: '#888', fontSize: 13 }}>{scenario.extraInfo}</div>
             </div>
           )}
 
           {/* Feedback */}
           {result && (
-            <div className="mb-4 rounded-lg px-4 py-3" style={{
-              background: result.isCorrect ? '#00d4aa15' : '#e9456015',
-              border: `1px solid ${result.isCorrect ? '#00d4aa40' : '#e9456040'}`
+            <div className="mx-4 mb-3 rounded-lg px-4 py-3" style={{
+              background: result.isCorrect ? '#00ac8d15' : '#F03C3C15',
+              border: `1px solid ${result.isCorrect ? '#00ac8d40' : '#F03C3C40'}`
             }}>
-              <div style={{ color: result.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 16 }}>
+              <div style={{ color: result.isCorrect ? '#00ac8d' : '#F03C3C', fontWeight: 700, fontSize: 16 }}>
                 {result.isCorrect ? '✓ Correto!' : `✗ Errou — era ${result.correctLabel}`}
               </div>
               {result.isMix && (
-                <div style={{ color: '#ff8f00', fontSize: 12, marginTop: 3 }}>Mao de transição — ambas as ações são aceitaveis.</div>
+                <div style={{ color: '#ff8f00', fontSize: 12, marginTop: 3 }}>Mao de transicao — ambas as acoes sao aceitaveis.</div>
               )}
             </div>
           )}
 
           {/* Action buttons */}
-          {!result ? (
-            <div className="flex gap-2 flex-wrap">
-              {scenario.buttons.map(b => (
-                <button key={b.id} onClick={() => handleAnswer(b.id)}
-                  className="flex-1 min-w-0"
-                  style={{
-                    padding: '14px 4px', borderRadius: 8, fontWeight: 700, fontSize: 13,
-                    border: 'none', cursor: 'pointer', color: '#f5f5f5', background: b.bg,
-                    textShadow: '0 1px 2px #0008',
-                  }}>
-                  {b.label}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <button onClick={handleNext}
-              className="w-full"
-              style={{
-                padding: '14px', borderRadius: 8, background: '#1e1e2e', border: '1px solid #333',
-                color: '#f5f5f5', fontWeight: 700, fontSize: 15, cursor: 'pointer',
-              }}>
-              Próxima Mao →
-            </button>
-          )}
+          <div className="px-4 pb-4">
+            {!result ? (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {scenario.buttons.map(b => (
+                  <button key={b.id} onClick={() => handleAnswer(b.id)}
+                    style={{
+                      flex: 1, minWidth: 0, padding: '14px 4px', borderRadius: 8, fontWeight: 700,
+                      fontSize: 13, border: 'none', cursor: 'pointer', letterSpacing: 0.3,
+                      color: '#f5f5f5', textShadow: '0 1px 2px #0008', background: b.bg,
+                    }}>
+                    {b.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <button onClick={handleNext}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 8,
+                  background: '#1e1e2e', border: '1px solid #333',
+                  color: '#f5f5f5', fontWeight: 700, fontSize: 15,
+                  cursor: 'pointer', letterSpacing: 0.5,
+                }}>
+                Proxima Mao →
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Filter & Stats toggles */}
@@ -821,12 +1042,12 @@ export default function Infinite() {
           <button onClick={() => { setShowFilter(!showFilter); setShowModuleStats(false) }}
             className="flex-1 py-2 rounded-lg text-sm font-semibold"
             style={{ background: showFilter ? '#e9456022' : '#12121a', color: showFilter ? '#e94560' : '#666', border: `1px solid ${showFilter ? '#e94560' : '#1e1e2e'}` }}>
-            🎯 Filtrar Módulos
+            Filtrar Modulos
           </button>
           <button onClick={() => { setShowModuleStats(!showModuleStats); setShowFilter(false) }}
             className="flex-1 py-2 rounded-lg text-sm font-semibold"
             style={{ background: showModuleStats ? '#4a90e222' : '#12121a', color: showModuleStats ? '#4a90e2' : '#666', border: `1px solid ${showModuleStats ? '#4a90e2' : '#1e1e2e'}` }}>
-            📊 Stats por Módulo
+            Stats por Modulo
           </button>
         </div>
 
@@ -834,7 +1055,7 @@ export default function Infinite() {
         {showFilter && (
           <div className="rounded-xl p-4 mb-3" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
             <div className="flex justify-between items-center mb-3">
-              <div style={{ color: '#888', fontSize: 12, fontWeight: 600 }}>SELECIONE OS MÓDULOS</div>
+              <div style={{ color: '#888', fontSize: 12, fontWeight: 600 }}>SELECIONE OS MODULOS</div>
               <div className="flex gap-2">
                 <button onClick={selectAll} className="text-xs px-2 py-1 rounded" style={{ color: '#00d4aa', background: '#00d4aa15' }}>Todos</button>
                 <button onClick={selectNone} className="text-xs px-2 py-1 rounded" style={{ color: '#e94560', background: '#e9456015' }}>Nenhum</button>
@@ -857,7 +1078,7 @@ export default function Infinite() {
               })}
             </div>
             <div style={{ color: '#555', fontSize: 11, marginTop: 8 }}>
-              {activeIds.length === 0 ? 'Nenhum selecionado — usando todos' : `${activeIds.length} módulo${activeIds.length > 1 ? 's' : ''} ativo${activeIds.length > 1 ? 's' : ''}`}
+              {activeIds.length === 0 ? 'Nenhum selecionado — usando todos' : `${activeIds.length} modulo${activeIds.length > 1 ? 's' : ''} ativo${activeIds.length > 1 ? 's' : ''}`}
             </div>
           </div>
         )}
@@ -865,9 +1086,9 @@ export default function Infinite() {
         {/* Per-module stats */}
         {showModuleStats && (
           <div className="rounded-xl p-4 mb-3" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-            <div style={{ color: '#888', fontSize: 12, fontWeight: 600, marginBottom: 8 }}>ACERTO POR MÓDULO</div>
+            <div style={{ color: '#888', fontSize: 12, fontWeight: 600, marginBottom: 8 }}>ACERTO POR MODULO</div>
             {Object.keys(moduleStats).length === 0 ? (
-              <div style={{ color: '#444', fontSize: 13 }}>Jogue algumas mãos para ver as estatísticas.</div>
+              <div style={{ color: '#444', fontSize: 13 }}>Jogue algumas maos para ver as estatisticas.</div>
             ) : (
               <div className="space-y-2">
                 {Object.entries(moduleStats)
