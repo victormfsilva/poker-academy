@@ -48,7 +48,7 @@ function getFeedback(hand, action, myPos, raiserPos) {
   const isIP = myPos === 'BTN'
   let reason = ''
   if (correct === '3bet') reason = `${hand} — relance do ${myPos} vs ${raiserPos}. ${isIP ? 'Você age por último no flop e tem mão forte — aproveite para construir o pote.' : 'Mesmo agindo primeiro no flop, a mão é boa demais para só chamar — relance para pressionar.'}`
-  else if (correct === 'call') reason = `${hand} — chame do ${myPos} vs ${raiserPos}. ${isIP ? 'Você age por último no flop — pode entrar e decidir depois com informação.' : 'Mesmo agindo primeiro no flop, a mão tem potencial suficiente para entrar.'}`
+  else if (correct === 'call') reason = `${hand} — chame do ${myPos} vs ${raiserPos}. ${isIP ? 'Você age por último no flop — pode entrar é decidir depois com informação.' : 'Mesmo agindo primeiro no flop, a mão tem potencial suficiente para entrar.'}`
   else reason = `${hand} — folde do ${myPos} vs ${raiserPos}. ${isIP ? 'Mesmo com a vantagem de agir por último, essa mão específica não tem potencial suficiente.' : 'Agindo primeiro no flop sem boa mão — economize fichas.'}`
   return { correct, isCorrect, reason }
 }
@@ -56,8 +56,8 @@ function getFeedback(hand, action, myPos, raiserPos) {
 function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🃏 Módulo 7 — BTN e SB Respondendo ao Raise</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Alguém já atacou — e agora você está no BTN ou no SB. O que fazer?</p>
+      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🃏 Módulo 7 — BTN é SB Respondendo ao Raise</h1>
+      <p style={{ color: '#888', marginBottom: 24 }}>Alguém já atacou — é agora você está no BTN ou no SB. O que fazer?</p>
       <div className="space-y-4">
         <Section title="BTN — A Melhor Posição da Mesa">
           O Button (BTN) é a posição mais privilegiada do poker. Por quê? Porque depois do flop, o BTN age por último em todas as rodadas — vê o que todo mundo faz antes de decidir. <br /><br />
@@ -79,7 +79,7 @@ function Lesson({ onComplete }) {
             </div>
           </div>
         </Section>
-        <Section title="Quando Relançar e Quando Só Chamar">
+        <Section title="Quando Relançar é Quando Só Chamar">
           <ul className="space-y-2 mt-2" style={{ color: '#ccc', fontSize: 14 }}>
             <li><strong style={{ color: '#f5a623' }}>Relança com mão muito boa:</strong> AA, KK, QQ, JJ, AK — você quer o pote maior porque provavelmente tem a melhor mão</li>
             <li><strong style={{ color: '#4a90e2' }}>Relança com Ás médio (blefe inteligente):</strong> A5, A4, A3 do mesmo naipe — o Ás na sua mão reduz a chance do adversário ter mão forte</li>
@@ -88,7 +88,7 @@ function Lesson({ onComplete }) {
           </ul>
         </Section>
         <Section title="Por Onde Começar?">
-          Pratique primeiro os confrontos mais comuns: <strong style={{ color: '#00d4aa' }}>BTN vs CO</strong> e <strong style={{ color: '#00d4aa' }}>BTN vs HJ</strong>. São os que você vai encontrar toda hora nos torneios.
+          Pratique primeiro os confrontos mais comuns: <strong style={{ color: '#00d4aa' }}>BTN vs CO</strong> é <strong style={{ color: '#00d4aa' }}>BTN vs HJ</strong>. São os que você vai encontrar toda hora nos torneios.
         </Section>
       </div>
       <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>

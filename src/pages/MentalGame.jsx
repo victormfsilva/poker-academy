@@ -21,20 +21,20 @@ function PreSessionCheckin({ onComplete }) {
   const [estresse, setEstresse] = useState(null)
 
   const options = [
-    { value: 1, label: '😫', desc: 'Pessimo' },
+    { value: 1, label: '😫', desc: 'Péssimo' },
     { value: 2, label: '😕', desc: 'Ruim' },
     { value: 3, label: '😐', desc: 'Ok' },
     { value: 4, label: '🙂', desc: 'Bom' },
-    { value: 5, label: '😊', desc: 'Otimo' },
+    { value: 5, label: '😊', desc: 'Ótimo' },
   ]
 
   const score = (humor || 0) + (sono || 0) + (estresse || 0)
   const allSelected = humor && sono && estresse
 
   function getRecommendation() {
-    if (score >= 13) return { text: 'Voce esta em otimo estado! Jogue com confianca.', color: '#00d4aa', icon: '🟢' }
+    if (score >= 13) return { text: 'Você está em ótimo estado! Jogue com confiança.', color: '#00d4aa', icon: '🟢' }
     if (score >= 10) return { text: 'Estado bom. Jogue normalmente, mas fique atento aos sinais de tilt.', color: '#f5a623', icon: '🟡' }
-    if (score >= 7) return { text: 'Estado medio. Considere jogar menos mesas ou sessao mais curta.', color: '#f5a623', icon: '🟠' }
+    if (score >= 7) return { text: 'Estado médio. Considere jogar menos mesas ou sessão mais curta.', color: '#f5a623', icon: '🟠' }
     return { text: 'Estado ruim. Recomendamos NAO jogar agora. Descanse, exercite-se ou medite.', color: '#e94560', icon: '🔴' }
   }
 
@@ -70,10 +70,10 @@ function PreSessionCheckin({ onComplete }) {
 
   return (
     <div>
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>🧘 Check-in Pre-Sessao</h2>
-      <RatingRow label="Como esta seu humor?" value={humor} onChange={setHumor} />
+      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>🧘 Check-in Pré-Sessão</h2>
+      <RatingRow label="Como está seu humor?" value={humor} onChange={setHumor} />
       <RatingRow label="Como dormiu?" value={sono} onChange={setSono} />
-      <RatingRow label="Nivel de estresse? (5 = sem estresse)" value={estresse} onChange={setEstresse} />
+      <RatingRow label="Nível de estresse? (5 = sem estresse)" value={estresse} onChange={setEstresse} />
 
       {rec && (
         <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${rec.color}` }}>
@@ -129,7 +129,7 @@ function SessionDiary({ onComplete }) {
 
   return (
     <div>
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>📓 Diario de Sessao</h2>
+      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>📓 Diário de Sessão</h2>
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div>
           <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>BUY-INS JOGADOS</label>
@@ -165,16 +165,16 @@ function SessionDiary({ onComplete }) {
       <div className="mb-4">
         <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>MOMENTO DE TILT (opcional)</label>
         <textarea value={tiltMoment} onChange={e => setTiltMoment(e.target.value)}
-          placeholder="Descreva um momento em que voce sentiu tilt..."
+          placeholder="Descreva um momento em que você sentiu tilt..."
           className="w-full px-3 py-2 rounded-lg text-white resize-none"
           rows={2}
           style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
       </div>
 
       <div className="mb-4">
-        <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>LICAO DA SESSAO (opcional)</label>
+        <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>LIÇÃO DA SESSÃO (opcional)</label>
         <textarea value={lesson} onChange={e => setLesson(e.target.value)}
-          placeholder="O que voce aprendeu hoje?"
+          placeholder="O que você aprendeu hoje?"
           className="w-full px-3 py-2 rounded-lg text-white resize-none"
           rows={2}
           style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
@@ -182,7 +182,7 @@ function SessionDiary({ onComplete }) {
 
       <button onClick={handleSave} className="w-full py-3 rounded-xl font-bold"
         style={{ background: '#e94560', color: 'white' }}>
-        Salvar Sessao
+        Salvar Sessão
       </button>
     </div>
   )
@@ -221,14 +221,14 @@ function BreathingExercise() {
 
   return (
     <div className="text-center">
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>🫁 Respiracao 4-7-8</h2>
-      <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Tecnica anti-tilt: inspire 4s, segure 7s, expire 8s</p>
+      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>🫁 Respiração 4-7-8</h2>
+      <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Técnica anti-tilt: inspire 4s, segure 7s, expire 8s</p>
 
       {!active ? (
         <button onClick={() => { setActive(true); setPhase('inhale'); setCount(4); setCycles(0) }}
           className="px-8 py-4 rounded-xl font-bold text-lg"
           style={{ background: '#e94560', color: 'white' }}>
-          Iniciar Exercicio
+          Iniciar Exercício
         </button>
       ) : (
         <>
@@ -262,18 +262,18 @@ function BreathingExercise() {
 // ============================================================
 function MindsetCards() {
   const phrases = [
-    { text: 'Foque no processo, nao no resultado.', category: 'Mindset' },
-    { text: 'Uma mao ruim nao define sua sessao.', category: 'Tilt' },
-    { text: 'Variance e temporaria. Skill e permanente.', category: 'Variance' },
-    { text: 'Se voce esta jogando bem, o resultado vem.', category: 'Processo' },
-    { text: 'Tilt e dar dinheiro pros seus oponentes.', category: 'Tilt' },
-    { text: 'Cada decisao e independente da anterior.', category: 'Mindset' },
-    { text: 'Nao tente recuperar perdas. Jogue seu A-game.', category: 'Tilt' },
-    { text: 'O objetivo nao e ganhar toda mao. E tomar boas decisoes.', category: 'Processo' },
-    { text: 'Bad beats provam que voce esta colocando o dinheiro como favorito.', category: 'Variance' },
-    { text: 'Se voce nao esta no seu melhor, pare. A mesa vai estar la amanha.', category: 'Stop-loss' },
-    { text: 'Disciplina e fazer a coisa certa mesmo quando e dificil.', category: 'Mindset' },
-    { text: 'Jogadores profissionais focam em bb/100, nao em sessoes individuais.', category: 'Processo' },
+    { text: 'Foque no processo, não no resultado.', category: 'Mindset' },
+    { text: 'Uma mão ruim não define sua sessão.', category: 'Tilt' },
+    { text: 'Variance é temporária. Skill é permanente.', category: 'Variance' },
+    { text: 'Se você está jogando bem, o resultado vem.', category: 'Processo' },
+    { text: 'Tilt é dar dinheiro pros seus oponentes.', category: 'Tilt' },
+    { text: 'Cada decisão é independente da anterior.', category: 'Mindset' },
+    { text: 'Não tente recuperar perdas. Jogue seu A-game.', category: 'Tilt' },
+    { text: 'O objetivo não é ganhar toda mão. É tomar boas decisões.', category: 'Processo' },
+    { text: 'Bad beats provam que você está colocando o dinheiro como favorito.', category: 'Variance' },
+    { text: 'Se você não está no seu melhor, pare. A mesa vai estar lá amanhã.', category: 'Stop-loss' },
+    { text: 'Disciplina é fazer a coisa certa mesmo quando é difícil.', category: 'Mindset' },
+    { text: 'Jogadores profissionais focam em bb/100, não em sessões individuais.', category: 'Processo' },
   ]
 
   const [current, setCurrent] = useState(0)
@@ -297,7 +297,7 @@ function MindsetCards() {
       </div>
       <button onClick={next} className="px-6 py-3 rounded-xl font-bold"
         style={{ background: '#e94560', color: 'white' }}>
-        Proxima Frase →
+        Próxima Frase →
       </button>
       <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>{current + 1}/{phrases.length}</div>
     </div>
@@ -317,7 +317,7 @@ function History() {
     return (
       <div className="text-center py-12">
         <div style={{ fontSize: 48, marginBottom: 8 }}>📊</div>
-        <p style={{ color: '#666' }}>Nenhum registro ainda. Faca um check-in ou registre uma sessao!</p>
+        <p style={{ color: '#666' }}>Nenhum registro ainda. Faça um check-in ou registre uma sessão!</p>
       </div>
     )
   }
@@ -326,10 +326,10 @@ function History() {
 
   return (
     <div>
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>📊 Historico</h2>
+      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>📊 Histórico</h2>
       {sessions.length > 0 && (
         <>
-          <div style={{ color: '#888', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>SESSOES RECENTES</div>
+          <div style={{ color: '#888', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>SESSÕES RECENTES</div>
           <div className="space-y-2 mb-6">
             {sessions.map((s, i) => (
               <div key={i} className="rounded-lg p-3 flex items-center justify-between"
@@ -384,7 +384,7 @@ function StopLoss() {
   return (
     <div>
       <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>🛑 Stop-Loss Tracker</h2>
-      <p style={{ color: '#888', fontSize: 13, marginBottom: 16 }}>Defina seu limite de perda ANTES da sessao</p>
+      <p style={{ color: '#888', fontSize: 13, marginBottom: 16 }}>Defina seu limite de perda ANTES da sessão</p>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div>
@@ -416,12 +416,12 @@ function StopLoss() {
           {shouldStop && (
             <div className="mt-3 text-center">
               <div style={{ color: '#e94560', fontSize: 20, fontWeight: 700 }}>🛑 PARE DE JOGAR!</div>
-              <p style={{ color: '#888', fontSize: 13, marginTop: 4 }}>Voce atingiu seu limite de stop-loss. Encerre a sessao agora.</p>
+              <p style={{ color: '#888', fontSize: 13, marginTop: 4 }}>Você atingiu seu limite de stop-loss. Encerre a sessão agora.</p>
             </div>
           )}
           {pct > 60 && !shouldStop && (
             <div className="mt-3 text-center">
-              <div style={{ color: '#f5a623', fontSize: 14, fontWeight: 600 }}>⚠️ Atencao — proximo do limite</div>
+              <div style={{ color: '#f5a623', fontSize: 14, fontWeight: 600 }}>⚠️ Atenção — próximo do limite</div>
             </div>
           )}
         </div>
@@ -439,11 +439,11 @@ export default function MentalGame() {
 
   const tabs = [
     { id: 'checkin', label: 'Check-in', icon: '🧘' },
-    { id: 'diary', label: 'Diario', icon: '📓' },
-    { id: 'breathing', label: 'Respiracao', icon: '🫁' },
+    { id: 'diary', label: 'Diário', icon: '📓' },
+    { id: 'breathing', label: 'Respiração', icon: '🫁' },
     { id: 'mindset', label: 'Frases', icon: '💎' },
     { id: 'stoploss', label: 'Stop-Loss', icon: '🛑' },
-    { id: 'history', label: 'Historico', icon: '📊' },
+    { id: 'history', label: 'Histórico', icon: '📊' },
   ]
 
   function handleSaved() {

@@ -58,8 +58,8 @@ function getFeedback(hand, action, scenario) {
     const correct = getBBAction(hand)
     const isCorrect = action === correct
     let reason = ''
-    if (correct === 'bet') reason = `${hand} — você está no BB e o SB só completou. Mão boa — aposte para construir o pote.`
-    else reason = `${hand} — passe a vez no BB vs complete do SB. Veja o flop de graça e decida depois.`
+    if (correct === 'bet') reason = `${hand} — você está no BB é o SB só completou. Mão boa — aposte para construir o pote.`
+    else reason = `${hand} — passe a vez no BB vs complete do SB. Veja o flop de graça é decida depois.`
     return { correct, isCorrect, reason }
   }
 }
@@ -68,16 +68,16 @@ function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>⚔️ Módulo 6 — Duelo dos Blinds</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Todos foldaram — só você e o outro blind restaram</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Todos foldaram — só você é o outro blind restaram</p>
       <div className="space-y-4">
         <Section title="Quando Isso Acontece?">
-          Às vezes todo mundo folda e sobram só o Small Blind e o Big Blind. É um confronto direto de dois jogadores. Parece simples, mas tem um detalhe importante: <strong style={{ color: '#e94560' }}>quem age primeiro antes do flop perde a vantagem depois dele</strong>. O SB fala primeiro antes das cartas comunitárias serem reveladas, mas depois do flop o BB sempre age por último — e agir por último é uma vantagem enorme.
+          Às vezes todo mundo folda é sobram só o Small Blind é o Big Blind. É um confronto direto de dois jogadores. Parece simples, mas tem um detalhe importante: <strong style={{ color: '#e94560' }}>quem age primeiro antes do flop perde a vantagem depois dele</strong>. O SB fala primeiro antes das cartas comunitárias serem reveladas, mas depois do flop o BB sempre age por último — é agir por último é uma vantagem enorme.
         </Section>
         <Section title="Se Você é o Small Blind, Tem 3 Opções">
           <div className="grid grid-cols-3 gap-2 mt-2">
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
               <div style={{ color: '#e94560', fontWeight: 700 }}>FOLD</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito fraca — desiste e pronto</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito fraca — desiste é pronto</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700 }}>COMPLETE</div>
@@ -90,12 +90,12 @@ function Lesson({ onComplete }) {
           </div>
         </Section>
         <Section title="Por Que o SB Precisa de Mãos Melhores?">
-          O SB paga metade de uma ficha e age antes de todo mundo no flop. Isso parece ok, mas na prática você fica em desvantagem permanente depois que as cartas saem — age primeiro, revela informação, e o Big Blind pode reagir. Por isso o SB é mais seletivo e não entra fácil.
+          O SB paga metade de uma ficha é age antes de todo mundo no flop. Isso parece ok, mas na prática você fica em desvantagem permanente depois que as cartas saem — age primeiro, revela informação, é o Big Blind pode reagir. Por isso o SB é mais seletivo é não entra fácil.
         </Section>
-        <Section title="Se Você é o Big Blind e o SB Completou">
+        <Section title="Se Você é o Big Blind é o SB Completou">
           Quando o SB entra sem atacar (só completa), o BB tem uma opção extra: apostar para pressionar. Com mãos boas, aposte. Com mãos medianas, passe a vez e veja o flop de graça — afinal, o SB que completou provavelmente não tem mão forte.
         </Section>
-        <Section title="Se Você é o Big Blind e o SB Atacou">
+        <Section title="Se Você é o Big Blind é o SB Atacou">
           O SB ataca com um range bem variado nesse spot — ele está tentando roubar o pote com facilidade. Por isso o BB pode se defender com muitas mãos, inclusive relançando com as melhores. Não folde fácil.
         </Section>
         <Section title="Dicas Práticas">

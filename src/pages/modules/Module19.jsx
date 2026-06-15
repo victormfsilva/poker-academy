@@ -3,104 +3,104 @@ import { useProgress } from '../../context/ProgressContext'
 
 const SCENARIOS = [
   {
-    situation: 'Voce esta no BTN com JTs. UTG fez raise, HJ chamou. Voce tem posicao sobre ambos.',
-    question: 'O que voce faz?',
+    situation: 'Você está no BTN com JTs. UTG fez raise, HJ chamou. Você tem posição sobre ambos.',
+    question: 'O que você faz?',
     options: [
       { id: 'call', label: 'Call', correct: true },
       { id: 'raise', label: '3-bet', correct: false },
     ],
-    explanation: 'Em potes multiway, 3-bet com JTs nao faz sentido — voce nao vai fazer os 2 foldarem. Call e perfeito: mao com boa jogabilidade, posicao, e implied odds altas em pote multi.',
-    concept: 'Em multiway, prefira call com maos jogaveis (suited connectors, pares) ao inves de 3-bet light.'
+    explanation: 'Em potes multiway, 3-bet com JTs não faz sentido — você não vai fazer os 2 foldarem. Call é perfeito: mão com boa jogabilidade, posição, e implied odds altas em pote multi.',
+    concept: 'Em multiway, prefira call com mãos jogaveis (suited connectors, pares) ao inves de 3-bet light.'
   },
   {
-    situation: '3 jogadores no flop: K♠ 8♦ 3♣. Voce esta no BB com A3s. UTG checou, CO checou.',
-    question: 'O que voce faz?',
+    situation: '3 jogadores no flop: K♠ 8♦ 3♣. Você está no BB com A3s. UTG checou, CO checou.',
+    question: 'O que você faz?',
     options: [
       { id: 'bet', label: 'Bet (c-bet)', correct: false },
       { id: 'check', label: 'Check', correct: true },
     ],
-    explanation: 'Em pote multiway, c-bet com par baixo e perigoso. Com 2 adversarios, a chance de alguem ter K ou melhor e alta. Check e controle o pote.',
-    concept: 'Em multiway, reduza drasticamente sua frequencia de c-bet. So aposte com maos fortes.'
+    explanation: 'Em pote multiway, c-bet com par baixo é perigoso. Com 2 adversarios, a chance de alguem ter K ou melhor é alta. Check e controle o pote.',
+    concept: 'Em multiway, reduza drasticamente sua frequência de c-bet. So aposte com mãos fortes.'
   },
   {
-    situation: 'Flop: Q♥ J♠ 9♦. Pote multiway (3 jogadores). Voce esta IP com KTs (straight draw + gutshot royal).',
-    question: 'O que voce faz?',
+    situation: 'Flop: Q♥ J♠ 9♦. Pote multiway (3 jogadores). Você está IP com KTs (straight draw + gutshot royal).',
+    question: 'O que você faz?',
     options: [
       { id: 'bet', label: 'Bet', correct: false },
       { id: 'check', label: 'Check (ver carta gratis)', correct: true },
     ],
-    explanation: 'Board muito conectado com 3 jogadores. Alguem provavelmente acertou forte (QJ, Q9, sets, straights feitos). Seu draw e bom mas apostar aqui e arriscado — check e veja o turn gratis.',
-    concept: 'Em boards conectados multiway, check com draws. Alguem provavelmente tem mao forte.'
+    explanation: 'Board muito conectado com 3 jogadores. Alguem provavelmente acertou forte (QJ, Q9, sets, straights feitos). Seu draw é bom mas apostar aqui é arriscado — check e veja o turn grátis.',
+    concept: 'Em boards conectados multiway, check com draws. Alguem provavelmente tem mão forte.'
   },
   {
-    situation: '3 jogadores no flop: A♠ 7♦ 2♣ (board seco). Voce foi o raiser pre-flop do CO. Voce tem AKo.',
-    question: 'O que voce faz?',
+    situation: '3 jogadores no flop: A♠ 7♦ 2♣ (board seco). Você foi o raiser pre-flop do CO. Você tem AKo.',
+    question: 'O que você faz?',
     options: [
       { id: 'bet', label: 'Bet 33-50%', correct: true },
       { id: 'check', label: 'Check', correct: false },
     ],
-    explanation: 'Excecao a regra: com top pair top kicker em board MUITO seco e voce tem range advantage como raiser, pode apostar mesmo multiway. AK num A-7-2 rainbow e forte o suficiente.',
-    concept: 'Em multiway, aposte em boards secos quando tem mao forte + range advantage clara.'
+    explanation: 'Excecao a regra: com top pair top kicker em board MUITO seco e você tem range advantage como raiser, pode apostar mesmo multiway. AK num A-7-2 rainbow é forte o suficiente.',
+    concept: 'Em multiway, aposte em boards secos quando tem mão forte + range advantage clara.'
   },
   {
-    situation: 'Voce esta no CO com 55. UTG fez raise, HJ chamou, voce quer entrar no pote.',
+    situation: 'Você está no CO com 55. UTG fez raise, HJ chamou, você quer entrar no pote.',
     question: 'Qual o principal motivo de chamar?',
     options: [
       { id: 'implied', label: 'Implied odds (set mining)', correct: true },
-      { id: 'equity', label: 'Par e sempre forte', correct: false },
+      { id: 'equity', label: 'Par é sempre forte', correct: false },
     ],
-    explanation: '55 em multiway e puro set mining. Voce acerta set ~12% das vezes (1 em 8 flops). Em pote multiway, quando acerta, extrai muito valor de multiplos jogadores. As implied odds justificam o call.',
-    concept: 'Pares baixos em multiway = set mining. Voce entra pelos implied odds, nao pela forca do par.'
+    explanation: '55 em multiway é puro set mining. Você acerta set ~12% das vezes (1 em 8 flops). Em pote multiway, quando acerta, extrai muito valor de multiplos jogadores. As implied odds justificam o call.',
+    concept: 'Pares baixos em multiway = set mining. Você entra pelos implied odds, não pela força do par.'
   },
   {
-    situation: 'Flop: 7♠ 6♠ 5♠. Pote multiway (4 jogadores). Voce tem A♠ 2♠ (flush feito). Primeiro a agir.',
-    question: 'O que voce faz?',
+    situation: 'Flop: 7♠ 6♠ 5♠. Pote multiway (4 jogadores). Você tem A♠ 2♠ (flush feito). Primeiro a agir.',
+    question: 'O que você faz?',
     options: [
       { id: 'bet', label: 'Bet grande (75%)', correct: true },
       { id: 'check', label: 'Check (slow play)', correct: false },
     ],
-    explanation: 'Com 4 jogadores num board monotone, alguem quase certamente tem flush draw ou mao forte. Nao slow play — aposte grande. Em multiway, sempre proteja maos fortes. Alguem vai pagar.',
+    explanation: 'Com 4 jogadores num board monotone, alguem quase certamente tem flush draw ou mão forte. Não slow play — aposte grande. Em multiway, sempre proteja mãos fortes. Alguem vai pagar.',
     concept: 'Em multiway com board perigoso, NUNCA slow play. Aposte grande pra proteger e extrair.'
   },
   {
-    situation: 'Voce esta no BB com Q7o. UTG fez raise, 3 jogadores chamaram. Voce tem pot odds de 5:1.',
-    question: 'O que voce faz?',
+    situation: 'Você está no BB com Q7o. UTG fez raise, 3 jogadores chamaram. Você tem pot odds de 5:1.',
+    question: 'O que você faz?',
     options: [
       { id: 'call', label: 'Call (pot odds)', correct: false },
       { id: 'fold', label: 'Fold', correct: true },
     ],
-    explanation: 'Pot odds bons nao compensam jogabilidade ruim. Q7o nao tem conexao, nao e suited, e vai ser dominada frequentemente. Em multiway, voce precisa de maos que podem fazer nuts — Q7o nao faz.',
-    concept: 'Em multiway, jogabilidade importa mais que pot odds. Maos desconectadas sem potencial de nuts sao fold.'
+    explanation: 'Pot odds bons não compensam jogabilidade ruim. Q7o não tem conexao, não é suited, é vai ser dominada frequentemente. Em multiway, você precisa de mãos que podem fazer nuts — Q7o não faz.',
+    concept: 'Em multiway, jogabilidade importa mais que pot odds. Mãos desconectadas sem potencial de nuts são fold.'
   },
   {
-    situation: 'Flop: T♥ 9♥ 8♣. Pote multiway (3 jogadores). Voce esta OOP com TT (set).',
-    question: 'O que voce faz?',
+    situation: 'Flop: T♥ 9♥ 8♣. Pote multiway (3 jogadores). Você está OOP com TT (set).',
+    question: 'O que você faz?',
     options: [
       { id: 'bet', label: 'Bet/check-raise', correct: true },
-      { id: 'check', label: 'Check e call', correct: false },
+      { id: 'check', label: 'Check é call', correct: false },
     ],
-    explanation: 'Set em board MUITO umido com 3 jogadores — voce DEVE apostar ou check-raise. J7, QJ, 76 ja tem straight. Qualquer carta de copas completa flush. Nao de carta gratis!',
-    concept: 'Sets em boards umidos multiway devem ser jogados agressivamente. Protecao e prioridade.'
+    explanation: 'Set em board MUITO úmido com 3 jogadores — você DEVE apostar ou check-raise. J7, QJ, 76 já tem straight. Qualquer carta de copas completa flush. Não de carta gratis!',
+    concept: 'Sets em boards umidos multiway devem ser jogados agressivamente. Protecao é prioridade.'
   },
   {
-    situation: 'Pre-flop. Voce esta no SB com AQo. UTG fez raise, HJ chamou, CO chamou.',
-    question: 'O que voce faz?',
+    situation: 'Pre-flop. Você está no SB com AQo. UTG fez raise, HJ chamou, CO chamou.',
+    question: 'O que você faz?',
     options: [
       { id: 'squeeze', label: '3-bet (squeeze)', correct: false },
       { id: 'fold', label: 'Fold', correct: true },
     ],
-    explanation: 'AQo do SB contra raiser + 2 callers e uma situacao complicada. Squeeze raramente funciona com 3 oponentes, e se chamar voce joga OOP contra 3 ranges. Fold e o mais correto.',
+    explanation: 'AQo do SB contra raiser + 2 callers é uma situação complicada. Squeeze raramente funciona com 3 oponentes, é se chamar você joga OOP contra 3 ranges. Fold é o mais correto.',
     concept: 'Em potes multiway, aperte seu range de 3-bet do SB. Mais jogadores = menos fold equity.'
   },
   {
-    situation: 'Voce esta no BTN com A♥ 5♥. 3 jogadores ja chamaram o raise. Voce decide chamar. Flop: K♥ 8♥ 2♦.',
-    question: 'Alguem aposta 33%. O que voce faz?',
+    situation: 'Você está no BTN com A♥ 5♥. 3 jogadores já chamaram o raise. Você decide chamar. Flop: K♥ 8♥ 2♦.',
+    question: 'Alguem aposta 33%. O que você faz?',
     options: [
       { id: 'call', label: 'Call', correct: true },
       { id: 'raise', label: 'Raise', correct: false },
     ],
-    explanation: 'Flush draw do nuts (A-high flush draw) em multiway — call. Nao raise: em multiway, raise com draw e arriscado porque pode ter alguem com mao forte que re-raisa. Call e veja o turn.',
-    concept: 'Em multiway, nao semi-blefe com raises. Multiplos oponentes reduzem sua fold equity a quase zero.'
+    explanation: 'Flush draw do nuts (A-high flush draw) em multiway — call. Não raise: em multiway, raise com draw é arriscado porque pode ter alguem com mão forte que re-raisa. Call é veja o turn.',
+    concept: 'Em multiway, não semi-blefe com raises. Multiplos oponentes reduzem sua fold equity a quase zero.'
   },
 ]
 
@@ -112,7 +112,7 @@ function Lesson({ onComplete }) {
       </h1>
       <p style={{ color: '#888', marginBottom: 24 }}>Tudo muda quando o pote tem 3+ jogadores</p>
       <div className="space-y-4">
-        <Section title="Por Que Multiway e Diferente?">
+        <Section title="Por Que Multiway é Diferente?">
           Em potes heads-up (1v1), blefes funcionam ~50% das vezes. Em multiway com 3 jogadores, a chance de TODOS foldarem cai drasticamente.<br /><br />
           <div className="grid grid-cols-2 gap-3 mt-2">
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
@@ -131,11 +131,11 @@ function Lesson({ onComplete }) {
           <div className="space-y-2">
             {[
               { rule: 'Reduza c-bets drasticamente', why: 'Com mais jogadores, alguem provavelmente acertou algo' },
-              { rule: 'Aposte apenas com maos fortes', why: 'Blefes nao funcionam contra multiplos oponentes' },
-              { rule: 'Proteja maos fortes agressivamente', why: 'Mais jogadores = mais draws possiveis. Nao de carta gratis' },
+              { rule: 'Aposte apenas com mãos fortes', why: 'Blefes não funcionam contra multiplos oponentes' },
+              { rule: 'Proteja mãos fortes agressivamente', why: 'Mais jogadores = mais draws possíveis. Não de carta gratis' },
               { rule: 'Nunca slow play', why: 'Com 3+ oponentes, alguem pode te ultrapassar' },
-              { rule: 'Prefira maos com potencial de nuts', why: 'Suited connectors > offsuit desconectados' },
-              { rule: 'Set mining e lucrativo', why: 'Implied odds sao maiores com mais jogadores pagando' },
+              { rule: 'Prefira mãos com potencial de nuts', why: 'Suited connectors > offsuit desconectados' },
+              { rule: 'Set mining é lucrativo', why: 'Implied odds são maiores com mais jogadores pagando' },
             ].map(r => (
               <div key={r.rule} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13 }}>{r.rule}</div>
@@ -144,15 +144,15 @@ function Lesson({ onComplete }) {
             ))}
           </div>
         </Section>
-        <Section title="Maos Boas pra Multiway">
+        <Section title="Mãos Boas pra Multiway">
           <div className="grid grid-cols-2 gap-3 mt-2">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 600 }}>Boas</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Pares (set mining)<br />Suited connectors<br />Suited aces<br />Maos que fazem nuts</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Pares (set mining)<br />Suited connectors<br />Suited aces<br />Mãos que fazem nuts</div>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
               <div style={{ color: '#e94560', fontWeight: 600 }}>Ruins</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Offsuit desconectados<br />Maos dominadas (KTo, Q9o)<br />Maos que fazem 2o melhor<br />Anything sem potencial de nuts</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Offsuit desconectados<br />Mãos dominadas (KTo, Q9o)<br />Mãos que fazem 2o melhor<br />Anything sem potencial de nuts</div>
             </div>
           </div>
         </Section>
@@ -214,9 +214,9 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -226,7 +226,7 @@ function Trainer() {
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenarios</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
@@ -273,7 +273,7 @@ export default function Module19() {
   const [view, setView] = useState(progress.modules[19]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[19]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 18 para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 18 para desbloquear.</p></div>
     </div>
   )
   return (

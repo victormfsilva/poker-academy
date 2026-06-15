@@ -21,8 +21,8 @@ const MODULES = [
   { id: 17, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: '🧠', color: '#00d4aa' },
   { id: 18, name: 'ICM', desc: 'Modelo de chip independente em torneios', icon: '🏆', color: '#f5a623' },
   { id: 19, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥', color: '#4a90e2' },
-  { id: 20, name: 'Blockers', desc: 'Card removal e decisoes avancadas', icon: '🧩', color: '#e94560' },
-  { id: 21, name: 'HUD e Solvers', desc: 'Estatisticas e estudo com solver', icon: '📊', color: '#00d4aa' },
+  { id: 20, name: 'Blockers', desc: 'Card removal e decisões avançadas', icon: '🧩', color: '#e94560' },
+  { id: 21, name: 'HUD e Solvers', desc: 'Estatísticas e estudo com solver', icon: '📊', color: '#00d4aa' },
 ]
 
 export default function Modules() {
@@ -64,7 +64,7 @@ export default function Modules() {
                       </div>
                     </div>
                     {!locked && (
-                      <Link to={`/modulos/${m.id}`} className="px-4 py-2 rounded-lg text-sm font-semibold flex-shrink-0"
+                      <Link to={`/módulos/${m.id}`} className="px-4 py-2 rounded-lg text-sm font-semibold flex-shrink-0"
                         style={{ background: p.completed ? '#00d4aa22' : '#e9456022', color: p.completed ? '#00d4aa' : '#e94560' }}>
                         {p.completed ? 'Revisar' : p.lessonRead ? 'Treinar' : 'Iniciar'}
                       </Link>

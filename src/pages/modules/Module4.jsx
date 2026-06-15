@@ -77,7 +77,7 @@ function Lesson({ onComplete }) {
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: "1px solid #00d4aa" }}>
               <div style={{ color: '#00d4aa', fontWeight: 700 }}>CALL</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão razoável — paga e vê o flop</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão razoável — paga é vê o flop</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700 }}>3-BET</div>
@@ -106,7 +106,7 @@ function Lesson({ onComplete }) {
           Se além do raise original, outro jogador também entrou, agora você está competindo contra duas pessoas. Com mais adversários, você precisa de uma mão mais forte para continuar — folde mais e priorize pares e mãos do mesmo naipe.
         </Section>
         <Section title="Quando Relançar (3-Bet)?">
-          Você relança quando quer pressionar o adversário e forçar ele a tomar uma decisão difícil. Isso acontece com dois tipos de mão:
+          Você relança quando quer pressionar o adversário é forçar ele a tomar uma decisão difícil. Isso acontece com dois tipos de mão:
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>Mãos Muito Fortes</div>

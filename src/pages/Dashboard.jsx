@@ -21,8 +21,8 @@ const MODULES = [
   { id: 17, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: '🧠' },
   { id: 18, name: 'ICM', desc: 'Modelo de chip independente em torneios', icon: '🏆' },
   { id: 19, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥' },
-  { id: 20, name: 'Blockers', desc: 'Card removal e decisoes avancadas', icon: '🧩' },
-  { id: 21, name: 'HUD e Solvers', desc: 'Estatisticas e estudo com solver', icon: '📊' },
+  { id: 20, name: 'Blockers', desc: 'Card removal e decisões avançadas', icon: '🧩' },
+  { id: 21, name: 'HUD e Solvers', desc: 'Estatísticas e estudo com solver', icon: '📊' },
 ]
 
 function motivationalMessage(globalStats) {
@@ -41,10 +41,10 @@ function getBadge(completedIds) {
   const intermediateDone = [8,9,10,11,12,13].every(has)
   const basicDone = [1,2,3,4,5,6,7].every(has)
 
-  if (advancedDone && intermediateDone && basicDone) return { name: 'Avancado', icon: '🏆', color: '#f5a623', desc: 'Todos os 21 modulos completos!' }
-  if (intermediateDone && basicDone) return { name: 'Intermediario Avancado', icon: '💎', color: '#4a90e2', desc: 'Modulos 1-13 completos' }
-  if (basicDone) return { name: 'Iniciante Solido', icon: '⭐', color: '#00d4aa', desc: 'Modulos 1-7 completos' }
-  return { name: 'Aprendiz', icon: '📖', color: '#888', desc: 'Complete os modulos 1-7' }
+  if (advancedDone && intermediateDone && basicDone) return { name: 'Avançado', icon: '🏆', color: '#f5a623', desc: 'Todos os 21 módulos completos!' }
+  if (intermediateDone && basicDone) return { name: 'Intermediário Avançado', icon: '💎', color: '#4a90e2', desc: 'Modulos 1-13 completos' }
+  if (basicDone) return { name: 'Iniciante Sólido', icon: '⭐', color: '#00d4aa', desc: 'Modulos 1-7 completos' }
+  return { name: 'Aprendiz', icon: '📖', color: '#888', desc: 'Complete os módulos 1-7' }
 }
 
 export default function Dashboard() {
@@ -103,7 +103,7 @@ export default function Dashboard() {
             </div>
             <div style={{ color: '#888', fontSize: 14, marginTop: 2 }}>{currentModule.desc}</div>
             <Link
-              to={`/modulos/${currentModule.id}`}
+              to={`/módulos/${currentModule.id}`}
               className="inline-block mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
               style={{ background: '#e94560', color: 'white' }}
             >
@@ -140,7 +140,7 @@ export default function Dashboard() {
                   </div>
                   {!locked && (
                     <Link
-                      to={`/modulos/${m.id}`}
+                      to={`/módulos/${m.id}`}
                       className="px-3 py-1 rounded-lg text-sm font-semibold"
                       style={{ background: '#1e1e2e', color: '#e94560' }}
                     >

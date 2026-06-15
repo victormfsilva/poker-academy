@@ -84,7 +84,7 @@ function Lesson({ onComplete }) {
         </Section>
 
         <Section title="Por Que Não Posso Apostar Pequeno?">
-          Simples: com poucas fichas, se você apostar pequeno e alguém relançar, você vai ser forçado a ir all-in de qualquer jeito — mas numa posição pior. É como tentar ameaçar sem poder cumprir. <br /><br />
+          Simples: com poucas fichas, se você apostar pequeno é alguém relançar, você vai ser forçado a ir all-in de qualquer jeito — mas numa posição pior. É como tentar ameaçar sem poder cumprir. <br /><br />
           A solução é ir all-in direto: ou todo mundo folda e você ganha as fichas agora, ou vai pra showdown e tem a chance de dobrar. Sem meios-termos.
         </Section>
 
@@ -121,7 +121,7 @@ function Lesson({ onComplete }) {
         </Section>
 
         <Section title="O Poder do Ás com Poucas Fichas">
-          Sabe por que A5 vai all-in mais fácil que K5 com as mesmas fichas? Porque o Ás na sua mão <strong style={{ color: '#e94560' }}>reduz a chance do adversário ter Ás</strong> — o que significa menos chance de alguém ter uma mão forte o suficiente para te chamar. É um efeito sutil mas real, e o GTO leva isso em conta.
+          Sabe por que A5 vai all-in mais fácil que K5 com as mesmas fichas? Porque o Ás na sua mão <strong style={{ color: '#e94560' }}>reduz a chance do adversário ter Ás</strong> — o que significa menos chance de alguém ter uma mão forte o suficiente para te chamar. É um efeito sutil mas real, é o GTO leva isso em conta.
         </Section>
 
         <Section title="Mentalidade">

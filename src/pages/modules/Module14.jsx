@@ -87,44 +87,44 @@ function hasTwoPairFn(hole, flop) {
   return [...new Set(holeRanks)].filter(r => flopRanks.includes(r)).length === 2
 }
 
-// Donk bet: voce esta OOP (BB), chamou pre, flop saiu.
-// Normalmente voce checa pro raiser. Mas em certos spots, apostar primeiro (donk) e correto.
+// Donk bet: você está OOP (BB), chamou pre, flop saiu.
+// Normalmente você checa pro raiser. Mas em certos spots, apostar primeiro (donk) é correto.
 function getCorrectAction(hole, flop) {
   const texture = getBoardTexture(flop)
 
-  // Donk bet de valor: mao muito forte em board que favorece SEU range
+  // Donk bet de valor: mão muito forte em board que favorece SEU range
   if (hasMadeFlush(hole, flop)) {
-    return { action: 'donk', reason: 'Flush completo! Donk bet de valor — voce tem mao nuts e o adversario pode checar atras. Nao de carta gratis, aposte!' }
+    return { action: 'donk', reason: 'Flush completo! Donk bet de valor — você tem mão nuts e o adversário pode checar atras. Não de carta gratis, aposte!' }
   }
   if (hasSetFn(hole, flop)) {
     if (texture.lowBoard) {
-      return { action: 'donk', reason: 'Set em board baixo — donk bet! Esse flop favorece seu range de BB (voce tem mais sets de cartas baixas que o raiser). Aposte pra construir pote.' }
+      return { action: 'donk', reason: 'Set em board baixo — donk bet! Esse flop favorece seu range de BB (você tem mais sets de cartas baixas que o raiser). Aposte pra construir pote.' }
     }
-    return { action: 'check', reason: 'Set em board alto — check pro raiser. Ele provavelmente vai c-betar e voce pode check-raise. Board alto favorece o range dele.' }
+    return { action: 'check', reason: 'Set em board alto — check pro raiser. Ele provavelmente vai c-betar e você pode check-raise. Board alto favorece o range dele.' }
   }
   if (hasTwoPairFn(hole, flop)) {
     if (texture.lowBoard && texture.isWet) {
-      return { action: 'donk', reason: 'Dois pares em board baixo e umido — donk bet! Proteja sua mao e construa pote. O raiser pode checar atras num board que nao favorece ele.' }
+      return { action: 'donk', reason: 'Dois pares em board baixo e úmido — donk bet! Proteja sua mão e construa pote. O raiser pode checar atras num board que não favorece ele.' }
     }
-    return { action: 'check', reason: 'Dois pares mas board nao favorece claramente seu range. Check e deixe o raiser c-betar — voce pode check-raise.' }
+    return { action: 'check', reason: 'Dois pares mas board não favorece claramente seu range. Check e deixe o raiser c-betar — você pode check-raise.' }
   }
 
   // Donk bet como semi-blefe: draw forte em board que favorece seu range
   if (texture.lowBoard && texture.isWet && (hasFlushDraw(hole, flop) || hasStraightDraw(hole, flop))) {
-    return { action: 'donk', reason: 'Draw forte em board baixo e umido — donk bet como semi-blefe! O raiser pode checar atras num board que nao favorece ele. Aposte pra ganhar na hora ou construir pote pro draw.' }
+    return { action: 'donk', reason: 'Draw forte em board baixo e úmido — donk bet como semi-blefe! O raiser pode checar atras num board que não favorece ele. Aposte pra ganhar na hora ou construir pote pro draw.' }
   }
 
   // Top pair em board baixo: pode donk
   if (hasTopPair(hole, flop) && texture.lowBoard) {
-    return { action: 'donk', reason: 'Top pair em board baixo — donk bet de valor fino. Esse board favorece seu range. O raiser pode checar atras com overcards, entao aposte voce mesmo.' }
+    return { action: 'donk', reason: 'Top pair em board baixo — donk bet de valor fino. Esse board favorece seu range. O raiser pode checar atras com overcards, então aposte você mesmo.' }
   }
 
-  // Maioria dos casos: check (estrategia padrao)
+  // Maioria dos casos: check (estratégia padrão)
   if (hasTopPair(hole, flop) || hasAnyPair(hole, flop) || hasFlushDraw(hole, flop) || hasStraightDraw(hole, flop)) {
-    return { action: 'check', reason: 'Check pro raiser — estrategia padrao. Deixe ele c-betar e decida depois. Board nao favorece seu range o suficiente pra donk bet.' }
+    return { action: 'check', reason: 'Check pro raiser — estratégia padrão. Deixe ele c-betar e decida depois. Board não favorece seu range o suficiente pra donk bet.' }
   }
 
-  return { action: 'check', reason: 'Sem mao forte nem draw — check. Donk bet sem motivo e desperdicar fichas. Deixe o raiser agir primeiro.' }
+  return { action: 'check', reason: 'Sem mão forte nem draw — check. Donk bet sem motivo é desperdiçar fichas. Deixe o raiser agir primeiro.' }
 }
 
 function Lesson({ onComplete }) {
@@ -133,18 +133,18 @@ function Lesson({ onComplete }) {
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
         Donk Bet — Quando Apostar Antes do Raiser
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Quebrando a convencao: por que as vezes voce deve liderar a aposta OOP</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Quebrando a convencao: por que as vezes você deve liderar a aposta OOP</p>
       <div className="space-y-4">
-        <Section title="O Que e Donk Bet?">
-          Normalmente, quando voce chamou um raise pre-flop e esta OOP (fora de posicao), voce checa pro raiser no flop. Ele tem a "iniciativa".<br /><br />
-          <strong style={{ color: '#f5a623' }}>Donk bet</strong> e quando voce aposta ANTES do raiser ter chance de agir. E o contrario da estrategia convencional — e por isso e poderoso quando usado certo.
+        <Section title="O Que é Donk Bet?">
+          Normalmente, quando você chamou um raise pre-flop e está OOP (fora de posição), você checa pro raiser no flop. Ele tem a "iniciativa".<br /><br />
+          <strong style={{ color: '#f5a623' }}>Donk bet</strong> é quando você aposta ANTES do raiser ter chance de agir. E o contrário da estratégia convencional — e por isso é poderoso quando usado certo.
         </Section>
-        <Section title="Por Que Donk Bet Normalmente e Ruim?">
+        <Section title="Por Que Donk Bet Normalmente é Ruim?">
           <div className="space-y-2">
             {[
-              'Voce abre mao da chance de check-raise (jogada mais forte)',
+              'Você abre mão da chance de check-raise (jogada mais forte)',
               'O raiser tem range mais forte na maioria dos boards',
-              'Donk bet revela forca — adversarios bons exploram isso',
+              'Donk bet revela força — adversarios bons exploram isso',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#e94560' }}>✗</span>
@@ -153,13 +153,13 @@ function Lesson({ onComplete }) {
             ))}
           </div>
         </Section>
-        <Section title="Quando Donk Bet e Correto">
+        <Section title="Quando Donk Bet é Correto">
           <div className="space-y-2">
             {[
-              { spot: 'Board baixo (ex: 7-5-3, 8-6-2)', why: 'Favorece seu range de BB — voce tem mais 75s, 53s, 86s que o raiser. Ele pode checar atras.' },
-              { spot: 'Set ou dois pares em board baixo', why: 'Mao monstruosa que o raiser nao espera. Se ele checar atras, voce perde valor.' },
-              { spot: 'Draw forte em board que favorece voce', why: 'Semi-blefe. O raiser pode checar atras e voce perde fold equity.' },
-              { spot: 'Top pair em board baixo', why: 'Thin value. O raiser pode checar overcards e voce nao extrai nada.' },
+              { spot: 'Board baixo (ex: 7-5-3, 8-6-2)', why: 'Favorece seu range de BB — você tem mais 75s, 53s, 86s que o raiser. Ele pode checar atras.' },
+              { spot: 'Set ou dois pares em board baixo', why: 'Mao monstruosa que o raiser não espera. Se ele checar atras, você perde valor.' },
+              { spot: 'Draw forte em board que favorece você', why: 'Semi-blefe. O raiser pode checar atrás e você perde fold equity.' },
+              { spot: 'Top pair em board baixo', why: 'Thin value. O raiser pode checar overcards e você não extrai nada.' },
             ].map(r => (
               <div key={r.spot} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: '#00d4aa', fontWeight: 600, fontSize: 13 }}>{r.spot}</div>
@@ -172,8 +172,8 @@ function Lesson({ onComplete }) {
           <div className="space-y-2">
             {[
               { spot: 'Board alto (A-K-Q, A-J-T)', why: 'Favorece o range do raiser. Deixe ele c-betar e decida depois.' },
-              { spot: 'Sem mao nem draw', why: 'Donk bet sem motivo e jogar dinheiro fora.' },
-              { spot: 'Set em board alto', why: 'Check-raise e muito melhor. O raiser vai c-betar quase sempre nesse board.' },
+              { spot: 'Sem mão nem draw', why: 'Donk bet sem motivo é jogar dinheiro fora.' },
+              { spot: 'Set em board alto', why: 'Check-raise é muito melhor. O raiser vai c-betar quase sempre nesse board.' },
             ].map(r => (
               <div key={r.spot} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: '#e94560', fontWeight: 600, fontSize: 13 }}>{r.spot}</div>
@@ -186,7 +186,7 @@ function Lesson({ onComplete }) {
           <div className="rounded-lg p-3 mt-2" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
             <div style={{ color: '#f5a623', fontWeight: 700, marginBottom: 4 }}>33-50% do pote</div>
             <div style={{ color: '#ccc', fontSize: 13 }}>
-              Donk bets geralmente sao menores que c-bets. 33% em boards secos, 50% em boards umidos. O objetivo nao e assustar — e construir pote ou semi-blefar barato.
+              Donk bets geralmente são menores que c-bets. 33% em boards secos, 50% em boards umidos. O objetivo não é assustar — é construir pote ou semi-blefar barato.
             </div>
           </div>
         </Section>
@@ -247,9 +247,9 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -259,17 +259,17 @@ function Trainer() {
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 maos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
 
       <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
-        <div style={{ color: '#e94560', fontSize: 18, fontWeight: 700 }}>Voce esta no BB (OOP)</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Voce chamou o raise pre-flop. Flop saiu. Donk bet ou check?</div>
+        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
+        <div style={{ color: '#e94560', fontSize: 18, fontWeight: 700 }}>Você está no BB (OOP)</div>
+        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Você chamou o raise pre-flop. Flop saiu. Donk bet ou check?</div>
         {texture && (
           <div className="mt-2 flex gap-2 justify-center flex-wrap">
             <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#00d4aa22' : '#e9456022', color: texture.isDry ? '#00d4aa' : '#e94560' }}>
@@ -305,7 +305,7 @@ function Trainer() {
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proxima Mao</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
             Correto: <strong style={{ color: '#f5a623' }}>{feedback.action === 'check' ? 'CHECK' : 'DONK BET'}</strong>
@@ -321,7 +321,7 @@ export default function Module14() {
   const [view, setView] = useState(progress.modules[14]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[14]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 13 para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 13 para desbloquear.</p></div>
     </div>
   )
   return (

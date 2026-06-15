@@ -141,7 +141,7 @@ function getCorrectAction(hole, flop) {
 
   // Top pair: bet 50%
   if (hasTop) {
-    return { action: 'bet', sizing: '50%', reason: 'Você acertou o par mais alto do flop — aposte 50% para extrair valor e proteger sua mão.' }
+    return { action: 'bet', sizing: '50%', reason: 'Você acertou o par mais alto do flop — aposte 50% para extrair valor é proteger sua mão.' }
   }
 
   // Par de bolso acima do flop (overpair): bet 50% para valor/proteção
@@ -187,7 +187,7 @@ function Lesson({ onComplete }) {
       <p style={{ color: '#888', marginBottom: 24 }}>Você abriu o pote — agora o flop saiu. O que fazer?</p>
       <div className="space-y-4">
         <Section title="O que é essa Aposta?">
-          Quando você é o primeiro a apostar antes do flop e o flop sai, os adversários tendem a esperar que você aposte de novo — porque foi você que atacou primeiro. Essa aposta de continuação existe justamente pra aproveitar essa expectativa e pressionar o adversário.
+          Quando você é o primeiro a apostar antes do flop é o flop sai, os adversários tendem a esperar que você aposte de novo — porque foi você que atacou primeiro. Essa aposta de continuação existe justamente pra aproveitar essa expectativa é pressionar o adversário.
         </Section>
         <Section title="O Flop Favorece Você ou o Adversário?">
           A primeira coisa que você analisa é: as cartas do flop combinam mais com as mãos que você teria ou com as mãos que o adversário teria?
@@ -213,11 +213,11 @@ function Lesson({ onComplete }) {
           </div>
         </Section>
         <Section title="Quem Conecta Mais com o Flop?">
-          Pensa assim: se você abriu de uma posição fechada (como UTG) e o flop vem com Ás-Rei-Valete, você provavelmente tem mais mãos grandes do que o adversário — aposte com confiança. Mas se o flop vem 9-8-7, o adversário do Big Blind pode ter muitas mãos conectadas que você não tem. Aposte menos.
+          Pensa assim: se você abriu de uma posição fechada (como UTG) é o flop vem com Ás-Rei-Valete, você provavelmente tem mais mãos grandes do que o adversário — aposte com confiança. Mas se o flop vem 9-8-7, o adversário do Big Blind pode ter muitas mãos conectadas que você não tem. Aposte menos.
         </Section>
         <Section title="Flop Seco Sem Mão — Aposta Mesmo Assim!">
           Esse é o conceito mais contraintuitivo do módulo: <strong style={{ color: '#e94560' }}>no flop seco, você aposta mesmo sem ter nada.</strong><br /><br />
-          Por quê? Porque num flop como A-7-2 com naipes diferentes, o adversário também dificilmente acertou algo — e uma aposta pequena de 33% vai fazer ele foldar a maioria das mãos fracas. Você não precisa ter mão para apostar, precisa ter <strong style={{ color: '#00d4aa' }}>uma boa razão para apostar</strong> — e "ele provavelmente não tem nada" é uma boa razão.
+          Por quê? Porque num flop como A-7-2 com naipes diferentes, o adversário também dificilmente acertou algo — é uma aposta pequena de 33% vai fazer ele foldar a maioria das mãos fracas. Você não precisa ter mão para apostar, precisa ter <strong style={{ color: '#00d4aa' }}>uma boa razão para apostar</strong> — é "ele provavelmente não tem nada" é uma boa razão.
         </Section>
         <Section title="Quando Passar a Vez (não apostar)">
           <ul className="space-y-1 mt-2" style={{ color: '#ccc', fontSize: 14 }}>

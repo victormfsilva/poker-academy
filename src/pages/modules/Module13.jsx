@@ -95,19 +95,19 @@ function hasOverpair(hole, flop) {
   return pocketIdx < topFlopIdx
 }
 
-// Cenario: voce esta IP, fez raise pre, adversario checou. Qual sizing?
+// Cenario: você está IP, fez raise pre, adversário checou. Qual sizing?
 function getCorrectSizing(hole, flop) {
   const texture = getBoardTexture(flop)
 
   // Made flush
   if (hasMadeFlush(hole, flop)) {
-    return { sizing: '75%', reason: 'Flush completo! Aposte grande (75%) — mao nuts, extraia o maximo de valor. O adversario pode ter draws ou pares que pagam.' }
+    return { sizing: '75%', reason: 'Flush completo! Aposte grande (75%) — mão nuts, extraia o máximo de valor. O adversário pode ter draws ou pares que pagam.' }
   }
 
   // Set
   if (hasSetFn(hole, flop)) {
     if (texture.isWet) {
-      return { sizing: '75%', reason: 'Set em board umido — aposte grande (75%)! Proteja contra draws e construa pote com sua mao monstruosa.' }
+      return { sizing: '75%', reason: 'Set em board úmido — aposte grande (75%)! Proteja contra draws e construa pote com sua mão monstruosa.' }
     }
     return { sizing: '75%', reason: 'Set em board seco — aposte grande (75%). Mao muito forte, construa o pote. Mesmo em board seco, 75% extrai mais valor a longo prazo.' }
   }
@@ -115,45 +115,45 @@ function getCorrectSizing(hole, flop) {
   // Dois pares
   if (hasTwoPairFn(hole, flop)) {
     if (texture.isWet) {
-      return { sizing: '75%', reason: 'Dois pares em board umido — aposte grande (75%) pra proteger. Muitos draws podem ultrapassar sua mao se voce apostar pouco.' }
+      return { sizing: '75%', reason: 'Dois pares em board úmido — aposte grande (75%) pra proteger. Muitos draws podem ultrapassar sua mão se você apostar pouco.' }
     }
-    return { sizing: '50%', reason: 'Dois pares em board seco — aposte medio (50%). Mao forte mas nao precisa proteger tanto. Extraia valor sem assustar.' }
+    return { sizing: '50%', reason: 'Dois pares em board seco — aposte médio (50%). Mao forte mas não precisa proteger tanto. Extraia valor sem assustar.' }
   }
 
   // Top pair / overpair
   if (hasOverpair(hole, flop)) {
     if (texture.isWet) {
-      return { sizing: '75%', reason: 'Overpair em board umido — aposte grande (75%) pra proteger contra draws. Sua mao provavelmente e a melhor agora.' }
+      return { sizing: '75%', reason: 'Overpair em board úmido — aposte grande (75%) pra proteger contra draws. Sua mão provavelmente é a melhor agora.' }
     }
-    return { sizing: '50%', reason: 'Overpair em board seco — aposte medio (50%). Mao forte, extraia valor. Poucas ameacas no board.' }
+    return { sizing: '50%', reason: 'Overpair em board seco — aposte médio (50%). Mao forte, extraia valor. Poucas ameacas no board.' }
   }
   if (hasTopPair(hole, flop)) {
-    return { sizing: '50%', reason: 'Top pair — aposte medio (50%). Bom equilibrio entre valor e protecao. Nao aposte muito grande pra nao pagar caro quando estiver atras.' }
+    return { sizing: '50%', reason: 'Top pair — aposte médio (50%). Bom equilibrio entre valor e proteção. Não aposte muito grande pra não pagar caro quando estiver atras.' }
   }
 
   // Draws: semi-blefe
   if (hasFlushDraw(hole, flop) && hasStraightDraw(hole, flop)) {
-    return { sizing: '75%', reason: 'Combo draw (flush + straight)! Aposte grande (75%) como semi-blefe. Equity monstruosa (~45%+) — se chamar voce tem muitos outs, se foldar voce ganha na hora.' }
+    return { sizing: '75%', reason: 'Combo draw (flush + straight)! Aposte grande (75%) como semi-blefe. Equity monstruosa (~45%+) — se chamar você tem muitos outs, se foldar você ganha na hora.' }
   }
   if (hasFlushDraw(hole, flop)) {
-    return { sizing: '50%', reason: 'Flush draw — aposte medio (50%) como semi-blefe. 9 outs (~35% equity). Voce ganha se ele foldar ou se completar o draw.' }
+    return { sizing: '50%', reason: 'Flush draw — aposte médio (50%) como semi-blefe. 9 outs (~35% equity). Você ganha se ele foldar ou se completar o draw.' }
   }
   if (hasStraightDraw(hole, flop)) {
     return { sizing: '33%', reason: 'Straight draw — aposte pequeno (33%) como semi-blefe barato. 8 outs (~32%). Mantem a pressao sem arriscar muito.' }
   }
 
-  // Par medio/baixo
+  // Par médio/baixo
   if (hasAnyPair(hole, flop)) {
-    return { sizing: '33%', reason: 'Par medio/baixo — aposte pequeno (33%) pra protecao e thin value. Nao inflando demais o pote com mao vulneravel.' }
+    return { sizing: '33%', reason: 'Par médio/baixo — aposte pequeno (33%) pra proteção e thin value. Não inflando demais o pote com mão vulneravel.' }
   }
 
   // Nada em board seco: blefe barato
   if (texture.isDry) {
-    return { sizing: '33%', reason: 'Board seco sem mao — aposte pequeno (33%) como blefe. O adversario provavelmente tambem errou. Aposta barata tem alta fold equity aqui.' }
+    return { sizing: '33%', reason: 'Board seco sem mão — aposte pequeno (33%) como blefe. O adversário provavelmente também errou. Aposta barata tem alta fold equity aqui.' }
   }
 
-  // Nada em board umido: check
-  return { sizing: 'check', reason: 'Board umido sem mao nem draw — check. Nao desperdice fichas blefando num board que favorece o range do adversario.' }
+  // Nada em board úmido: check
+  return { sizing: 'check', reason: 'Board úmido sem mão nem draw — check. Não desperdice fichas blefando num board que favorece o range do adversário.' }
 }
 
 function Lesson({ onComplete }) {
@@ -162,14 +162,14 @@ function Lesson({ onComplete }) {
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
         Bet Sizing — Quanto Apostar em Cada Situacao
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>O tamanho da aposta comunica informacao e maximiza seu EV</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>O tamanho da aposta comunica informação e maximiza seu EV</p>
       <div className="space-y-4">
         <Section title="Por Que Sizing Importa?">
-          Apostar o tamanho certo e tao importante quanto decidir se aposta ou nao. Um sizing errado pode:<br /><br />
+          Apostar o tamanho certo é tao importante quanto decidir se aposta ou nao. Um sizing errado pode:<br /><br />
           <div className="space-y-1">
             {[
-              'Dar pot odds bons demais pro adversario (aposta pequena com mao forte)',
-              'Inflar o pote desnecessariamente (aposta grande com mao fraca)',
+              'Dar pot odds bons demais pro adversário (aposta pequena com mão forte)',
+              'Inflar o pote desnecessariamente (aposta grande com mão fraca)',
               'Perder valor (aposta pequena quando poderia cobrar mais)',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
@@ -182,7 +182,7 @@ function Lesson({ onComplete }) {
         <Section title="Os 4 Tamanhos Principais">
           <div className="grid grid-cols-2 gap-3 mt-2">
             {[
-              { size: '33%', color: '#00d4aa', name: 'Pequeno', when: 'Board seco, blefe barato, par medio, thin value', example: 'Pote 10bb → aposta 3.3bb' },
+              { size: '33%', color: '#00d4aa', name: 'Pequeno', when: 'Board seco, blefe barato, par médio, thin value', example: 'Pote 10bb → aposta 3.3bb' },
               { size: '50%', color: '#f5a623', name: 'Medio', when: 'Top pair, overpair seco, flush draw semi-blefe', example: 'Pote 10bb → aposta 5bb' },
               { size: '75%', color: '#e94560', name: 'Grande', when: 'Set, dois pares, overpair wet, combo draw', example: 'Pote 10bb → aposta 7.5bb' },
               { size: '100%+', color: '#9b59b6', name: 'Overbet', when: 'Nuts no river, polarizado (muito forte ou blefe puro)', example: 'Pote 10bb → aposta 10-15bb' },
@@ -199,10 +199,10 @@ function Lesson({ onComplete }) {
         <Section title="Regra de Ouro: Sizing Segue a Forca da Mao + Board">
           <div className="space-y-2 mt-2">
             {[
-              { rule: 'Mao forte + board umido → aposte GRANDE', color: '#e94560', why: 'Proteja contra draws e extraia valor enquanto podem pagar' },
-              { rule: 'Mao forte + board seco → aposte MEDIO', color: '#f5a623', why: 'Sem urgencia de protecao. Extraia valor sem assustar' },
-              { rule: 'Mao media → aposte PEQUENO', color: '#00d4aa', why: 'Thin value. Nao inflando o pote com mao vulneravel' },
-              { rule: 'Blefe → aposte o MINIMO efetivo', color: '#888', why: 'Risco minimo pra maxima fold equity. 33% em board seco ja funciona' },
+              { rule: 'Mao forte + board úmido → aposte GRANDE', color: '#e94560', why: 'Proteja contra draws e extraia valor enquanto podem pagar' },
+              { rule: 'Mao forte + board seco → aposte MEDIO', color: '#f5a623', why: 'Sem urgencia de proteção. Extraia valor sem assustar' },
+              { rule: 'Mao média → aposte PEQUENO', color: '#00d4aa', why: 'Thin value. Não inflando o pote com mão vulneravel' },
+              { rule: 'Blefe → aposte o MINIMO efetivo', color: '#888', why: 'Risco mínimo pra maxima fold equity. 33% em board seco já funciona' },
             ].map(r => (
               <div key={r.rule} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: r.color, fontWeight: 600, fontSize: 13 }}>{r.rule}</div>
@@ -213,15 +213,15 @@ function Lesson({ onComplete }) {
         </Section>
         <Section title="Sizing no Turn e River">
           As mesmas regras se aplicam, mas com ajustes:<br /><br />
-          <strong style={{ color: '#f5a623' }}>Turn:</strong> Se apostou 50% no flop e o draw nao completou, pode manter 50% ou subir pra 75%.<br />
-          <strong style={{ color: '#e94560' }}>River:</strong> Sizing polarizado — ou aposte grande (valor/blefe) ou check. Nao existe "aposta de protecao" no river porque nao tem mais cartas pra vir.
+          <strong style={{ color: '#f5a623' }}>Turn:</strong> Se apostou 50% no flop e o draw não completou, pode manter 50% ou subir pra 75%.<br />
+          <strong style={{ color: '#e94560' }}>River:</strong> Sizing polarizado — ou aposte grande (valor/blefe) ou check. Não existe "aposta de proteção" no river porque não tem mais cartas pra vir.
         </Section>
         <Section title="Overbet — Quando Usar">
           <div className="rounded-lg p-3 mt-2" style={{ background: '#0a0a0f', border: '1px solid #9b59b6' }}>
             <div style={{ color: '#9b59b6', fontWeight: 700, marginBottom: 4 }}>Apostar mais que o pote (100%+)</div>
             <div style={{ color: '#ccc', fontSize: 13 }}>
-              Use no river quando voce tem nuts e o adversario tem um range capped (limitado).<br /><br />
-              Exemplo: voce tem flush no river e o adversario nao pode ter flush. Overbet extrai maximo valor porque ele pode ter top pair forte que paga.
+              Use no river quando você tem nuts e o adversário tem um range capped (limitado).<br /><br />
+              Exemplo: você tem flush no river e o adversário não pode ter flush. Overbet extrai máximo valor porque ele pode ter top pair forte que paga.
             </div>
           </div>
         </Section>
@@ -282,9 +282,9 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -294,17 +294,17 @@ function Trainer() {
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 maos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
 
       <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
-        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Voce esta IP (em posicao)</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Voce fez raise pre-flop. Adversario checou. Qual sizing?</div>
+        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
+        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Você está IP (em posição)</div>
+        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Você fez raise pre-flop. Adversario checou. Qual sizing?</div>
         {texture && (
           <div className="mt-2 flex gap-2 justify-center flex-wrap">
             <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#00d4aa22' : '#e9456022', color: texture.isDry ? '#00d4aa' : '#e94560' }}>
@@ -347,7 +347,7 @@ function Trainer() {
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proxima Mao</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
             Correto: <strong style={{ color: '#f5a623' }}>{feedback.sizing === 'check' ? 'CHECK' : `BET ${feedback.sizing}`}</strong>
@@ -358,8 +358,8 @@ function Trainer() {
               <div style={{ color: '#ccc', fontSize: 12, lineHeight: 1.7 }}>
                 <div>• <strong style={{ color: '#e94560' }}>Set / Dois pares wet / Overpair wet / Combo draw</strong> → 75%</div>
                 <div>• <strong style={{ color: '#f5a623' }}>Top pair / Overpair seco / Dois pares seco / Flush draw</strong> → 50%</div>
-                <div>• <strong style={{ color: '#00d4aa' }}>Par medio / Straight draw / Board seco sem mao</strong> → 33%</div>
-                <div>• <strong style={{ color: '#888' }}>Board umido sem nada</strong> → CHECK</div>
+                <div>• <strong style={{ color: '#00d4aa' }}>Par médio / Straight draw / Board seco sem mão</strong> → 33%</div>
+                <div>• <strong style={{ color: '#888' }}>Board úmido sem nada</strong> → CHECK</div>
               </div>
             </div>
           )}
@@ -374,7 +374,7 @@ export default function Module13() {
   const [view, setView] = useState(progress.modules[13]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[13]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 12 para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 12 para desbloquear.</p></div>
     </div>
   )
   return (

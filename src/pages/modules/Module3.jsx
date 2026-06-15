@@ -35,7 +35,7 @@ function analyzeDraws(hole, board) {
   const values = [...new Set(all.map(c => RANK_VALUES[c.rank]))].sort((a, b) => a - b)
   if (values.includes(14)) values.unshift(1)
 
-  // Verifica se ja tem straight completa (5 consecutivas)
+  // Verifica se já tem straight completa (5 consecutivas)
   let hasStraightMade = false
   for (let i = 0; i <= values.length - 5; i++) {
     if (values[i+1] === values[i]+1 && values[i+2] === values[i]+2 && values[i+3] === values[i]+3 && values[i+4] === values[i]+4) {
@@ -208,7 +208,7 @@ function Lesson({ onComplete }) {
           { id: 'potodds', label: 'Pot Odds' },
           { id: 'implied', label: 'Implied Odds' },
           { id: 'ev', label: 'EV' },
-          { id: 'pratica', label: 'Na Prática' },
+          { id: 'prática', label: 'Na Prática' },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className="px-4 py-2 rounded-lg text-sm font-semibold"
@@ -221,7 +221,7 @@ function Lesson({ onComplete }) {
       {tab === 'outs' && (
         <div className="space-y-4">
           <Section title="O que são Outs?">
-            Outs são as <strong style={{ color: '#e94560' }}>cartas que faltam no baralho e que melhoram sua mão</strong>. Se você tem 4 cartas do mesmo naipe e precisa de mais uma para fazer flush, as cartas que faltam desse naipe são seus outs.
+            Outs são as <strong style={{ color: '#e94560' }}>cartas que faltam no baralho é que melhoram sua mão</strong>. Se você tem 4 cartas do mesmo naipe é precisa de mais uma para fazer flush, as cartas que faltam desse naipe são seus outs.
             <br /><br />
             Pense assim: você está esperando um ônibus. Os outs são quantos ônibus diferentes podem te levar ao destino. Quanto mais outs, mais chance de pegar um.
           </Section>
@@ -270,7 +270,7 @@ function Lesson({ onComplete }) {
       {tab === 'potodds' && (
         <div className="space-y-4">
           <Section title="O que são Pot Odds?">
-            Pot odds é a <strong style={{ color: '#e94560' }}>relação entre o que você precisa pagar e o que pode ganhar</strong>. É como calcular se vale a pena pagar para ver a próxima carta.
+            Pot odds é a <strong style={{ color: '#e94560' }}>relação entre o que você precisa pagar é o que pode ganhar</strong>. É como calcular se vale a pena pagar para ver a próxima carta.
             <br /><br />
             Imagine que alguém te oferece: pague R$10 para concorrer a R$100. Você só precisa acertar 1 em 11 vezes para sair no lucro. Isso é pot odds.
           </Section>
@@ -364,7 +364,7 @@ function Lesson({ onComplete }) {
                 <ul className="mt-2 space-y-1" style={{ color: '#ccc', fontSize: 13 }}>
                   <li>- Adversário tem poucas fichas (não pode pagar mais)</li>
                   <li>- Seu draw é óbvio (3 cartas do mesmo naipe no board)</li>
-                  <li>- Adversário é bom e vai foldar quando você completar</li>
+                  <li>- Adversário e bom e vai foldar quando você completar</li>
                 </ul>
               </div>
             </div>
@@ -400,7 +400,7 @@ function Lesson({ onComplete }) {
           </Section>
 
           <Section title="Decisão Certa com Resultado Ruim">
-            Ponto importante: <strong style={{ color: '#e94560' }}>uma decisão certa pode dar resultado ruim numa mão específica</strong>, e tudo bem.
+            Ponto importante: <strong style={{ color: '#e94560' }}>uma decisão certa pode dar resultado ruim numa mão específica</strong>, é tudo bem.
             <br /><br />
             Se você tem 70% de chance e perde, você não errou — você só caiu nos 30%. No longo prazo, tomar essa decisão sempre te deixa no lucro.
             <br /><br />
@@ -409,7 +409,7 @@ function Lesson({ onComplete }) {
         </div>
       )}
 
-      {tab === 'pratica' && (
+      {tab === 'prática' && (
         <div className="space-y-4">
           <Section title="Cálculo Mental Rápido na Mesa">
             Na mesa você não tem tempo para cálculos exatos. Use estas aproximações:

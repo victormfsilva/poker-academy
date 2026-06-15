@@ -521,19 +521,19 @@ function riverPlayScenario() {
 const SCENARIO_POOLS = {
   17: [
     { q: 'BTN com A5s. UTG tight (12%) fez raise. GTO diz 3-bet.', opts: [{ id: 'a', label: '3-bet (GTO)', correct: false }, { id: 'b', label: 'Fold (Exploit)', correct: true }] },
-    { q: 'BB defende 70%+ dos raises. Voce CO com K9o.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: 'Raise (Exploit)', correct: true }] },
+    { q: 'BB defende 70%+ dos raises. Você CO com K9o.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: 'Raise (Exploit)', correct: true }] },
     { q: 'BB com 87s vs BTN regular forte. GTO diz call.', opts: [{ id: 'a', label: 'Call (GTO)', correct: true }, { id: 'b', label: 'Fold ou 3-bet', correct: false }] },
     { q: 'BTN c-beta 90% dos flops. BB com 65s em A-7-2.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: 'Call/CR (Exploit)', correct: true }] },
     { q: 'SB limpa. BB com J4o.', opts: [{ id: 'a', label: 'Check (GTO)', correct: false }, { id: 'b', label: 'Raise grande (Exploit)', correct: true }] },
-    { q: 'Mesa final ICM. Short stack shova. BB com AQo stack medio.', opts: [{ id: 'a', label: 'Call (ChipEV)', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
+    { q: 'Mesa final ICM. Short stack shova. BB com AQo stack médio.', opts: [{ id: 'a', label: 'Call (ChipEV)', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
     { q: 'BB folda 80% ao 3-bet. SB com K8s.', opts: [{ id: 'a', label: 'Fold (GTO)', correct: false }, { id: 'b', label: '3-bet (Exploit)', correct: true }] },
-    { q: 'River com par medio. Vilao passivo (AF 0.5) fez raise.', opts: [{ id: 'a', label: 'Call (pot odds)', correct: false }, { id: 'b', label: 'Fold (Exploit)', correct: true }] },
+    { q: 'River com par médio. Vilao passivo (AF 0.5) fez raise.', opts: [{ id: 'a', label: 'Call (pot odds)', correct: false }, { id: 'b', label: 'Fold (Exploit)', correct: true }] },
   ],
   18: [
-    { q: '4 restam, pagam 3. Voce 20bb. Short 5bb. CO com AJo.', opts: [{ id: 'a', label: 'Raise', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
-    { q: 'Mesa final 3-way. Voce 15bb. Chip leader shova. QQ.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
-    { q: 'Satelite 10 left, pagam 9. Voce 25bb. Short 12bb shova. AKs.', opts: [{ id: 'a', label: 'Call', correct: false }, { id: 'b', label: 'Fold (ICM extremo)', correct: true }] },
-    { q: 'Longe da bolha (30% restam). 30bb. BTN raise, voce 77.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
+    { q: '4 restam, pagam 3. Você 20bb. Short 5bb. CO com AJo.', opts: [{ id: 'a', label: 'Raise', correct: false }, { id: 'b', label: 'Fold (ICM)', correct: true }] },
+    { q: 'Mesa final 3-way. Você 15bb. Chip leader shova. QQ.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
+    { q: 'Satelite 10 left, pagam 9. Você 25bb. Short 12bb shova. AKs.', opts: [{ id: 'a', label: 'Call', correct: false }, { id: 'b', label: 'Fold (ICM extremo)', correct: true }] },
+    { q: 'Longe da bolha (30% restam). 30bb. BTN raise, você 77.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
     { q: 'Mesa final 6. Chip leader 50bb, demais 10-15bb. BTN com T8s.', opts: [{ id: 'a', label: 'Raise (pressionar)', correct: true }, { id: 'b', label: 'Fold (esperar)', correct: false }] },
     { q: 'Bolha 5 left (4 pagam). 18bb. Short 3bb shova. K2o.', opts: [{ id: 'a', label: 'Call', correct: false }, { id: 'b', label: 'Fold', correct: true }] },
     { q: 'Inicio torneio. 100bb. UTG raise. AKo.', opts: [{ id: 'a', label: '3-bet (ChipEV)', correct: true }, { id: 'b', label: 'Fold (conservar)', correct: false }] },
@@ -541,7 +541,7 @@ const SCENARIO_POOLS = {
   ],
   19: [
     { q: 'BTN JTs. UTG raise, HJ call. 3-way.', opts: [{ id: 'a', label: 'Call', correct: true }, { id: 'b', label: '3-bet', correct: false }] },
-    { q: '3-way flop K-8-3. BB com A3s. Todos checkam a voce.', opts: [{ id: 'a', label: 'Check', correct: true }, { id: 'b', label: 'Bet', correct: false }] },
+    { q: '3-way flop K-8-3. BB com A3s. Todos checkam a você.', opts: [{ id: 'a', label: 'Check', correct: true }, { id: 'b', label: 'Bet', correct: false }] },
     { q: 'Flop Q-J-9, 3-way, IP com KTs (draw).', opts: [{ id: 'a', label: 'Check (multiway)', correct: true }, { id: 'b', label: 'Bet', correct: false }] },
     { q: '3-way A-7-2 dry. CO raiser com AKo.', opts: [{ id: 'a', label: 'Bet', correct: true }, { id: 'b', label: 'Check', correct: false }] },
     { q: 'CO com 55. UTG raise, HJ call. Set mine?', opts: [{ id: 'a', label: 'Call (set mine)', correct: true }, { id: 'b', label: 'Fold', correct: false }] },
@@ -551,22 +551,22 @@ const SCENARIO_POOLS = {
   ],
   20: [
     { q: 'River As5h. Board K-Q-7-3-2 sem flush. Vilao checkou 3 streets.', opts: [{ id: 'a', label: 'Blefe (As bloqueia AK/AQ)', correct: true }, { id: 'b', label: 'Check back', correct: false }] },
-    { q: 'BTN KsQs vs UTG raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Nao (bloqueia folds)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
+    { q: 'BTN KsQs vs UTG raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Não (bloqueia folds)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
     { q: 'BB Ah4d vs BTN raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Sim (bloqueia AA/AK)', correct: true }, { id: 'b', label: 'Nao', correct: false }] },
     { q: 'River T9 straight. Board 5-6-7-8-J. Sizing?', opts: [{ id: 'a', label: 'Media (bloqueia T9 caller)', correct: true }, { id: 'b', label: 'Grande 75%+', correct: false }] },
-    { q: 'SB JsTs vs CO raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Nao (melhor call)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
+    { q: 'SB JsTs vs CO raise. 3-bet blefe?', opts: [{ id: 'a', label: 'Não (melhor call)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
     { q: 'River Kh. Board A-K-8-5-2 com 3 copas. Vilao bet 75%.', opts: [{ id: 'a', label: 'Fold (bloqueia blefes)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
-    { q: 'River 9s8s. Board Q-J-T-4-2. Vilao checkou. Blefar?', opts: [{ id: 'a', label: 'Nao (nao bloqueia AK nuts)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
+    { q: 'River 9s8s. Board Q-J-T-4-2. Vilao checkou. Blefar?', opts: [{ id: 'a', label: 'Não (não bloqueia AK nuts)', correct: true }, { id: 'b', label: 'Sim', correct: false }] },
     { q: 'Flop Ad-Kd-3s. 7d6d. SB bet 33%.', opts: [{ id: 'a', label: 'Check-raise (blocker FD)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
   ],
   21: [
     { q: 'Vilao VPIP 45 / PFR 8. Ele fez raise UTG.', opts: [{ id: 'a', label: 'Range muito forte (so raise premium)', correct: true }, { id: 'b', label: 'Range amplo', correct: false }] },
     { q: 'Vilao 22/19, 3-Bet 9%. Fez 3-bet do BTN.', opts: [{ id: 'a', label: 'Defender normal (equilibrado)', correct: true }, { id: 'b', label: 'Fold (muito forte)', correct: false }] },
-    { q: 'BTN Fold to 3-Bet 75%. Voce BB com K8s.', opts: [{ id: 'a', label: '3-bet blefe (75% fold)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
-    { q: 'Vilao CBet 85%. Ele checkou flop A-7-2. Voce tem 65s.', opts: [{ id: 'a', label: 'Range de check muito fraco', correct: true }, { id: 'b', label: 'Pode ter maos fortes', correct: false }] },
+    { q: 'BTN Fold to 3-Bet 75%. Você BB com K8s.', opts: [{ id: 'a', label: '3-bet blefe (75% fold)', correct: true }, { id: 'b', label: 'Call', correct: false }] },
+    { q: 'Vilao CBet 85%. Ele checkou flop A-7-2. Você tem 65s.', opts: [{ id: 'a', label: 'Range de check muito fraco', correct: true }, { id: 'b', label: 'Pode ter mãos fortes', correct: false }] },
     { q: 'Solver: check 60% bet 40% com top pair no flop.', opts: [{ id: 'a', label: 'Simplificar por textura', correct: true }, { id: 'b', label: 'Aleatorizar 60/40', correct: false }] },
-    { q: 'Solver: A5s e 3-bet 100% mas A8o e call. Por que?', opts: [{ id: 'a', label: 'A5s suited + backdoors + nao domina calls', correct: true }, { id: 'b', label: 'A5s tem mais equity', correct: false }] },
-    { q: 'Seus stats: WTSD 35%, W$SD 45%.', opts: [{ id: 'a', label: 'Chamando demais (calling station)', correct: true }, { id: 'b', label: 'Numeros normais', correct: false }] },
+    { q: 'Solver: A5s é 3-bet 100% mas A8o é call. Por que?', opts: [{ id: 'a', label: 'A5s suited + backdoors + não domina calls', correct: true }, { id: 'b', label: 'A5s tem mais equity', correct: false }] },
+    { q: 'Seus stats: WTSD 35%, W$SD 45%.', opts: [{ id: 'a', label: 'Chamando demais (calling station)', correct: true }, { id: 'b', label: 'Números normais', correct: false }] },
     { q: 'Vilao AF 0.8. Fez raise no river A-K-8-5-2.', opts: [{ id: 'a', label: 'MUITO forte (passivo nunca blefa)', correct: true }, { id: 'b', label: 'Pode ser blefe', correct: false }] },
   ],
 }
@@ -634,15 +634,30 @@ const MOD_COLORS = {
 // ================================================================
 // COMPONENTE PRINCIPAL
 // ================================================================
+const MOD_NAMES_SHORT = {
+  1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet Flop',
+  6: 'Blind Wars', 7: 'SB/BTN vs RFI', 8: 'SB vs RFI', 9: 'BTN vs RFI', 10: '3-Bet',
+  11: 'Def vs CBet', 12: 'Check-Raise', 13: 'Bet Sizing', 14: 'Donk Bet', 15: 'CBet Turn',
+  16: 'River Play', 17: 'GTO vs Exploit', 18: 'ICM', 19: 'Multiway', 20: 'Blockers', 21: 'HUD/Solvers',
+}
+
 export default function Infinite() {
   const { recordAnswer, getModuleProgress } = useProgress()
 
   const unlockedIds = Array.from({ length: 21 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
 
-  const [scenario, setScenario] = useState(() => newScenario(unlockedIds))
+  const [selectedModules, setSelectedModules] = useState(() => new Set(unlockedIds))
+  const [showFilter, setShowFilter] = useState(false)
+  const [showModuleStats, setShowModuleStats] = useState(false)
+
+  const activeIds = unlockedIds.filter(id => selectedModules.has(id))
+  const idsForPlay = activeIds.length > 0 ? activeIds : unlockedIds
+
+  const [scenario, setScenario] = useState(() => newScenario(idsForPlay))
   const [result, setResult] = useState(null)
   const [streak, setStreak] = useState(0)
   const [stats, setStats] = useState({ total: 0, correct: 0 })
+  const [moduleStats, setModuleStats] = useState({})
 
   const handleAnswer = useCallback((action) => {
     if (result) return
@@ -650,14 +665,30 @@ export default function Infinite() {
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
     setStats(s => ({ total: s.total + 1, correct: s.correct + (isCorrect ? 1 : 0) }))
+    setModuleStats(prev => {
+      const m = prev[scenario.moduleId] || { total: 0, correct: 0 }
+      return { ...prev, [scenario.moduleId]: { total: m.total + 1, correct: m.correct + (isCorrect ? 1 : 0) } }
+    })
     recordAnswer(scenario.moduleId, isCorrect, newStreak)
     setResult({ isCorrect, correctLabel, isMix, action })
   }, [result, scenario, streak, recordAnswer])
 
   const handleNext = useCallback(() => {
     setResult(null)
-    setScenario(newScenario(unlockedIds))
-  }, [unlockedIds])
+    setScenario(newScenario(idsForPlay))
+  }, [idsForPlay])
+
+  const toggleModule = (id) => {
+    setSelectedModules(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectAll = () => setSelectedModules(new Set(unlockedIds))
+  const selectNone = () => setSelectedModules(new Set())
 
   const acc = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
   const accColor = acc >= 90 ? '#00d4aa' : acc >= 70 ? '#f5a623' : '#e94560'
@@ -673,9 +704,9 @@ export default function Infinite() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mb-5">
           {[
-            { label: 'Maos', value: stats.total, color: '#e94560' },
+            { label: 'Mãos', value: stats.total, color: '#e94560' },
             { label: 'Acerto', value: stats.total ? `${acc}%` : '—', color: accColor },
-            { label: 'Sequencia', value: streak, color: '#f5a623' },
+            { label: 'Sequência', value: streak, color: '#f5a623' },
           ].map(s => (
             <div key={s.label} className="rounded-xl py-3 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
               <div style={{ color: s.color, fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{s.value}</div>
@@ -687,7 +718,7 @@ export default function Infinite() {
         {/* Module badge */}
         <div className="mb-4 flex items-center gap-2">
           <span className="px-3 py-1 rounded-lg text-xs font-bold" style={{ background: `${modColor}22`, color: modColor }}>
-            Modulo {scenario.moduleId}
+            Módulo {scenario.moduleId}
           </span>
           <span style={{ color: '#888', fontSize: 13 }}>{scenario.label}</span>
         </div>
@@ -716,7 +747,7 @@ export default function Infinite() {
           {/* Hole cards for board-based */}
           {scenario.hole && (
             <div className="mb-4">
-              <div style={{ color: '#666', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>SUA MAO</div>
+              <div style={{ color: '#666', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>SUA MÃO</div>
               <div className="flex gap-2">
                 {scenario.hole.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
               </div>
@@ -758,7 +789,7 @@ export default function Infinite() {
                 {result.isCorrect ? '✓ Correto!' : `✗ Errou — era ${result.correctLabel}`}
               </div>
               {result.isMix && (
-                <div style={{ color: '#ff8f00', fontSize: 12, marginTop: 3 }}>Mao de transicao — ambas as acoes sao aceitaveis.</div>
+                <div style={{ color: '#ff8f00', fontSize: 12, marginTop: 3 }}>Mao de transição — ambas as ações são aceitaveis.</div>
               )}
             </div>
           )}
@@ -785,29 +816,89 @@ export default function Infinite() {
                 padding: '14px', borderRadius: 8, background: '#1e1e2e', border: '1px solid #333',
                 color: '#f5f5f5', fontWeight: 700, fontSize: 15, cursor: 'pointer',
               }}>
-              Proxima Mao →
+              Próxima Mao →
             </button>
           )}
         </div>
 
-        {/* Unlocked modules indicator */}
-        <div className="rounded-xl p-3" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-          <div style={{ color: '#555', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>MODULOS ATIVOS</div>
-          <div className="flex flex-wrap gap-1">
-            {Array.from({ length: 21 }, (_, i) => i + 1).map(id => {
-              const unlocked = unlockedIds.includes(id)
-              return (
-                <div key={id} className="rounded px-2 py-1 text-xs font-bold"
-                  style={{
-                    background: unlocked ? `${MOD_COLORS[id]}22` : '#1a1a1a',
-                    color: unlocked ? MOD_COLORS[id] : '#333',
-                  }}>
-                  {id}
-                </div>
-              )
-            })}
-          </div>
+        {/* Filter & Stats toggles */}
+        <div className="flex gap-2 mb-3">
+          <button onClick={() => { setShowFilter(!showFilter); setShowModuleStats(false) }}
+            className="flex-1 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: showFilter ? '#e9456022' : '#12121a', color: showFilter ? '#e94560' : '#666', border: `1px solid ${showFilter ? '#e94560' : '#1e1e2e'}` }}>
+            🎯 Filtrar Módulos
+          </button>
+          <button onClick={() => { setShowModuleStats(!showModuleStats); setShowFilter(false) }}
+            className="flex-1 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: showModuleStats ? '#4a90e222' : '#12121a', color: showModuleStats ? '#4a90e2' : '#666', border: `1px solid ${showModuleStats ? '#4a90e2' : '#1e1e2e'}` }}>
+            📊 Stats por Módulo
+          </button>
         </div>
+
+        {/* Module filter */}
+        {showFilter && (
+          <div className="rounded-xl p-4 mb-3" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+            <div className="flex justify-between items-center mb-3">
+              <div style={{ color: '#888', fontSize: 12, fontWeight: 600 }}>SELECIONE OS MÓDULOS</div>
+              <div className="flex gap-2">
+                <button onClick={selectAll} className="text-xs px-2 py-1 rounded" style={{ color: '#00d4aa', background: '#00d4aa15' }}>Todos</button>
+                <button onClick={selectNone} className="text-xs px-2 py-1 rounded" style={{ color: '#e94560', background: '#e9456015' }}>Nenhum</button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {unlockedIds.map(id => {
+                const active = selectedModules.has(id)
+                return (
+                  <button key={id} onClick={() => toggleModule(id)}
+                    className="rounded-lg px-3 py-2 text-xs font-bold transition-all"
+                    style={{
+                      background: active ? `${MOD_COLORS[id]}22` : '#0a0a0f',
+                      color: active ? MOD_COLORS[id] : '#444',
+                      border: `1px solid ${active ? MOD_COLORS[id] : '#1e1e2e'}`,
+                    }}>
+                    {id}. {MOD_NAMES_SHORT[id]}
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ color: '#555', fontSize: 11, marginTop: 8 }}>
+              {activeIds.length === 0 ? 'Nenhum selecionado — usando todos' : `${activeIds.length} módulo${activeIds.length > 1 ? 's' : ''} ativo${activeIds.length > 1 ? 's' : ''}`}
+            </div>
+          </div>
+        )}
+
+        {/* Per-module stats */}
+        {showModuleStats && (
+          <div className="rounded-xl p-4 mb-3" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+            <div style={{ color: '#888', fontSize: 12, fontWeight: 600, marginBottom: 8 }}>ACERTO POR MÓDULO</div>
+            {Object.keys(moduleStats).length === 0 ? (
+              <div style={{ color: '#444', fontSize: 13 }}>Jogue algumas mãos para ver as estatísticas.</div>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(moduleStats)
+                  .sort((a, b) => {
+                    const accA = a[1].total > 0 ? a[1].correct / a[1].total : 0
+                    const accB = b[1].total > 0 ? b[1].correct / b[1].total : 0
+                    return accA - accB
+                  })
+                  .map(([id, ms]) => {
+                    const modAcc = ms.total > 0 ? Math.round((ms.correct / ms.total) * 100) : 0
+                    const color = modAcc >= 90 ? '#00d4aa' : modAcc >= 70 ? '#f5a623' : '#e94560'
+                    return (
+                      <div key={id} className="flex items-center gap-3">
+                        <div style={{ width: 90, color: MOD_COLORS[id], fontSize: 12, fontWeight: 600 }}>{MOD_NAMES_SHORT[id]}</div>
+                        <div className="flex-1 rounded-full h-2" style={{ background: '#1e1e2e' }}>
+                          <div className="rounded-full h-2 transition-all" style={{ width: `${modAcc}%`, background: color }} />
+                        </div>
+                        <div style={{ color, fontSize: 13, fontWeight: 700, width: 45, textAlign: 'right' }}>{modAcc}%</div>
+                        <div style={{ color: '#555', fontSize: 11, width: 30 }}>{ms.total}x</div>
+                      </div>
+                    )
+                  })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

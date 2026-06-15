@@ -68,10 +68,10 @@ function hasOverpair(hole, board) {
 }
 
 function hasFlushDrawMissed(hole, board) {
-  // Tinha flush draw no turn (4 cartas do mesmo naipe) mas nao completou no river
+  // Tinha flush draw no turn (4 cartas do mesmo naipe) mas não completou no river
   const suitCounts = {}
   ;[...hole, ...board].forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  // Se tivesse 4 no turn (hole+flop+turn) e agora tem 4 (nao 5), o draw falhou
+  // Se tivesse 4 no turn (hole+flop+turn) é agora tem 4 (não 5), o draw falhou
   return Object.values(suitCounts).some(v => v === 4)
 }
 
@@ -89,50 +89,50 @@ function boardHasStraightPossible(board) {
   return false
 }
 
-// River: voce esta IP, pot control ate aqui ou apostou flop+turn. River saiu. Valor, blefe ou check?
+// River: você está IP, pot control até aqui ou apostou flop+turn. River saiu. Valor, blefe ou check?
 function getCorrectAction(hole, board) {
   const flushOnBoard = boardHasFlushComplete(board)
   const straightOnBoard = boardHasStraightPossible(board)
 
   // Nuts ou perto: value bet grande
   if (hasMadeFlush(hole, board)) {
-    return { action: 'value-big', reason: 'Flush completo no river! Value bet grande (75-100%). Mao nuts — extraia o maximo. Adversario pode pagar com top pair ou dois pares.' }
+    return { action: 'value-big', reason: 'Flush completo no river! Value bet grande (75-100%). Mao nuts — extraia o máximo. Adversario pode pagar com top pair ou dois pares.' }
   }
   if (hasMadeStraight(hole, board)) {
     if (flushOnBoard) {
-      return { action: 'value-small', reason: 'Straight no river mas flush possivel no board. Value bet menor (50%) — voce pode estar atras se adversario tem flush. Cuidado.' }
+      return { action: 'value-small', reason: 'Straight no river mas flush possível no board. Value bet menor (50%) — você pode estar atras se adversário tem flush. Cuidado.' }
     }
-    return { action: 'value-big', reason: 'Straight no river! Value bet grande (75%). Mao muito forte — adversario pode pagar com pares e dois pares.' }
+    return { action: 'value-big', reason: 'Straight no river! Value bet grande (75%). Mao muito forte — adversário pode pagar com pares e dois pares.' }
   }
   if (hasSetFn(hole, board)) {
-    return { action: 'value-big', reason: 'Set no river — value bet grande (75%). Mao muito forte. Adversario que pagou ate aqui provavelmente tem algo que paga.' }
+    return { action: 'value-big', reason: 'Set no river — value bet grande (75%). Mao muito forte. Adversario que pagou até aqui provavelmente tem algo que paga.' }
   }
 
-  // Dois pares ou overpair: value bet medio
+  // Dois pares ou overpair: value bet médio
   if (hasTwoPairFn(hole, board)) {
     if (flushOnBoard || straightOnBoard) {
-      return { action: 'check', reason: 'Dois pares mas board perigoso (flush/straight possivel). Check — se apostar e levar raise, esta em situacao horrivel.' }
+      return { action: 'check', reason: 'Dois pares mas board perigoso (flush/straight possível). Check — se apostar é levar raise, está em situação horrivel.' }
     }
-    return { action: 'value-small', reason: 'Dois pares no river — value bet medio (50%). Mao boa mas nao nuts. Adversario paga com pares inferiores.' }
+    return { action: 'value-small', reason: 'Dois pares no river — value bet médio (50%). Mao boa mas não nuts. Adversario paga com pares inferiores.' }
   }
   if (hasOverpair(hole, board)) {
     if (flushOnBoard) {
-      return { action: 'check', reason: 'Overpair mas flush possivel no board. Check — nao aposte valor quando pode estar dominado.' }
+      return { action: 'check', reason: 'Overpair mas flush possível no board. Check — não aposte valor quando pode estar dominado.' }
     }
-    return { action: 'value-small', reason: 'Overpair no river — value bet fino (50%). Pode extrair de pares menores. Nao aposte muito grande.' }
+    return { action: 'value-small', reason: 'Overpair no river — value bet fino (50%). Pode extrair de pares menores. Não aposte muito grande.' }
   }
 
   // Top pair: check na maioria (pot control) ou thin value em board limpo
   if (hasTopPair(hole, board)) {
     if (flushOnBoard || straightOnBoard) {
-      return { action: 'check', reason: 'Top pair em board perigoso — check. Board tem muitas maos que te vencem. Controle o pote.' }
+      return { action: 'check', reason: 'Top pair em board perigoso — check. Board tem muitas mãos que te vencem. Controle o pote.' }
     }
-    return { action: 'value-small', reason: 'Top pair em board limpo — thin value bet (33-50%). Adversario pode pagar com pares menores. Mas nao exagere no sizing.' }
+    return { action: 'value-small', reason: 'Top pair em board limpo — thin value bet (33-50%). Adversario pode pagar com pares menores. Mas não exagere no sizing.' }
   }
 
-  // Par medio/baixo: check
+  // Par médio/baixo: check
   if (hasAnyPair(hole, board)) {
-    return { action: 'check', reason: 'Par medio/baixo no river — check. Sua mao tem showdown value mas nao aguenta apostar e ser chamada por melhor.' }
+    return { action: 'check', reason: 'Par médio/baixo no river — check. Sua mão tem showdown value mas não aguenta apostar é ser chamada por melhor.' }
   }
 
   // Sem nada: blefe ou give up
@@ -144,15 +144,15 @@ function getCorrectAction(hole, board) {
     boardSuits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
     const flushSuit = Object.keys(suitCounts).find(s => suitCounts[s] >= 3)
     if (flushSuit && holeSuits.includes(flushSuit)) {
-      return { action: 'bluff', reason: 'Sem mao mas voce pode representar o flush! Blefe grande (75%) — voce tem uma carta do naipe que completou. Adversario com pares vai ter dificuldade de chamar.' }
+      return { action: 'bluff', reason: 'Sem mão mas você pode representar o flush! Blefe grande (75%) — você tem uma carta do naipe que completou. Adversario com pares vai ter dificuldade de chamar.' }
     }
   }
 
   if (hasFlushDrawMissed(hole, board)) {
-    return { action: 'bluff', reason: 'Flush draw que nao completou — blefe no river! Voce nao tem showdown value nenhum, entao a unica forma de ganhar e fazendo o adversario foldar. Aposte grande.' }
+    return { action: 'bluff', reason: 'Flush draw que não completou — blefe no river! Você não tem showdown value nenhum, então a unica forma de ganhar é fazendo o adversário foldar. Aposte grande.' }
   }
 
-  return { action: 'check', reason: 'Sem mao e sem historia pra blefar. Check e desista — dar give up no river e correto quando nao tem motivo pra apostar.' }
+  return { action: 'check', reason: 'Sem mão e sem historia pra blefar. Check e desista — dar give up no river é correto quando não tem motivo pra apostar.' }
 }
 
 function Lesson({ onComplete }) {
@@ -161,22 +161,22 @@ function Lesson({ onComplete }) {
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
         River Play — A Decisao Final
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>No river nao tem mais cartas. Value bet, blefe ou check?</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>No river não tem mais cartas. Value bet, blefe ou check?</p>
       <div className="space-y-4">
-        <Section title="Por Que River e Diferente?">
-          No river, nao existem mais draws. Nao existe "protecao". Toda aposta e por um de dois motivos:<br /><br />
+        <Section title="Por Que River é Diferente?">
+          No river, não existem mais draws. Não existe "proteção". Toda aposta é por um de dois motivos:<br /><br />
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 700 }}>Value Bet</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Voce tem mao forte e quer que chamem</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você tem mão forte é quer que chamem</div>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
               <div style={{ color: '#e94560', fontWeight: 700 }}>Blefe</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Voce nao tem nada e quer que foldem</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você não tem nada é quer que foldem</div>
             </div>
           </div>
           <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #888' }}>
-            <div style={{ color: '#888', fontSize: 13 }}>Nao existe "aposta de protecao" no river — nao tem mais cartas pra proteger contra.</div>
+            <div style={{ color: '#888', fontSize: 13 }}>Não existe "aposta de proteção" no river — não tem mais cartas pra proteger contra.</div>
           </div>
         </Section>
         <Section title="Value Bet no River">
@@ -193,17 +193,17 @@ function Lesson({ onComplete }) {
             ))}
           </div>
           <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
-            Regra: aposte mais quando tem mao mais forte. Quanto mais nuts, maior o sizing.
+            Regra: aposte mais quando tem mão mais forte. Quanto mais nuts, maior o sizing.
           </div>
         </Section>
         <Section title="Blefe no River">
           Blefar no river funciona quando:<br /><br />
           <div className="space-y-2">
             {[
-              'Voce pode representar uma mao forte (flush/straight completou)',
-              'Seu draw nao completou e voce nao tem showdown value',
-              'O adversario tem range capped (nao pode ter mao forte)',
-              'Voce apostou flop e turn — a historia faz sentido',
+              'Você pode representar uma mão forte (flush/straight completou)',
+              'Seu draw não completou e você não tem showdown value',
+              'O adversário tem range capped (não pode ter mão forte)',
+              'Você apostou flop e turn — a historia faz sentido',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#f5a623' }}>•</span>
@@ -213,15 +213,15 @@ function Lesson({ onComplete }) {
           </div>
           <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
             <div style={{ color: '#e94560', fontWeight: 600, fontSize: 13 }}>Sizing do blefe: GRANDE (75%+)</div>
-            <div style={{ color: '#ccc', fontSize: 12, marginTop: 2 }}>Blefes pequenos no river nao funcionam — o adversario tem pot odds bons demais pra foldar.</div>
+            <div style={{ color: '#ccc', fontSize: 12, marginTop: 2 }}>Blefes pequenos no river não funcionam — o adversário tem pot odds bons demais pra foldar.</div>
           </div>
         </Section>
         <Section title="Quando Check (Give Up)">
           <div className="space-y-2">
             {[
-              'Par medio/baixo — tem showdown value, nao transforme em blefe',
-              'Board perigoso e voce tem mao boa mas nao nuts — controle',
-              'Sem mao e sem historia pra blefar — aceite o give up',
+              'Par médio/baixo — tem showdown value, não transforme em blefe',
+              'Board perigoso e você tem mão boa mas não nuts — controle',
+              'Sem mão e sem historia pra blefar — aceite o give up',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#888' }}>✓</span>
@@ -287,9 +287,9 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -304,17 +304,17 @@ function Trainer() {
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 maos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
 
       <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
-        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Voce esta IP — River</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Todas as cartas foram reveladas. Qual sua acao final?</div>
+        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
+        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Você está IP — River</div>
+        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Todas as cartas foram reveladas. Qual sua ação final?</div>
       </div>
 
       <div className="mb-4">
@@ -350,7 +350,7 @@ function Trainer() {
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proxima Mao</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
             Correto: <strong style={{ color: '#f5a623' }}>{ACTION_LABELS[feedback.action]}</strong>
@@ -366,7 +366,7 @@ export default function Module16() {
   const [view, setView] = useState(progress.modules[16]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[16]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 15 para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 15 para desbloquear.</p></div>
     </div>
   )
   return (

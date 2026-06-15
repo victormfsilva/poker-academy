@@ -100,50 +100,50 @@ function isTurnScary(flop, turn) {
   // Flush completing card
   const suitCounts = {}
   flopSuits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  if (suitCounts[turnSuit] >= 2) return { scary: true, type: 'flush', desc: 'Carta do mesmo naipe — possivel flush completado' }
+  if (suitCounts[turnSuit] >= 2) return { scary: true, type: 'flush', desc: 'Carta do mesmo naipe — possível flush completado' }
 
   // Straight completing card
   const allRanks = [...flopRanks, turnRank]
   const sorted = [...new Set(allRanks)].sort((a, b) => a - b)
   for (let i = 0; i <= sorted.length - 4; i++) {
-    if (sorted[i + 3] - sorted[i] <= 4) return { scary: true, type: 'straight', desc: 'Carta conectada — possivel straight completado' }
+    if (sorted[i + 3] - sorted[i] <= 4) return { scary: true, type: 'straight', desc: 'Carta conectada — possível straight completado' }
   }
 
   // Overcard
   if (turnRank < Math.min(...flopRanks)) return { scary: true, type: 'overcard', desc: 'Overcard — carta mais alta que o flop' }
 
-  return { scary: false, type: 'brick', desc: 'Brick — carta inofensiva que nao muda nada' }
+  return { scary: false, type: 'brick', desc: 'Brick — carta inofensiva que não muda nada' }
 }
 
-// CBet turn IP: voce apostou no flop, adversario chamou. Turn saiu. Double barrel ou check?
+// CBet turn IP: você apostou no flop, adversário chamou. Turn saiu. Double barrel ou check?
 function getCorrectAction(hole, flop, turn) {
   const board = [...flop, turn]
   const turnInfo = isTurnScary(flop, turn)
 
   // Mao muito forte: sempre barrel
   if (hasMadeFlush(hole, board) || hasSetFn(hole, board) || hasTwoPairFn(hole, board)) {
-    return { action: 'bet', sizing: '66%', reason: 'Mao muito forte no turn — aposte! Continue construindo pote. Voce quer ser pago.' }
+    return { action: 'bet', sizing: '66%', reason: 'Mao muito forte no turn — aposte! Continue construindo pote. Você quer ser pago.' }
   }
 
   // Overpair
   if (hasOverpair(hole, board)) {
     if (turnInfo.scary && turnInfo.type === 'flush') {
-      return { action: 'check', reason: 'Overpair mas turn completou possivel flush. Check pra controlar o pote — se o adversario apostar grande, pode estar com flush.' }
+      return { action: 'check', reason: 'Overpair mas turn completou possível flush. Check pra controlar o pote — se o adversário apostar grande, pode estar com flush.' }
     }
-    return { action: 'bet', sizing: '66%', reason: 'Overpair — continue apostando no turn. Sua mao provavelmente ainda e a melhor. Aposte 66% pra valor e protecao.' }
+    return { action: 'bet', sizing: '66%', reason: 'Overpair — continue apostando no turn. Sua mão provavelmente ainda é a melhor. Aposte 66% pra valor é proteção.' }
   }
 
   // Top pair
   if (hasTopPair(hole, board)) {
     if (turnInfo.scary) {
-      return { action: 'check', reason: `Turn assustador (${turnInfo.desc}). Com top pair, check pra controlar o pote. Se o adversario melhorou, voce economiza fichas.` }
+      return { action: 'check', reason: `Turn assustador (${turnInfo.desc}). Com top pair, check pra controlar o pote. Se o adversário melhorou, você economiza fichas.` }
     }
-    return { action: 'bet', sizing: '50%', reason: 'Top pair em turn brick — continue apostando (50%). O adversario provavelmente ainda tem pior e pode pagar com draws ou pares inferiores.' }
+    return { action: 'bet', sizing: '50%', reason: 'Top pair em turn brick — continue apostando (50%). O adversário provavelmente ainda tem pior e pode pagar com draws ou pares inferiores.' }
   }
 
   // Flush draw: barrel como semi-blefe
   if (hasFlushDraw(hole, board)) {
-    return { action: 'bet', sizing: '50%', reason: 'Flush draw no turn — double barrel como semi-blefe! Voce tem 9 outs (~20% no river). Se ele foldar, voce ganha na hora. Se chamar, voce ainda pode completar.' }
+    return { action: 'bet', sizing: '50%', reason: 'Flush draw no turn — double barrel como semi-blefe! Você tem 9 outs (~20% no river). Se ele foldar, você ganha na hora. Se chamar, você ainda pode completar.' }
   }
 
   // Straight draw: depende do turn
@@ -151,21 +151,21 @@ function getCorrectAction(hole, flop, turn) {
     if (!turnInfo.scary) {
       return { action: 'bet', sizing: '33%', reason: 'Straight draw em turn brick — barrel pequeno (33%) como semi-blefe. Mantem a pressao sem arriscar muito.' }
     }
-    return { action: 'check', reason: 'Straight draw mas turn assustador — check. O adversario pode ter melhorado e seu draw pode nao ser suficiente.' }
+    return { action: 'check', reason: 'Straight draw mas turn assustador — check. O adversário pode ter melhorado e seu draw pode não ser suficiente.' }
   }
 
-  // Par medio/baixo
+  // Par médio/baixo
   if (hasAnyPair(hole, board)) {
-    return { action: 'check', reason: 'Par medio/baixo no turn — check. Sua mao nao e forte o bastante pra apostar duas ruas. Controle o pote.' }
+    return { action: 'check', reason: 'Par médio/baixo no turn — check. Sua mão não é forte o bastante pra apostar duas ruas. Controle o pote.' }
   }
 
-  // Turn e uma boa carta pra blefe (overcard scare card)
+  // Turn é uma boa carta pra blefe (overcard scare card)
   if (turnInfo.scary && turnInfo.type === 'overcard') {
-    return { action: 'bet', sizing: '50%', reason: `Turn trouxe overcard — bom pra blefar! Voce pode representar que acertou a carta alta. Aposte 50% como blefe.` }
+    return { action: 'bet', sizing: '50%', reason: `Turn trouxe overcard — bom pra blefar! Você pode representar que acertou a carta alta. Aposte 50% como blefe.` }
   }
 
   // Nada: check
-  return { action: 'check', reason: 'Sem mao, sem draw, turn nao ajuda pra blefe. Check — nao desperdice mais fichas.' }
+  return { action: 'check', reason: 'Sem mão, sem draw, turn não ajuda pra blefe. Check — não desperdice mais fichas.' }
 }
 
 function Lesson({ onComplete }) {
@@ -174,11 +174,11 @@ function Lesson({ onComplete }) {
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
         CBet Turn IP — Double Barrel
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Voce apostou no flop e chamaram. O turn saiu. Continuar ou frear?</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Você apostou no flop é chamaram. O turn saiu. Continuar ou frear?</p>
       <div className="space-y-4">
-        <Section title="O Que e Double Barrel?">
-          Double barrel e apostar no flop E no turn. E uma continuacao da sua agressividade pre-flop.<br /><br />
-          <strong style={{ color: '#f5a623' }}>Nao e obrigatorio.</strong> Muitos jogadores erram apostando mecanicamente em todas as ruas. A chave e entender QUANDO continuar.
+        <Section title="O Que é Double Barrel?">
+          Double barrel é apostar no flop E no turn. E uma continuacao da sua agressividade pré-flop.<br /><br />
+          <strong style={{ color: '#f5a623' }}>Não é obrigatorio.</strong> Muitos jogadores erram apostando mecanicamente em todas as ruas. A chave é entender QUANDO continuar.
         </Section>
         <Section title="A Carta do Turn Muda Tudo">
           <div className="grid grid-cols-2 gap-3 mt-2">
@@ -186,7 +186,7 @@ function Lesson({ onComplete }) {
               <div style={{ color: '#00d4aa', fontWeight: 600 }}>Boas pra barrel</div>
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>
                 • Brick (carta baixa sem conexao)<br />
-                • Overcard que voce pode representar<br />
+                • Overcard que você pode representar<br />
                 • Carta que completa SEU draw
               </div>
             </div>
@@ -195,7 +195,7 @@ function Lesson({ onComplete }) {
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>
                 • Completa flush draw obvio<br />
                 • Completa straight draw obvio<br />
-                • Carta que ajuda o range do adversario
+                • Carta que ajuda o range do adversário
               </div>
             </div>
           </div>
@@ -205,8 +205,8 @@ function Lesson({ onComplete }) {
             {[
               'Mao forte (set, dois pares, overpair) — sempre continue apostando',
               'Top pair em turn brick — continue extraindo valor',
-              'Flush draw — semi-blefe, voce tem outs',
-              'Turn e overcard e voce pode representar — bom blefe',
+              'Flush draw — semi-blefe, você tem outs',
+              'Turn e overcard e você pode representar — bom blefe',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#00d4aa' }}>✓</span>
@@ -218,9 +218,9 @@ function Lesson({ onComplete }) {
         <Section title="Quando Frear (Check no Turn)">
           <div className="space-y-2">
             {[
-              'Par medio/baixo — controle o pote, voce nao aguenta raise',
-              'Turn completou draw obvio — adversario pode ter melhorado',
-              'Sem mao e turn nao ajuda pra blefe — economize fichas',
+              'Par médio/baixo — controle o pote, você não aguenta raise',
+              'Turn completou draw obvio — adversário pode ter melhorado',
+              'Sem mão e turn não ajuda pra blefe — economize fichas',
               'Top pair em turn assustador — cautela, check e reavalie',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
@@ -303,9 +303,9 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -313,17 +313,17 @@ function Trainer() {
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 maos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
 
       <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
-        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Voce esta IP — Turn</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Voce c-betou no flop e chamaram. Turn saiu. Double barrel?</div>
+        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
+        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Você está IP — Turn</div>
+        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Você c-betou no flop e chamaram. Turn saiu. Double barrel?</div>
         {turnInfo && (
           <div className="mt-2">
             <span className="px-2 py-1 rounded text-xs" style={{
@@ -362,7 +362,7 @@ function Trainer() {
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proxima Mao</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
             Correto: <strong style={{ color: '#f5a623' }}>{feedback.action === 'check' ? 'CHECK' : `BET ${feedback.sizing}`}</strong>
@@ -378,7 +378,7 @@ export default function Module15() {
   const [view, setView] = useState(progress.modules[15]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[15]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 14 para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 14 para desbloquear.</p></div>
     </div>
   )
   return (

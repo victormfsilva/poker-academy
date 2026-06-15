@@ -52,11 +52,11 @@ function getFeedback(hand, action, raisedFrom) {
   const isLate = raisedFrom === 'CO'
 
   if (correct === '3bet') {
-    reason = `${hand} e forte o suficiente para 3-bet no BTN contra ${raisedFrom}. ${isEarly ? 'Mesmo contra range forte, voce tem posicao — 3-bet e lucrativo com maos premium e blockers.' : 'Ele abriu de posicao tardia — 3-bet para isolar e jogar IP com iniciativa.'}`
+    reason = `${hand} é forte o suficiente para 3-bet no BTN contra ${raisedFrom}. ${isEarly ? 'Mesmo contra range forte, você tem posição — 3-bet é lucrativo com mãos premium é blockers.' : 'Ele abriu de posição tardia — 3-bet para isolar é jogar IP com iniciativa.'}`
   } else if (correct === 'call') {
-    reason = `${hand} merece call no BTN contra ${raisedFrom}. Voce tem a melhor posicao da mesa — jogar IP pos-flop compensa. ${isLate ? 'CO abriu mais largo, mas call ainda e melhor que 3-bet com essa mao especifica.' : 'Range dele e mais forte, mas posicao compensa — chame e jogue bem pos-flop.'}`
+    reason = `${hand} merece call no BTN contra ${raisedFrom}. Você tem a melhor posição da mesa — jogar IP pos-flop compensa. ${isLate ? 'CO abriu mais largo, mas call ainda é melhor que 3-bet com essa mão especifica.' : 'Range dele é mais forte, mas posição compensa — chame é jogue bem pos-flop.'}`
   } else {
-    reason = `${hand} deve ser foldada no BTN contra ${raisedFrom}. ${isEarly ? 'Ele abriu de posicao cedo com range forte — mesmo no BTN com posicao, essa mao nao tem equity suficiente.' : 'Mesmo com a vantagem de posicao, essa mao especifica nao tem jogabilidade suficiente.'}`
+    reason = `${hand} deve ser foldada no BTN contra ${raisedFrom}. ${isEarly ? 'Ele abriu de posição cedo com range forte — mesmo no BTN com posição, essa mão não tem equity suficiente.' : 'Mesmo com a vantagem de posição, essa mão especifica não tem jogabilidade suficiente.'}`
   }
 
   return { correct, isCorrect, reason }
@@ -68,26 +68,26 @@ function Lesson({ onComplete }) {
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
         BTN vs RFI — A Melhor Posicao da Mesa
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Voce sempre joga em posicao no pos-flop — aproveite ao maximo</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Você sempre joga em posição no pos-flop — aproveite ao máximo</p>
       <div className="space-y-4">
-        <Section title="Por Que o BTN e a Melhor Posicao?">
+        <Section title="Por Que o BTN é a Melhor Posicao?">
           O Button tem uma vantagem unica no poker:<br /><br />
-          <strong style={{ color: '#00d4aa' }}>Voce SEMPRE age por ultimo no pos-flop.</strong><br /><br />
-          Isso significa que voce ve o que todos fazem antes de tomar sua decisao. Voce pode:<br />
+          <strong style={{ color: '#00d4aa' }}>Você SEMPRE age por ultimo no pos-flop.</strong><br /><br />
+          Isso significa que você vê o que todos fazem antes de tomar sua decisão. Você pode:<br />
           - Controlar o tamanho do pote<br />
           - Fazer blefes mais eficientes<br />
-          - Extrair mais valor com maos fortes<br />
-          - Realizar equity gratis em posicao
+          - Extrair mais valor com mãos fortes<br />
+          - Realizar equity gratis em posição
         </Section>
         <Section title="Suas 3 Opcoes">
           <div className="grid grid-cols-3 gap-3 mt-2">
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
               <div style={{ color: '#e94560', fontWeight: 700 }}>FOLD</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao sem jogabilidade — mesmo IP nao compensa</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao sem jogabilidade — mesmo IP não compensa</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 700 }}>CALL</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao com equity — jogue IP e explore pos-flop</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao com equity — jogue IP é explore pos-flop</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700 }}>3-BET</div>
@@ -97,12 +97,12 @@ function Lesson({ onComplete }) {
         </Section>
         <Section title="BTN Defende MUITO Mais">
           <p style={{ color: '#ccc', fontSize: 14, marginBottom: 12 }}>
-            Comparando as posicoes defensivas, o BTN e de longe o que mais joga:
+            Comparando as posições defensivas, o BTN é de longe o que mais joga:
           </p>
           <div className="space-y-2">
             {[
               { label: 'SB', pct: '35-40%', reason: 'Pagou metade + sempre OOP' },
-              { label: 'BB', pct: '55-60%', reason: 'Ja pagou preco total + fecha acao pre' },
+              { label: 'BB', pct: '55-60%', reason: 'Ja pagou preço total + fecha ação pre' },
               { label: 'BTN', pct: '45-55%', reason: 'Posicao absoluta — sempre IP pos-flop' },
             ].map(r => (
               <div key={r.label} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
@@ -115,9 +115,9 @@ function Lesson({ onComplete }) {
         <Section title="De Onde Vem o Raise Muda Tudo">
           <div className="space-y-2">
             {[
-              { pos: 'UTG', desc: 'Range mais forte. BTN defende ~35% — so maos com boa equity.' },
-              { pos: 'LJ / HJ', desc: 'Range medio. BTN defende ~42-45% — muitos suited connectors entram.' },
-              { pos: 'CO', desc: 'Range mais aberto. BTN defende ~50%+ — defend amplo, voce tem posicao.' },
+              { pos: 'UTG', desc: 'Range mais forte. BTN defende ~35% — só mãos com boa equity.' },
+              { pos: 'LJ / HJ', desc: 'Range médio. BTN defende ~42-45% — muitos suited connectors entram.' },
+              { pos: 'CO', desc: 'Range mais aberto. BTN defende ~50%+ — defend amplo, você tem posição.' },
             ].map(r => (
               <div key={r.pos} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: '#e94560', fontWeight: 700, width: 65, flexShrink: 0 }}>{r.pos}</div>
@@ -126,18 +126,18 @@ function Lesson({ onComplete }) {
             ))}
           </div>
         </Section>
-        <Section title="3-Bet no BTN: Isolar e Dominar">
-          No BTN, 3-bet e poderoso porque:<br /><br />
-          <strong style={{ color: '#00d4aa' }}>Voce isola o raiser e garante posicao pos-flop.</strong><br />
-          <strong style={{ color: '#f5a623' }}>Os blinds geralmente foldham, e voce joga HU em posicao.</strong><br /><br />
+        <Section title="3-Bet no BTN: Isolar é Dominar">
+          No BTN, 3-bet é poderoso porque:<br /><br />
+          <strong style={{ color: '#00d4aa' }}>Você isola o raiser é garante posição pos-flop.</strong><br />
+          <strong style={{ color: '#f5a623' }}>Os blinds geralmente foldham, e você joga HU em posição.</strong><br /><br />
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>3-Bet de Valor</div>
-              <div style={{ color: '#ccc', fontSize: 13 }}>AA, KK, QQ, JJ, TT, AKs, AQs — relanca porque sua mao e forte e voce quer pote grande IP.</div>
+              <div style={{ color: '#ccc', fontSize: 13 }}>AA, KK, QQ, JJ, TT, AKs, AQs — relanca porque sua mão e forte e você quer pote grande IP.</div>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>3-Bet Blefe</div>
-              <div style={{ color: '#ccc', fontSize: 13 }}>A5s, A4s, A3s — blockers de AA/AK. Suited te da equity extra se chamarem. IP voce navega melhor.</div>
+              <div style={{ color: '#ccc', fontSize: 13 }}>A5s, A4s, A3s — blockers de AA/AK. Suited te da equity extra se chamarem. IP você navega melhor.</div>
             </div>
           </div>
         </Section>
@@ -200,9 +200,9 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -224,16 +224,16 @@ function Trainer() {
         </div>
       </div>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 maos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
       {currentRaiser && (
         <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-          <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
-          <div style={{ color: '#00d4aa', fontSize: 22, fontWeight: 700 }}>Voce esta no BTN</div>
+          <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
+          <div style={{ color: '#00d4aa', fontSize: 22, fontWeight: 700 }}>Você está no BTN</div>
           <div style={{ color: '#ccc', fontSize: 14, marginTop: 4 }}>{currentRaiser} fez raise. O que fazer?</div>
         </div>
       )}
@@ -253,7 +253,7 @@ function Trainer() {
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proxima Mao</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Correto: <strong style={{ color: '#f5a623' }}>{feedback.correct.toUpperCase()}</strong></div>
           {!feedback.isCorrect && (() => {
@@ -279,7 +279,7 @@ export default function Module9() {
   const [view, setView] = useState(progress.modules[9]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[9]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 8 para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 8 para desbloquear.</p></div>
     </div>
   )
   return (

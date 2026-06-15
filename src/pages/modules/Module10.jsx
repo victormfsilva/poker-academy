@@ -77,16 +77,16 @@ function getFeedback(hand, action, spot) {
   if (correct === '3bet') {
     const isPremium = ['AA','KK','QQ','JJ','TT','AKs','AKo','AQs'].includes(hand)
     if (isPremium) {
-      reason = `${hand} e 3-bet de VALOR do ${spot.myPos} vs ${spot.raiser}. Mao premium — construa o pote pre-flop. ${isIP ? 'Voce joga IP, ainda melhor.' : 'Mesmo OOP, a mao e forte demais para so chamar.'}`
+      reason = `${hand} é 3-bet de VALOR do ${spot.myPos} vs ${spot.raiser}. Mao premium — construa o pote pre-flop. ${isIP ? 'Você joga IP, ainda melhor.' : 'Mesmo OOP, a mão é forte demais para só chamar.'}`
     } else if (isBlocker(hand)) {
-      reason = `${hand} e 3-bet de BLEFE do ${spot.myPos} vs ${spot.raiser}. O As bloqueia AA e AK do adversario, e suited te da equity extra. ${isOOP ? 'OOP voce prefere 3-bet a call com essa mao — retoma iniciativa.' : 'IP voce pode 3-bet light pra isolar.'}`
+      reason = `${hand} é 3-bet de BLEFE do ${spot.myPos} vs ${spot.raiser}. O As bloqueia AA e AK do adversário, e suited te dá equity extra. ${isOOP ? 'OOP você prefere 3-bet a call com essa mão — retoma iniciativa.' : 'IP você pode 3-bet light pra isolar.'}`
     } else {
-      reason = `${hand} e 3-bet do ${spot.myPos} vs ${spot.raiser}. ${isIP ? 'Em posicao, voce pode 3-betar mais leve para isolar.' : 'Essa mao e forte o suficiente para relance nesse spot.'}`
+      reason = `${hand} é 3-bet do ${spot.myPos} vs ${spot.raiser}. ${isIP ? 'Em posição, você pode 3-betar mais leve para isolar.' : 'Essa mão é forte o suficiente para relance nesse spot.'}`
     }
   } else if (correct === 'call') {
-    reason = `${hand} merece call do ${spot.myPos} vs ${spot.raiser}. Boa equity mas nao forte o suficiente para 3-bet nesse spot. ${isIP ? 'IP voce realiza equity bem pos-flop.' : 'OOP e mais dificil, mas o preco justifica.'}`
+    reason = `${hand} merece call do ${spot.myPos} vs ${spot.raiser}. Boa equity mas não forte o suficiente para 3-bet nesse spot. ${isIP ? 'IP você realiza equity bem pos-flop.' : 'OOP é mais difícil, mas o preço justifica.'}`
   } else {
-    reason = `${hand} deve ser foldada do ${spot.myPos} vs ${spot.raiser}. ${spot.raiser === 'UTG' || spot.raiser === 'LJ' ? 'Ele abriu de posicao cedo com range forte — sua mao nao tem equity suficiente.' : 'Sem equity nem jogabilidade suficiente nesse spot.'}`
+    reason = `${hand} deve ser foldada do ${spot.myPos} vs ${spot.raiser}. ${spot.raiser === 'UTG' || spot.raiser === 'LJ' ? 'Ele abriu de posição cedo com range forte — sua mão não tem equity suficiente.' : 'Sem equity nem jogabilidade suficiente nesse spot.'}`
   }
 
   return { correct, isCorrect, reason }
@@ -98,41 +98,41 @@ function Lesson({ onComplete }) {
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
         3-Bet Ranges — Quando Relançar Pre-Flop
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>O 3-bet e uma das armas mais poderosas do poker moderno</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>O 3-bet é uma das armas mais poderosas do poker moderno</p>
       <div className="space-y-4">
-        <Section title="O Que e 3-Bet?">
-          No poker, as apostas pre-flop sao numeradas:<br /><br />
+        <Section title="O Que é 3-Bet?">
+          No poker, as apostas pre-flop são numeradas:<br /><br />
           <strong style={{ color: '#888' }}>1-bet</strong> = blind (aposta obrigatoria)<br />
           <strong style={{ color: '#f5a623' }}>2-bet</strong> = raise (primeira abertura voluntaria)<br />
           <strong style={{ color: '#e94560' }}>3-bet</strong> = re-raise (relance sobre o raise)<br /><br />
-          Quando alguem faz raise e voce relanca, isso e um 3-bet. E uma jogada agressiva que mostra forca — ou simula forca.
+          Quando alguem faz raise e você relança, isso é um 3-bet. É uma jogada agressiva que mostra força — ou simula força.
         </Section>
         <Section title="2 Tipos de 3-Bet">
           <div className="grid grid-cols-2 gap-3 mt-2">
             <div className="rounded-lg p-4" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>3-Bet de Valor</div>
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.6 }}>
-                Maos premium que QUEREM ser chamadas:<br />
+                Mãos premium que QUEREM ser chamadas:<br />
                 <strong>AA, KK, QQ, JJ, TT, AKs, AQs, AKo</strong><br /><br />
-                Voce relanca para construir pote com mao forte.
+                Você relanca para construir pote com mão forte.
               </div>
             </div>
             <div className="rounded-lg p-4" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>3-Bet de Blefe</div>
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.6 }}>
-                Maos com blockers que PREFEREM fold:<br />
+                Mãos com blockers que PREFEREM fold:<br />
                 <strong>A5s, A4s, A3s, A2s</strong><br /><br />
-                O As bloqueia AA e AK do oponente. Suited da equity de backup.
+                O As bloqueia AA e AK do oponente. Suited dá equity de backup.
               </div>
             </div>
           </div>
         </Section>
-        <Section title="Por Que Nao 3-Betar So de Valor?">
-          Se voce so 3-beta com AA-QQ e AK, oponentes bons percebem rapidamente e:<br /><br />
+        <Section title="Por Que Não 3-Betar So de Valor?">
+          Se você só 3-beta com AA-QQ e AK, oponentes bons percebem rapidamente e:<br /><br />
           <div className="space-y-2">
             {[
-              'Foldam sempre que voce 3-beta (voce nao ganha valor)',
-              '4-betam com blefe sabendo que voce so tem premium',
+              'Foldam sempre que você 3-beta (você não ganha valor)',
+              '4-betam com blefe sabendo que você só tem premium',
               'Exploram sua previsibilidade pos-flop',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
@@ -143,33 +143,33 @@ function Lesson({ onComplete }) {
           </div>
           <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
             <div style={{ color: '#00d4aa', fontSize: 13 }}>
-              <strong>Range balanceado</strong> = valor + blefe juntos. O oponente nunca sabe se voce tem AA ou A5s.
+              <strong>Range balanceado</strong> = valor + blefe juntos. O oponente nunca sabe se você tem AA ou A5s.
             </div>
           </div>
         </Section>
         <Section title="Sizing do 3-Bet">
           <div className="grid grid-cols-2 gap-3 mt-2">
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
-              <div style={{ color: '#4a90e2', fontWeight: 700 }}>IP (em posicao)</div>
+              <div style={{ color: '#4a90e2', fontWeight: 700 }}>IP (em posição)</div>
               <div style={{ color: 'white', fontSize: 28, fontWeight: 700, marginTop: 4 }}>3x</div>
               <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Raise de 3bb → 3-bet 9bb</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700 }}>OOP (fora de posicao)</div>
+              <div style={{ color: '#e94560', fontWeight: 700 }}>OOP (fora de posição)</div>
               <div style={{ color: 'white', fontSize: 28, fontWeight: 700, marginTop: 4 }}>4x</div>
               <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Raise de 3bb → 3-bet 12bb</div>
             </div>
           </div>
           <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
-            OOP voce faz maior para compensar a desvantagem posicional e desencorajar calls.
+            OOP você faz maior para compensar a desvantagem posicional e desencorajar calls.
           </div>
         </Section>
         <Section title="Posicao Muda Tudo">
           <div className="space-y-2">
             {[
-              { pos: 'BTN', desc: '3-bet range mais largo. Voce isola o raiser e joga IP. Pode 3-betar blefe com mais maos.' },
-              { pos: 'SB', desc: '3-bet range medio. OOP mas retoma iniciativa. Prefira 3-bet a call com maos marginais.' },
-              { pos: 'BB', desc: '3-bet range mais seletivo. Ja pagou o blind, pode chamar com mais maos. 3-bet so com premium e blockers.' },
+              { pos: 'BTN', desc: '3-bet range mais largo. Você isola o raiser e joga IP. Pode 3-betar blefe com mais mãos.' },
+              { pos: 'SB', desc: '3-bet range médio. OOP mas retoma iniciativa. Prefira 3-bet a call com mãos marginais.' },
+              { pos: 'BB', desc: '3-bet range mais seletivo. Ja pagou o blind, pode chamar com mais mãos. 3-bet só com premium e blockers.' },
             ].map(r => (
               <div key={r.pos} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: '#e94560', fontWeight: 700, width: 40, flexShrink: 0 }}>{r.pos}</div>
@@ -185,7 +185,7 @@ function Lesson({ onComplete }) {
               { hand: 'AA, KK', action: '5-bet all-in', color: '#00d4aa' },
               { hand: 'QQ, AKs', action: 'Call a 4-bet (depende do tamanho)', color: '#4a90e2' },
               { hand: 'JJ, TT, AQs', action: 'Call ou fold (depende do oponente)', color: '#f5a623' },
-              { hand: 'A5s, A4s (blefes)', action: 'Fold — ja cumpriram seu papel', color: '#e94560' },
+              { hand: 'A5s, A4s (blefes)', action: 'Fold — já cumpriram seu papel', color: '#e94560' },
             ].map(r => (
               <div key={r.hand} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
                 <div style={{ color: r.color, fontWeight: 600, width: 130, flexShrink: 0, fontSize: 13 }}>{r.hand}</div>
@@ -252,9 +252,9 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -276,21 +276,21 @@ function Trainer() {
         </div>
       </div>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 maos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
       {currentSpot && (
         <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-          <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
+          <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
           <div style={{ color: currentSpot.myPos === 'BTN' ? '#00d4aa' : '#e94560', fontSize: 22, fontWeight: 700 }}>
-            Voce esta no {currentSpot.myPos}
+            Você está no {currentSpot.myPos}
           </div>
           <div style={{ color: '#ccc', fontSize: 14, marginTop: 4 }}>{currentSpot.raiser} fez raise. O que fazer?</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 4 }}>
-            {currentSpot.myPos === 'BTN' ? '(Em posicao — IP)' : '(Fora de posicao — OOP)'}
+            {currentSpot.myPos === 'BTN' ? '(Em posição — IP)' : '(Fora de posição — OOP)'}
           </div>
         </div>
       )}
@@ -310,7 +310,7 @@ function Trainer() {
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proxima Mao</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Correto: <strong style={{ color: '#f5a623' }}>{feedback.correct.toUpperCase()}</strong></div>
           {!feedback.isCorrect && currentSpot && (() => {
@@ -335,7 +335,7 @@ export default function Module10() {
   const [view, setView] = useState(progress.modules[10]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[10]?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 9 para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 9 para desbloquear.</p></div>
     </div>
   )
   return (

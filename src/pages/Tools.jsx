@@ -278,14 +278,14 @@ function BoardTextureGuide() {
       name: 'Board Seco (Dry)',
       example: 'K♠ 7♥ 2♦',
       traits: ['Sem draws de flush', 'Sem draws de straight', 'Cartas desconectadas'],
-      strategy: 'CBet com range inteiro, sizing pequeno (25-33%). Vantagem de range do raiser e enorme.',
+      strategy: 'CBet com range inteiro, sizing pequeno (25-33%). Vantagem de range do raiser é enorme.',
       color: '#00d4aa',
     },
     {
       name: 'Board Molhado (Wet)',
       example: 'J♥ T♥ 8♠',
-      traits: ['Flush draw possivel', 'Muitos straight draws', 'Cartas conectadas'],
-      strategy: 'CBet seletivo com maos fortes e draws. Sizing maior (66-75%). Check com air.',
+      traits: ['Flush draw possível', 'Muitos straight draws', 'Cartas conectadas'],
+      strategy: 'CBet seletivo com mãos fortes e draws. Sizing maior (66-75%). Check com air.',
       color: '#e94560',
     },
     {
@@ -298,7 +298,7 @@ function BoardTextureGuide() {
     {
       name: 'Board Monotone',
       example: 'A♠ 8♠ 3♠',
-      traits: ['Tres cartas do mesmo naipe', 'Flush ja possivel', 'Flush draw morto'],
+      traits: ['Tres cartas do mesmo naipe', 'Flush já possível', 'Flush draw morto'],
       strategy: 'Check muito. So aposte com flush feito ou nut flush draw. Board perigoso.',
       color: '#4a90e2',
     },
@@ -306,7 +306,7 @@ function BoardTextureGuide() {
       name: 'Board Alto (High)',
       example: 'A♠ K♥ J♦',
       traits: ['Cartas altas', 'Favorece range do raiser', 'Broadway draws'],
-      strategy: 'CBet com frequencia alta — seu range tem mais top pairs e overpairs.',
+      strategy: 'CBet com frequência alta — seu range tem mais top pairs e overpairs.',
       color: '#00d4aa',
     },
     {
@@ -408,13 +408,13 @@ function ThreeBetGuide() {
         {spot.flatRange.length === 0 && (
           <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a62333' }}>
             <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 13, marginBottom: 6 }}>FLAT CALL</div>
-            <div style={{ color: '#888', fontSize: 13 }}>SB nao faz flat — 3-bet ou fold (sem posicao pos-flop)</div>
+            <div style={{ color: '#888', fontSize: 13 }}>SB não faz flat — 3-bet ou fold (sem posição pos-flop)</div>
           </div>
         )}
       </div>
       <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f' }}>
         <div style={{ color: '#888', fontSize: 12, lineHeight: 1.6 }}>
-          <strong style={{ color: '#ccc' }}>Dica:</strong> Blefes de 3-bet ideais sao maos suited com Ace (bloqueiam AA/AK) ou suited connectors que tem boa equity quando pagos.
+          <strong style={{ color: '#ccc' }}>Dica:</strong> Blefes de 3-bet ideais são mãos suited com Ace (bloqueiam AA/AK) ou suited connectors que tem boa equity quando pagos.
         </div>
       </div>
     </div>
