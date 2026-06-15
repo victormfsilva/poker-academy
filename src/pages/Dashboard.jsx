@@ -15,6 +15,10 @@ const MODULES = [
   { id: 11, name: 'Defesa vs CBet', desc: 'O que fazer quando apostam em você no flop', icon: '🛡️' },
   { id: 12, name: 'Check-Raise', desc: 'A arma mais poderosa fora de posição', icon: '⚡' },
   { id: 13, name: 'Bet Sizing', desc: 'Quanto apostar em cada situação', icon: '📐' },
+  { id: 14, name: 'Donk Bet', desc: 'Quando apostar antes do raiser no flop', icon: '💣' },
+  { id: 15, name: 'CBet Turn', desc: 'Double barrel — continuar no turn', icon: '🔄' },
+  { id: 16, name: 'River Play', desc: 'Value bet, blefe ou check no river', icon: '🏁' },
+  { id: 17, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: '🧠' },
 ]
 
 function motivationalMessage(globalStats) {
