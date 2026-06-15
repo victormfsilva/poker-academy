@@ -21,14 +21,14 @@ export const RFI_RANGES = {
     100: {
       // GTO Wizard MTT Avg 100bb ChipEV — ~16.9%
       raise: [
-        'AA','KK','QQ','JJ','TT','99','88',
+        'AA','KK','QQ','JJ','TT','99','88','77',
         'AKs','AQs','AJs','ATs','A9s','A8s',
         'KQs','KJs','KTs','K9s',
         'QJs','QTs','JTs',
         'T9s','98s','87s','76s','65s',
         'AKo','AQo','AJo',
       ],
-      mix: ['77','66','55','A7s','A6s','A5s','Q9s','J9s','T8s','97s','86s','75s','ATo','KQo'],
+      mix: ['66','55','A7s','A6s','A5s','Q9s','J9s','T8s','97s','86s','75s','ATo','KQo'],
       fold: []
     },
     50: {
@@ -52,9 +52,9 @@ export const RFI_RANGES = {
         'KQs','KJs','KTs',
         'QJs','QTs','JTs',
         'T9s','98s','87s',
-        'AKo','AQo','AJo','KJo',
+        'AKo','AQo','AJo',
       ],
-      mix: ['66','55','A8s','A7s','K9s','J9s','76s','ATo','KQo'],
+      mix: ['66','55','A8s','K9s','T8s','76s'],
       fold: []
     },
     15: {
@@ -66,7 +66,7 @@ export const RFI_RANGES = {
         'QJs','JTs',
         'AKo','AQo','AJo',
       ],
-      mix: ['66','A8s','Q9s','ATo','KQo'],
+      mix: ['66','A8s','T9s'],
       fold: []
     }
   },
@@ -76,14 +76,14 @@ export const RFI_RANGES = {
     100: {
       // GTO Wizard MTT Avg 100bb ChipEV — ~19.6%
       raise: [
-        'AA','KK','QQ','JJ','TT','99','88','77',
+        'AA','KK','QQ','JJ','TT','99','88','77','66',
         'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A5s',
         'KQs','KJs','KTs','K9s','K8s','K7s',
         'QJs','QTs','Q9s','JTs','J9s',
         'T9s','98s','87s','76s','65s',
         'AKo','AQo','AJo',
       ],
-      mix: ['66','55','A6s','Q8s','T8s','97s','86s','ATo','KQo'],
+      mix: ['55','A6s','Q8s','T8s','97s','86s','ATo','KQo'],
       fold: []
     },
     50: {
@@ -109,7 +109,7 @@ export const RFI_RANGES = {
         'T9s','98s','87s',
         'AKo','AQo','AJo',
       ],
-      mix: ['66','55','A7s','J9s','76s','ATo','KQo'],
+      mix: ['66','55','A7s','T8s','76s'],
       fold: []
     },
     15: {
@@ -121,7 +121,7 @@ export const RFI_RANGES = {
         'QJs','JTs',
         'AKo','AQo','AJo',
       ],
-      mix: ['66','A8s','K9s','T9s','ATo','KQo'],
+      mix: ['66','A8s','K9s','T9s'],
       fold: []
     }
   },
@@ -313,13 +313,13 @@ export const RFI_RANGES = {
         'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s',
         'KQs','KJs','KTs','K9s','K8s',
         'QJs','QTs','Q9s','JTs','J9s',
-        'T9s','98s','87s',
+        'T9s','T8s','98s','87s',
         'AKo','AQo','AJo','ATo','A9o',
         'KQo','KJo','KTo',
         'QJo','QTo',
         'JTo',
       ],
-      mix: ['33','A4s','A3s','A2s','K7s','Q8s','T8s','65s','A8o','K9o','Q9o'],
+      mix: ['33','A4s','A3s','K7s','Q8s','J8s','K5s','65s','A8o','K9o','Q9o'],
       fold: []
     }
   },
@@ -383,7 +383,7 @@ export const RFI_RANGES = {
     25: {
       // GTO Wizard MTT Avg 25bb ChipEV — 45.1%
       raise: [
-        'AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
+        'AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33',
         'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
         'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s',
         'QJs','QTs','Q9s','Q8s','Q7s',
@@ -392,18 +392,15 @@ export const RFI_RANGES = {
         '98s','97s','96s',
         '87s','86s','85s',
         '76s','75s',
-        '65s','64s',
+        '65s',
         '54s',
         'AKo','AQo','AJo','ATo','A9o','A8o','A7o',
         'KQo','KJo','KTo','K9o',
         'QJo','QTo','Q9o',
         'JTo','J9o',
-        'T9o','T8o',
-        '97o',
-        '87o','86o',
-        '76o',
+        'T9o',
       ],
-      mix: ['K4s','Q6s','J6s','T6s','95s','84s','74s','63s','53s','43s','A6o','A5o','K8o','Q8o','J8o','T7o','98o'],
+      mix: ['22','Q6s','J6s','T6s','T8o','95s'],
       fold: []
     },
     15: {
@@ -437,7 +434,7 @@ export const PUSH_FOLD_RANGES = {
   // Fonte: GTO Wizard MTT Avg ChipEV
   UTG: {
     // 10bb: Allin 12.5% | 8bb: Allin 19.4% | 5bb: Allin ~35%
-    10: ['AA','KK','QQ','JJ','TT','99','88','77','66',
+    10: ['AA','KK','QQ','JJ','TT','99','88','77','66','55',
          'AKs','AQs','AJs','ATs','A9s','A8s',
          'KQs','KJs','KTs',
          'QJs',
@@ -463,7 +460,7 @@ export const PUSH_FOLD_RANGES = {
     10: ['AA','KK','QQ','JJ','TT','99','88','77','66','55',
          'AKs','AQs','AJs','ATs','A9s','A8s',
          'KQs','KJs','KTs',
-         'QJs','JTs',
+         'QJs',
          'AKo','AQo','AJo','ATo'],
     8:  ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44',
          'AKs','AQs','AJs','ATs','A9s','A8s','A7s',
