@@ -254,7 +254,7 @@ function PokerTable({ scenario }) {
 
       {/* Centro: pot + board cards */}
       <div style={{
-        position: 'absolute', top: boardCards ? '44%' : '40%', left: '50%',
+        position: 'absolute', top: boardCards ? '42%' : '40%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center', pointerEvents: 'none',
       }}>
