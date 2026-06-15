@@ -12,6 +12,8 @@ const defaultProgress = {
     5: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     6: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     7: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    8: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    9: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
   },
   globalStats: {
     totalHands: 0,
@@ -143,7 +145,7 @@ export function ProgressProvider({ children, userId }) {
       const moduleCompleted = lastTwo.length === 2 && lastTwo.every(s => s.accuracy >= 90)
 
       const nextModules = { ...prev.modules }
-      if (moduleCompleted && moduleId < 7) {
+      if (moduleCompleted && moduleId < 9) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
       }
 

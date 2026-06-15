@@ -712,6 +712,16 @@ export const BTN_VS_RFI = {
     threebet: ['AA','KK','QQ','JJ','TT','AKs','AQs','AJs','ATs','A5s','A4s','AKo','AQo'],
     fold: []
   },
+  'vsUTG+1': {
+    call: ['AKs','AQs','AJs','ATs','A9s','A8s','A7s','A5s','A4s','KQs','KJs','KTs','K9s','QJs','QTs','JTs','J9s','T9s','T8s','98s','97s','87s','76s','65s','54s','AA','KK','QQ','JJ','TT','99','88','77','66','55','AKo','AQo','AJo'],
+    threebet: ['AA','KK','QQ','JJ','TT','AKs','AQs','AJs','ATs','A5s','A4s','AKo','AQo'],
+    fold: []
+  },
+  vsLJ: {
+    call: ['AKs','AQs','AJs','ATs','A9s','A8s','A7s','A5s','A4s','A3s','KQs','KJs','KTs','K9s','K8s','QJs','QTs','Q9s','JTs','J9s','J8s','T9s','T8s','98s','97s','87s','86s','76s','75s','65s','54s','AA','KK','QQ','JJ','TT','99','88','77','66','55','44','AKo','AQo','AJo'],
+    threebet: ['AA','KK','QQ','JJ','TT','99','AKs','AQs','AJs','ATs','A5s','A4s','A3s','AKo','AQo','AJo'],
+    fold: []
+  },
   vsHJ: {
     call: ['AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','KQs','KJs','KTs','K9s','K8s','QJs','QTs','Q9s','JTs','J9s','J8s','T9s','T8s','T7s','98s','97s','87s','86s','76s','75s','65s','54s','AA','KK','QQ','JJ','TT','99','88','77','66','55','44','AKo','AQo','AJo'],
     threebet: ['AA','KK','QQ','JJ','TT','99','AKs','AQs','AJs','ATs','A5s','A4s','A3s','AKo','AQo','AJo'],
@@ -728,6 +738,16 @@ export const SB_VS_RFI = {
   vsUTG: {
     call: ['AKs','AQs','AJs','ATs','A9s','A8s','KQs','KJs','KTs','QJs','QTs','JTs','T9s','98s','AA','KK','QQ','JJ','TT','99','88','77','66'],
     threebet: ['AA','KK','QQ','JJ','AKs','AKo'],
+    fold: []
+  },
+  'vsUTG+1': {
+    call: ['AKs','AQs','AJs','ATs','A9s','A8s','KQs','KJs','KTs','QJs','QTs','JTs','T9s','98s','87s','AA','KK','QQ','JJ','TT','99','88','77','66'],
+    threebet: ['AA','KK','QQ','JJ','AKs','AQs','AKo'],
+    fold: []
+  },
+  vsLJ: {
+    call: ['AKs','AQs','AJs','ATs','A9s','A8s','A7s','KQs','KJs','KTs','K9s','QJs','QTs','JTs','J9s','T9s','98s','87s','76s','AA','KK','QQ','JJ','TT','99','88','77','66','55'],
+    threebet: ['AA','KK','QQ','JJ','TT','AKs','AQs','AJs','A5s','AKo','AQo'],
     fold: []
   },
   vsHJ: {

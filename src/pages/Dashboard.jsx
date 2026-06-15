@@ -9,6 +9,8 @@ const MODULES = [
   { id: 5, name: 'CBet Flop IP', desc: 'Aposta de continuação em posição', icon: '⚡' },
   { id: 6, name: 'Blind Wars', desc: 'SB vs BB — confronto direto', icon: '⚔️' },
   { id: 7, name: 'SB/BTN vs RFI', desc: 'Jogar nas posições mais tardias', icon: '🃏' },
+  { id: 8, name: 'SB vs RFI', desc: 'Defendendo o Small Blind contra raises', icon: '🛡️' },
+  { id: 9, name: 'BTN vs RFI', desc: 'A melhor posição da mesa contra raises', icon: '👑' },
 ]
 
 function motivationalMessage(globalStats) {
