@@ -260,15 +260,15 @@ function PokerTable({ scenario }) {
       }}>
         {boardCards ? (
           <>
-            <div style={{ display: 'flex', gap: 3, justifyContent: 'center', marginBottom: 4 }}>
+            <div style={{ display: 'flex', gap: 2, justifyContent: 'center', marginBottom: 3 }}>
               {boardCards.map((c, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                  <Card card={parseCard(c)} size="sm" />
-                  {scenario.flop && i === 2 && boardCards.length > 3 && <div style={{ width: 4 }} />}
+                  <Card card={parseCard(c)} size="xs" />
+                  {scenario.flop && i === 2 && boardCards.length > 3 && <div style={{ width: 3 }} />}
                 </div>
               ))}
             </div>
-            <div style={{ color: '#ccc', fontSize: 13, fontWeight: 800 }}>{displayPot}</div>
+            <div style={{ color: '#ccc', fontSize: 12, fontWeight: 800 }}>{displayPot}</div>
           </>
         ) : (
           <>
