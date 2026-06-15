@@ -28,6 +28,7 @@ import Module19 from './pages/modules/Module19'
 import Module20 from './pages/modules/Module20'
 import Module21 from './pages/modules/Module21'
 import Tools from './pages/Tools'
+import MentalGame from './pages/MentalGame'
 import Infinite from './pages/Infinite'
 
 function App() {
@@ -86,6 +87,7 @@ function App() {
           <Route path="/modulos/20" element={<Module20 />} />
           <Route path="/modulos/21" element={<Module21 />} />
           <Route path="/ferramentas" element={<Tools />} />
+          <Route path="/mental" element={<MentalGame />} />
           <Route path="/infinito" element={<Infinite />} />
         </Routes>
       </BrowserRouter>

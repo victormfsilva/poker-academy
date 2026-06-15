@@ -215,6 +215,213 @@ function Glossary() {
 }
 
 // ============================================================
+// CALCULADORA DE EV
+// ============================================================
+function EVCalc() {
+  const [winPct, setWinPct] = useState('')
+  const [winAmt, setWinAmt] = useState('')
+  const [loseAmt, setLoseAmt] = useState('')
+
+  const w = parseFloat(winPct) / 100 || 0
+  const winVal = parseFloat(winAmt) || 0
+  const loseVal = parseFloat(loseAmt) || 0
+  const ev = w > 0 ? (w * winVal) - ((1 - w) * loseVal) : 0
+  const hasInput = w > 0 && (winVal > 0 || loseVal > 0)
+
+  return (
+    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <h2 style={{ color: 'white', fontWeight: 700, marginBottom: 16, fontSize: 18 }}>💰 Calculadora de EV</h2>
+      <div className="space-y-3 mb-4">
+        <div>
+          <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>SUA EQUITY / CHANCE DE GANHAR (%)</label>
+          <input type="number" value={winPct} onChange={e => setWinPct(e.target.value)} placeholder="Ex: 65"
+            className="w-full px-3 py-2 rounded-lg text-white"
+            style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>QUANTO GANHA (bb)</label>
+            <input type="number" value={winAmt} onChange={e => setWinAmt(e.target.value)} placeholder="Ex: 20"
+              className="w-full px-3 py-2 rounded-lg text-white"
+              style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+          </div>
+          <div>
+            <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>QUANTO PERDE (bb)</label>
+            <input type="number" value={loseAmt} onChange={e => setLoseAmt(e.target.value)} placeholder="Ex: 10"
+              className="w-full px-3 py-2 rounded-lg text-white"
+              style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+          </div>
+        </div>
+      </div>
+      {hasInput && (
+        <div className="rounded-lg p-4 text-center" style={{ background: '#0a0a0f', border: `2px solid ${ev >= 0 ? '#00d4aa' : '#e94560'}` }}>
+          <div style={{ color: '#888', fontSize: 12 }}>EXPECTED VALUE</div>
+          <div style={{ color: ev >= 0 ? '#00d4aa' : '#e94560', fontSize: 36, fontWeight: 700 }}>{ev >= 0 ? '+' : ''}{ev.toFixed(2)} bb</div>
+          <div style={{ color: '#666', fontSize: 13, marginTop: 4 }}>
+            {ev >= 0 ? '✓ Decisao +EV — lucrativa a longo prazo' : '✗ Decisao -EV — prejuizo a longo prazo'}
+          </div>
+          <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
+            ({(w * 100).toFixed(0)}% × {winVal}bb) - ({((1 - w) * 100).toFixed(0)}% × {loseVal}bb) = {ev >= 0 ? '+' : ''}{ev.toFixed(2)}bb
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================
+// GUIA DE BOARD TEXTURE
+// ============================================================
+function BoardTextureGuide() {
+  const textures = [
+    {
+      name: 'Board Seco (Dry)',
+      example: 'K♠ 7♥ 2♦',
+      traits: ['Sem draws de flush', 'Sem draws de straight', 'Cartas desconectadas'],
+      strategy: 'CBet com range inteiro, sizing pequeno (25-33%). Vantagem de range do raiser e enorme.',
+      color: '#00d4aa',
+    },
+    {
+      name: 'Board Molhado (Wet)',
+      example: 'J♥ T♥ 8♠',
+      traits: ['Flush draw possivel', 'Muitos straight draws', 'Cartas conectadas'],
+      strategy: 'CBet seletivo com maos fortes e draws. Sizing maior (66-75%). Check com air.',
+      color: '#e94560',
+    },
+    {
+      name: 'Board Pareado',
+      example: 'Q♠ Q♦ 5♣',
+      traits: ['Uma carta pareada', 'Poucos draws', 'Range de trips reduzido'],
+      strategy: 'CBet pequeno com range amplo. Vilao raramente tem trips. Bom para blefe.',
+      color: '#f5a623',
+    },
+    {
+      name: 'Board Monotone',
+      example: 'A♠ 8♠ 3♠',
+      traits: ['Tres cartas do mesmo naipe', 'Flush ja possivel', 'Flush draw morto'],
+      strategy: 'Check muito. So aposte com flush feito ou nut flush draw. Board perigoso.',
+      color: '#4a90e2',
+    },
+    {
+      name: 'Board Alto (High)',
+      example: 'A♠ K♥ J♦',
+      traits: ['Cartas altas', 'Favorece range do raiser', 'Broadway draws'],
+      strategy: 'CBet com frequencia alta — seu range tem mais top pairs e overpairs.',
+      color: '#00d4aa',
+    },
+    {
+      name: 'Board Baixo (Low)',
+      example: '6♣ 4♥ 2♠',
+      traits: ['Cartas baixas', 'Favorece range do caller', 'Sets e two pairs do BB'],
+      strategy: 'Check mais frequentemente. BB tem muitos sets (66, 44, 22) e two pairs.',
+      color: '#e94560',
+    },
+  ]
+
+  return (
+    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <h2 style={{ color: 'white', fontWeight: 700, marginBottom: 16, fontSize: 18 }}>🃏 Guia de Board Texture</h2>
+      <div className="space-y-3">
+        {textures.map(t => (
+          <div key={t.name} className="rounded-lg p-4" style={{ background: '#0a0a0f', border: `1px solid ${t.color}33` }}>
+            <div className="flex justify-between items-start mb-2">
+              <div style={{ color: t.color, fontWeight: 700, fontSize: 15 }}>{t.name}</div>
+              <div style={{ color: '#888', fontSize: 14, fontFamily: 'monospace' }}>{t.example}</div>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {t.traits.map(trait => (
+                <span key={trait} className="px-2 py-1 rounded text-xs" style={{ background: `${t.color}15`, color: t.color }}>{trait}</span>
+              ))}
+            </div>
+            <div style={{ color: '#aaa', fontSize: 13, lineHeight: 1.5 }}>
+              <strong style={{ color: '#ccc' }}>Estrategia:</strong> {t.strategy}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// TABELA 3-BET RANGES
+// ============================================================
+function ThreeBetGuide() {
+  const [selectedSpot, setSelectedSpot] = useState('bb_vs_btn')
+
+  const spots = {
+    bb_vs_btn: {
+      label: 'BB vs BTN',
+      value: ['QQ+', 'AKs', 'AKo'],
+      bluff: ['A5s-A2s', 'K5s-K4s', '76s', '65s', '54s'],
+      flatRange: ['22-JJ', 'AQs-A2s', 'AQo-ATo', 'KQs-K9s', 'KQo-KJo', 'QJs-Q9s', 'JTs-J9s', 'T9s-T8s', '98s-97s', '87s-86s', '76s-75s', '65s-64s', '54s'],
+    },
+    bb_vs_co: {
+      label: 'BB vs CO',
+      value: ['QQ+', 'AKs', 'AKo'],
+      bluff: ['A5s-A3s', 'K5s', '76s', '65s'],
+      flatRange: ['22-JJ', 'AQs-A7s', 'AQo-AJo', 'KQs-KTs', 'KQo', 'QJs-QTs', 'JTs-J9s', 'T9s', '98s', '87s', '76s'],
+    },
+    sb_vs_btn: {
+      label: 'SB vs BTN',
+      value: ['JJ+', 'AKs', 'AQs', 'AKo'],
+      bluff: ['A5s-A2s', 'K9s-K8s', 'Q9s', 'J9s', 'T9s', '98s', '87s', '76s'],
+      flatRange: [],
+    },
+    btn_vs_co: {
+      label: 'BTN vs CO',
+      value: ['JJ+', 'AKs', 'AKo'],
+      bluff: ['A5s-A4s', 'ATo', 'KQs', 'KJs', '76s', '65s'],
+      flatRange: ['22-TT', 'AQs-A2s', 'AQo-AJo', 'KQs-K9s', 'KQo-KJo', 'QJs-Q9s', 'JTs-J9s', 'T9s-T8s', '98s-97s', '87s', '76s', '65s'],
+    },
+  }
+
+  const spot = spots[selectedSpot]
+
+  return (
+    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <h2 style={{ color: 'white', fontWeight: 700, marginBottom: 16, fontSize: 18 }}>🔥 3-Bet Ranges</h2>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {Object.entries(spots).map(([key, s]) => (
+          <button key={key} onClick={() => setSelectedSpot(key)}
+            className="px-3 py-1 rounded-lg text-sm"
+            style={{ background: selectedSpot === key ? '#e94560' : '#0a0a0f', color: selectedSpot === key ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-3">
+        <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa33' }}>
+          <div style={{ color: '#00d4aa', fontWeight: 700, fontSize: 13, marginBottom: 6 }}>3-BET VALOR</div>
+          <div style={{ color: '#ccc', fontSize: 14, fontFamily: 'monospace' }}>{spot.value.join(', ')}</div>
+        </div>
+        <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e9456033' }}>
+          <div style={{ color: '#e94560', fontWeight: 700, fontSize: 13, marginBottom: 6 }}>3-BET BLEFE</div>
+          <div style={{ color: '#ccc', fontSize: 14, fontFamily: 'monospace' }}>{spot.bluff.join(', ')}</div>
+        </div>
+        {spot.flatRange.length > 0 && (
+          <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a62333' }}>
+            <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 13, marginBottom: 6 }}>FLAT CALL</div>
+            <div style={{ color: '#ccc', fontSize: 14, fontFamily: 'monospace' }}>{spot.flatRange.join(', ')}</div>
+          </div>
+        )}
+        {spot.flatRange.length === 0 && (
+          <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a62333' }}>
+            <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 13, marginBottom: 6 }}>FLAT CALL</div>
+            <div style={{ color: '#888', fontSize: 13 }}>SB nao faz flat — 3-bet ou fold (sem posicao pos-flop)</div>
+          </div>
+        )}
+      </div>
+      <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+        <div style={{ color: '#888', fontSize: 12, lineHeight: 1.6 }}>
+          <strong style={{ color: '#ccc' }}>Dica:</strong> Blefes de 3-bet ideais sao maos suited com Ace (bloqueiam AA/AK) ou suited connectors que tem boa equity quando pagos.
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
 // PÁGINA PRINCIPAL
 // ============================================================
 export default function Tools() {
@@ -223,6 +430,9 @@ export default function Tools() {
   const tabs = [
     { id: 'potodds', label: 'Pot Odds', icon: '🧮' },
     { id: 'outs', label: 'Outs', icon: '🎯' },
+    { id: 'ev', label: 'EV', icon: '💰' },
+    { id: 'board', label: 'Texturas', icon: '🃏' },
+    { id: 'threebet', label: '3-Bet', icon: '🔥' },
     { id: 'pushfold', label: 'Push/Fold', icon: '📊' },
     { id: 'glossario', label: 'Glossário', icon: '📖' },
   ]
@@ -245,6 +455,9 @@ export default function Tools() {
 
         {activeTab === 'potodds' && <PotOddsCalc />}
         {activeTab === 'outs' && <OutsCalc />}
+        {activeTab === 'ev' && <EVCalc />}
+        {activeTab === 'board' && <BoardTextureGuide />}
+        {activeTab === 'threebet' && <ThreeBetGuide />}
         {activeTab === 'pushfold' && <PushFoldGuide />}
         {activeTab === 'glossario' && <Glossary />}
       </div>

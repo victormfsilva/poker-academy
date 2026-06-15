@@ -154,10 +154,11 @@ export function ProgressProvider({ children, userId }) {
       const mod = prev.modules[moduleId]
       const sessions = [...(mod.trainerSessions || []), { accuracy, date: Date.now() }]
       const lastTwo = sessions.slice(-2)
-      const moduleCompleted = lastTwo.length === 2 && lastTwo.every(s => s.accuracy >= 90)
+      const justCompleted = lastTwo.length === 2 && lastTwo.every(s => s.accuracy >= 90)
+      const moduleCompleted = mod.completed || justCompleted
 
       const nextModules = { ...prev.modules }
-      if (moduleCompleted && moduleId < 21) {
+      if (justCompleted && moduleId < 21) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
       }
 

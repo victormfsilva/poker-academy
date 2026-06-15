@@ -35,12 +35,27 @@ function motivationalMessage(globalStats) {
   return `${total} mãos treinadas. Consistência é o segredo — continue!`
 }
 
+function getBadge(completedIds) {
+  const has = id => completedIds.includes(id)
+  const advancedDone = [14,15,16,17,18,19,20,21].every(has)
+  const intermediateDone = [8,9,10,11,12,13].every(has)
+  const basicDone = [1,2,3,4,5,6,7].every(has)
+
+  if (advancedDone && intermediateDone && basicDone) return { name: 'Avancado', icon: '🏆', color: '#f5a623', desc: 'Todos os 21 modulos completos!' }
+  if (intermediateDone && basicDone) return { name: 'Intermediario Avancado', icon: '💎', color: '#4a90e2', desc: 'Modulos 1-13 completos' }
+  if (basicDone) return { name: 'Iniciante Solido', icon: '⭐', color: '#00d4aa', desc: 'Modulos 1-7 completos' }
+  return { name: 'Aprendiz', icon: '📖', color: '#888', desc: 'Complete os modulos 1-7' }
+}
+
 export default function Dashboard() {
   const { progress, getModuleProgress } = useProgress()
 
   const globalAcc = progress.globalStats.totalHands > 0
     ? Math.round((progress.globalStats.totalCorrect / progress.globalStats.totalHands) * 100)
     : 0
+
+  const completedIds = MODULES.filter(m => getModuleProgress(m.id).completed).map(m => m.id)
+  const badge = getBadge(completedIds)
 
   const currentModule = MODULES.find(m => {
     const p = getModuleProgress(m.id)
@@ -52,9 +67,15 @@ export default function Dashboard() {
       <div className="max-w-2xl mx-auto pt-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 style={{ color: 'white', fontSize: 26, fontWeight: 700 }}>
-            ♠ Poker Academy <span style={{ color: '#e94560' }}>BR</span>
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 style={{ color: 'white', fontSize: 26, fontWeight: 700 }}>
+              ♠ Poker Academy <span style={{ color: '#e94560' }}>BR</span>
+            </h1>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: `${badge.color}15`, border: `1px solid ${badge.color}44` }}>
+              <span style={{ fontSize: 16 }}>{badge.icon}</span>
+              <span style={{ color: badge.color, fontSize: 13, fontWeight: 700 }}>{badge.name}</span>
+            </div>
+          </div>
           <p style={{ color: '#666', marginTop: 4 }}>{motivationalMessage(progress.globalStats)}</p>
         </div>
 

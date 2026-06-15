@@ -6,6 +6,7 @@ const links = [
   { to: '/modulos', label: 'Módulos', icon: '📚' },
   { to: '/infinito', label: 'Infinito', icon: '♾️' },
   { to: '/ferramentas', label: 'Ferramentas', icon: '🧮' },
+  { to: '/mental', label: 'Mental', icon: '🧠' },
 ]
 
 export default function Navbar({ user }) {
