@@ -11,6 +11,7 @@ const MODULES = [
   { id: 7, name: 'SB/BTN vs RFI', desc: 'Jogar nas posições mais tardias', icon: '🃏' },
   { id: 8, name: 'SB vs RFI', desc: 'Defendendo o Small Blind contra raises', icon: '🛡️' },
   { id: 9, name: 'BTN vs RFI', desc: 'A melhor posição da mesa contra raises', icon: '👑' },
+  { id: 10, name: '3-Bet Ranges', desc: 'Quando relançar pre-flop — valor e blefe', icon: '🔥' },
 ]
 
 function motivationalMessage(globalStats) {
