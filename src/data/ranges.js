@@ -191,12 +191,12 @@ export const RFI_RANGES = {
         'AA','KK','QQ','JJ','TT','99','88','77','66','55',
         'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s',
         'KQs','KJs','KTs','K9s','K8s','K7s',
-        'QJs','QTs','Q9s','Q8s','Q5s','JTs','J9s','J8s',
+        'QJs','QTs','Q9s','Q8s','Q6s','JTs','J9s','J8s',
         'T9s','T8s','98s','97s','87s','86s','76s','75s','65s','64s','54s',
         'AKo','AQo','AJo','ATo','A9o',
         'KQo','KJo',
       ],
-      mix: ['44','A4s','A3s','A2s','K6s','Q7s','Q6s','J7s','T7s','96s','85s','74s','63s','53s','43s','A8o'],
+      mix: ['44','A4s','A3s','A2s','K6s','Q7s','Q5s','J7s','T7s','96s','85s','74s','63s','53s','43s','A8o'],
       fold: []
     },
     50: {
@@ -350,7 +350,7 @@ export const RFI_RANGES = {
         '87o','86o',
         '76o','75o',
       ],
-      mix: ['Q4s','J5s','T5s','94s','83s','73s','62s','A4o','A3o','A2o','K7o','Q7o','J7o','T7o','98o'],
+      mix: ['Q4s','J5s','T5s','94s','83s','73s','62s','A4o','A3o','A2o','K7o','Q7o','J7o','T7o'],
       fold: []
     },
     50: {
@@ -436,7 +436,7 @@ export const PUSH_FOLD_RANGES = {
   // Ranges de PUSH (open shove) por posição e stack
   // Fonte: GTO Wizard MTT Avg ChipEV
   UTG: {
-    // 10bb: Allin 12.5% | 8bb: Allin 19.4% | 5bb: Allin ~76% (quase tudo)
+    // 10bb: Allin 12.5% | 8bb: Allin 19.4% | 5bb: Allin ~35%
     10: ['AA','KK','QQ','JJ','TT','99','88','77','66',
          'AKs','AQs','AJs','ATs','A9s','A8s',
          'KQs','KJs','KTs',

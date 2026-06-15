@@ -57,16 +57,43 @@ function hasFlushDraw(hole, flop) {
   const allCards = [...hole, ...flop]
   const suitCounts = {}
   allCards.forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  return Object.values(suitCounts).some(v => v >= 4)
+  // 4 = flush draw, 5 = made flush (não é draw)
+  return Object.values(suitCounts).some(v => v === 4)
+}
+
+function hasMadeFlush(hole, flop) {
+  const allCards = [...hole, ...flop]
+  const suitCounts = {}
+  allCards.forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
+  return Object.values(suitCounts).some(v => v >= 5)
 }
 
 function hasStraightDraw(hole, flop) {
-  // Só conta como draw se tiver 4 cartas num intervalo de 5 (open-ended ou gutshot forte)
+  // Detecta straight draw: 4 cartas num intervalo de 5, onde pelo menos 1 hole card participa
+  // Exclui made straights (5 consecutivas)
+  const holeRankIdx = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
   const allRanks = [...hole, ...flop].map(c => RANKS.indexOf(c.slice(0, -1)))
   const unique = [...new Set(allRanks)].sort((a, b) => a - b)
-  for (let i = 0; i < unique.length - 3; i++) {
-    if (unique[i + 3] - unique[i] <= 4) return true
+
+  // Checa made straight primeiro (5 consecutivas ou wheel A-2-3-4-5)
+  for (let i = 0; i <= unique.length - 5; i++) {
+    if (unique[i + 4] - unique[i] === 4) return false // made straight, não é draw
   }
+  // Wheel made: A(0) + 2(12) + 3(11) + 4(10) + 5(9)
+  if ([0, 9, 10, 11, 12].every(v => unique.includes(v))) return false
+
+  // Checa draw: 4 cartas span <= 4, com hole card participando
+  for (let i = 0; i < unique.length - 3; i++) {
+    if (unique[i + 3] - unique[i] <= 4) {
+      const windowRanks = unique.slice(i, i + 4)
+      if (holeRankIdx.some(r => windowRanks.includes(r))) return true
+    }
+  }
+  // Wheel draw: A + 3 de {2,3,4,5} com hole card participando
+  const wheelRanks = [0, 9, 10, 11, 12]
+  const wheelCount = wheelRanks.filter(v => unique.includes(v)).length
+  if (wheelCount >= 4 && holeRankIdx.some(r => wheelRanks.includes(r))) return true
+
   return false
 }
 
@@ -75,6 +102,11 @@ function getCorrectAction(hole, flop) {
   const hasTop = hasTopPair(hole, flop)
   const hasFlush = hasFlushDraw(hole, flop)
   const hasStraight = hasStraightDraw(hole, flop)
+
+  // Made flush: mão muito forte
+  if (hasMadeFlush(hole, flop)) {
+    return { action: 'bet', sizing: '75%', reason: 'Você já completou uma cor (flush)! Mão muito forte — aposte grande (75%) para extrair o máximo de valor.' }
+  }
 
   // Regras CBet IP — seguindo a aula:
   // 33% → board seco (blefe barato, range advantage)

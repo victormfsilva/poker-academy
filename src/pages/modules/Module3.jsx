@@ -123,7 +123,7 @@ function generateScenario() {
   return { hole, board, draw, street, multiplier, equity, pot, bet, betPct, totalPot, potOdds }
 }
 
-// Gera opcoes numericas
+// Gera opções numéricas
 function generateNumericOptions(correct, min = 0, max = 60, spread = 8) {
   const opts = new Set([correct])
   while (opts.size < 4) {
