@@ -982,6 +982,76 @@ export default function Infinite() {
   const acc = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
   const accColor = acc >= 90 ? '#00d4aa' : acc >= 70 ? '#f5a623' : '#e94560'
 
+  // Build range data for RangeViewer on feedback
+  const rangeViewerProps = (() => {
+    if (!result) return null
+    const s = scenario
+    if (s.type === 'rfi') {
+      return { pos: s.pos, stack: s.stack, highlightHand: s.hand, label: `Range RFI — ${s.pos} ${s.stack}bb` }
+    }
+    if (s.type === 'pushfold') {
+      const range = PUSH_FOLD_RANGES[s.pos]
+      const stacks = Object.keys(range || {}).map(Number).sort((a, b) => a - b)
+      const closest = stacks.reduce((p, c) => Math.abs(c - s.stack) < Math.abs(p - s.stack) ? c : p, stacks[0])
+      const pushRange = range?.[closest] || []
+      return {
+        customRange: { push: pushRange },
+        legend: [['push', 'Push'], ['fold', 'Fold']],
+        highlightHand: s.hand,
+        label: `Range Push/Fold — ${s.pos} ${s.stack}bb`
+      }
+    }
+    if (s.type === 'range') {
+      const bbKeyMap = { UTG: 'vsUTG', 'UTG+1': 'vsUTG1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
+      const otherKeyMap = { UTG: 'vsUTG', 'UTG+1': 'vsUTG+1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
+      let dataSource, myPos
+      if (s.moduleId === 7) { dataSource = SB_VS_RFI; myPos = 'SB' }
+      else if (s.moduleId === 8) { dataSource = BTN_VS_RFI; myPos = 'BTN' }
+      else {
+        // Module 9: detect from label
+        if (s.label.includes('SB vs')) { dataSource = SB_VS_RFI; myPos = 'SB' }
+        else if (s.label.includes('BTN vs')) { dataSource = BTN_VS_RFI; myPos = 'BTN' }
+        else { dataSource = BB_VS_RFI; myPos = 'BB' }
+      }
+      const keyMap = dataSource === BB_VS_RFI ? bbKeyMap : otherKeyMap
+      const range = dataSource?.[keyMap[s.pos]] || {}
+      return {
+        customRange: { threebet: range.threebet || [], call: range.call || [] },
+        legend: [['threebet', '3-Bet'], ['call', 'Call'], ['fold', 'Fold']],
+        highlightHand: s.hand,
+        label: `Range ${myPos} vs ${s.pos}`
+      }
+    }
+    if (s.type === 'bb') {
+      // BB defense — rebuild range from scenario data
+      const bbKeyMap = { UTG: 'vsUTG', 'UTG+1': 'vsUTG1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
+      const range = BB_VS_RFI?.[bbKeyMap[s.pos]] || {}
+      return {
+        customRange: { threebet: range.threebet || [], call: range.call || [] },
+        legend: [['threebet', '3-Bet'], ['call', 'Call'], ['fold', 'Fold']],
+        highlightHand: s.hand,
+        label: `Range BB vs ${s.pos}`
+      }
+    }
+    if (s.type === 'blindwars' && s.hand) {
+      if (s.label.includes('SB')) {
+        return {
+          customRange: { raise: BLIND_WARS?.SB_complete?.raise || [], call: BLIND_WARS?.SB_complete?.complete || [] },
+          legend: [['raise', 'Raise'], ['call', 'Complete'], ['fold', 'Fold']],
+          highlightHand: s.hand,
+          label: 'Range SB vs BB'
+        }
+      }
+      return {
+        customRange: { raise: BLIND_WARS?.BB_vs_complete?.bet || [] },
+        legend: [['raise', 'Bet'], ['fold', 'Check']],
+        highlightHand: s.hand,
+        label: 'Range BB vs SB Complete'
+      }
+    }
+    return null
+  })()
+
   // Cards for hand-based scenarios
   const cards = scenario.hand ? handToCards(scenario.hand) : null
 
@@ -1073,6 +1143,9 @@ export default function Infinite() {
               </div>
               {result.isMix && (
                 <div style={{ color: '#ff8f00', fontSize: 12, marginTop: 3 }}>Mao de transicao — ambas as acoes sao aceitaveis.</div>
+              )}
+              {rangeViewerProps && (
+                <RangeViewer {...rangeViewerProps} />
               )}
             </div>
           )}
