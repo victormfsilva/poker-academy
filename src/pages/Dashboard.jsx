@@ -170,6 +170,82 @@ export default function Dashboard() {
           )
         })()}
 
+        {/* Gráfico diário */}
+        {(() => {
+          const days = []
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date()
+            d.setDate(d.getDate() - i)
+            const key = d.toISOString().slice(0, 10)
+            const data = progress.dailyHistory?.[key] || { hands: 0, correct: 0 }
+            const acc = data.hands > 0 ? Math.round((data.correct / data.hands) * 100) : 0
+            const weekday = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()]
+            days.push({ key, weekday, day: d.getDate(), hands: data.hands, acc })
+          }
+          const maxHands = Math.max(...days.map(d => d.hands), 1)
+          const hasData = days.some(d => d.hands > 0)
+
+          if (!hasData) return null
+
+          const W = 320, H = 140, padL = 30, padR = 10, padT = 15, padB = 30
+          const chartW = W - padL - padR
+          const chartH = H - padT - padB
+          const barW = chartW / 7 * 0.6
+          const gap = chartW / 7
+
+          const accPoints = days.map((d, i) => {
+            const x = padL + gap * i + gap / 2
+            const y = d.hands > 0 ? padT + chartH - (d.acc / 100) * chartH : padT + chartH
+            return { x, y, acc: d.acc, has: d.hands > 0 }
+          }).filter(p => p.has)
+
+          const accLine = accPoints.length > 1
+            ? accPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+            : null
+
+          return (
+            <div className="rounded-xl p-4 mb-6" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+              <div className="flex items-center justify-between mb-2">
+                <span style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>Evolução Diária</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1"><div style={{ width: 10, height: 10, borderRadius: 2, background: '#4a90e2' }} /><span style={{ color: '#888', fontSize: 11 }}>Mãos</span></div>
+                  <div className="flex items-center gap-1"><div style={{ width: 10, height: 3, borderRadius: 1, background: '#00d4aa' }} /><span style={{ color: '#888', fontSize: 11 }}>Acerto</span></div>
+                </div>
+              </div>
+              <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }}>
+                {[0, 25, 50, 75, 100].map(v => {
+                  const y = padT + chartH - (v / 100) * chartH
+                  return <line key={v} x1={padL} x2={W - padR} y1={y} y2={y} stroke="#1e1e2e" strokeWidth={1} />
+                })}
+                <text x={2} y={padT + 4} fill="#555" fontSize={9}>100%</text>
+                <text x={2} y={padT + chartH / 2 + 3} fill="#555" fontSize={9}>50%</text>
+                <text x={2} y={padT + chartH + 3} fill="#555" fontSize={9}>0%</text>
+
+                {days.map((d, i) => {
+                  const x = padL + gap * i + (gap - barW) / 2
+                  const barH = maxHands > 0 ? (d.hands / maxHands) * chartH : 0
+                  const y = padT + chartH - barH
+                  return (
+                    <g key={d.key}>
+                      <rect x={x} y={y} width={barW} height={barH} rx={3} fill="#4a90e2" opacity={0.7} />
+                      {d.hands > 0 && <text x={x + barW / 2} y={y - 3} fill="#4a90e2" fontSize={9} textAnchor="middle">{d.hands}</text>}
+                      <text x={padL + gap * i + gap / 2} y={H - 5} fill="#666" fontSize={9} textAnchor="middle">{d.weekday}</text>
+                    </g>
+                  )
+                })}
+
+                {accLine && <path d={accLine} fill="none" stroke="#00d4aa" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />}
+                {accPoints.map((p, i) => (
+                  <g key={i}>
+                    <circle cx={p.x} cy={p.y} r={3.5} fill="#12121a" stroke="#00d4aa" strokeWidth={2} />
+                    <text x={p.x} y={p.y - 7} fill="#00d4aa" fontSize={8} textAnchor="middle">{p.acc}%</text>
+                  </g>
+                ))}
+              </svg>
+            </div>
+          )
+        })()}
+
         {/* Módulo atual */}
         {currentModule && (
           <div className="rounded-xl p-4 mb-6" style={{ background: '#12121a', border: '1px solid #e94560' }}>
