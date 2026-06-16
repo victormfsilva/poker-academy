@@ -30,6 +30,7 @@ import Module21 from './pages/modules/Module21'
 import Tools from './pages/Tools'
 import MentalGame from './pages/MentalGame'
 import Infinite from './pages/Infinite'
+import Stats from './pages/Stats'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -86,6 +87,7 @@ function App() {
           <Route path="/modulos/19" element={<Module19 />} />
           <Route path="/modulos/20" element={<Module20 />} />
           <Route path="/modulos/21" element={<Module21 />} />
+          <Route path="/stats" element={<Stats />} />
           <Route path="/ferramentas" element={<Tools />} />
           <Route path="/mental" element={<MentalGame />} />
           <Route path="/infinito" element={<Infinite />} />

@@ -2,9 +2,10 @@ import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const links = [
-  { to: '/', label: 'Dashboard', icon: '📊' },
+  { to: '/', label: 'Home', icon: '🏠' },
   { to: '/modulos', label: 'Módulos', icon: '📚' },
   { to: '/infinito', label: 'Infinito', icon: '♾️' },
+  { to: '/stats', label: 'Stats', icon: '📊' },
   { to: '/ferramentas', label: 'Ferramentas', icon: '🧮' },
   { to: '/mental', label: 'Mental', icon: '🧠' },
 ]
