@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProgress } from '../context/ProgressContext'
 
@@ -46,7 +47,8 @@ function getBadge(completedIds) {
 }
 
 export default function Dashboard() {
-  const { progress, getModuleProgress } = useProgress()
+  const { progress, getModuleProgress, setDailyGoal } = useProgress()
+  const [editingGoal, setEditingGoal] = useState(false)
 
   const globalAcc = progress.globalStats.totalHands > 0
     ? Math.round((progress.globalStats.totalCorrect / progress.globalStats.totalHands) * 100)
@@ -91,6 +93,82 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+
+        {/* Meta diária */}
+        {(() => {
+          const today = new Date().toISOString().slice(0, 10)
+          const dayData = progress.dailyHistory?.[today] || { hands: 0, correct: 0 }
+          const goal = progress.dailyGoal || 50
+          const pct = Math.min(Math.round((dayData.hands / goal) * 100), 100)
+          const completed = dayData.hands >= goal
+          const dayAcc = dayData.hands > 0 ? Math.round((dayData.correct / dayData.hands) * 100) : 0
+
+          const streak = (() => {
+            let count = 0
+            const d = new Date()
+            d.setDate(d.getDate() - 1)
+            while (true) {
+              const key = d.toISOString().slice(0, 10)
+              const day = progress.dailyHistory?.[key]
+              if (day && day.hands >= goal) { count++; d.setDate(d.getDate() - 1) }
+              else break
+            }
+            if (completed) count++
+            return count
+          })()
+
+          const GOAL_OPTIONS = [25, 50, 75, 100, 150, 200]
+
+          return (
+            <div className="rounded-xl p-4 mb-6" style={{ background: '#12121a', border: `1px solid ${completed ? '#00d4aa' : '#1e1e2e'}` }}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: 20 }}>{completed ? '🔥' : '🎯'}</span>
+                  <span style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>Meta Diária</span>
+                </div>
+                <button onClick={() => setEditingGoal(!editingGoal)} style={{ color: '#888', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer' }}>
+                  {editingGoal ? 'Fechar' : 'Alterar meta'}
+                </button>
+              </div>
+
+              {editingGoal && (
+                <div className="flex gap-2 mb-3 flex-wrap">
+                  {GOAL_OPTIONS.map(g => (
+                    <button key={g} onClick={() => { setDailyGoal(g); setEditingGoal(false) }}
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold"
+                      style={{ background: g === goal ? '#e9456033' : '#1e1e2e', color: g === goal ? '#e94560' : '#888', border: g === goal ? '1px solid #e94560' : '1px solid #2a2a3a' }}>
+                      {g} mãos
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-end justify-between mb-2">
+                <div>
+                  <span style={{ color: completed ? '#00d4aa' : '#e94560', fontSize: 28, fontWeight: 700 }}>{dayData.hands}</span>
+                  <span style={{ color: '#666', fontSize: 14 }}> / {goal} mãos</span>
+                </div>
+                <div className="text-right">
+                  {dayData.hands > 0 && <div style={{ color: dayAcc >= 90 ? '#00d4aa' : dayAcc >= 60 ? '#f5a623' : '#e94560', fontSize: 13 }}>{dayAcc}% acerto hoje</div>}
+                  {streak > 0 && <div style={{ color: '#f5a623', fontSize: 12 }}>🔥 {streak} dia{streak > 1 ? 's' : ''} seguido{streak > 1 ? 's' : ''}</div>}
+                </div>
+              </div>
+
+              <div className="rounded-full h-3" style={{ background: '#1e1e2e' }}>
+                <div className="rounded-full h-3 transition-all" style={{
+                  width: `${pct}%`,
+                  background: completed ? '#00d4aa' : pct >= 60 ? '#f5a623' : '#e94560'
+                }} />
+              </div>
+
+              {completed && (
+                <div className="mt-2 text-center" style={{ color: '#00d4aa', fontSize: 13, fontWeight: 600 }}>
+                  Meta cumprida! Continue treinando para manter o ritmo.
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Módulo atual */}
         {currentModule && (

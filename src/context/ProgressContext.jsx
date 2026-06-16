@@ -32,7 +32,9 @@ const defaultProgress = {
     totalCorrect: 0,
     bestStreak: 0,
     currentStreak: 0,
-  }
+  },
+  dailyGoal: 50,
+  dailyHistory: {},
 }
 
 function migrateModules(modules) {
@@ -175,9 +177,14 @@ export function ProgressProvider({ children, userId }) {
         bestStreak: Math.max(prev.globalStats.bestStreak, streak),
         currentStreak: correct ? prev.globalStats.currentStreak + 1 : 0,
       }
+      const today = new Date().toISOString().slice(0, 10)
+      const dailyHistory = { ...prev.dailyHistory }
+      const dayData = dailyHistory[today] || { hands: 0, correct: 0 }
+      dailyHistory[today] = { hands: dayData.hands + 1, correct: dayData.correct + (correct ? 1 : 0) }
       return {
         ...prev,
         globalStats,
+        dailyHistory,
         modules: {
           ...prev.modules,
           [moduleId]: {
@@ -225,8 +232,12 @@ export function ProgressProvider({ children, userId }) {
     return { ...mod, accuracy, sessionsToComplete }
   }
 
+  function setDailyGoal(goal) {
+    setProgress(prev => ({ ...prev, dailyGoal: goal }))
+  }
+
   return (
-    <ProgressContext.Provider value={{ progress, markLessonRead, recordAnswer, recordSession, getModuleProgress }}>
+    <ProgressContext.Provider value={{ progress, markLessonRead, recordAnswer, recordSession, getModuleProgress, setDailyGoal }}>
       {children}
     </ProgressContext.Provider>
   )
