@@ -878,7 +878,7 @@ function dynamicScenarioQuestion(moduleId) {
   return {
     moduleId, type: 'scenario', hand: null, question: t.q,
     label: '',
-    buttons: opts.map(o => ({ id: o.id, label: o.label, bg: o.correct ? '#5ab966' : '#3D7CB8' })),
+    buttons: opts.map(o => ({ id: o.id, label: o.label, bg: '#3D7CB8' })),
     evaluate: (action) => {
       const chosen = opts.find(o => o.id === action)
       const correctOpt = opts.find(o => o.correct)
@@ -928,14 +928,14 @@ const MOD_COLORS = {
   1: '#e94560', 2: '#f5a623', 3: '#4a90e2', 4: '#00d4aa', 5: '#f5a623',
   6: '#e94560', 7: '#00d4aa', 8: '#e94560', 9: '#f5a623', 10: '#4a90e2',
   11: '#f5a623', 12: '#00d4aa', 13: '#e94560', 14: '#f5a623', 15: '#4a90e2',
-  16: '#00d4aa', 17: '#f5a623', 18: '#4a90e2', 19: '#e94560', 20: '#00d4aa',
+  16: '#00d4aa', 17: '#f5a623', 18: '#4a90e2', 19: '#e94560', 20: '#00d4aa', 21: '#e94560',
 }
 
 const MOD_NAMES_SHORT = {
   1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet Flop',
   6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def vs CBet',
   11: 'Check-Raise', 12: 'Bet Sizing', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
-  16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers',
+  16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers', 21: 'Late Game',
 }
 
 // ================================================================
@@ -1047,7 +1047,7 @@ export default function Infinite() {
     if (s.type === 'blindwars' && s.hand) {
       if (s.label.includes('SB')) {
         return {
-          customRange: { raise: BLIND_WARS?.SB_complete?.raise || [], call: BLIND_WARS?.SB_complete?.complete || [] },
+          customRange: { raise: BLIND_WARS?.SB_raise?.raise || [], call: BLIND_WARS?.SB_complete?.complete || [] },
           legend: [['raise', 'Raise'], ['call', 'Complete'], ['fold', 'Fold']],
           highlightHand: s.hand,
           label: 'Range SB vs BB'

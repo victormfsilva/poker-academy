@@ -28,7 +28,8 @@ function getBoardTexture(flop) {
   const suits = flop.map(c => c.slice(-1))
   const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
   const sorted = [...ranks].sort((a, b) => a - b)
-  const connected = (sorted[2] - sorted[0]) <= 4
+  const isBroadway = sorted[2] <= 4
+  const connected = (sorted[2] - sorted[0]) <= 4 && !isBroadway
   const paired = ranks[0] === ranks[1] || ranks[1] === ranks[2] || ranks[0] === ranks[2]
   const lowBoard = Math.min(...ranks) >= 5 // todas as cartas 9 ou menos
   return { suited, connected, paired, lowBoard, isWet: suited || connected, isDry: !suited && !connected }

@@ -33,7 +33,8 @@ function getBoardTexture(flop) {
   const suits = flop.map(c => c.slice(-1))
   const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
   const sorted = [...ranks].sort((a, b) => a - b)
-  const connected = (sorted[2] - sorted[0]) <= 4
+  const isBroadway = sorted[2] <= 4 // todas as cartas são T ou maiores (indices 0-4)
+  const connected = (sorted[2] - sorted[0]) <= 4 && !isBroadway
   const paired = ranks[0] === ranks[1] || ranks[1] === ranks[2] || ranks[0] === ranks[2]
   const highCard = Math.min(...ranks) // menor índice = carta mais alta
 

@@ -29,7 +29,8 @@ function getBoardTexture(flop) {
   const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
   const monotone = suits[0] === suits[1] && suits[1] === suits[2]
   const sorted = [...ranks].sort((a, b) => a - b)
-  const connected = (sorted[2] - sorted[0]) <= 4
+  const isBroadway = sorted[2] <= 4
+  const connected = (sorted[2] - sorted[0]) <= 4 && !isBroadway
   const paired = ranks[0] === ranks[1] || ranks[1] === ranks[2] || ranks[0] === ranks[2]
   return { suited, monotone, connected, paired, isWet: suited || connected, isDry: !suited && !connected }
 }
@@ -115,11 +116,11 @@ function getCorrectAction(hole, flop) {
   }
 
   // Check-raise de blefe: draw forte em board úmido
-  if (hasFlushDraw(hole, flop) && texture.isWet) {
-    return { action: 'raise-bluff', reason: 'Flush draw em board úmido — check-raise de BLEFE! Você tem ~35% equity (9 outs) e pressiona o adversário. Se ele foldar, você ganha na hora. Se chamar, você ainda pode completar.' }
-  }
   if (hasStraightDraw(hole, flop) && hasFlushDraw(hole, flop)) {
     return { action: 'raise-bluff', reason: 'Combo draw (flush + straight draw)! Check-raise de BLEFE com equity monstruosa (~45%+). Uma das melhores mãos pra semi-blefe.' }
+  }
+  if (hasFlushDraw(hole, flop) && texture.isWet) {
+    return { action: 'raise-bluff', reason: 'Flush draw em board úmido — check-raise de BLEFE! Você tem ~35% equity (9 outs) e pressiona o adversário. Se ele foldar, você ganha na hora. Se chamar, você ainda pode completar.' }
   }
   if (hasStraightDraw(hole, flop) && texture.isWet && !texture.paired) {
     return { action: 'raise-bluff', reason: 'Straight draw em board úmido nao-pareado — check-raise de BLEFE. Boa equity (~32%) e fold equity combinados.' }

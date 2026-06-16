@@ -28,7 +28,8 @@ function getBoardTexture(flop) {
   const suits = flop.map(c => c.slice(-1))
   const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
   const sorted = [...ranks].sort((a, b) => a - b)
-  const connected = (sorted[2] - sorted[0]) <= 4
+  const isBroadway = sorted[2] <= 4
+  const connected = (sorted[2] - sorted[0]) <= 4 && !isBroadway
   const paired = ranks[0] === ranks[1] || ranks[1] === ranks[2] || ranks[0] === ranks[2]
   return { suited, connected, paired, isWet: suited || connected, isDry: !suited && !connected }
 }
@@ -126,7 +127,7 @@ function getCorrectAction(hole, flop, cbetSize) {
     if (cbetSize === '50%') {
       return { action: 'call', reason: `Straight draw com pot odds razoaveis (${potOdds}% necessário, você tem ~32% com 8 outs). Call é correto.` }
     }
-    return { action: 'fold', reason: `Straight draw contra aposta grande (75%) — você precisa de ${potOdds}% de equity. Com 8 outs você tem ~16% para o turn (regra do 2). Sem implied odds claras, fold é mais seguro.` }
+    return { action: 'fold', reason: `Straight draw contra aposta grande (75%) — você precisa de ${potOdds}% de equity, mas só tem ~32% com 8 outs. Pot odds desfavoráveis. Sem implied odds claras, fold.` }
   }
 
   // Par médio/baixo: call se sizing pequeno, fold se grande
@@ -205,7 +206,7 @@ function Lesson({ onComplete }) {
         <Section title="Pot Odds na Defesa">
           O tamanho da aposta muda quanto você precisa ganhar pra justificar o call:
           <div className="grid grid-cols-3 gap-2 mt-3">
-            {[['33%', '25%', '#00d4aa'], ['50%', '33%', '#f5a623'], ['75%', '43%', '#e94560']].map(([bet, need, c]) => (
+            {[['33%', '20%', '#00d4aa'], ['50%', '25%', '#f5a623'], ['75%', '30%', '#e94560']].map(([bet, need, c]) => (
               <div key={bet} className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: `1px solid ${c}` }}>
                 <div style={{ color: c, fontWeight: 700 }}>CBet {bet}</div>
                 <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>{need}</div>
