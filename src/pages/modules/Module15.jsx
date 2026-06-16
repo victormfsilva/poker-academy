@@ -89,6 +89,42 @@ function boardHasStraightPossible(board) {
   return false
 }
 
+// Verifica se a mao faz sentido ter chegado ao river IP (teria c-betado no flop)
+function wouldPlayToRiver(hole, board) {
+  const flop = board.slice(0, 3)
+  const flopRanks = flop.map(c => c.slice(0, -1))
+  const holeRanks = hole.map(c => c.slice(0, -1))
+  const isPocketPair = holeRanks[0] === holeRanks[1]
+
+  // Mao forte no board completo: sempre faz sentido
+  if (hasMadeFlush(hole, board) || hasMadeStraight(hole, board) || hasSetFn(hole, board)) return true
+  if (hasTwoPairFn(hole, board) || hasOverpair(hole, board)) return true
+  if (hasTopPair(hole, board) || hasAnyPair(hole, board)) return true
+
+  // Flush draw que falhou (4 suited): faz sentido — chegou ao river com draw
+  if (hasFlushDrawMissed(hole, board)) return true
+
+  // Pocket pair: sempre c-betaria no flop
+  if (isPocketPair) return true
+
+  // Teria c-betado no flop? (par, draw, ou blefe em board seco)
+  if (hasTopPair(hole, flop) || hasAnyPair(hole, flop)) return true
+  const flopSuits = flop.map(c => c.slice(-1))
+  const flopSuitCounts = {}
+  ;[...hole, ...flop].forEach(c => { const s = c.slice(-1); flopSuitCounts[s] = (flopSuitCounts[s] || 0) + 1 })
+  if (Object.values(flopSuitCounts).some(v => v >= 4)) return true // flush draw no flop
+
+  const ranks = flop.map(c => RANKS.indexOf(c.slice(0, -1)))
+  const suits = flop.map(c => c.slice(-1))
+  const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
+  const sorted = [...ranks].sort((a, b) => a - b)
+  const connected = (sorted[2] - sorted[0]) <= 4
+  const isDry = !suited && !connected
+  if (isDry) return true // teria blefado em board seco
+
+  return false
+}
+
 // River: você está IP, pot control até aqui ou apostou flop+turn. River saiu. Valor, blefe ou check?
 function getCorrectAction(hole, board) {
   const flushOnBoard = boardHasFlushComplete(board)
@@ -259,8 +295,12 @@ function Trainer() {
 
   function newHand() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const b = randomCards(5)
-    const h = randomCards(2, b)
+    let b, h
+    for (let i = 0; i < 100; i++) {
+      b = randomCards(5)
+      h = randomCards(2, b)
+      if (wouldPlayToRiver(h, b)) break
+    }
     setBoard(b); setHole(h); setFeedback(null)
   }
 
