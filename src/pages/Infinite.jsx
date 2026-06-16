@@ -576,7 +576,9 @@ function rangeScenario(moduleId) {
     raiserPositions = spot.raisers
   }
   const raiser = raiserPositions[Math.floor(Math.random() * raiserPositions.length)]
-  const keyMap = { UTG: 'vsUTG', 'UTG+1': 'vsUTG1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
+  const bbKeyMap = { UTG: 'vsUTG', 'UTG+1': 'vsUTG1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
+  const otherKeyMap = { UTG: 'vsUTG', 'UTG+1': 'vsUTG+1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
+  const keyMap = dataSource === BB_VS_RFI ? bbKeyMap : otherKeyMap
   const range = dataSource?.[keyMap[raiser]] || {}
   const threebet = range.threebet || []
   const call = range.call || []
