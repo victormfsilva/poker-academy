@@ -63,7 +63,7 @@ export default function Modules() {
                       </div>
                     </div>
                     {!locked && (
-                      <Link to={`/módulos/${m.id}`} className="px-4 py-2 rounded-lg text-sm font-semibold flex-shrink-0"
+                      <Link to={`/modulos/${m.id}`} className="px-4 py-2 rounded-lg text-sm font-semibold flex-shrink-0"
                         style={{ background: p.completed ? '#00d4aa22' : '#e9456022', color: p.completed ? '#00d4aa' : '#e94560' }}>
                         {p.completed ? 'Revisar' : p.lessonRead ? 'Treinar' : 'Iniciar'}
                       </Link>

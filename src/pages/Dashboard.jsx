@@ -102,7 +102,7 @@ export default function Dashboard() {
             </div>
             <div style={{ color: '#888', fontSize: 14, marginTop: 2 }}>{currentModule.desc}</div>
             <Link
-              to={`/módulos/${currentModule.id}`}
+              to={`/modulos/${currentModule.id}`}
               className="inline-block mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
               style={{ background: '#e94560', color: 'white' }}
             >
@@ -139,7 +139,7 @@ export default function Dashboard() {
                   </div>
                   {!locked && (
                     <Link
-                      to={`/módulos/${m.id}`}
+                      to={`/modulos/${m.id}`}
                       className="px-3 py-1 rounded-lg text-sm font-semibold"
                       style={{ background: '#1e1e2e', color: '#e94560' }}
                     >
