@@ -90,6 +90,34 @@ function hasStraightDraw(hole, board) {
   return false
 }
 
+// Verifica se a mao teria c-betado no flop (filtra maos irreais no cenario de double barrel)
+function wouldCbetFlop(hole, flop) {
+  const flopRanks = flop.map(c => c.slice(0, -1))
+  const holeRanks = hole.map(c => c.slice(0, -1))
+  const isPocketPair = holeRanks[0] === holeRanks[1]
+  const hasSet = isPocketPair && flopRanks.includes(holeRanks[0])
+  const matchCount = [...new Set(holeRanks)].filter(r => flopRanks.includes(r)).length
+  const hasTwoPair = !isPocketPair && matchCount === 2
+
+  if (hasMadeFlush(hole, flop) || hasSetFn(hole, flop) || hasTwoPair) return true
+  if (hasOverpair(hole, flop) || hasTopPair(hole, flop)) return true
+  if (hasFlushDraw(hole, flop) || hasStraightDraw(hole, flop)) return true
+  if (hasAnyPair(hole, flop) || isPocketPair) return true
+
+  // Board seco sem mao: c-bet blefe 33%
+  const ranks = flop.map(c => RANKS.indexOf(c.slice(0, -1)))
+  const suits = flop.map(c => c.slice(-1))
+  const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
+  const sorted = [...ranks].sort((a, b) => a - b)
+  const isBroadway = sorted[2] <= 4
+  const connected = (sorted[2] - sorted[0]) <= 4 && !isBroadway
+  const isDry = !suited && !connected
+  if (isDry) return true
+
+  // Board umido sem nada: nao c-betaria
+  return false
+}
+
 // Turn card types
 function isTurnScary(flop, turn) {
   const turnRank = RANKS.indexOf(turn.slice(0, -1))
@@ -272,9 +300,13 @@ function Trainer() {
 
   function newHand() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const f = randomCards(3)
-    const [t] = randomCards(1, f)
-    const h = randomCards(2, [...f, t])
+    let f, t, h
+    for (let i = 0; i < 100; i++) {
+      f = randomCards(3)
+      ;[t] = randomCards(1, f)
+      h = randomCards(2, [...f, t])
+      if (wouldCbetFlop(h, f)) break
+    }
     setFlop(f); setTurn(t); setHole(h); setFeedback(null)
   }
 
