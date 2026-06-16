@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import Card from '../../components/Card'
-import RangeViewer from '../../components/RangeViewer'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
@@ -33,12 +32,10 @@ function getBoardTexture(flop) {
   const suits = flop.map(c => c.slice(-1))
   const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
   const sorted = [...ranks].sort((a, b) => a - b)
-  const isBroadway = sorted[2] <= 4 // todas as cartas são T ou maiores (indices 0-4)
+  const isBroadway = sorted[2] <= 4
   const connected = (sorted[2] - sorted[0]) <= 4 && !isBroadway
   const paired = ranks[0] === ranks[1] || ranks[1] === ranks[2] || ranks[0] === ranks[2]
-  const highCard = Math.min(...ranks) // menor índice = carta mais alta
-
-  return { suited, connected, paired, highCard, isWet: suited || connected, isDry: !suited && !connected }
+  return { suited, connected, paired, isWet: suited || connected, isDry: !suited && !connected }
 }
 
 function hasTopPair(hole, flop) {
@@ -58,7 +55,6 @@ function hasFlushDraw(hole, flop) {
   const allCards = [...hole, ...flop]
   const suitCounts = {}
   allCards.forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  // 4 = flush draw, 5 = made flush (não é draw)
   return Object.values(suitCounts).some(v => v === 4)
 }
 
@@ -70,178 +66,157 @@ function hasMadeFlush(hole, flop) {
 }
 
 function hasStraightDraw(hole, flop) {
-  // Detecta straight draw: 4 cartas num intervalo de 5, onde pelo menos 1 hole card participa
-  // Exclui made straights (5 consecutivas)
   const holeRankIdx = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
   const allRanks = [...hole, ...flop].map(c => RANKS.indexOf(c.slice(0, -1)))
   const unique = [...new Set(allRanks)].sort((a, b) => a - b)
-
-  // Checa made straight primeiro (5 consecutivas ou wheel A-2-3-4-5)
   for (let i = 0; i <= unique.length - 5; i++) {
-    if (unique[i + 4] - unique[i] === 4) return false // made straight, não é draw
+    if (unique[i + 4] - unique[i] === 4) return false
   }
-  // Wheel made: A(0) + 2(12) + 3(11) + 4(10) + 5(9)
   if ([0, 9, 10, 11, 12].every(v => unique.includes(v))) return false
-
-  // Checa draw: 4 cartas span <= 4, com hole card participando
   for (let i = 0; i < unique.length - 3; i++) {
     if (unique[i + 3] - unique[i] <= 4) {
       const windowRanks = unique.slice(i, i + 4)
       if (holeRankIdx.some(r => windowRanks.includes(r))) return true
     }
   }
-  // Wheel draw: A + 3 de {2,3,4,5} com hole card participando
   const wheelRanks = [0, 9, 10, 11, 12]
   const wheelCount = wheelRanks.filter(v => unique.includes(v)).length
   if (wheelCount >= 4 && holeRankIdx.some(r => wheelRanks.includes(r))) return true
-
   return false
 }
 
 function getCorrectAction(hole, flop) {
   const texture = getBoardTexture(flop)
-  const hasTop = hasTopPair(hole, flop)
-  const hasFlush = hasFlushDraw(hole, flop)
-  const hasStraight = hasStraightDraw(hole, flop)
-
-  // Made flush: mão muito forte
-  if (hasMadeFlush(hole, flop)) {
-    return { action: 'bet', sizing: '75%', reason: 'Você já completou uma cor (flush)! Mão muito forte — aposte grande (75%) para extrair o máximo de valor.' }
-  }
-
-  // Regras CBet IP — seguindo a aula:
-  // 33% → board seco (blefe barato, range advantage)
-  // 50% → top pair ou melhor, ou semi-draw (flush/straight draw)
-  // 75% → mão muito forte (dois pares, set) em board úmido
-  // check → board úmido sem equidade nenhuma
-
-  // Mão muito forte (dois pares ou set): bet 75% em board úmido, 50% em seco
   const flopRanks = flop.map(c => c.slice(0, -1))
   const holeRanks = hole.map(c => c.slice(0, -1))
   const isPocketPair = holeRanks[0] === holeRanks[1]
   const hasSet = isPocketPair && flopRanks.includes(holeRanks[0])
   const matchingFlopRanks = [...new Set(holeRanks)].filter(r => flopRanks.includes(r))
   const hasTwoPair = !isPocketPair && matchingFlopRanks.length === 2
+  const hasTop = hasTopPair(hole, flop)
   const hasPair = hasAnyPair(hole, flop)
+  const hasFlush = hasFlushDraw(hole, flop)
+  const hasStraight = hasStraightDraw(hole, flop)
 
-  // Set (trinca): sempre aposta grande
+  if (hasMadeFlush(hole, flop)) {
+    return { action: 'bet', sizing: '75%', reason: 'Flush completo! Aposte grande (75%) — mao nuts, extraia o maximo de valor.' }
+  }
   if (hasSet) {
-    if (texture.isWet) {
-      return { action: 'bet', sizing: '75%', reason: 'Você fez trinca (set)! Num flop perigoso, aposte grande (75%) — proteja sua mão e extraia valor antes que o adversário complete um draw.' }
-    }
-    return { action: 'bet', sizing: '75%', reason: 'Você fez trinca (set)! Mão muito forte — aposte grande (75%) para construir o pote e extrair o máximo.' }
+    if (texture.isWet) return { action: 'bet', sizing: '75%', reason: 'Set em board umido — aposte grande (75%)! Proteja contra draws e construa pote.' }
+    return { action: 'bet', sizing: '75%', reason: 'Set — aposte grande (75%). Mao muito forte, construa o pote.' }
   }
-
-  // Dois pares: bet grande em úmido, 50% em seco
   if (hasTwoPair) {
-    if (texture.isWet) {
-      return { action: 'bet', sizing: '75%', reason: 'Você tem dois pares num flop perigoso — aposte grande (75%) para proteger e extrair valor antes que o adversário complete um draw.' }
-    }
-    return { action: 'bet', sizing: '50%', reason: 'Você tem dois pares — aposte 50% para extrair valor.' }
+    if (texture.isWet) return { action: 'bet', sizing: '75%', reason: 'Dois pares em board umido — aposte grande (75%) pra proteger. Muitos draws podem ultrapassar.' }
+    return { action: 'bet', sizing: '50%', reason: 'Dois pares em board seco — aposte medio (50%). Extraia valor sem assustar.' }
   }
-
-  // Top pair: bet 50%
-  if (hasTop) {
-    return { action: 'bet', sizing: '50%', reason: 'Você acertou o par mais alto do flop — aposte 50% para extrair valor é proteger sua mão.' }
-  }
-
-  // Par de bolso acima do flop (overpair): bet 50% para valor/proteção
   if (isPocketPair && !hasSet) {
     const pocketRankIdx = RANKS.indexOf(holeRanks[0])
     const topFlopRankIdx = Math.min(...flopRanks.map(r => RANKS.indexOf(r)))
     if (pocketRankIdx < topFlopRankIdx) {
-      // Overpair (par de bolso acima de todas as cartas do flop)
-      if (texture.isWet) {
-        return { action: 'bet', sizing: '75%', reason: 'Você tem um par de bolso acima de todas as cartas do flop (overpair) num board perigoso — aposte grande (75%) para proteger.' }
-      }
-      return { action: 'bet', sizing: '50%', reason: 'Você tem um par de bolso acima de todas as cartas do flop (overpair) — aposte 50% para extrair valor. Sua mão provavelmente é a melhor.' }
+      if (texture.isWet) return { action: 'bet', sizing: '75%', reason: 'Overpair em board umido — aposte grande (75%) pra proteger contra draws.' }
+      return { action: 'bet', sizing: '50%', reason: 'Overpair em board seco — aposte medio (50%). Extraia valor, poucas ameacas.' }
     }
-    // Par de bolso abaixo do flop: trata como par médio
   }
-
-  // Semi-draw (flush ou straight draw): bet 50%
-  if (hasFlush || hasStraight) {
-    return { action: 'bet', sizing: '50%', reason: 'Você está próximo de completar uma cor ou sequência — aposte 50% mesmo sem ter mão agora. Você tem dois caminhos para ganhar: o adversário pode foldar agora, ou você completa o draw.' }
-  }
-
-  // Par médio/baixo (incluindo par de bolso abaixo do flop): bet 50%
+  if (hasTop) return { action: 'bet', sizing: '50%', reason: 'Top pair — aposte medio (50%). Bom equilibrio entre valor e protecao.' }
+  if (hasFlush && hasStraight) return { action: 'bet', sizing: '75%', reason: 'Combo draw (flush + straight)! Aposte grande (75%) como semi-blefe. Equity monstruosa (~45%+).' }
+  if (hasFlush) return { action: 'bet', sizing: '50%', reason: 'Flush draw — aposte medio (50%) como semi-blefe. 9 outs (~35% equity).' }
+  if (hasStraight) return { action: 'bet', sizing: '33%', reason: 'Straight draw — aposte pequeno (33%) como semi-blefe barato. 8 outs (~32%).' }
   if (hasPair || isPocketPair) {
-    if (texture.isWet) {
-      return { action: 'bet', sizing: '50%', reason: 'Você tem um par num flop perigoso — aposte 50% para proteger. Deixar o adversário ver cartas de graça pode custar caro se ele tiver draw.' }
-    }
-    return { action: 'bet', sizing: '50%', reason: 'Você tem um par no flop seco — aposte 50% para extrair valor. Com poucas ameaças de draw, sua mão provavelmente está na frente.' }
+    if (texture.isWet) return { action: 'bet', sizing: '50%', reason: 'Par num flop umido — aposte 50% pra proteger. Deixar ver cartas gratis pode custar caro.' }
+    return { action: 'bet', sizing: '33%', reason: 'Par medio/baixo em board seco — aposte pequeno (33%) pra thin value e protecao.' }
   }
-
-  // Board seco sem equidade: bet 33% (blefe barato, range advantage)
-  if (texture.isDry) {
-    return { action: 'bet', sizing: '33%', reason: 'Flop seco e o adversário checou para você. Aposte barato (33%) — com poucas possibilidades de draw, ele provavelmente vai foldar.' }
-  }
-
-  // Board úmido sem equidade nenhuma: check
-  return { action: 'check', sizing: null, reason: 'Flop conectado e você não tem nada — nem par, nem draw. Não gaste fichas sem motivo. Passe a vez e veja o que acontece.' }
+  if (texture.isDry) return { action: 'bet', sizing: '33%', reason: 'Board seco sem mao — aposte barato (33%). O adversario provavelmente errou tambem.' }
+  return { action: 'check', sizing: null, reason: 'Board umido sem mao nem draw — check. Nao desperdice fichas blefando num board que favorece o adversario.' }
 }
 
 function Lesson({ onComplete }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
-      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>⚡ Módulo 5 — Apostar no Flop (em Posição)</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Você abriu o pote — agora o flop saiu. O que fazer?</p>
+      <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>CBet Flop IP + Bet Sizing</h1>
+      <p style={{ color: '#888', marginBottom: 24 }}>Voce abriu o pote e esta em posicao. Quando apostar, quanto apostar, e por que.</p>
       <div className="space-y-4">
-        <Section title="O que é essa Aposta?">
-          Quando você é o primeiro a apostar antes do flop é o flop sai, os adversários tendem a esperar que você aposte de novo — porque foi você que atacou primeiro. Essa aposta de continuação existe justamente pra aproveitar essa expectativa é pressionar o adversário.
+        <Section title="O que e essa Aposta?">
+          Quando voce e o primeiro a apostar antes do flop e o flop sai, os adversarios tendem a esperar que voce aposte de novo — porque foi voce que atacou primeiro. Essa aposta de continuacao existe pra aproveitar essa expectativa e pressionar o adversario.
         </Section>
-        <Section title="O Flop Favorece Você ou o Adversário?">
-          A primeira coisa que você analisa é: as cartas do flop combinam mais com as mãos que você teria ou com as mãos que o adversário teria?
+        <Section title="O Flop Favorece Voce ou o Adversario?">
+          A primeira coisa que voce analisa e: as cartas do flop combinam mais com as maos que voce teria ou com as maos que o adversario teria?
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
               <div style={{ color: '#00d4aa', fontWeight: 600 }}>Flop Seco</div>
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ex: A♠ 7♦ 2♣ (naipes diferentes)<br />Poucas chances de draw. Aposte frequente e barato (33% do pote).</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: "1px solid #e94560" }}>
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
               <div style={{ color: '#e94560', fontWeight: 600 }}>Flop Conectado</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ex: 9♠ 8♥ 7♠<br />Muitos draws possíveis. Só aposte se tiver boa mão — caso contrário, passe a vez.</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ex: 9♠ 8♥ 7♠<br />Muitos draws possiveis. So aposte se tiver boa mao — caso contrario, passe a vez.</div>
             </div>
           </div>
         </Section>
-        <Section title="Quanto Apostar?">
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {[['33%', '#00d4aa', 'Flop seco, aposta barata com muitas mãos'], ['50%', '#f5a623', 'Aposta padrão quando tem mão razoável'], ['75%', '#e94560', 'Mão muito forte ou flop perigoso que você conectou bem']].map(([s, c, d]) => (
-              <div key={s} className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: `1px solid ${c}` }}>
-                <div style={{ color: c, fontWeight: 700, fontSize: 18 }}>{s}</div>
-                <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>{d}</div>
+
+        <Section title="Os 4 Tamanhos Principais">
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            {[
+              { size: '33%', color: '#00d4aa', name: 'Pequeno', when: 'Board seco, blefe barato, par medio, thin value', example: 'Pote 10bb → aposta 3.3bb' },
+              { size: '50%', color: '#f5a623', name: 'Medio', when: 'Top pair, overpair seco, flush draw semi-blefe', example: 'Pote 10bb → aposta 5bb' },
+              { size: '75%', color: '#e94560', name: 'Grande', when: 'Set, dois pares, overpair wet, combo draw', example: 'Pote 10bb → aposta 7.5bb' },
+              { size: '100%+', color: '#9b59b6', name: 'Overbet', when: 'Nuts no river, polarizado (muito forte ou blefe puro)', example: 'Pote 10bb → aposta 10-15bb' },
+            ].map(s => (
+              <div key={s.size} className="rounded-lg p-3" style={{ background: '#0a0a0f', border: `1px solid ${s.color}` }}>
+                <div style={{ color: s.color, fontWeight: 700, fontSize: 18 }}>{s.size}</div>
+                <div style={{ color: 'white', fontWeight: 600, fontSize: 13, marginTop: 2 }}>{s.name}</div>
+                <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>{s.when}</div>
+                <div style={{ color: '#666', fontSize: 11, marginTop: 4 }}>{s.example}</div>
               </div>
             ))}
           </div>
         </Section>
-        <Section title="Quem Conecta Mais com o Flop?">
-          Pensa assim: se você abriu de uma posição fechada (como UTG) é o flop vem com Ás-Rei-Valete, você provavelmente tem mais mãos grandes do que o adversário — aposte com confiança. Mas se o flop vem 9-8-7, o adversário do Big Blind pode ter muitas mãos conectadas que você não tem. Aposte menos.
+
+        <Section title="Regra de Ouro: Sizing Segue a Forca da Mao + Board">
+          <div className="space-y-2 mt-2">
+            {[
+              { rule: 'Mao forte + board umido → aposte GRANDE', color: '#e94560', why: 'Proteja contra draws e extraia valor enquanto podem pagar' },
+              { rule: 'Mao forte + board seco → aposte MEDIO', color: '#f5a623', why: 'Sem urgencia de protecao. Extraia valor sem assustar' },
+              { rule: 'Mao media → aposte PEQUENO', color: '#00d4aa', why: 'Thin value. Nao inflando o pote com mao vulneravel' },
+              { rule: 'Blefe → aposte o MINIMO efetivo', color: '#888', why: 'Risco minimo pra maxima fold equity. 33% em board seco ja funciona' },
+            ].map(r => (
+              <div key={r.rule} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+                <div style={{ color: r.color, fontWeight: 600, fontSize: 13 }}>{r.rule}</div>
+                <div style={{ color: '#ccc', fontSize: 12, marginTop: 2 }}>{r.why}</div>
+              </div>
+            ))}
+          </div>
         </Section>
-        <Section title="Flop Seco Sem Mão — Aposta Mesmo Assim!">
-          Esse é o conceito mais contraintuitivo do módulo: <strong style={{ color: '#e94560' }}>no flop seco, você aposta mesmo sem ter nada.</strong><br /><br />
-          Por quê? Porque num flop como A-7-2 com naipes diferentes, o adversário também dificilmente acertou algo — é uma aposta pequena de 33% vai fazer ele foldar a maioria das mãos fracas. Você não precisa ter mão para apostar, precisa ter <strong style={{ color: '#00d4aa' }}>uma boa razão para apostar</strong> — é "ele provavelmente não tem nada" é uma boa razão.
+
+        <Section title="Flop Seco Sem Mao — Aposta Mesmo Assim!">
+          Esse e o conceito mais contraintuitivo: <strong style={{ color: '#e94560' }}>no flop seco, voce aposta mesmo sem ter nada.</strong><br /><br />
+          Num flop como A-7-2 com naipes diferentes, o adversario tambem dificilmente acertou algo — uma aposta pequena de 33% vai fazer ele foldar a maioria das maos fracas. Voce nao precisa ter mao para apostar, precisa ter <strong style={{ color: '#00d4aa' }}>uma boa razao para apostar</strong>.
         </Section>
-        <Section title="Quando Passar a Vez (não apostar)">
+
+        <Section title="Quando Passar a Vez (nao apostar)">
           <ul className="space-y-1 mt-2" style={{ color: '#ccc', fontSize: 14 }}>
-            <li>• Flop conectado (ex: 9-8-7) e você não tem nada — aí sim, não aposte</li>
-            <li>• Mais de 2 jogadores no pote — alguém quase certamente acertou algo</li>
-            <li>• Adversário que já relançou antes — cuidado, ele pode estar esperando</li>
+            <li>• Flop conectado (ex: 9-8-7) e voce nao tem nada — nao aposte</li>
+            <li>• Mais de 2 jogadores no pote — alguem quase certamente acertou algo</li>
+            <li>• Adversario que ja relancou antes — cuidado, ele pode estar esperando</li>
           </ul>
         </Section>
-        <Section title="Apostando com Mão vs Apostando sem Mão">
-          <div className="grid grid-cols-2 gap-3 mt-2">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 600 }}>Com mão boa</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você quer que o adversário chame. Tem par forte, dois pares, trinca. Aposta média a grande.</div>
-            </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 600 }}>Sem mão (mas com chance)</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você quer que foldem ou está tentando completar um draw. Aposta pequena (33%) é mais eficiente.</div>
+
+        <Section title="Sizing no Turn e River">
+          As mesmas regras se aplicam, mas com ajustes:<br /><br />
+          <strong style={{ color: '#f5a623' }}>Turn:</strong> Se apostou 50% no flop e o draw nao completou, pode manter 50% ou subir pra 75%.<br />
+          <strong style={{ color: '#e94560' }}>River:</strong> Sizing polarizado — ou aposte grande (valor/blefe) ou check. Nao existe "aposta de protecao" no river porque nao tem mais cartas pra vir.
+        </Section>
+
+        <Section title="Overbet — Quando Usar">
+          <div className="rounded-lg p-3 mt-2" style={{ background: '#0a0a0f', border: '1px solid #9b59b6' }}>
+            <div style={{ color: '#9b59b6', fontWeight: 700, marginBottom: 4 }}>Apostar mais que o pote (100%+)</div>
+            <div style={{ color: '#ccc', fontSize: 13 }}>
+              Use no river quando voce tem nuts e o adversario tem um range capped (limitado).<br /><br />
+              Exemplo: voce tem flush no river e o adversario nao pode ter flush. Overbet extrai maximo valor porque ele pode ter top pair forte que paga.
             </div>
           </div>
         </Section>
       </div>
       <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
-        Entendi — Quero Treinar ⚡
+        Entendi — Quero Treinar
       </button>
     </div>
   )
@@ -296,9 +271,9 @@ function Trainer() {
     return (
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
         <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
       </div>
     )
   }
@@ -308,21 +283,21 @@ function Trainer() {
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 maos</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
       </div>
 
       <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        <div style={{ color: '#4a90e2', fontSize: 18, fontWeight: 700 }}>Você está IP (em posição)</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Você fez o raise pré-flop. Adversário checou para você no flop.</div>
+        <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
+        <div style={{ color: '#4a90e2', fontSize: 18, fontWeight: 700 }}>Voce esta IP (em posicao)</div>
+        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Voce fez o raise pre-flop. Adversario checou para voce no flop.</div>
         {texture && (
           <div className="mt-2 flex gap-2 justify-center flex-wrap">
             <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#00d4aa22' : '#e9456022', color: texture.isDry ? '#00d4aa' : '#e94560' }}>
-              {texture.isDry ? 'Board Seco' : 'Board Úmido'}
+              {texture.isDry ? 'Board Seco' : 'Board Umido'}
             </span>
             {texture.suited && <span className="px-2 py-1 rounded text-xs" style={{ background: '#4a90e222', color: '#4a90e2' }}>Flush Draw</span>}
             {texture.connected && <span className="px-2 py-1 rounded text-xs" style={{ background: '#f5a62322', color: '#f5a623' }}>Conectado</span>}
@@ -345,7 +320,7 @@ function Trainer() {
       {!feedback && (
         <div className="space-y-3 mb-4">
           <button onClick={() => answer('check')} className="w-full py-4 rounded-xl font-bold text-xl" style={{ background: '#4a90e2', color: 'white' }}>
-            CHECK ✓
+            CHECK
           </button>
           <div className="grid grid-cols-3 gap-2">
             {[['33%', '#00d4aa'], ['50%', '#f5a623'], ['75%', '#e94560']].map(([s, c]) => (
@@ -360,25 +335,21 @@ function Trainer() {
       {feedback && (
         <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
           <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
-            {feedback.isCorrect ? '✓ Correto!' : '✗ Incorreto'}
+            {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mão →</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
             Correto: <strong style={{ color: '#f5a623' }}>{feedback.action === 'check' ? 'CHECK' : `BET ${feedback.sizing}`}</strong>
           </div>
           {!feedback.isCorrect && (
             <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #4a90e230' }}>
-              <div style={{ color: '#4a90e2', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>📋 Regra geral CBet IP</div>
+              <div style={{ color: '#4a90e2', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Guia de Sizing</div>
               <div style={{ color: '#ccc', fontSize: 12, lineHeight: 1.7 }}>
-                <div>• <strong style={{ color: '#e94560' }}>Set (trinca)</strong> → BET 75%</div>
-                <div>• <strong style={{ color: '#e94560' }}>Dois pares em flop úmido</strong> → BET 75%</div>
-                <div>• <strong style={{ color: '#e94560' }}>Overpair em flop úmido</strong> → BET 75%</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Top pair / overpair seco / dois pares seco</strong> → BET 50%</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Draw de cor ou sequência</strong> → BET 50%</div>
-                <div>• <strong style={{ color: '#f5a623' }}>Qualquer par</strong> → BET 50%</div>
-                <div>• <strong style={{ color: '#00d4aa' }}>Flop seco sem nada</strong> → BET 33% (blefe barato)</div>
-                <div>• <strong style={{ color: '#888' }}>Flop úmido sem nada</strong> → CHECK</div>
+                <div>• <strong style={{ color: '#e94560' }}>Set / Dois pares wet / Overpair wet / Combo draw</strong> → 75%</div>
+                <div>• <strong style={{ color: '#f5a623' }}>Top pair / Overpair seco / Dois pares seco / Flush draw</strong> → 50%</div>
+                <div>• <strong style={{ color: '#00d4aa' }}>Par medio / Straight draw / Board seco sem mao</strong> → 33%</div>
+                <div>• <strong style={{ color: '#888' }}>Board umido sem nada</strong> → CHECK</div>
               </div>
             </div>
           )}
@@ -393,15 +364,15 @@ export default function Module5() {
   const [view, setView] = useState(progress.modules[5].lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[5].unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 4 para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 4 para desbloquear.</p></div>
     </div>
   )
   return (
     <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>📖 Aula</button>
-          <button onClick={() => progress.modules[5].lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[5].lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[5].lessonRead ? 'pointer' : 'not-allowed' }}>🎯 Trainer {!progress.modules[5].lessonRead && '🔒'}</button>
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
+          <button onClick={() => progress.modules[5].lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[5].lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[5].lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[5].lessonRead && '🔒'}</button>
         </div>
         {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(5); setView('trainer') }} /> : <Trainer />}
       </div>

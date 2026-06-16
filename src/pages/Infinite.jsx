@@ -902,7 +902,7 @@ const GENERATORS = {
   9: () => rangeScenario(9),
   10: defenseCbetScenario,
   11: defenseCbetScenario,
-  12: betSizingScenario,
+  12: cbetFlopScenario,
   13: donkBetScenario,
   14: cbetTurnScenario,
   15: riverPlayScenario,
@@ -932,9 +932,9 @@ const MOD_COLORS = {
 }
 
 const MOD_NAMES_SHORT = {
-  1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet Flop',
+  1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet+Size',
   6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def+CR',
-  11: 'Def+CR', 12: 'Bet Sizing', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
+  11: 'Def+CR', 12: 'CBet+Size', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
   16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers', 21: 'Late Game',
 }
 
