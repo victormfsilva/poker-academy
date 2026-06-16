@@ -22,6 +22,7 @@ const MODULES = [
   { id: 18, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥', color: '#4a90e2' },
   { id: 19, name: 'Blockers', desc: 'Card removal e decisões avançadas', icon: '🧩', color: '#e94560' },
   { id: 20, name: 'HUD e Solvers', desc: 'Estatísticas e estudo com solver', icon: '📊', color: '#00d4aa' },
+  { id: 21, name: 'Late Game MTT', desc: 'Dominando os momentos decisivos do torneio', icon: '🎰', color: '#e94560' },
 ]
 
 export default function Modules() {

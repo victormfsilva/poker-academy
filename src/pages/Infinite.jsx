@@ -857,6 +857,16 @@ function dynamicScenarioQuestion(moduleId) {
       () => { const wtsd = randInt(33, 40); const wsd = randInt(42, 47); return { q: `Seus stats: WTSD ${wtsd}%, W$SD ${wsd}%.`, a: 'Chamando demais', b: 'Numeros normais', aCorrect: true } },
       () => { const hands = randInt(30, 70); return { q: `Voce tem ${hands} maos de um vilao e quer usar 3-Bet% dele para decidir.`, a: 'Nao confiar (amostra pequena)', b: 'Usar o stat normalmente', aCorrect: true } },
     ],
+    21: [
+      () => { const bb = randInt(8, 14); const hand = pick(['A9o','KJs','QTs','88','77','ATs']); return { q: `Late game. ${bb}bb no BB. CO raisa 2.2x. Voce tem ${hand}.`, a: 'Shove all-in (resteal)', b: 'Call', aCorrect: true } },
+      () => { const bb = randInt(5, 9); const hand = pick(['A7o','K9s','QTs','A2s','66','55']); return { q: `Late game. ${bb}bb no ${pick(['CO','BTN'])}. Fold ate voce. ${hand}.`, a: 'Shove', b: 'Fold', aCorrect: true } },
+      () => { const bb = randInt(15, 25); const hand = pick(['J7s','T6s','85s','97s','Q4s']); return { q: `Late game com antes. ${bb}bb no BB. ${pick(['BTN','SB'])} min-raise. ${hand}.`, a: 'Call (pot odds excelentes)', b: 'Fold', aCorrect: true } },
+      () => { const bb = randInt(18, 30); const hand = pick(['AJs','KQs','TT','99','AQo']); return { q: `Late game. ${bb}bb no SB. ${pick(['LJ','HJ','CO'])} raisa, ${pick(['BTN','CO'])} chama. ${hand}.`, a: 'Squeeze (3-bet)', b: 'Call', aCorrect: true } },
+      () => { const bb = randInt(5, 8); const hand = pick(['J3o','T4o','95o','Q2o','83o']); return { q: `Late game. ${bb}bb no ${pick(['UTG','LJ','HJ'])}. ${hand}. Falta 1 orbita pro blind.`, a: 'Fold (esperar spot melhor)', b: 'Shove', aCorrect: true } },
+      () => { const bb = randInt(12, 18); const hand = pick(['AA','KK','QQ','AKs','JJ']); return { q: `Late game. ${bb}bb no SB. BB agressivo (raisa vs limp 80%+). ${hand}.`, a: 'Limp-shove (trap)', b: 'Raise normal', aCorrect: true } },
+      () => { const bb = randInt(6, 10); const hand = pick(['ATo','KJs','QTs','A8s']); return { q: `Late game. ${bb}bb no BB. CO raisa 2.2x. Pot odds pra call. ${hand}.`, a: 'Stop and go (call pre, shove flop)', b: 'Shove pre', aCorrect: true } },
+      () => { const bb = randInt(20, 35); const hand = pick(['K8o','Q9o','J9o','T9o','A5o']); return { q: `Mesa tight esperando ITM. ${bb}bb no ${pick(['CO','BTN'])}. Ninguem abriu em 3 orbitas. ${hand}.`, a: 'Raise (explorar passividade)', b: 'Fold', aCorrect: true } },
+    ],
   }
 
   const templates = TEMPLATES[moduleId]
@@ -901,6 +911,7 @@ const GENERATORS = {
   18: () => dynamicScenarioQuestion(18),
   19: () => dynamicScenarioQuestion(19),
   20: () => dynamicScenarioQuestion(20),
+  21: () => dynamicScenarioQuestion(21),
 }
 
 function newScenario(unlockedIds) {
@@ -933,7 +944,7 @@ const MOD_NAMES_SHORT = {
 export default function Infinite() {
   const { recordAnswer, getModuleProgress } = useProgress()
 
-  const unlockedIds = Array.from({ length: 20 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
+  const unlockedIds = Array.from({ length: 21 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
 
   const [selectedModules, setSelectedModules] = useState(() => new Set(unlockedIds))
   const [showFilter, setShowFilter] = useState(false)

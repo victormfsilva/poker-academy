@@ -25,6 +25,7 @@ const defaultProgress = {
     18: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     19: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     20: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    21: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
   },
   globalStats: {
     totalHands: 0,
@@ -199,7 +200,7 @@ export function ProgressProvider({ children, userId }) {
       const moduleCompleted = mod.completed || justCompleted
 
       const nextModules = { ...prev.modules }
-      if (justCompleted && moduleId < 20) {
+      if (justCompleted && moduleId < 21) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
       }
 
