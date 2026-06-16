@@ -263,7 +263,125 @@ const TEMPLATES = [
     }
   },
 
-  // 14. Pay jump grande — fold mão boa
+  // 14. Multi-way all-in na bolha — evitar
+  () => {
+    const players = pick([5, 6, 7])
+    const itm = players - 1
+    const heroBB = randBB(20, 30)
+    const villain1BB = randBB(15, 25)
+    const villain2BB = randBB(10, 18)
+    const hand = pick(HANDS_STRONG)
+    return {
+      situation: `Bolha (${players} restam, pagam ${itm}). ${villain1BB}bb shova do CO. ${villain2BB}bb re-shova do BTN. Voce tem ${heroBB}bb no BB com ${hand}.`,
+      question: 'O que voce faz?',
+      options: [
+        { id: 'call', label: 'Call', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `Com 2 all-ins na sua frente na bolha, ${hand} é fold. Se um deles bustar, voce garante premiacao sem arriscar nada. O cenario multi-way all-in na bolha é o spot de ICM mais extremo — deixe eles se eliminarem.`,
+      concept: 'Quando 2+ jogadores vao all-in na bolha, voce pode foldar quase tudo. Se um bustar, voce lucra sem risco.',
+    }
+  },
+
+  // 15. Ante stealing na bolha com stack grande
+  () => {
+    const heroBB = randBB(35, 50)
+    const hand = pick([...HANDS_WEAK, ...HANDS_MARGINAL])
+    const heroPos = pick(['CO', 'BTN'])
+    const antes = pick([0.1, 0.125])
+    return {
+      situation: `Bolha. Voce é o maior stack (${heroBB}bb) no ${heroPos}. Antes de ${antes}bb por jogador. Fold até voce. Voce tem ${hand}.`,
+      question: 'O que voce faz?',
+      options: [
+        { id: 'raise', label: 'Raise (roubar antes)', correct: true },
+        { id: 'fold', label: 'Fold (jogar safe)', correct: false },
+      ],
+      explanation: `Como maior stack na bolha, ninguém quer confrontar voce. Com antes de ${antes}bb por jogador, tem muito dead money. ${hand} é raise — os stacks médios vao foldar quase tudo por medo de ICM.`,
+      concept: 'O chip leader na bolha deve roubar antes agressivamente — ninguém quer arriscar bustar contra voce.',
+    }
+  },
+
+  // 16. Risk premium — mão boa mas risco alto
+  () => {
+    const heroBB = randBB(12, 18)
+    const villainBB = randBB(25, 40)
+    const hand = pick(['AJo', 'ATo', 'KQs', 'KQo', '99', 'TT'])
+    const players = pick([4, 5])
+    const shortBB = randBB(3, 5)
+    return {
+      situation: `Mesa final de ${players}. Short tem ${shortBB}bb. Voce tem ${heroBB}bb. Big stack (${villainBB}bb) raisa 3x do CO. Voce está no BB com ${hand}.`,
+      question: 'O que voce faz?',
+      options: [
+        { id: 'call', label: 'Call/3-bet', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `${hand} é call em ChipEV, mas em ICM o "risk premium" muda tudo. Se perder, voce vira o short stack. Se o short de ${shortBB}bb bustar, voce sobe de premiacao sem fazer nada. O risk premium torna ${hand} fold.`,
+      concept: 'Risk premium: em ICM, voce precisa de MAIS equity pra chamar porque bustar custa mais que o pot vale.',
+    }
+  },
+
+  // 17. Bubble factor explicito
+  () => {
+    const heroBB = randBB(15, 22)
+    const villainBB = randBB(12, 18)
+    const hand = pick(['AJo', 'KQo', 'TT', '99', 'ATs'])
+    const bf = pick([1.5, 1.8, 2.0, 2.2])
+    const players = pick([5, 6])
+    const itm = players - 1
+    return {
+      situation: `Bolha (${players} restam, pagam ${itm}). Bubble factor estimado: ${bf}x. Voce tem ${heroBB}bb. Vilao (${villainBB}bb) shova do BTN. Voce está no BB com ${hand}.`,
+      question: `Com bubble factor de ${bf}x, o que voce faz?`,
+      options: [
+        { id: 'call', label: 'Call', correct: bf <= 1.5 },
+        { id: 'fold', label: 'Fold', correct: bf > 1.5 },
+      ],
+      explanation: bf > 1.5
+        ? `Bubble factor ${bf}x significa que voce precisa de ${Math.round(50 * bf)}% de equity pra break even (em vez de 50%). ${hand} raramente tem isso contra um range de shove. Fold.`
+        : `Bubble factor ${bf}x é moderado — voce precisa de ~${Math.round(50 * bf)}% equity. ${hand} tem equity suficiente contra range amplo de shove do BTN. Call.`,
+      concept: `Bubble factor: multiplique a equity necessária. BF 1.0 = ChipEV. BF 1.5 = precisa 75% equity. BF 2.0 = precisa 100% (impossível = fold tudo).`,
+    }
+  },
+
+  // 18. ICM spot — 2o vs 3o lugar importa
+  () => {
+    const prize1 = pick([5000, 10000, 20000])
+    const prize2 = Math.round(prize1 * 0.6)
+    const prize3 = Math.round(prize1 * 0.35)
+    const heroBB = randBB(18, 28)
+    const villainBB = randBB(20, 35)
+    const shortBB = randBB(5, 8)
+    const hand = pick(HANDS_MARGINAL)
+    return {
+      situation: `Mesa final 3-way. 1o: $${prize1}, 2o: $${prize2}, 3o: $${prize3}. Short tem ${shortBB}bb. Voce (${heroBB}bb) no SB. CO (${villainBB}bb) raisa. Voce tem ${hand}.`,
+      question: 'O que voce faz?',
+      options: [
+        { id: 'call', label: 'Call/3-bet', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `A diferença entre 2o ($${prize2}) e 3o ($${prize3}) é $${prize2 - prize3}. Se o short bustar, voce garante pelo menos 2o sem risco. ${hand} não vale arriscar $${prize2 - prize3} de EV.`,
+      concept: 'Calcule o pay jump real ($). Se esperar o short bustar garante um salto grande, fold mãos marginais.',
+    }
+  },
+
+  // 19. Early FT — ICM começa a importar
+  () => {
+    const players = pick([7, 8, 9])
+    const heroBB = randBB(20, 35)
+    const hand = pick(HANDS_MEDIUM)
+    const heroPos = pick(['LJ', 'HJ', 'CO'])
+    return {
+      situation: `Mesa final começou com ${players} jogadores (você é um deles). Blinds subindo. Voce tem ${heroBB}bb no ${heroPos} com ${hand}. Fold até voce.`,
+      question: 'O que voce faz?',
+      options: [
+        { id: 'raise', label: 'Raise (open)', correct: true },
+        { id: 'fold', label: 'Fold (esperar pay jumps)', correct: false },
+      ],
+      explanation: `No início da FT com ${players} jogadores, ICM ainda é moderado. Apertar demais agora faz voce sangrar fichas nos blinds. ${hand} é open do ${heroPos}. Reserve o ultra-tight para quando tiver 3-4 left.`,
+      concept: 'ICM aumenta gradualmente na FT. Com 7-9 left, jogue perto de ChipEV. Ultra-tight só com 3-4 left.',
+    }
+  },
+
+  // 20. Pay jump grande — fold mão boa
   () => {
     const hand = pick(HANDS_MEDIUM)
     const heroBB = randBB(15, 22)
@@ -333,19 +451,91 @@ function Lesson({ onComplete }) {
             ))}
           </div>
         </Section>
+        <Section title="Bubble Factor">
+          <p style={{ marginBottom: 8 }}>O <strong style={{ color: '#e94560' }}>Bubble Factor (BF)</strong> mede quanto ICM custa em cada spot. Ele multiplica a equity que voce precisa pra break even:</p>
+          <div className="rounded-lg p-3 mt-2" style={{ background: '#0a0a0f' }}>
+            <div className="space-y-2">
+              {[
+                { bf: '1.0', meaning: 'ChipEV puro (inicio torneio)', example: 'Precisa 50% equity', color: '#00d4aa' },
+                { bf: '1.3', meaning: 'ICM leve (longe da bolha)', example: 'Precisa 65% equity', color: '#4a90e2' },
+                { bf: '1.5-2.0', meaning: 'ICM pesado (bolha)', example: 'Precisa 75-100% equity', color: '#f5a623' },
+                { bf: '2.0+', meaning: 'ICM extremo (satelite/FT curta)', example: 'Fold quase tudo', color: '#e94560' },
+              ].map(r => (
+                <div key={r.bf} className="flex justify-between items-center">
+                  <div>
+                    <span style={{ color: r.color, fontWeight: 700, fontSize: 14 }}>BF {r.bf}</span>
+                    <span style={{ color: '#888', fontSize: 12, marginLeft: 8 }}>{r.meaning}</span>
+                  </div>
+                  <span style={{ color: '#666', fontSize: 12 }}>{r.example}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p style={{ color: '#888', fontSize: 13, marginTop: 8 }}>Formula: Equity necessaria = 50% x BF. Se BF = 2.0, voce precisa de 100% — impossivel, entao fold.</p>
+        </Section>
+
+        <Section title="Risk Premium">
+          <p>Em ICM, chamar um all-in custa MAIS do que parece. Isso é o <strong style={{ color: '#f5a623' }}>risk premium</strong>:</p>
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
+              <div style={{ color: '#00d4aa', fontWeight: 700, fontSize: 13 }}>Se ganhar</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Dobra fichas, mas valor em $ sobe pouco (retornos decrescentes)</div>
+            </div>
+            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
+              <div style={{ color: '#e94560', fontWeight: 700, fontSize: 13 }}>Se perder</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Bustar ou virar short = perda enorme de $EV</div>
+            </div>
+          </div>
+          <p style={{ color: '#888', fontSize: 13, marginTop: 8 }}>Por isso, voce precisa de MAIS equity que em cash game pra chamar all-ins em torneio.</p>
+        </Section>
+
+        <Section title="Pay Jump Analysis">
+          <p>Sempre calcule o <strong style={{ color: '#4a90e2' }}>pay jump real</strong> antes de tomar decisoes em FT:</p>
+          <div className="rounded-lg p-3 mt-2" style={{ background: '#0a0a0f' }}>
+            <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.8 }}>
+              <strong style={{ color: 'white' }}>Exemplo:</strong> FT 3-way. 1o: $10.000, 2o: $6.000, 3o: $3.500<br />
+              <span style={{ color: '#f5a623' }}>Jump 3o→2o:</span> $2.500 (garantido se short bustar)<br />
+              <span style={{ color: '#e94560' }}>Jump 2o→1o:</span> $4.000 (precisa ganhar heads-up)<br /><br />
+              Se o short tem 3bb, esperar ele bustar vale <strong style={{ color: '#00d4aa' }}>$2.500 gratis</strong>. Não arrisque com maos marginais.
+            </div>
+          </div>
+        </Section>
+
         <Section title="Regras Praticas de ICM">
           <div className="space-y-2">
             {[
               'Na bolha, aperte seu range significativamente (fold mais)',
-              'Deixe short stacks bustarem antes de você arriscar',
-              'Como chip leader, AUMENTE agressividade — os outros não podem revidar',
-              'Mãos premium (QQ+, AKs) quase nunca são fold, mesmo em ICM pesado',
-              'Em satelites, sobrevivencia é TUDO — fold até garantir a vaga',
+              'Deixe short stacks bustarem antes de voce arriscar',
+              'Como chip leader, AUMENTE agressividade — os outros nao podem revidar',
+              'Maos premium (QQ+, AKs) quase nunca sao fold, mesmo em ICM pesado',
+              'Em satelites, sobrevivencia e TUDO — fold ate garantir a vaga',
               'Longe da bolha, jogue ChipEV normal',
+              'Calcule o pay jump antes de decisoes na mesa final',
+              'Bubble factor 2.0+ = fold quase tudo exceto nuts',
+              'Multi-way all-in na bolha? Fold — deixe eles se eliminarem',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#f5a623' }}>•</span>
                 <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Ferramentas de ICM">
+          <div className="space-y-2">
+            {[
+              { name: 'ICMizer', desc: 'Calculadora ICM dedicada — push/fold e spots complexos', color: '#e94560' },
+              { name: 'HRC (Holdem Resources)', desc: 'Analise push/fold com ICM integrado', color: '#f5a623' },
+              { name: 'GTO Wizard', desc: 'Solver com modo ICM pra FT e bolha', color: '#4a90e2' },
+              { name: 'ICMIZER Free', desc: 'Versao gratuita pra praticar spots basicos', color: '#00d4aa' },
+            ].map(t => (
+              <div key={t.name} className="flex gap-3 items-start rounded-lg p-2" style={{ background: '#0a0a0f' }}>
+                <div style={{ width: 4, minHeight: 32, borderRadius: 2, background: t.color, marginTop: 2 }} />
+                <div>
+                  <div style={{ color: 'white', fontWeight: 600, fontSize: 13 }}>{t.name}</div>
+                  <div style={{ color: '#888', fontSize: 12 }}>{t.desc}</div>
+                </div>
               </div>
             ))}
           </div>
