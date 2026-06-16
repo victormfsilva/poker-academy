@@ -25,15 +25,18 @@ function suitName(s) {
 function analyzeDraws(hole, board) {
   const all = [...hole, ...board]
 
-  // Flush draw
+  // Flush draw (pelo menos 1 hole card deve contribuir)
   const suitCounts = {}
   all.forEach(c => { suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1 })
-  const flushEntry = Object.entries(suitCounts).find(([, count]) => count === 4)
+  const holeSuits = hole.map(c => c.suit)
+  const flushEntry = Object.entries(suitCounts).find(([suit, count]) => count === 4 && holeSuits.includes(suit))
   const hasFlushDraw = !!flushEntry
 
   // Straight draws
   const values = [...new Set(all.map(c => RANK_VALUES[c.rank]))].sort((a, b) => a - b)
   if (values.includes(14)) values.unshift(1)
+  const holeValues = new Set(hole.map(c => RANK_VALUES[c.rank]))
+  if (holeValues.has(14)) holeValues.add(1)
 
   // Verifica se já tem straight completa (5 consecutivas)
   let hasStraightMade = false
@@ -46,7 +49,8 @@ function analyzeDraws(hole, board) {
   let hasOESD = false
   if (!hasStraightMade) {
     for (let i = 0; i <= values.length - 4; i++) {
-      if (values[i+1] === values[i]+1 && values[i+2] === values[i]+2 && values[i+3] === values[i]+3) {
+      const run = [values[i], values[i]+1, values[i]+2, values[i]+3]
+      if (run.every(v => values.includes(v)) && run.some(v => holeValues.has(v))) {
         hasOESD = true; break
       }
     }
@@ -56,8 +60,10 @@ function analyzeDraws(hole, board) {
   if (!hasOESD) {
     for (let start = 1; start <= 10; start++) {
       const window = [start, start+1, start+2, start+3, start+4]
-      const count = window.filter(v => values.includes(v)).length
-      if (count === 4) { hasGutshot = true; break }
+      const present = window.filter(v => values.includes(v))
+      if (present.length === 4 && present.some(v => holeValues.has(v))) {
+        hasGutshot = true; break
+      }
     }
   }
 
