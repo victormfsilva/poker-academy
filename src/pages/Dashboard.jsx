@@ -22,6 +22,7 @@ const MODULES = [
   { id: 18, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥' },
   { id: 19, name: 'Blockers', desc: 'Card removal e decisões avançadas', icon: '🧩' },
   { id: 20, name: 'HUD e Solvers', desc: 'Estatísticas e estudo com solver', icon: '📊' },
+  { id: 21, name: 'Late Game MTT', desc: 'Dominando os momentos decisivos do torneio', icon: '🎰' },
 ]
 
 function motivationalMessage(globalStats) {
@@ -36,11 +37,11 @@ function motivationalMessage(globalStats) {
 
 function getBadge(completedIds) {
   const has = id => completedIds.includes(id)
-  const advancedDone = [13,14,15,16,17,18,19,20].every(has)
+  const advancedDone = [13,14,15,16,17,18,19,20,21].every(has)
   const intermediateDone = [7,8,9,10,11,12].every(has)
   const basicDone = [1,2,3,4,5,6].every(has)
 
-  if (advancedDone && intermediateDone && basicDone) return { name: 'Avançado', icon: '🏆', color: '#f5a623', desc: 'Todos os 20 módulos completos!' }
+  if (advancedDone && intermediateDone && basicDone) return { name: 'Avançado', icon: '🏆', color: '#f5a623', desc: 'Todos os 21 módulos completos!' }
   if (intermediateDone && basicDone) return { name: 'Intermediário Avançado', icon: '💎', color: '#4a90e2', desc: 'Módulos 1-12 completos' }
   if (basicDone) return { name: 'Iniciante Sólido', icon: '⭐', color: '#00d4aa', desc: 'Módulos 1-6 completos' }
   return { name: 'Aprendiz', icon: '📖', color: '#888', desc: 'Complete os módulos 1-6' }
