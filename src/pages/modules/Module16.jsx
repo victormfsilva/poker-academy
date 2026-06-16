@@ -1,108 +1,293 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 
-const SCENARIOS = [
-  {
-    situation: 'Você está no BTN com A5s. UTG (jogador tight que só abre 12%) fez raise. GTO diz 3-bet.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: '3-bet (GTO)', correct: false },
-      { id: 'exploit', label: 'Fold (Exploitative)', correct: true },
-    ],
-    explanation: 'GTO diz 3-bet com A5s do BTN vs UTG. Mas se o jogador é MUITO tight (12%), seu 3-bet de blefe perde valor — ele só continua com range forte. Fold explora a tendencia dele de abrir pouco.',
-    concept: 'Contra jogadores muito tight, reduza seus blefes. Eles não abrem o suficiente pra justificar 3-bet light.'
+// ================================================================
+// GERADOR DINÂMICO — GTO vs Exploitative
+// Templates parametrizados geram milhares de combinações únicas
+// ================================================================
+
+const POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB']
+const pick = arr => arr[Math.floor(Math.random() * arr.length)]
+
+const HANDS_PREMIUM = ['AA', 'KK', 'QQ', 'AKs', 'AKo']
+const HANDS_STRONG = ['JJ', 'TT', 'AQs', 'AQo', 'AJs', 'KQs']
+const HANDS_MEDIUM = ['99', '88', '77', 'ATs', 'AJo', 'KJs', 'QJs', 'JTs']
+const HANDS_LIGHT = ['66', '55', 'A5s', 'A4s', 'A3s', 'K9s', 'K8s', 'Q9s', 'T9s', '98s', '87s', '76s']
+const HANDS_TRASH = ['K9o', 'K7o', 'Q8o', 'J7o', 'T8o', 'J4o', '93o', '72o', 'Q3o', 'T6o', '84o']
+const HANDS_MARGINAL_OPEN = ['K9o', 'Q9o', 'J9o', 'T9o', 'K8o', 'Q8o', 'J8o']
+
+const VILLAIN_TYPES = [
+  { type: 'tight', desc: 'jogador tight que só abre 12%', vpip: 12, pfr: 10, foldTo3bet: 65, cbet: 55, riverBluff: 'raramente' },
+  { type: 'nit', desc: 'nit extremo que só abre 8%', vpip: 8, pfr: 7, foldTo3bet: 75, cbet: 45, riverBluff: 'nunca' },
+  { type: 'loose-passive', desc: 'calling station que chama tudo', vpip: 55, pfr: 8, foldTo3bet: 30, cbet: 40, riverBluff: 'raramente' },
+  { type: 'loose-aggressive', desc: 'LAG que abre 35% e 3-beta muito', vpip: 35, pfr: 28, foldTo3bet: 45, cbet: 75, riverBluff: 'frequentemente' },
+  { type: 'maniac', desc: 'maníaco que aposta e raisa tudo', vpip: 50, pfr: 40, foldTo3bet: 35, cbet: 90, riverBluff: 'sempre' },
+  { type: 'regular', desc: 'regular forte que joga GTO', vpip: 22, pfr: 18, foldTo3bet: 55, cbet: 65, riverBluff: 'de forma equilibrada' },
+  { type: 'passive', desc: 'jogador passivo que raramente aposta ou raisa', vpip: 30, pfr: 6, foldTo3bet: 70, cbet: 35, riverBluff: 'quase nunca' },
+  { type: 'over-folder', desc: 'jogador que folda 80% a 3-bets', vpip: 25, pfr: 20, foldTo3bet: 80, cbet: 60, riverBluff: 'raramente' },
+  { type: 'over-cbetter', desc: 'jogador que c-beta 90% dos flops', vpip: 28, pfr: 22, foldTo3bet: 50, cbet: 90, riverBluff: 'as vezes' },
+  { type: 'limper', desc: 'jogador recreativo que limpa pre-flop', vpip: 40, pfr: 5, foldTo3bet: 60, cbet: 30, riverBluff: 'nunca' },
+]
+
+// Cada template é uma função que retorna um cenário completo
+const TEMPLATES = [
+  // 1. Villain tight, hero tem blefe GTO
+  () => {
+    const v = pick(VILLAIN_TYPES.filter(v => v.type === 'tight' || v.type === 'nit'))
+    const heroPos = pick(['BTN', 'CO', 'SB'])
+    const villainPos = pick(POSITIONS.filter(p => p !== heroPos && POSITIONS.indexOf(p) < POSITIONS.indexOf(heroPos)))
+    const hand = pick(HANDS_LIGHT)
+    return {
+      situation: `Você está no ${heroPos} com ${hand}. ${villainPos} (${v.desc}) fez raise. GTO diz 3-bet.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: '3-bet (GTO)', correct: false },
+        { id: 'exploit', label: 'Fold (Exploitative)', correct: true },
+      ],
+      explanation: `GTO diz 3-bet com ${hand} do ${heroPos} vs ${villainPos}. Mas contra jogador que abre apenas ${v.vpip}%, seu 3-bet de blefe perde valor — ele só continua com range muito forte. Fold explora a tendência dele.`,
+      concept: 'Contra jogadores muito tight, reduza seus blefes. Eles não abrem o suficiente pra justificar 3-bet light.',
+    }
   },
-  {
-    situation: 'Mesa de torneio. Jogador no BB defende 70%+ dos raises (chama com tudo). Você está no CO com K9o.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Fold (GTO)', correct: false },
-      { id: 'exploit', label: 'Raise (Exploitative)', correct: true },
-    ],
-    explanation: 'GTO foldaria K9o do CO. Mas se o BB defende 70%+ (muito frouxo), você pode abrir mais leve porque vai jogar pos-flop IP contra range fraco. Exploitative = aproveitar o erro dele.',
-    concept: 'Contra jogadores que chamam demais, amplie seu range de abertura. Você tem edge pos-flop.'
+
+  // 2. Villain loose-passive, hero pode abrir mais
+  () => {
+    const heroPos = pick(['CO', 'BTN', 'HJ'])
+    const hand = pick(HANDS_MARGINAL_OPEN)
+    const defPct = pick([65, 70, 75])
+    return {
+      situation: `Jogador no BB defende ${defPct}%+ dos raises (chama com tudo). Você está no ${heroPos} com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Fold (GTO)', correct: false },
+        { id: 'exploit', label: 'Raise (Exploitative)', correct: true },
+      ],
+      explanation: `GTO foldaria ${hand} do ${heroPos}. Mas se o BB defende ${defPct}%+ (muito frouxo), abra mais leve — você joga pós-flop IP contra range fraco. Exploitative = aproveitar o erro dele.`,
+      concept: 'Contra jogadores que chamam demais, amplie seu range de abertura. Você tem edge pós-flop.',
+    }
   },
-  {
-    situation: 'Você está no BB com 87s. BTN (regular forte) fez raise. GTO diz call.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Call (GTO)', correct: true },
-      { id: 'exploit', label: 'Fold ou 3-bet', correct: false },
-    ],
-    explanation: 'Contra regulares fortes que jogam perto do GTO, a melhor estratégia é jogar GTO você também. 87s tem equity é jogabilidade suficiente pra call no BB. Desviar do GTO contra bons jogadores te torna exploravel.',
-    concept: 'Contra jogadores bons, fique no GTO. Desviar contra quem joga equilibrado cria leaks no seu jogo.'
+
+  // 3. Villain regular forte, jogar GTO
+  () => {
+    const heroPos = pick(['BB', 'SB', 'BTN', 'CO'])
+    const villainPos = pick(POSITIONS.filter(p => p !== heroPos && p !== 'BB' && p !== 'SB'))
+    const hand = pick([...HANDS_MEDIUM, ...HANDS_LIGHT])
+    const gtoAction = pick(['call', 'raise'])
+    return {
+      situation: `Você está no ${heroPos} com ${hand}. ${villainPos} (regular forte, joga GTO) fez raise.${gtoAction === 'call' ? ' GTO diz call.' : ' GTO diz 3-bet.'}`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: gtoAction === 'call' ? 'Call (GTO)' : '3-bet (GTO)', correct: true },
+        { id: 'exploit', label: gtoAction === 'call' ? 'Fold ou 3-bet' : 'Fold ou call', correct: false },
+      ],
+      explanation: `Contra regulares fortes que jogam GTO, siga o GTO. ${hand} é ${gtoAction} padrão no ${heroPos}. Desviar contra bons jogadores te torna explorável.`,
+      concept: 'Contra jogadores bons, fique no GTO. Desviar contra quem joga equilibrado cria leaks no seu jogo.',
+    }
   },
-  {
-    situation: 'Cash game. Jogador no BTN c-beta 90% dos flops (aposta quase sempre). Você está no BB num flop A-7-2 com 65s.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Fold (GTO)', correct: false },
-      { id: 'exploit', label: 'Call ou Check-raise (Exploitative)', correct: true },
-    ],
-    explanation: 'GTO foldaria 65s num flop A-7-2. Mas se ele c-beta 90%, a maioria das vezes ele não tem nada. Você pode chamar leve ou check-raise de blefe porque o range dele é muito fraco.',
-    concept: 'Contra jogadores que apostam demais, defenda mais é check-raise blefe. A alta frequência de c-bet deles significa range fraco.'
+
+  // 4. Villain c-beta demais, hero defende mais
+  () => {
+    const cbetPct = pick([85, 90, 95])
+    const flops = ['A-7-2', 'K-8-3', 'Q-5-2', 'J-7-4', 'T-6-3', '9-4-2', '8-5-3']
+    const flop = pick(flops)
+    const hand = pick(['65s', '76s', '87s', '43s', '54s', 'T8s', '97s'])
+    return {
+      situation: `Adversário no BTN c-beta ${cbetPct}% dos flops. Você está no BB num flop ${flop} com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Fold (GTO)', correct: false },
+        { id: 'exploit', label: 'Call ou Check-raise (Exploitative)', correct: true },
+      ],
+      explanation: `GTO foldaria ${hand} nesse flop. Mas se ele c-beta ${cbetPct}%, na maioria das vezes não tem nada. Defenda mais ou check-raise blefe — o range dele é muito fraco.`,
+      concept: 'Contra jogadores que apostam demais, defenda mais e check-raise blefe. Alta frequência de c-bet = range fraco.',
+    }
   },
-  {
-    situation: 'Torneio online. Jogador limpa (limp) no SB. Você está no BB com J4o.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Check (GTO)', correct: false },
-      { id: 'exploit', label: 'Raise grande (Exploitative)', correct: true },
-    ],
-    explanation: 'GTO checkaria J4o. Mas limpar do SB é um erro enorme — jogadores que limpam geralmente tem range fraco é foldham frequentemente a raises. Raise grande explora essa tendencia.',
-    concept: 'Contra limpers, raise mais que o normal. Limpar é um leak que você deve punir.'
+
+  // 5. Villain limpa, hero pune
+  () => {
+    const hand = pick([...HANDS_TRASH.slice(0, 5), ...HANDS_LIGHT.slice(5)])
+    return {
+      situation: `Jogador limpa (limp) no SB. Você está no BB com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Check (GTO)', correct: false },
+        { id: 'exploit', label: 'Raise grande (Exploitative)', correct: true },
+      ],
+      explanation: `GTO checkaria ${hand}. Mas limpar do SB é um erro enorme — jogadores que limpam geralmente foldham a raises. Raise grande explora essa tendência.`,
+      concept: 'Contra limpers, raise mais que o normal. Limpar é um leak que você deve punir.',
+    }
   },
-  {
-    situation: 'Mesa final de torneio. ICM pesado. Jogador short stack shova all-in. Você está no BB com AQo é tem stack médio.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Call (ChipEV)', correct: false },
-      { id: 'exploit', label: 'Fold (ICM)', correct: true },
-    ],
-    explanation: 'Em ChipEV puro, AQo é call fácil contra shove. Mas em mesa final com ICM, o custo de bustar é muito maior que o ganho de dobrar. ICM diz fold com muitas mãos que seriam call em ChipEV.',
-    concept: 'ICM muda drasticamente as decisões. Na bolha é mesa final, sobrevivencia vale mais que fichas.'
+
+  // 6. ICM pesado, fold mão boa
+  () => {
+    const hand = pick(['AQo', 'AJs', 'ATs', 'KQs', 'JJ', 'TT'])
+    const stack = pick(['médio', 'acima da média'])
+    return {
+      situation: `Mesa final de torneio. ICM pesado. Short stack shova all-in. Você está no BB com ${hand} e tem stack ${stack}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Call (ChipEV)', correct: false },
+        { id: 'exploit', label: 'Fold (ICM)', correct: true },
+      ],
+      explanation: `Em ChipEV, ${hand} é call. Mas em mesa final com ICM, o custo de bustar é desproporcional. Com stack ${stack}, sobreviver vale mais que arriscar por fichas marginais.`,
+      concept: 'ICM muda decisões drasticamente. Na mesa final, sobrevivência vale mais que fichas.',
+    }
   },
-  {
-    situation: 'Você está no BTN com QJs. Mesa de 6 jogadores, todos regulares competentes jogando GTO.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Raise (GTO padrão)', correct: true },
-      { id: 'exploit', label: 'Limp ou fold', correct: false },
-    ],
-    explanation: 'Contra mesa de regulares fortes, não tem leak pra explorar. QJs é raise padrão do BTN no GTO. Desviar aqui (limpar ou foldar) criaria um leak no SEU jogo que eles poderiam explorar.',
-    concept: 'Quando não sabe nada sobre o adversário, jogue GTO. E a estratégia mais segura — ninguem consegue explorar.'
+
+  // 7. Mesa de regulares, jogar GTO padrão
+  () => {
+    const heroPos = pick(['BTN', 'CO', 'HJ'])
+    const hand = pick([...HANDS_STRONG, ...HANDS_MEDIUM])
+    return {
+      situation: `Você está no ${heroPos} com ${hand}. Mesa de 6 jogadores, todos regulares competentes jogando GTO.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Raise (GTO padrão)', correct: true },
+        { id: 'exploit', label: 'Limp ou fold', correct: false },
+      ],
+      explanation: `Contra mesa de regulares fortes, não tem leak pra explorar. ${hand} é raise padrão do ${heroPos}. Desviar cria um leak no SEU jogo.`,
+      concept: 'Quando não sabe nada sobre o adversário, jogue GTO. É a estratégia mais segura.',
+    }
   },
-  {
-    situation: 'Você está no SB. BB é jogador recreativo que folda 80% a 3-bets (fold demais). Você tem K8s.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Complete ou fold (GTO)', correct: false },
-      { id: 'exploit', label: '3-bet (Exploitative)', correct: true },
-    ],
-    explanation: 'GTO não 3-betaria K8s no SB vs BB. Mas se o BB folda 80% a 3-bets, você lucra 3-betando com qualquer mão — ele desiste demais. K8s ainda tem equity de backup se chamar.',
-    concept: 'Contra jogadores que foldam demais a 3-bet, 3-bete mais. Você ganha na hora a maioria das vezes.'
+
+  // 8. Villain folda demais a 3-bet
+  () => {
+    const foldPct = pick([75, 80, 85])
+    const heroPos = pick(['SB', 'BB', 'BTN'])
+    const villainPos = pick(POSITIONS.filter(p => p !== heroPos && p !== 'BB'))
+    const hand = pick(HANDS_LIGHT)
+    return {
+      situation: `${villainPos} (folda ${foldPct}% a 3-bets) fez raise. Você está no ${heroPos} com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Fold ou call (GTO)', correct: false },
+        { id: 'exploit', label: '3-bet (Exploitative)', correct: true },
+      ],
+      explanation: `GTO não 3-betaria ${hand} aqui. Mas se ele folda ${foldPct}% a 3-bets, você lucra 3-betando leve — ganha na hora a maioria das vezes. ${hand} tem equity de backup.`,
+      concept: 'Contra jogadores que foldam demais a 3-bet, 3-bete mais. Você ganha na hora na maioria.',
+    }
   },
-  {
-    situation: 'Você está IP no river com par médio (99 num board A-K-8-3-2). Adversario é um jogador passivo que raramente blefa.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Call se ele apostar (GTO)', correct: false },
-      { id: 'exploit', label: 'Fold se ele apostar (Exploitative)', correct: true },
-    ],
-    explanation: 'GTO teria que chamar com certa frequência pra não ser exploravel. Mas contra jogador passivo que raramente blefa, quando ele aposta no river geralmente TEM mão forte. Fold explora essa tendencia.',
-    concept: 'Contra jogadores passivos, respeite as apostas deles — geralmente significam força real.'
+
+  // 9. Villain passivo aposta river
+  () => {
+    const hand = pick(['99', '88', '77', 'TT', 'JJ'])
+    const boards = ['A-K-8-3-2', 'K-Q-7-4-3', 'A-J-9-5-2', 'Q-T-6-3-8', 'K-J-8-4-2']
+    const board = pick(boards)
+    return {
+      situation: `River: board ${board}. Você está IP com ${hand}. Adversário é passivo que ${pick(['raramente blefa', 'quase nunca aposta sem mão forte', 'só aposta river com nuts'])}. Ele aposta grande.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Call (GTO)', correct: false },
+        { id: 'exploit', label: 'Fold (Exploitative)', correct: true },
+      ],
+      explanation: `GTO chamaria com certa frequência pra não ser explorável. Mas contra jogador passivo, aposta grande no river = mão forte. Fold explora essa tendência.`,
+      concept: 'Contra jogadores passivos, respeite as apostas deles — geralmente significam força real.',
+    }
   },
-  {
-    situation: 'Você abriu UTG com AKo. Jogador no BB (regular forte) fez 3-bet. GTO diz call.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'gto', label: 'Call (GTO)', correct: true },
-      { id: 'exploit', label: '4-bet ou fold', correct: false },
-    ],
-    explanation: 'Contra regular forte que 3-beta de forma equilibrada, AKo é call padrão vs 3-bet do BB. 4-bet transforma em blefe (ele pode ter AA/KK), é fold desperdiça equity enorme. GTO é o caminho.',
-    concept: 'Contra jogadores equilibrados, siga o GTO. Não tente "adivinhar" — jogue de forma solida.'
+
+  // 10. Regular forte 3-beta, hero tem mão forte
+  () => {
+    const hand = pick(['AKo', 'AKs', 'QQ'])
+    const heroPos = pick(['UTG', 'UTG+1', 'LJ', 'HJ'])
+    return {
+      situation: `Você abriu ${heroPos} com ${hand}. BB (regular forte) fez 3-bet equilibrado. GTO diz call.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Call (GTO)', correct: true },
+        { id: 'exploit', label: '4-bet ou fold', correct: false },
+      ],
+      explanation: `Contra regular equilibrado, ${hand} é call padrão vs 3-bet. 4-bet pode ser prematura contra range balanceado, e fold desperdiça equity enorme. GTO é o caminho.`,
+      concept: 'Contra jogadores equilibrados, siga o GTO. Não tente adivinhar.',
+    }
+  },
+
+  // 11. Villain maníaco, hero tighta e trapa
+  () => {
+    const hand = pick(HANDS_STRONG)
+    const heroPos = pick(['BB', 'SB', 'BTN'])
+    return {
+      situation: `Maníaco (VPIP 50%, PFR 40%) fez raise do CO. Você está no ${heroPos} com ${hand}. GTO diz 3-bet.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: '3-bet (GTO)', correct: false },
+        { id: 'exploit', label: 'Call (trap)', correct: true },
+      ],
+      explanation: `GTO diz 3-bet, mas contra maníaco que 4-beta qualquer coisa, call é melhor — trapa ele pós-flop onde comete mais erros. 3-bet infla o pote e ele não folda.`,
+      concept: 'Contra maníacos, trape com mãos fortes. Eles se enforcam sozinhos pós-flop.',
+    }
+  },
+
+  // 12. Calling station, menos blefe mais valor
+  () => {
+    const hand = pick(['87s', 'A5s', '65s', 'T8s', '43s'])
+    const flops = ['K-8-3', 'Q-7-2', 'J-6-4', 'A-9-5', 'T-7-3']
+    const flop = pick(flops)
+    return {
+      situation: `Flop ${flop}. Adversário é calling station (chama com qualquer par/draw). Você tem ${hand} sem nada no flop. GTO diz c-bet blefe.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'C-bet blefe (GTO)', correct: false },
+        { id: 'exploit', label: 'Check (Exploitative)', correct: true },
+      ],
+      explanation: `GTO c-betaria como blefe. Mas contra calling station, blefe não funciona — ele chama com tudo. Economize fichas e check. Guarde seus blefes pra adversários que foldham.`,
+      concept: 'Contra calling stations, nunca blefe. Aposte apenas por valor — eles pagam.',
+    }
+  },
+
+  // 13. Villain desconhecido, default GTO
+  () => {
+    const heroPos = pick(['BTN', 'CO', 'HJ', 'BB'])
+    const villainPos = pick(POSITIONS.filter(p => p !== heroPos))
+    const hand = pick([...HANDS_MEDIUM, ...HANDS_STRONG])
+    return {
+      situation: `Primeira mão na mesa. Você não sabe nada sobre os adversários. ${villainPos} fez raise. Você está no ${heroPos} com ${hand}.`,
+      question: 'Como decidir?',
+      options: [
+        { id: 'gto', label: 'Jogar GTO (default seguro)', correct: true },
+        { id: 'exploit', label: 'Tentar ler o adversário', correct: false },
+      ],
+      explanation: `Sem informação sobre o adversário, GTO é o default. Não tente adivinhar tendências na primeira mão. ${hand} segue a linha GTO padrão.`,
+      concept: 'Sem informação, jogue GTO. Observe e ajuste depois de ter dados suficientes.',
+    }
+  },
+
+  // 14. Villain LAG, widen 3-bet value
+  () => {
+    const hand = pick(['ATs', 'AJo', 'KQo', '99', 'TT'])
+    const heroPos = pick(['BB', 'SB', 'BTN'])
+    const villainPos = pick(['CO', 'BTN', 'HJ'])
+    return {
+      situation: `${villainPos} (LAG, abre 35%) fez raise. Você está no ${heroPos} com ${hand}. GTO diz call.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Call (GTO)', correct: false },
+        { id: 'exploit', label: '3-bet valor (Exploitative)', correct: true },
+      ],
+      explanation: `GTO diz call com ${hand}. Mas contra LAG que abre 35%, o range dele é fraco — ${hand} vira 3-bet de valor. Ele vai chamar com muitas mãos piores.`,
+      concept: 'Contra LAGs, amplie seu range de 3-bet de valor. O range de abertura deles é fraco.',
+    }
+  },
+
+  // 15. Calling station river, thin value bet
+  () => {
+    const hand = pick(['A9o', 'KTo', 'QJo', 'AT', 'KJ'])
+    const boards = ['T-7-3-2-5', 'J-8-4-2-6', 'Q-6-3-9-2', 'K-8-5-3-7']
+    const board = pick(boards)
+    return {
+      situation: `River: board ${board}. Você tem ${hand} (top pair fraco). Adversário é calling station que nunca folda pares.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'gto', label: 'Check (GTO)', correct: false },
+        { id: 'exploit', label: 'Value bet fino (Exploitative)', correct: true },
+      ],
+      explanation: `GTO checkaria com top pair fraco no river. Mas contra calling station, value bet fino é imprimível — ele paga com pares menores, draws que não completaram, e lixo. Extraia valor.`,
+      concept: 'Contra calling stations, faça thin value bets que normalmente não faria. Eles pagam.',
+    }
   },
 ]
+
+function generateScenario() {
+  return pick(TEMPLATES)()
+}
 
 function Lesson({ onComplete }) {
   return (
@@ -189,27 +374,21 @@ function Section({ title, children }) {
 
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
-  const [scenarioIdx, setScenarioIdx] = useState(null)
+  const [scenario, setScenario] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [sessionTotal, setSessionTotal] = useState(0)
   const [streak, setStreak] = useState(0)
   const [sessionDone, setSessionDone] = useState(false)
-  const [usedIdxs, setUsedIdxs] = useState([])
 
   function newScenario() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const available = SCENARIOS.map((_, i) => i).filter(i => !usedIdxs.includes(i))
-    const pool = available.length > 0 ? available : SCENARIOS.map((_, i) => i)
-    const idx = pool[Math.floor(Math.random() * pool.length)]
-    setScenarioIdx(idx)
-    setUsedIdxs(prev => [...prev, idx])
+    setScenario(generateScenario())
     setFeedback(null)
   }
 
   function answer(optionId) {
-    if (scenarioIdx === null || feedback) return
-    const scenario = SCENARIOS[scenarioIdx]
+    if (!scenario || feedback) return
     const chosen = scenario.options.find(o => o.id === optionId)
     const isCorrect = chosen.correct
     const newStreak = isCorrect ? streak + 1 : 0
@@ -222,9 +401,9 @@ function Trainer() {
     setFeedback({ isCorrect, explanation: scenario.explanation, concept: scenario.concept, correctLabel: scenario.options.find(o => o.correct).label, isLast })
   }
 
-  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setScenarioIdx(null); setUsedIdxs([]) }
+  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setScenario(null) }
 
-  if (scenarioIdx === null && !sessionDone) newScenario()
+  if (!scenario && !sessionDone) newScenario()
 
   if (sessionDone) {
     const acc = Math.round((sessionCorrect / sessionTotal) * 100)
@@ -238,13 +417,11 @@ function Trainer() {
     )
   }
 
-  const scenario = scenarioIdx !== null ? SCENARIOS[scenarioIdx] : null
-
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenários</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />

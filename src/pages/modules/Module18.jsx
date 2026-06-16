@@ -1,108 +1,236 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 
-const SCENARIOS = [
-  {
-    situation: 'Você está no BTN com JTs. UTG fez raise, HJ chamou. Você tem posição sobre ambos.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'call', label: 'Call', correct: true },
-      { id: 'raise', label: '3-bet', correct: false },
-    ],
-    explanation: 'Em potes multiway, 3-bet com JTs não faz sentido — você não vai fazer os 2 foldarem. Call é perfeito: mão com boa jogabilidade, posição, e implied odds altas em pote multi.',
-    concept: 'Em multiway, prefira call com mãos jogaveis (suited connectors, pares) ao inves de 3-bet light.'
+// ================================================================
+// GERADOR DINÂMICO — Multiway Pots
+// ================================================================
+
+const pick = arr => arr[Math.floor(Math.random() * arr.length)]
+
+const POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB']
+const HANDS_SUITED_CONN = ['JTs', 'T9s', '98s', '87s', '76s', '65s', '54s']
+const HANDS_SUITED_ACE = ['A5s', 'A4s', 'A3s', 'A2s', 'A9s', 'A8s', 'A7s']
+const HANDS_PAIRS = ['22', '33', '44', '55', '66', '77', '88']
+const HANDS_OFFSUIT = ['KTo', 'Q9o', 'J9o', 'T8o', 'Q8o', 'K7o', 'J8o']
+const HANDS_STRONG = ['AKo', 'AQo', 'AQs', 'KQs', 'JJ', 'TT', '99']
+const FLOPS_DRY = ['A-7-2 rainbow', 'K-8-3 rainbow', 'Q-5-2 rainbow', 'J-7-4 rainbow', 'A-9-4 rainbow', 'K-6-2 rainbow']
+const FLOPS_WET = ['Q-J-9 two-tone', 'T-9-8 two-tone', '9-8-7 monotone', 'K-Q-T two-tone', 'J-T-8 two-tone', '7-6-5 two-tone']
+const FLOPS_MEDIUM = ['K-8-5 two-tone', 'Q-7-4 two-tone', 'J-6-3 two-tone', 'A-8-5 two-tone']
+
+const TEMPLATES = [
+  // 1. Pre-flop multiway — call com mão jogável
+  () => {
+    const hand = pick(HANDS_SUITED_CONN)
+    const heroPos = pick(['BTN', 'CO', 'HJ'])
+    const raiserPos = pick(['UTG', 'UTG+1', 'LJ'])
+    const callerPos = pick(POSITIONS.filter(p => p !== heroPos && p !== raiserPos && POSITIONS.indexOf(p) > POSITIONS.indexOf(raiserPos) && POSITIONS.indexOf(p) < POSITIONS.indexOf(heroPos)))
+    return {
+      situation: `${raiserPos} fez raise, ${callerPos || 'HJ'} chamou. Você está no ${heroPos} com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: 'Call', correct: true },
+        { id: 'raise', label: '3-bet', correct: false },
+      ],
+      explanation: `Em multiway, 3-bet com ${hand} não faz sentido — você não vai fazer todos foldarem. Call é perfeito: mão com jogabilidade, posição, e implied odds altas.`,
+      concept: 'Em multiway, prefira call com suited connectors ao invés de 3-bet light.',
+    }
   },
-  {
-    situation: '3 jogadores no flop: K♠ 8♦ 3♣. Você está no BB com A3s. UTG checou, CO checou.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'bet', label: 'Bet (c-bet)', correct: false },
-      { id: 'check', label: 'Check', correct: true },
-    ],
-    explanation: 'Em pote multiway, c-bet com par baixo é perigoso. Com 2 adversarios, a chance de alguem ter K ou melhor é alta. Check e controle o pote.',
-    concept: 'Em multiway, reduza drasticamente sua frequência de c-bet. So aposte com mãos fortes.'
+
+  // 2. Multiway flop — check com mão fraca
+  () => {
+    const players = pick([3, 4])
+    const hand = pick(['A3s', 'A4s', '65s', '76s', '87s', 'K5s'])
+    const flop = pick(FLOPS_DRY)
+    const heroPos = 'BB'
+    return {
+      situation: `${players} jogadores no flop: ${flop}. Você está no ${heroPos} com ${hand} (par baixo ou nada). Checaram até você.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'bet', label: 'Bet', correct: false },
+        { id: 'check', label: 'Check', correct: true },
+      ],
+      explanation: `Em pote multiway, c-bet com mão fraca é perigoso. Com ${players} adversários, a chance de alguém ter acertado é alta. Check e controle o pote.`,
+      concept: 'Em multiway, reduza drasticamente a frequência de c-bet. Só aposte com mãos fortes.',
+    }
   },
-  {
-    situation: 'Flop: Q♥ J♠ 9♦. Pote multiway (3 jogadores). Você está IP com KTs (straight draw + gutshot royal).',
-    question: 'O que você faz?',
-    options: [
-      { id: 'bet', label: 'Bet', correct: false },
-      { id: 'check', label: 'Check (ver carta gratis)', correct: true },
-    ],
-    explanation: 'Board muito conectado com 3 jogadores. Alguem provavelmente acertou forte (QJ, Q9, sets, straights feitos). Seu draw é bom mas apostar aqui é arriscado — check e veja o turn grátis.',
-    concept: 'Em boards conectados multiway, check com draws. Alguem provavelmente tem mão forte.'
+
+  // 3. Board conectado multiway — check com draw
+  () => {
+    const flop = pick(FLOPS_WET)
+    const hand = pick(['KTs', 'QTs', 'JTs', 'T9s', '98s', '87s'])
+    const players = pick([3, 4])
+    return {
+      situation: `Flop: ${flop}. Pote multiway (${players} jogadores). Você está IP com ${hand} (straight draw).`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'bet', label: 'Bet', correct: false },
+        { id: 'check', label: 'Check (ver carta grátis)', correct: true },
+      ],
+      explanation: `Board muito conectado com ${players} jogadores. Alguém provavelmente acertou forte. Seu draw é bom mas apostar é arriscado — check e veja o turn grátis.`,
+      concept: 'Em boards conectados multiway, check com draws. Alguém provavelmente tem mão forte.',
+    }
   },
-  {
-    situation: '3 jogadores no flop: A♠ 7♦ 2♣ (board seco). Você foi o raiser pre-flop do CO. Você tem AKo.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'bet', label: 'Bet 33-50%', correct: true },
-      { id: 'check', label: 'Check', correct: false },
-    ],
-    explanation: 'Excecao a regra: com top pair top kicker em board MUITO seco e você tem range advantage como raiser, pode apostar mesmo multiway. AK num A-7-2 rainbow é forte o suficiente.',
-    concept: 'Em multiway, aposte em boards secos quando tem mão forte + range advantage clara.'
+
+  // 4. Top pair top kicker em board seco — pode apostar
+  () => {
+    const hand = pick(['AKo', 'AKs', 'AQo', 'AQs'])
+    const flop = pick(FLOPS_DRY.filter(f => f.startsWith('A')))
+    const players = pick([3, 4])
+    const heroPos = pick(['CO', 'BTN'])
+    return {
+      situation: `${players} jogadores no flop: ${flop || 'A-7-2 rainbow'}. Você foi o raiser do ${heroPos}. Tem ${hand} (TPTK).`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'bet', label: 'Bet 33-50%', correct: true },
+        { id: 'check', label: 'Check', correct: false },
+      ],
+      explanation: `Exceção: com top pair top kicker em board MUITO seco e range advantage como raiser, pode apostar mesmo multiway. ${hand} é forte o suficiente.`,
+      concept: 'Em multiway, aposte em boards secos com mão forte + range advantage clara.',
+    }
   },
-  {
-    situation: 'Você está no CO com 55. UTG fez raise, HJ chamou, você quer entrar no pote.',
-    question: 'Qual o principal motivo de chamar?',
-    options: [
-      { id: 'implied', label: 'Implied odds (set mining)', correct: true },
-      { id: 'equity', label: 'Par é sempre forte', correct: false },
-    ],
-    explanation: '55 em multiway é puro set mining. Você acerta set ~12% das vezes (1 em 8 flops). Em pote multiway, quando acerta, extrai muito valor de multiplos jogadores. As implied odds justificam o call.',
-    concept: 'Pares baixos em multiway = set mining. Você entra pelos implied odds, não pela força do par.'
+
+  // 5. Set mining — implied odds
+  () => {
+    const hand = pick(HANDS_PAIRS)
+    const heroPos = pick(['CO', 'BTN', 'HJ'])
+    const raiserPos = pick(['UTG', 'UTG+1', 'LJ'])
+    const callers = pick([1, 2])
+    return {
+      situation: `${raiserPos} fez raise, ${callers} jogador${callers > 1 ? 'es' : ''} chamou. Você está no ${heroPos} com ${hand}.`,
+      question: 'Qual o principal motivo de chamar?',
+      options: [
+        { id: 'implied', label: 'Implied odds (set mining)', correct: true },
+        { id: 'equity', label: 'Par é sempre forte', correct: false },
+      ],
+      explanation: `${hand} em multiway é puro set mining. Acerta set ~12% (1 em 8 flops). Em multiway, extrai muito valor de múltiplos jogadores. Implied odds justificam o call.`,
+      concept: 'Pares baixos em multiway = set mining. Você entra pelos implied odds.',
+    }
   },
-  {
-    situation: 'Flop: 7♠ 6♠ 5♠. Pote multiway (4 jogadores). Você tem A♠ 2♠ (flush feito). Primeiro a agir.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'bet', label: 'Bet grande (75%)', correct: true },
-      { id: 'check', label: 'Check (slow play)', correct: false },
-    ],
-    explanation: 'Com 4 jogadores num board monotone, alguem quase certamente tem flush draw ou mão forte. Não slow play — aposte grande. Em multiway, sempre proteja mãos fortes. Alguem vai pagar.',
-    concept: 'Em multiway com board perigoso, NUNCA slow play. Aposte grande pra proteger e extrair.'
+
+  // 6. Flush feito multiway — apostar grande
+  () => {
+    const flop = pick(['7s-6s-5s', '9h-8h-4h', 'Td-7d-3d', 'Qs-8s-2s', 'Jh-6h-3h'])
+    const hand = pick(['As-2s', 'Ah-5h', 'Kd-9d', 'Ks-4s', 'Ad-6d'].filter(() => Math.random() > 0.3))
+    const players = pick([3, 4])
+    return {
+      situation: `Flop: ${flop || '7s-6s-5s'}. Pote multiway (${players} jogadores). Você tem flush feito. Primeiro a agir.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'bet', label: 'Bet grande (75%)', correct: true },
+        { id: 'check', label: 'Check (slow play)', correct: false },
+      ],
+      explanation: `Com ${players} jogadores num board monotone, alguém quase certamente tem draw ou mão forte. Não slow play — aposte grande. Em multiway, sempre proteja.`,
+      concept: 'Em multiway com board perigoso, NUNCA slow play. Aposte grande.',
+    }
   },
-  {
-    situation: 'Você está no BB com Q7o. UTG fez raise, 3 jogadores chamaram. Você tem pot odds de 5:1.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'call', label: 'Call (pot odds)', correct: false },
-      { id: 'fold', label: 'Fold', correct: true },
-    ],
-    explanation: 'Pot odds bons não compensam jogabilidade ruim. Q7o não tem conexao, não é suited, é vai ser dominada frequentemente. Em multiway, você precisa de mãos que podem fazer nuts — Q7o não faz.',
-    concept: 'Em multiway, jogabilidade importa mais que pot odds. Mãos desconectadas sem potencial de nuts são fold.'
+
+  // 7. Mão lixo com pot odds — fold
+  () => {
+    const hand = pick(HANDS_OFFSUIT)
+    const callers = pick([3, 4])
+    const odds = pick(['4:1', '5:1', '6:1'])
+    return {
+      situation: `Você está no BB com ${hand}. UTG fez raise, ${callers} jogadores chamaram. Pot odds de ${odds}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: `Call (pot odds ${odds})`, correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `Pot odds bons não compensam jogabilidade ruim. ${hand} não tem conexão, não é suited, e será dominada. Em multiway, precisa de mãos que façam nuts.`,
+      concept: 'Em multiway, jogabilidade importa mais que pot odds. Mãos sem potencial de nuts são fold.',
+    }
   },
-  {
-    situation: 'Flop: T♥ 9♥ 8♣. Pote multiway (3 jogadores). Você está OOP com TT (set).',
-    question: 'O que você faz?',
-    options: [
-      { id: 'bet', label: 'Bet/check-raise', correct: true },
-      { id: 'check', label: 'Check é call', correct: false },
-    ],
-    explanation: 'Set em board MUITO úmido com 3 jogadores — você DEVE apostar ou check-raise. J7, QJ, 76 já tem straight. Qualquer carta de copas completa flush. Não de carta gratis!',
-    concept: 'Sets em boards umidos multiway devem ser jogados agressivamente. Protecao é prioridade.'
+
+  // 8. Set em board úmido — apostar agressivo
+  () => {
+    const setCard = pick(['T', 'J', '8', '9', '7', '6'])
+    const hand = `${setCard}${setCard}`
+    const flop = pick(FLOPS_WET)
+    const players = pick([3, 4])
+    return {
+      situation: `Flop: ${flop}. Pote multiway (${players} jogadores). Você está OOP com ${hand} (set).`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'bet', label: 'Bet/check-raise', correct: true },
+        { id: 'check', label: 'Check e call', correct: false },
+      ],
+      explanation: `Set em board úmido com ${players} jogadores — DEVE apostar agressivamente. Muitos draws possíveis podem completar. Não dê carta grátis!`,
+      concept: 'Sets em boards úmidos multiway devem ser jogados agressivamente. Proteção é prioridade.',
+    }
   },
-  {
-    situation: 'Pre-flop. Você está no SB com AQo. UTG fez raise, HJ chamou, CO chamou.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'squeeze', label: '3-bet (squeeze)', correct: false },
-      { id: 'fold', label: 'Fold', correct: true },
-    ],
-    explanation: 'AQo do SB contra raiser + 2 callers é uma situação complicada. Squeeze raramente funciona com 3 oponentes, é se chamar você joga OOP contra 3 ranges. Fold é o mais correto.',
-    concept: 'Em potes multiway, aperte seu range de 3-bet do SB. Mais jogadores = menos fold equity.'
+
+  // 9. Squeeze com muitos callers — fold
+  () => {
+    const hand = pick(['AQo', 'AJo', 'KQo', 'KJs'])
+    const callers = pick([2, 3])
+    const heroPos = 'SB'
+    return {
+      situation: `UTG fez raise, ${callers} jogadores chamaram. Você está no ${heroPos} com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'squeeze', label: '3-bet (squeeze)', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `${hand} do SB contra raiser + ${callers} callers é complicado. Squeeze raramente funciona com ${callers + 1} oponentes, e chamar é OOP contra todos. Fold é correto.`,
+      concept: 'Em multiway, aperte o range de 3-bet do SB. Mais jogadores = menos fold equity.',
+    }
   },
-  {
-    situation: 'Você está no BTN com A♥ 5♥. 3 jogadores já chamaram o raise. Você decide chamar. Flop: K♥ 8♥ 2♦.',
-    question: 'Alguem aposta 33%. O que você faz?',
-    options: [
-      { id: 'call', label: 'Call', correct: true },
-      { id: 'raise', label: 'Raise', correct: false },
-    ],
-    explanation: 'Flush draw do nuts (A-high flush draw) em multiway — call. Não raise: em multiway, raise com draw é arriscado porque pode ter alguem com mão forte que re-raisa. Call é veja o turn.',
-    concept: 'Em multiway, não semi-blefe com raises. Multiplos oponentes reduzem sua fold equity a quase zero.'
+
+  // 10. Nut flush draw multiway — call não raise
+  () => {
+    const hand = pick(['Ah-5h', 'As-4s', 'Ad-7d', 'Ah-3h', 'As-6s'])
+    const flop = pick(['Kh-8h-2d', 'Qs-7s-3c', 'Jd-6d-2h', 'Td-5d-3s'])
+    const players = pick([3, 4])
+    return {
+      situation: `Flop: ${flop || 'Kh-8h-2d'}. ${players} jogadores. Alguém aposta 33%. Você tem ${hand || 'Ah-5h'} (nut flush draw).`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: 'Call', correct: true },
+        { id: 'raise', label: 'Raise', correct: false },
+      ],
+      explanation: `Nut flush draw em multiway — call. Raise com draw é arriscado: pode ter alguém com mão forte que re-raisa. Múltiplos oponentes reduzem fold equity.`,
+      concept: 'Em multiway, não semi-blefe com raises. Fold equity é quase zero contra múltiplos.',
+    }
+  },
+
+  // 11. Multiway — prefer suited hands
+  () => {
+    const suitedHand = pick(HANDS_SUITED_CONN)
+    const offsuitHand = pick(HANDS_OFFSUIT)
+    const callers = pick([2, 3])
+    return {
+      situation: `${callers} jogadores já chamaram. Você está no BTN. Qual tipo de mão é melhor pra entrar no pote multiway?`,
+      question: `${suitedHand} (suited) ou ${offsuitHand} (offsuit)?`,
+      options: [
+        { id: 'suited', label: `${suitedHand} — suited connector`, correct: true },
+        { id: 'offsuit', label: `${offsuitHand} — carta alta offsuit`, correct: false },
+      ],
+      explanation: `${suitedHand} faz nuts (flush, straight). ${offsuitHand} faz segunda melhor mão e é dominada frequentemente. Em multiway, potencial de nuts é essencial.`,
+      concept: 'Em multiway, prefira suited connectors e pares. Mãos offsuit desconectadas são lixo.',
+    }
+  },
+
+  // 12. Overbet multiway é errado
+  () => {
+    const hand = pick(HANDS_STRONG.slice(0, 3))
+    const flop = pick(FLOPS_MEDIUM)
+    const players = pick([3, 4])
+    return {
+      situation: `Flop: ${flop}. ${players} jogadores. Você está IP com ${hand} (top pair forte).`,
+      question: 'Qual sizing?',
+      options: [
+        { id: 'small', label: 'Bet 33-50%', correct: true },
+        { id: 'big', label: 'Bet 75%+', correct: false },
+      ],
+      explanation: `Em multiway com top pair, aposte menor. Sizing grande contra múltiplos oponentes afasta mãos piores e só é pago por melhor. 33-50% extrai valor e mantém ranges piores no pote.`,
+      concept: 'Em multiway, use sizings menores. Apostar grande só funciona heads-up.',
+    }
   },
 ]
+
+function generateScenario() {
+  return pick(TEMPLATES)()
+}
 
 function Lesson({ onComplete }) {
   return (
@@ -152,7 +280,7 @@ function Lesson({ onComplete }) {
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
               <div style={{ color: '#e94560', fontWeight: 600 }}>Ruins</div>
-              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Offsuit desconectados<br />Mãos dominadas (KTo, Q9o)<br />Mãos que fazem 2o melhor<br />Anything sem potencial de nuts</div>
+              <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Offsuit desconectados<br />Mãos dominadas (KTo, Q9o)<br />Mãos que fazem 2o melhor</div>
             </div>
           </div>
         </Section>
@@ -175,26 +303,23 @@ function Section({ title, children }) {
 
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
-  const [scenarioIdx, setScenarioIdx] = useState(null)
+  const [scenario, setScenario] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [sessionTotal, setSessionTotal] = useState(0)
   const [streak, setStreak] = useState(0)
   const [sessionDone, setSessionDone] = useState(false)
-  const [usedIdxs, setUsedIdxs] = useState([])
 
   function newScenario() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const available = SCENARIOS.map((_, i) => i).filter(i => !usedIdxs.includes(i))
-    const pool = available.length > 0 ? available : SCENARIOS.map((_, i) => i)
-    const idx = pool[Math.floor(Math.random() * pool.length)]
-    setScenarioIdx(idx); setUsedIdxs(prev => [...prev, idx]); setFeedback(null)
+    setScenario(generateScenario())
+    setFeedback(null)
   }
 
   function answer(optionId) {
-    if (scenarioIdx === null || feedback) return
-    const scenario = SCENARIOS[scenarioIdx]
-    const isCorrect = scenario.options.find(o => o.id === optionId).correct
+    if (!scenario || feedback) return
+    const chosen = scenario.options.find(o => o.id === optionId)
+    const isCorrect = chosen.correct
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
     const newTotal = sessionTotal + 1, newCorrect = sessionCorrect + (isCorrect ? 1 : 0)
@@ -205,9 +330,9 @@ function Trainer() {
     setFeedback({ isCorrect, explanation: scenario.explanation, concept: scenario.concept, correctLabel: scenario.options.find(o => o.correct).label, isLast })
   }
 
-  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setScenarioIdx(null); setUsedIdxs([]) }
+  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setScenario(null) }
 
-  if (scenarioIdx === null && !sessionDone) newScenario()
+  if (!scenario && !sessionDone) newScenario()
 
   if (sessionDone) {
     const acc = Math.round((sessionCorrect / sessionTotal) * 100)
@@ -221,13 +346,11 @@ function Trainer() {
     )
   }
 
-  const scenario = scenarioIdx !== null ? SCENARIOS[scenarioIdx] : null
-
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenarios</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenários</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />

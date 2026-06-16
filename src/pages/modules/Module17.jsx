@@ -1,109 +1,289 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 
-// ICM scenarios — situational decisions
-const SCENARIOS = [
-  {
-    situation: 'Torneio de 9 jogadores. Pagam 3. Restam 4 jogadores. Você tem 20bb (2o maior stack). Short stack tem 5bb. Você está no CO com AJo.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'raise', label: 'Raise (ChipEV)', correct: false },
-      { id: 'fold', label: 'Fold (ICM)', correct: true },
-    ],
-    explanation: 'Em ChipEV, AJo é raise fácil do CO. Mas com ICM na bolha (4 jogadores, pagam 3), o short stack de 5bb vai bustar em breve. Sobreviver garante premiacao — não arrisque fichas desnecessariamente.',
-    concept: 'Na bolha, sobrevivencia vale mais que fichas. Deixe o short stack bustar.'
+// ================================================================
+// GERADOR DINÂMICO — ICM (Independent Chip Model)
+// Templates parametrizados com stacks, posições, mãos, premiação
+// ================================================================
+
+const pick = arr => arr[Math.floor(Math.random() * arr.length)]
+const randBB = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+
+const POSITIONS = ['UTG', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB']
+const HANDS_PREMIUM = ['AA', 'KK', 'QQ', 'AKs']
+const HANDS_STRONG = ['JJ', 'TT', 'AQs', 'AQo', 'AKo']
+const HANDS_MEDIUM = ['99', '88', '77', 'AJs', 'ATs', 'KQs', 'KQo']
+const HANDS_MARGINAL = ['66', '55', 'A9o', 'A8o', 'KJo', 'QJo', 'KTs', 'JTs']
+const HANDS_WEAK = ['A5o', 'A3o', 'K8o', 'Q9o', 'J9o', 'T9o', 'K2o', 'Q7o']
+
+const TEMPLATES = [
+  // 1. Bolha — fold mão marginal, deixar short bustar
+  () => {
+    const players = pick([4, 5, 6])
+    const itm = players - 1
+    const shortBB = randBB(3, 6)
+    const heroBB = randBB(15, 25)
+    const heroPos = pick(POSITIONS)
+    const hand = pick(HANDS_MARGINAL)
+    return {
+      situation: `Torneio. Pagam ${itm}. Restam ${players} jogadores. Você tem ${heroBB}bb no ${heroPos}. Short stack tem ${shortBB}bb. Você tem ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'raise', label: 'Raise (ChipEV)', correct: false },
+        { id: 'fold', label: 'Fold (ICM)', correct: true },
+      ],
+      explanation: `Em ChipEV, ${hand} seria raise do ${heroPos}. Mas na bolha com short stack de ${shortBB}bb prestes a bustar, não arrisque fichas. Sobreviver garante premiação.`,
+      concept: 'Na bolha, sobrevivência vale mais que fichas. Deixe o short stack bustar.',
+    }
   },
-  {
-    situation: 'Mesa final. 3 jogadores restantes. 1o lugar: $1000, 2o: $600, 3o: $400. Você tem 15bb (menor stack). BB (chip leader, 40bb) shova. Você tem QQ no SB.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'call', label: 'Call', correct: true },
-      { id: 'fold', label: 'Fold (ICM)', correct: false },
-    ],
-    explanation: 'QQ é forte demais pra foldar mesmo com ICM. Contra range de shove do chip leader (muito amplo), QQ tem equity enorme. ICM não significa foldar tudo — significa ajustar as margens.',
-    concept: 'ICM muda margens, não elimina mãos premium. QQ+ é AKs quase nunca são fold, mesmo em ICM pesado.'
+
+  // 2. Mesa final — premium é sempre call
+  () => {
+    const heroBB = randBB(12, 20)
+    const villainBB = randBB(30, 50)
+    const hand = pick(HANDS_PREMIUM)
+    const prize1 = pick([1000, 2000, 5000])
+    const prize2 = Math.round(prize1 * 0.6)
+    const prize3 = Math.round(prize1 * 0.4)
+    return {
+      situation: `Mesa final. 3 jogadores. 1o: $${prize1}, 2o: $${prize2}, 3o: $${prize3}. Você tem ${heroBB}bb (menor stack). Chip leader (${villainBB}bb) shova. Você tem ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: 'Call', correct: true },
+        { id: 'fold', label: 'Fold (ICM)', correct: false },
+      ],
+      explanation: `${hand} é forte demais pra foldar mesmo com ICM pesado. Contra range amplo de shove do chip leader, ${hand} tem equity enorme. ICM ajusta margens, não elimina premiums.`,
+      concept: 'ICM muda margens, não elimina mãos premium. QQ+ e AKs quase nunca são fold.',
+    }
   },
-  {
-    situation: 'Bolha de satelite. 10 jogadores restam, 9 ganham vaga (premio igual pra todos). Você tem 25bb (acima da média). UTG shova 12bb. Você tem AKs no BB.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'call', label: 'Call', correct: false },
-      { id: 'fold', label: 'Fold', correct: true },
-    ],
-    explanation: 'Em satelite com premio igual, ICM é EXTREMO. Dobrar suas fichas não muda seu premio (já tem vaga garantida se sobreviver). Mas bustar significa perder tudo. Mesmo AKs é fold aqui.',
-    concept: 'Em satelites, sobrevivencia é TUDO. Não arrisque fichas quando já tem stack pra garantir a vaga.'
+
+  // 3. Satélite — sobrevivência extrema
+  () => {
+    const totalPlayers = pick([10, 15, 20])
+    const vagas = Math.floor(totalPlayers / 2)
+    const heroBB = randBB(15, 30)
+    const hand = pick([...HANDS_STRONG, ...HANDS_MEDIUM])
+    const villainBB = randBB(8, 15)
+    const villainPos = pick(['UTG', 'CO', 'BTN'])
+    return {
+      situation: `Satélite. ${totalPlayers} jogadores, ${vagas} vagas (prêmio igual). Você tem ${heroBB}bb. ${villainPos} (${villainBB}bb) shova. Você tem ${hand} no BB.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: 'Call', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `Em satélite com prêmio igual, ICM é EXTREMO. Dobrar fichas não muda seu prêmio. Bustar perde tudo. Com ${heroBB}bb você sobrevive. Mesmo ${hand} é fold.`,
+      concept: 'Em satélites, sobrevivência é TUDO. Não arrisque quando já tem stack pra garantir a vaga.',
+    }
   },
-  {
-    situation: 'Torneio regular. Pagam 15%. Restam 30% do field. Você tem 30bb (média). BTN (20bb) fez raise. Você está no BB com 77.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'call', label: 'Call (ChipEV normal)', correct: true },
-      { id: 'fold', label: 'Fold (ICM)', correct: false },
-    ],
-    explanation: 'Longe da bolha (30% restam, pagam 15%), ICM tem pouco impacto. 77 é call padrão no BB vs BTN raise. Jogar ChipEV normal é correto quando a bolha está distante.',
-    concept: 'ICM só tem impacto significativo perto da bolha é na mesa final. Longe dela, jogue ChipEV.'
+
+  // 4. Longe da bolha — jogar ChipEV
+  () => {
+    const remaining = pick([30, 40, 50])
+    const itm = Math.floor(remaining * 0.5)
+    const heroBB = randBB(25, 40)
+    const hand = pick(HANDS_MEDIUM)
+    const villainPos = pick(['BTN', 'CO'])
+    const heroPos = 'BB'
+    return {
+      situation: `Torneio. Pagam ${itm}. Restam ${remaining} jogadores. Você tem ${heroBB}bb no ${heroPos}. ${villainPos} fez raise. Você tem ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: 'Call (ChipEV normal)', correct: true },
+        { id: 'fold', label: 'Fold (ICM)', correct: false },
+      ],
+      explanation: `Longe da bolha (${remaining} restam, pagam ${itm}), ICM tem pouco impacto. ${hand} é call padrão no BB vs ${villainPos}. Jogue ChipEV.`,
+      concept: 'ICM só impacta perto da bolha e na mesa final. Longe dela, jogue ChipEV.',
+    }
   },
-  {
-    situation: 'Mesa final de 6. Você é chip leader (50bb). Todos os outros tem 10-15bb. 6o lugar: $200, 1o lugar: $5000. Você está no BTN com T8s.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'raise', label: 'Raise (pressionar)', correct: true },
-      { id: 'fold', label: 'Fold (jogar safe)', correct: false },
-    ],
-    explanation: 'Como chip leader na mesa final, VOCE é quem pressiona. Os stacks medios não podem arriscar bustar porque perdem saltos de premiacao. T8s é raise — abuse da pressao ICM sobre eles.',
-    concept: 'Chip leader na mesa final deve AUMENTAR a agressividade — os outros não podem revidar.'
+
+  // 5. Chip leader na FT — pressionar
+  () => {
+    const players = pick([4, 5, 6])
+    const heroBB = randBB(40, 60)
+    const hand = pick([...HANDS_MARGINAL, ...HANDS_WEAK.slice(0, 3)])
+    const heroPos = pick(['BTN', 'CO', 'SB'])
+    return {
+      situation: `Mesa final de ${players}. Você é chip leader (${heroBB}bb). Todos os outros têm 10-15bb. Você está no ${heroPos} com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'raise', label: 'Raise (pressionar)', correct: true },
+        { id: 'fold', label: 'Fold (jogar safe)', correct: false },
+      ],
+      explanation: `Como chip leader, VOCÊ pressiona. Os stacks médios não podem arriscar bustar por causa dos saltos de premiação. ${hand} é raise — abuse da pressão ICM.`,
+      concept: 'Chip leader na mesa final deve AUMENTAR agressividade — os outros não podem revidar.',
+    }
   },
-  {
-    situation: 'Bolha. 5 jogadores, pagam 4. Short stack tem 3bb no BTN. Você tem 18bb no SB com K2o. Short stack foldou.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'raise', label: 'Raise/shove vs BB', correct: false },
-      { id: 'fold', label: 'Fold', correct: true },
-    ],
-    explanation: 'Na bolha com short stack prestes a bustar, K2o não vale o risco. Se o BB chamar e você perder, pode virar o short stack. Deixe o jogador de 3bb bustar naturalmente.',
-    concept: 'Na bolha, evite confrontos marginais. O short stack vai bustar — não assuma o risco por ele.'
+
+  // 6. Bolha — short stack vai bustar, não arrisque
+  () => {
+    const shortBB = pick([2, 3, 4])
+    const heroBB = randBB(15, 22)
+    const hand = pick(HANDS_WEAK)
+    const heroPos = pick(['SB', 'CO', 'BTN'])
+    return {
+      situation: `Bolha. Short stack tem ${shortBB}bb no BTN (vai bustar em ${shortBB} mãos). Você tem ${heroBB}bb no ${heroPos} com ${hand}. Short foldou.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'raise', label: 'Raise', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `Na bolha com short de ${shortBB}bb prestes a bustar, ${hand} não vale o risco. Se perder uma mão grande, pode virar o short stack. Paciência.`,
+      concept: 'Na bolha, evite confrontos marginais. O short vai bustar — não assuma o risco.',
+    }
   },
-  {
-    situation: 'Inicio do torneio. 1000 jogadores, pagam 150. Você tem 100bb. UTG fez raise, você tem AKo no BTN.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'threebet', label: '3-bet (ChipEV)', correct: true },
-      { id: 'call', label: 'Flat call (conservador)', correct: false },
-    ],
-    explanation: 'No inicio do torneio, ICM é praticamente zero. Jogue ChipEV puro. AKo é 3-bet padrão do BTN vs UTG. Não jogue conservador sem motivo.',
-    concept: 'No inicio do torneio, ICM não existe. Jogue para maximizar fichas (ChipEV).'
+
+  // 7. Início do torneio — ChipEV puro
+  () => {
+    const players = pick([500, 1000, 2000])
+    const itm = Math.floor(players * 0.15)
+    const heroBB = pick([80, 100, 120])
+    const hand = pick(HANDS_STRONG)
+    const villainPos = pick(['UTG', 'LJ', 'HJ'])
+    const heroPos = pick(['BTN', 'CO'])
+    return {
+      situation: `Início do torneio. ${players} jogadores, pagam ${itm}. Você tem ${heroBB}bb. ${villainPos} fez raise. Você está no ${heroPos} com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'threebet', label: '3-bet (ChipEV)', correct: true },
+        { id: 'call', label: 'Flat call (conservador)', correct: false },
+      ],
+      explanation: `No início, ICM é zero. Jogue ChipEV puro. ${hand} é 3-bet padrão do ${heroPos} vs ${villainPos}. Não jogue conservador sem motivo.`,
+      concept: 'No início do torneio, ICM não existe. Jogue para maximizar fichas.',
+    }
   },
-  {
-    situation: 'Final table. 4 jogadores. Você tem 12bb no BB. SB (chip leader, 45bb) completa. Você tem A3o.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'shove', label: 'Shove all-in', correct: true },
-      { id: 'check', label: 'Check', correct: false },
-    ],
-    explanation: 'Quando o chip leader limpa do SB, ele tem range fraco. A3o é bom o suficiente pra shove — você precisa acumular fichas pra competir. ICM não significa nunca arriscar; significa escolher os spots certos.',
-    concept: 'Contra limps do chip leader, shove com range amplo. Limpar = range fraco = boa oportunidade.'
+
+  // 8. FT — chip leader limpa, hero shova
+  () => {
+    const players = pick([3, 4, 5])
+    const heroBB = randBB(10, 15)
+    const chipLeaderBB = randBB(40, 55)
+    const hand = pick(['A3o', 'A5o', 'A2o', 'K7o', 'K9o', 'Q9o', 'JTo'])
+    return {
+      situation: `Mesa final de ${players}. Chip leader (${chipLeaderBB}bb) completa do SB. Você tem ${heroBB}bb no BB com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'shove', label: 'Shove all-in', correct: true },
+        { id: 'check', label: 'Check', correct: false },
+      ],
+      explanation: `Chip leader limpando = range fraco. ${hand} é bom pra shove — você precisa acumular fichas. ICM não significa nunca arriscar; significa escolher os spots certos.`,
+      concept: 'Contra limps do chip leader, shove com range amplo. Limpar = fraqueza = oportunidade.',
+    }
   },
-  {
-    situation: 'Satelite. 20 jogadores, 10 vagas. Você tem 8bb (abaixo da média). Folda até você no BTN. Você tem QJs.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'shove', label: 'Shove', correct: false },
-      { id: 'fold', label: 'Fold', correct: true },
-    ],
-    explanation: 'Em satelite com 20 restantes é 10 vagas, você ainda precisa que 10 bustem. Com 8bb você sobrevive muitas rodadas de blinds. QJs não vale o risco de bustar quando paciencia garante a vaga.',
-    concept: 'Em satelites, 8bb é um stack enorme quando metade do field ainda precisa bustar.'
+
+  // 9. Satélite com muitos a bustar — paciência
+  () => {
+    const total = pick([15, 20, 25])
+    const vagas = pick([8, 9, 10])
+    const heroBB = randBB(6, 10)
+    const hand = pick([...HANDS_MEDIUM, ...HANDS_STRONG.slice(2)])
+    const heroPos = pick(['BTN', 'CO'])
+    return {
+      situation: `Satélite. ${total} restam, ${vagas} vagas. Você tem ${heroBB}bb no ${heroPos} com ${hand}. Fold até você.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'shove', label: 'Shove', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `Em satélite com ${total} restantes e ${vagas} vagas, ainda faltam ${total - vagas} bustarem. Com ${heroBB}bb você sobrevive muitas rodadas. Paciência garante a vaga.`,
+      concept: 'Em satélites, stacks pequenos são enormes quando metade do field precisa bustar.',
+    }
   },
-  {
-    situation: 'Bolha. 10 jogadores, pagam 9. Você tem 35bb (maior stack da mesa). Jogador de 8bb shova do CO. Você está no BB com A9o.',
-    question: 'O que você faz?',
-    options: [
-      { id: 'call', label: 'Call', correct: true },
-      { id: 'fold', label: 'Fold', correct: false },
-    ],
-    explanation: 'Como maior stack na bolha, você pode chamar shoves mais leve — se perder, ainda tem 27bb. A9o tem boa equity contra range de shove de 8bb. Alem disso, eliminar alguem garante que a bolha estoura.',
-    concept: 'Stacks grandes na bolha podem chamar mais — o custo de perder é menor em ICM.'
+
+  // 10. Bolha — big stack pode chamar shoves
+  () => {
+    const heroBB = randBB(30, 45)
+    const villainBB = randBB(6, 10)
+    const hand = pick(['A9o', 'A8o', 'ATo', 'KQo', 'KJs', 'QJs', '99', 'TT'])
+    const villainPos = pick(['CO', 'BTN', 'SB'])
+    return {
+      situation: `Bolha. Você é o maior stack (${heroBB}bb). ${villainPos} (${villainBB}bb) shova. Você está no BB com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: 'Call', correct: true },
+        { id: 'fold', label: 'Fold', correct: false },
+      ],
+      explanation: `Como maior stack na bolha, chamar shoves é mais barato em ICM — se perder, ainda tem ${heroBB - villainBB}bb. ${hand} tem boa equity contra range de ${villainBB}bb. Eliminar alguém estoura a bolha.`,
+      concept: 'Stacks grandes na bolha podem chamar mais — o custo de perder é menor em ICM.',
+    }
+  },
+
+  // 11. Mesa final — stack médio com premium vs shove
+  () => {
+    const heroBB = randBB(18, 28)
+    const villainBB = randBB(8, 14)
+    const hand = pick(HANDS_PREMIUM)
+    const players = pick([4, 5])
+    return {
+      situation: `Mesa final de ${players}. Você tem ${heroBB}bb. Short (${villainBB}bb) shova do BTN. Você está no BB com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: 'Call', correct: true },
+        { id: 'fold', label: 'Fold (ICM conservador)', correct: false },
+      ],
+      explanation: `${hand} é call obrigatório mesmo em ICM pesado. Contra range de shove de ${villainBB}bb, sua equity é enorme. Não folde premiums por medo de ICM.`,
+      concept: 'Premiums nunca são fold em ICM. AA/KK/QQ/AKs sempre call contra shoves.',
+    }
+  },
+
+  // 12. ICM — confronto entre stacks médios é ruim
+  () => {
+    const heroBB = randBB(18, 25)
+    const villainBB = randBB(18, 25)
+    const hand = pick(HANDS_MARGINAL)
+    const shortBB = randBB(3, 6)
+    const heroPos = pick(['CO', 'BTN'])
+    const villainPos = pick(['BB', 'SB'])
+    return {
+      situation: `Mesa final. Short stack tem ${shortBB}bb. Você (${heroBB}bb) e ${villainPos} (${villainBB}bb) são stacks médios. Você está no ${heroPos} com ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'raise', label: 'Raise', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `Confronto entre stacks médios na FT é o pior cenário em ICM — ambos podem bustar e o short fica vivo. ${hand} não vale o risco. Deixe o short bustar.`,
+      concept: 'Em ICM, evite confrontos entre stacks médios. O risco mútuo beneficia o short stack.',
+    }
+  },
+
+  // 13. Bolha — SB shove com mão ok contra BB passivo
+  () => {
+    const heroBB = randBB(10, 15)
+    const hand = pick(['A7o', 'A5o', 'K9o', 'KTo', 'QJo', '88', '77'])
+    const bbBB = randBB(12, 18)
+    return {
+      situation: `Bolha. Fold até você no SB com ${heroBB}bb. BB tem ${bbBB}bb e joga muito tight na bolha. Você tem ${hand}.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'shove', label: 'Shove', correct: true },
+        { id: 'fold', label: 'Fold', correct: false },
+      ],
+      explanation: `O BB joga tight na bolha e não vai chamar leve. ${hand} é shove lucrativo — você ganha as blinds sem confronto na maioria das vezes. ICM favorece agressão seletiva.`,
+      concept: 'Na bolha, abuse de jogadores que apertam demais. Eles foldham mais que deveriam.',
+    }
+  },
+
+  // 14. Pay jump grande — fold mão boa
+  () => {
+    const hand = pick(HANDS_MEDIUM)
+    const heroBB = randBB(15, 22)
+    const players = pick([3, 4])
+    return {
+      situation: `Mesa final de ${players}. Pay jump de $${pick([500, 1000, 2000])} entre posições. Outro jogador tem ${pick([4, 5, 6])}bb. Você tem ${heroBB}bb com ${hand}. CO raisa.`,
+      question: 'O que você faz?',
+      options: [
+        { id: 'call', label: 'Call/3-bet', correct: false },
+        { id: 'fold', label: 'Fold', correct: true },
+      ],
+      explanation: `Com pay jump enorme e short prestes a bustar, ${hand} é fold. Cada posição a mais vale muito dinheiro. Sobrevivência > fichas marginais.`,
+      concept: 'Quanto maior o pay jump, mais tight você deve jogar — exceto se for o chip leader.',
+    }
   },
 ]
+
+function generateScenario() {
+  return pick(TEMPLATES)()
+}
 
 function Lesson({ onComplete }) {
   return (
@@ -189,27 +369,21 @@ function Section({ title, children }) {
 
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
-  const [scenarioIdx, setScenarioIdx] = useState(null)
+  const [scenario, setScenario] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [sessionTotal, setSessionTotal] = useState(0)
   const [streak, setStreak] = useState(0)
   const [sessionDone, setSessionDone] = useState(false)
-  const [usedIdxs, setUsedIdxs] = useState([])
 
   function newScenario() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
-    const available = SCENARIOS.map((_, i) => i).filter(i => !usedIdxs.includes(i))
-    const pool = available.length > 0 ? available : SCENARIOS.map((_, i) => i)
-    const idx = pool[Math.floor(Math.random() * pool.length)]
-    setScenarioIdx(idx)
-    setUsedIdxs(prev => [...prev, idx])
+    setScenario(generateScenario())
     setFeedback(null)
   }
 
   function answer(optionId) {
-    if (scenarioIdx === null || feedback) return
-    const scenario = SCENARIOS[scenarioIdx]
+    if (!scenario || feedback) return
     const chosen = scenario.options.find(o => o.id === optionId)
     const isCorrect = chosen.correct
     const newStreak = isCorrect ? streak + 1 : 0
@@ -222,9 +396,9 @@ function Trainer() {
     setFeedback({ isCorrect, explanation: scenario.explanation, concept: scenario.concept, correctLabel: scenario.options.find(o => o.correct).label, isLast })
   }
 
-  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setScenarioIdx(null); setUsedIdxs([]) }
+  function restart() { setSessionCorrect(0); setSessionTotal(0); setStreak(0); setSessionDone(false); setFeedback(null); setScenario(null) }
 
-  if (scenarioIdx === null && !sessionDone) newScenario()
+  if (!scenario && !sessionDone) newScenario()
 
   if (sessionDone) {
     const acc = Math.round((sessionCorrect / sessionTotal) * 100)
@@ -238,13 +412,11 @@ function Trainer() {
     )
   }
 
-  const scenario = scenarioIdx !== null ? SCENARIOS[scenarioIdx] : null
-
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
-        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenarios</div>
+        <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenários</div>
       </div>
       <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
