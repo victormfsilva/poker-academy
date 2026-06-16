@@ -12,8 +12,10 @@ function PotOddsCalc() {
   const [bet, setBet] = useState('')
   const [outs, setOuts] = useState('')
 
-  const totalPot = (parseFloat(pot) || 0) + (parseFloat(bet) || 0)
-  const needed = totalPot > 0 ? ((parseFloat(bet) || 0) / totalPot) * 100 : 0
+  const potVal = parseFloat(pot) || 0
+  const betVal = parseFloat(bet) || 0
+  const totalPot = potVal + betVal + betVal // pot + aposta adversário + seu call
+  const needed = totalPot > 0 ? (betVal / totalPot) * 100 : 0
   const outsNum = parseInt(outs) || 0
   const equityFlop = outsNum * 4
   const equityTurn = outsNum * 2
@@ -40,7 +42,7 @@ function PotOddsCalc() {
         <div className="rounded-lg p-4 mb-4 text-center" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
           <div style={{ color: '#888', fontSize: 12 }}>EQUIDADE MÍNIMA PARA CALL</div>
           <div style={{ color: '#e94560', fontSize: 36, fontWeight: 700 }}>{needed.toFixed(1)}%</div>
-          <div style={{ color: '#666', fontSize: 13 }}>Você paga {parseFloat(bet).toFixed(1)}bb para ganhar {totalPot.toFixed(1)}bb no total</div>
+          <div style={{ color: '#666', fontSize: 13 }}>Você paga {betVal.toFixed(1)}bb para ganhar {(potVal + betVal).toFixed(1)}bb no pote</div>
         </div>
       )}
       <div>
