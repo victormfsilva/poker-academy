@@ -99,7 +99,7 @@ const CBET_SIZES = ['33%', '50%', '75%']
 
 function getCorrectAction(hole, flop, cbetSize) {
   const texture = getBoardTexture(flop)
-  const potOdds = cbetSize === '33%' ? 25 : cbetSize === '50%' ? 33 : 43
+  const potOdds = cbetSize === '33%' ? 20 : cbetSize === '50%' ? 25 : 30
 
   // Mao muito forte: check-raise
   if (hasMadeFlush(hole, flop) || hasSet(hole, flop) || hasTwoPair(hole, flop)) {
@@ -126,7 +126,7 @@ function getCorrectAction(hole, flop, cbetSize) {
     if (cbetSize === '50%') {
       return { action: 'call', reason: `Straight draw com pot odds razoaveis (${potOdds}% necessário, você tem ~32% com 8 outs). Call é correto.` }
     }
-    return { action: 'fold', reason: `Straight draw contra aposta grande (75%) — pot odds ruins (precisa ${potOdds}%, você tem ~32%). Sem implied odds claras, fold é mais seguro.` }
+    return { action: 'fold', reason: `Straight draw contra aposta grande (75%) — você precisa de ${potOdds}% de equity. Com 8 outs você tem ~16% para o turn (regra do 2). Sem implied odds claras, fold é mais seguro.` }
   }
 
   // Par médio/baixo: call se sizing pequeno, fold se grande
