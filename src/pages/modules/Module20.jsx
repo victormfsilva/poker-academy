@@ -305,12 +305,18 @@ function Trainer() {
   )
 }
 
-export default function Module21() {
+export default function Module20() {
   const { progress, markLessonRead } = useProgress()
-  const mod = progress.modules[21]
+  const mod = progress.modules[20]
+
+  if (!mod?.unlocked) return (
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4 flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 19 para desbloquear.</p></div>
+    </div>
+  )
 
   if (!mod?.lessonRead) {
-    return <Lesson onComplete={() => markLessonRead(21)} />
+    return <Lesson onComplete={() => markLessonRead(20)} />
   }
   return <Trainer />
 }

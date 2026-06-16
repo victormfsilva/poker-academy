@@ -191,7 +191,7 @@ function Trainer() {
 
   function handleNext() {
     if (current + 1 >= SCENARIOS.length) {
-      const accuracy = Math.round((score + (selected?.correct ? 0 : 0)) / SCENARIOS.length * 100)
+      const accuracy = Math.round(score / SCENARIOS.length * 100)
       recordSession(19, accuracy)
       setFinished(true)
     } else {
@@ -272,12 +272,18 @@ function Trainer() {
   )
 }
 
-export default function Module20() {
+export default function Module19() {
   const { progress, markLessonRead } = useProgress()
-  const mod = progress.modules[20]
+  const mod = progress.modules[19]
+
+  if (!mod?.unlocked) return (
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4 flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 18 para desbloquear.</p></div>
+    </div>
+  )
 
   if (!mod?.lessonRead) {
-    return <Lesson onComplete={() => markLessonRead(20)} />
+    return <Lesson onComplete={() => markLessonRead(19)} />
   }
   return <Trainer />
 }
