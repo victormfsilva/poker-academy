@@ -82,13 +82,13 @@ export default function Dashboard() {
         {/* Stats globais */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: 'Mãos Treinadas', value: progress.globalStats.totalHands },
-            { label: 'Taxa de Acerto', value: `${globalAcc}%` },
-            { label: 'Melhor Sequência', value: progress.globalStats.bestStreak },
+            { label: 'Mãos Treinadas', value: progress.globalStats.totalHands, color: '#4a90e2' },
+            { label: 'Taxa de Acerto', value: `${globalAcc}%`, color: globalAcc >= 90 ? '#00d4aa' : globalAcc >= 60 ? '#f5a623' : '#e94560' },
+            { label: 'Melhor Sequência', value: progress.globalStats.bestStreak, color: '#f5a623' },
           ].map(s => (
             <div key={s.label} className="rounded-xl p-4 text-center"
               style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-              <div style={{ color: '#e94560', fontSize: 24, fontWeight: 700 }}>{s.value}</div>
+              <div style={{ color: s.color, fontSize: 24, fontWeight: 700 }}>{s.value}</div>
               <div style={{ color: '#666', fontSize: 12, marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
@@ -127,7 +127,7 @@ export default function Dashboard() {
                 style={{
                   background: '#12121a',
                   border: `1px solid ${p.completed ? '#00d4aa' : locked ? '#1e1e2e' : '#1e1e2e'}`,
-                  opacity: locked ? 0.5 : 1,
+                  opacity: locked ? 0.6 : 1,
                 }}
               >
                 <div className="flex items-center justify-between">

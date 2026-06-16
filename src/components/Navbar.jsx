@@ -46,7 +46,7 @@ export default function Navbar({ user }) {
           <button
             onClick={handleLogout}
             className="px-3 py-2 rounded-lg text-sm"
-            style={{ color: '#666', border: '1px solid #1e1e2e' }}
+            style={{ color: '#888', border: '1px solid #333', fontWeight: 500 }}
           >
             Sair
           </button>

@@ -42,7 +42,7 @@ export default function Modules() {
             const goodSessions = (p.trainerSessions || []).slice(-2).filter(s => s.accuracy >= 90).length
 
             return (
-              <div key={m.id} className="rounded-xl overflow-hidden" style={{ background: '#12121a', border: `1px solid ${p.completed ? '#00d4aa' : locked ? '#1e1e2e' : '#1e1e2e'}`, opacity: locked ? 0.5 : 1 }}>
+              <div key={m.id} className="rounded-xl overflow-hidden" style={{ background: '#12121a', border: `1px solid ${p.completed ? '#00d4aa' : locked ? '#1e1e2e' : '#1e1e2e'}`, opacity: locked ? 0.6 : 1 }}>
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
