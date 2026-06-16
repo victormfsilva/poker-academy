@@ -16,6 +16,7 @@ const STATUS_COLORS = {
   call:  { bg: '#4a90e2', text: '#0a0a0f' },
   threebet: { bg: '#e94560', text: 'white' },
   push:  { bg: '#00d4aa', text: '#0a0a0f' },
+  complete: { bg: '#f5a623', text: '#0a0a0f' },
 }
 
 /**
