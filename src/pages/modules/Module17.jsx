@@ -57,23 +57,27 @@ const TEMPLATES = [
     }
   },
 
-  // 3. Satélite — sobrevivência extrema
+  // 3. Satélite — sobrevivência extrema (mas premiums ainda são call)
   () => {
     const totalPlayers = pick([10, 15, 20])
     const vagas = Math.floor(totalPlayers / 2)
     const heroBB = randBB(15, 30)
-    const hand = pick([...HANDS_STRONG, ...HANDS_MEDIUM])
+    const isPremium = Math.random() > 0.6
+    const hand = isPremium ? pick(['AA', 'KK']) : pick([...HANDS_MEDIUM, 'AJo', 'KQo', 'TT', '99'])
     const villainBB = randBB(8, 15)
     const villainPos = pick(['UTG', 'CO', 'BTN'])
+    const shouldCall = isPremium
     return {
       situation: `Satélite. ${totalPlayers} jogadores, ${vagas} vagas (prêmio igual). Você tem ${heroBB}bb. ${villainPos} (${villainBB}bb) shova. Você tem ${hand} no BB.`,
       question: 'O que você faz?',
       options: [
-        { id: 'call', label: 'Call', correct: false },
-        { id: 'fold', label: 'Fold', correct: true },
+        { id: 'call', label: 'Call', correct: shouldCall },
+        { id: 'fold', label: 'Fold', correct: !shouldCall },
       ],
-      explanation: `Em satélite com prêmio igual, ICM é EXTREMO. Dobrar fichas não muda seu prêmio. Bustar perde tudo. Com ${heroBB}bb você sobrevive. Mesmo ${hand} é fold.`,
-      concept: 'Em satélites, sobrevivência é TUDO. Não arrisque quando já tem stack pra garantir a vaga.',
+      explanation: shouldCall
+        ? `Mesmo em satélite, ${hand} é forte demais para foldar. Você tem equity massiva contra qualquer range de shove. Fold aqui seria um erro.`
+        : `Em satélite com prêmio igual, ICM é EXTREMO. Dobrar fichas não muda seu prêmio. Bustar perde tudo. Com ${heroBB}bb você sobrevive. ${hand} é fold — reserve calls para AA/KK.`,
+      concept: 'Em satélites, sobrevivência é prioridade. Mas AA/KK ainda são call — a equity é grande demais para foldar.',
     }
   },
 
@@ -336,9 +340,9 @@ const TEMPLATES = [
         { id: 'fold', label: 'Fold', correct: bf > 1.5 },
       ],
       explanation: bf > 1.5
-        ? `Bubble factor ${bf}x significa que voce precisa de ${Math.round(50 * bf)}% de equity pra break even (em vez de 50%). ${hand} raramente tem isso contra um range de shove. Fold.`
-        : `Bubble factor ${bf}x é moderado — voce precisa de ~${Math.round(50 * bf)}% equity. ${hand} tem equity suficiente contra range amplo de shove do BTN. Call.`,
-      concept: `Bubble factor: multiplique a equity necessária. BF 1.0 = ChipEV. BF 1.5 = precisa 75% equity. BF 2.0 = precisa 100% (impossível = fold tudo).`,
+        ? `Bubble factor ${bf}x: equity necessaria = ${bf}/(1+${bf}) = ${Math.round(bf / (1 + bf) * 100)}%. ${hand} raramente tem isso contra um range de shove equilibrado. Fold.`
+        : `Bubble factor ${bf}x é moderado — equity necessaria = ${Math.round(bf / (1 + bf) * 100)}%. ${hand} tem equity suficiente contra range amplo de shove do BTN. Call.`,
+      concept: `Bubble factor: equity necessaria = BF/(1+BF). BF 1.0 = 50%. BF 1.5 = 60%. BF 2.0 = 67%.`,
     }
   },
 
@@ -457,9 +461,9 @@ function Lesson({ onComplete }) {
             <div className="space-y-2">
               {[
                 { bf: '1.0', meaning: 'ChipEV puro (inicio torneio)', example: 'Precisa 50% equity', color: '#00d4aa' },
-                { bf: '1.3', meaning: 'ICM leve (longe da bolha)', example: 'Precisa 65% equity', color: '#4a90e2' },
-                { bf: '1.5-2.0', meaning: 'ICM pesado (bolha)', example: 'Precisa 75-100% equity', color: '#f5a623' },
-                { bf: '2.0+', meaning: 'ICM extremo (satelite/FT curta)', example: 'Fold quase tudo', color: '#e94560' },
+                { bf: '1.3', meaning: 'ICM leve (longe da bolha)', example: 'Precisa 57% equity', color: '#4a90e2' },
+                { bf: '1.5-2.0', meaning: 'ICM pesado (bolha)', example: 'Precisa 60-67% equity', color: '#f5a623' },
+                { bf: '2.0+', meaning: 'ICM extremo (satelite/FT curta)', example: 'Precisa 67%+ equity', color: '#e94560' },
               ].map(r => (
                 <div key={r.bf} className="flex justify-between items-center">
                   <div>
@@ -471,7 +475,7 @@ function Lesson({ onComplete }) {
               ))}
             </div>
           </div>
-          <p style={{ color: '#888', fontSize: 13, marginTop: 8 }}>Formula: Equity necessaria = 50% x BF. Se BF = 2.0, voce precisa de 100% — impossivel, entao fold.</p>
+          <p style={{ color: '#888', fontSize: 13, marginTop: 8 }}>Formula: Equity necessaria = BF / (1 + BF). Se BF = 1.5, precisa de 60%. Se BF = 2.0, precisa de 67%.</p>
         </Section>
 
         <Section title="Risk Premium">

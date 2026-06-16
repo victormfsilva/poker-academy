@@ -110,7 +110,7 @@ const TEMPLATES = [
   // 6. Flush feito multiway — apostar grande
   () => {
     const flop = pick(['7s-6s-5s', '9h-8h-4h', 'Td-7d-3d', 'Qs-8s-2s', 'Jh-6h-3h'])
-    const hand = pick(['As-2s', 'Ah-5h', 'Kd-9d', 'Ks-4s', 'Ad-6d'].filter(() => Math.random() > 0.3))
+    const hand = pick(['As-2s', 'Ah-5h', 'Kd-9d', 'Ks-4s', 'Ad-6d'])
     const players = pick([3, 4])
     return {
       situation: `Flop: ${flop || '7s-6s-5s'}. Pote multiway (${players} jogadores). Você tem flush feito. Primeiro a agir.`,
@@ -143,9 +143,10 @@ const TEMPLATES = [
 
   // 8. Set em board úmido — apostar agressivo
   () => {
-    const setCard = pick(['T', 'J', '8', '9', '7', '6'])
-    const hand = `${setCard}${setCard}`
     const flop = pick(FLOPS_WET)
+    const flopRanks = flop.split('-').map(c => c.replace(/[^A-Z0-9]/gi, '').charAt(0)).filter(r => 'AKQJT98765432'.includes(r))
+    const setCard = pick(flopRanks) || 'T'
+    const hand = `${setCard}${setCard}`
     const players = pick([3, 4])
     return {
       situation: `Flop: ${flop}. Pote multiway (${players} jogadores). Você está OOP com ${hand} (set).`,

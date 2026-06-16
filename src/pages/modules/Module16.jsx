@@ -68,10 +68,11 @@ const TEMPLATES = [
 
   // 3. Villain regular forte, jogar GTO
   () => {
-    const heroPos = pick(['BB', 'SB', 'BTN', 'CO'])
+    const isCallSpot = Math.random() > 0.5
+    const heroPos = isCallSpot ? pick(['BB', 'BTN']) : pick(['BB', 'SB', 'BTN'])
     const villainPos = pick(POSITIONS.filter(p => p !== heroPos && p !== 'BB' && p !== 'SB'))
-    const hand = pick([...HANDS_MEDIUM, ...HANDS_LIGHT])
-    const gtoAction = pick(['call', 'raise'])
+    const hand = isCallSpot ? pick(['KJs', 'QTs', 'JTs', 'T9s', '98s', 'A9s']) : pick(['QQ', 'JJ', 'AKs', 'AKo', 'AQs'])
+    const gtoAction = isCallSpot ? 'call' : 'raise'
     return {
       situation: `Você está no ${heroPos} com ${hand}. ${villainPos} (regular forte, joga GTO) fez raise.${gtoAction === 'call' ? ' GTO diz call.' : ' GTO diz 3-bet.'}`,
       question: 'O que você faz?',

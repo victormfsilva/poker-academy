@@ -362,6 +362,9 @@ function Trainer() {
 
   const scenario = scenarios[current]
 
+  const scoreRef = { current: score }
+  scoreRef.current = score
+
   function handleSelect(option) {
     if (showResult) return
     setSelected(option)
@@ -374,8 +377,9 @@ function Trainer() {
   }
 
   function handleNext() {
+    const finalScore = score + (selected?.correct ? 1 : 0)
     if (current + 1 >= 10) {
-      const accuracy = Math.round(score / 10 * 100)
+      const accuracy = Math.round(finalScore / 10 * 100)
       recordSession(20, accuracy)
       setFinished(true)
     } else {

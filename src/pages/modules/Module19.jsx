@@ -32,11 +32,17 @@ const TEMPLATES = [
 
   // 2. Flush draw blocker — não completou
   () => {
-    const suit = pick(['copas', 'espadas', 'ouros'])
-    const suitChar = suit === 'copas' ? 'h' : suit === 'espadas' ? 's' : 'd'
+    const FLUSH_BOARDS = [
+      { board: 'Kh-Qh-7s-3d-2c', suit: 'copas', suitChar: 'h' },
+      { board: 'Ah-9h-5s-3d-Jc', suit: 'copas', suitChar: 'h' },
+      { board: 'Ks-Ts-4h-7d-2c', suit: 'espadas', suitChar: 's' },
+      { board: 'Qd-8d-3s-5h-Jc', suit: 'ouros', suitChar: 'd' },
+      { board: 'Jh-7h-2s-4d-9c', suit: 'copas', suitChar: 'h' },
+    ]
+    const spot = pick(FLUSH_BOARDS)
+    const { board, suit, suitChar } = spot
     const r1 = pick(['9', 'T', 'J', '8', '7'])
     const r2 = pick(['6', '5', '4', '3', '2'])
-    const board = pick(BOARDS_FLUSH)
     return {
       situation: `River: ${board}. Flush draw de ${suit} NÃO completou. Vilão apostou flop e turn. Você tem ${r1}${suitChar}${r2}${suitChar} (duas cartas de ${suit}, sem nada).`,
       question: 'Você deve raise blefe no river?',
@@ -85,8 +91,16 @@ const TEMPLATES = [
 
   // 5. Straight blocker — sizing menor
   () => {
-    const board = pick(BOARDS_STRAIGHT)
-    const hand = pick(['T9', '98', '87', 'JT', 'QJ'])
+    const straightSpots = [
+      { board: 'Q-J-T-4-2', hands: ['AK', 'K9', '98'] },
+      { board: 'J-T-9-3-7', hands: ['KQ', 'Q8', '86'] },
+      { board: 'T-9-8-2-K', hands: ['QJ', 'J7', '76'] },
+      { board: '9-8-7-A-3', hands: ['JT', 'T6', '65'] },
+      { board: '8-7-6-K-2', hands: ['T9', '95', '54'] },
+    ]
+    const spot = pick(straightSpots)
+    const board = spot.board
+    const hand = pick(spot.hands)
     return {
       situation: `River: board ${board}. Você tem ${hand} (straight). Vilão checou.`,
       question: 'Quão grande apostar?',
