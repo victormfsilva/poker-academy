@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import Card, { parseCard, handToCards } from '../components/Card'
 import { BLIND_WARS, BB_VS_RFI } from '../data/ranges'
 
@@ -510,6 +510,7 @@ export default function Arena() {
   const [match, setMatch] = useState(() => loadMatch())
   const [gameState, setGameState] = useState(null)
   const [feedback, setFeedback] = useState(null)
+  const [betSize, setBetSize] = useState(0)
 
   // Persist match on every change
   const updateMatch = useCallback((updater) => {
@@ -680,10 +681,11 @@ export default function Arena() {
     }
   }, [resolveHand])
 
-  const handleHeroAction = useCallback((action) => {
+  const handleHeroAction = useCallback((action, customSize) => {
     if (!gameState || gameState.result || gameState.heroActed) return
 
     const gs = { ...gameState }
+    const heroStack = match?.heroStack || STARTING_STACK
 
     // Record feedback
     let fb = null
@@ -719,12 +721,14 @@ export default function Arena() {
     let newPot = gs.pot
     let newLastBet = 0
     let heroLabel = ''
+    const isAllIn = customSize >= heroStack - gs.heroChipsInPot
 
     if (action === 'bet' || action === 'raise') {
-      const betSize = action === 'raise' ? Math.max(gs.lastBet * 2.5, gs.blinds.bb * 2) : gs.pot * 0.66
-      newPot += betSize + (gs.lastBet > 0 ? gs.lastBet : 0)
-      newLastBet = betSize
-      heroLabel = action === 'raise' ? `Raise ${betSize.toFixed(0)}` : `Bet ${betSize.toFixed(0)}`
+      const size = customSize || (action === 'raise' ? Math.max(gs.lastBet * 2.5, gs.blinds.bb * 2) : gs.pot * 0.66)
+      const actualSize = Math.min(size, heroStack - gs.heroChipsInPot) // cap at remaining stack
+      newPot += actualSize + (gs.lastBet > 0 ? gs.lastBet : 0)
+      newLastBet = actualSize
+      heroLabel = isAllIn ? `All-In ${actualSize.toFixed(0)}` : action === 'raise' ? `Raise ${actualSize.toFixed(0)}` : `Bet ${actualSize.toFixed(0)}`
     } else if (action === 'call') {
       newPot += gs.lastBet
       heroLabel = 'Call'
@@ -734,6 +738,7 @@ export default function Arena() {
 
     gs.pot = newPot
     gs.heroActed = true
+    gs.heroChipsInPot = (gs.heroChipsInPot || 0) + (newLastBet || (action === 'call' ? gs.lastBet : 0))
     gs.actions = [...gs.actions, { who: 'hero', action, label: heroLabel }]
 
     // Bot response
@@ -770,12 +775,12 @@ export default function Arena() {
       if (!gs.villainActed) {
         const botAction = botDecision(gs.villainCards, gs.board, gs.street, gs.pot, 0, !gs.heroIsBtn)
         if (botAction === 'bet') {
-          const betSize = Math.round(gs.pot * 0.66)
-          gs.pot += betSize
-          gs.lastBet = betSize
+          const bSize = Math.round(gs.pot * 0.66)
+          gs.pot += bSize
+          gs.lastBet = bSize
           gs.villainActed = true
           gs.heroActed = false
-          gs.actions = [...gs.actions, { who: 'villain', action: 'bet', label: `Bet ${betSize}` }]
+          gs.actions = [...gs.actions, { who: 'villain', action: 'bet', label: `Bet ${bSize}` }]
           setGameState({ ...gs })
           setFeedback(null)
           return
@@ -797,46 +802,32 @@ export default function Arena() {
 
     const nextGs = advanceStreet(gs)
     setGameState(nextGs)
-  }, [gameState, advanceStreet, resolveHand, updateMatch])
+  }, [gameState, match, advanceStreet, resolveHand, updateMatch])
 
-  // Determine available actions
-  const getActions = () => {
-    if (!gameState || gameState.result) return []
+  // Sizing limits for the slider
+  const sizingInfo = useMemo(() => {
+    if (!gameState || gameState.result || !match) return null
+    const heroRemaining = match.heroStack - (gameState.heroChipsInPot || 0)
     const bb = gameState.blinds?.bb || 2
+    const facingBet = gameState.lastBet > 0
 
-    if (gameState.street === 'preflop') {
-      if (gameState.heroIsBtn) {
-        return [
-          { id: 'fold', label: 'Fold', bg: '#e5484d' },
-          { id: 'call', label: 'Complete', bg: '#0a84d7' },
-          { id: 'raise', label: `Raise ${(bb * 2.5).toFixed(0)}`, bg: '#4fce82' },
-        ]
-      }
-      if (gameState.lastBet > 0) {
-        return [
-          { id: 'fold', label: 'Fold', bg: '#e5484d' },
-          { id: 'call', label: 'Call', bg: '#0a84d7' },
-          { id: 'raise', label: '3-Bet', bg: '#4fce82' },
-        ]
-      }
-      return [
-        { id: 'check', label: 'Check', bg: '#0a84d7' },
-        { id: 'raise', label: 'Raise', bg: '#4fce82' },
-      ]
+    if (facingBet) {
+      // Raise: min = 2x last bet, max = all-in
+      const minRaise = Math.min(gameState.lastBet * 2, heroRemaining)
+      return { minBet: minRaise, maxBet: heroRemaining, defaultBet: Math.min(gameState.lastBet * 2.5, heroRemaining), canBet: heroRemaining > gameState.lastBet, action: 'raise' }
     }
+    // Bet: min = 1bb, max = all-in
+    const minBet = Math.min(bb, heroRemaining)
+    return { minBet, maxBet: heroRemaining, defaultBet: Math.min(Math.round(gameState.pot * 0.66), heroRemaining), canBet: true, action: 'bet' }
+  }, [gameState, match])
 
-    if (gameState.lastBet > 0) {
-      return [
-        { id: 'fold', label: 'Fold', bg: '#e5484d' },
-        { id: 'call', label: `Call ${gameState.lastBet.toFixed(0)}`, bg: '#0a84d7' },
-        { id: 'raise', label: 'Raise', bg: '#4fce82' },
-      ]
+  // Reset betSize when sizing context changes
+  const prevSizingRef = useRef(null)
+  if (sizingInfo && sizingInfo !== prevSizingRef.current) {
+    if (prevSizingRef.current?.defaultBet !== sizingInfo.defaultBet) {
+      setBetSize(sizingInfo.defaultBet)
     }
-
-    return [
-      { id: 'check', label: 'Check', bg: '#0a84d7' },
-      { id: 'bet', label: 'Bet 66%', bg: '#4fce82' },
-    ]
+    prevSizingRef.current = sizingInfo
   }
 
   // Check match over
@@ -1062,17 +1053,120 @@ export default function Arena() {
                 {/* Action buttons */}
                 <div className="mb-4">
                   {!gameState.heroActed ? (
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {getActions().map(b => (
-                        <button key={b.id} onClick={() => handleHeroAction(b.id)}
+                    <div>
+                      {/* Slider de sizing */}
+                      {sizingInfo && sizingInfo.canBet && (
+                        <div className="rounded-xl px-4 py-3 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span style={{ color: '#676671', fontSize: 11, fontWeight: 600 }}>
+                              {gameState.lastBet > 0 ? 'RAISE' : 'BET'}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                value={betSize}
+                                onChange={e => {
+                                  const v = Math.max(sizingInfo.minBet, Math.min(sizingInfo.maxBet, Number(e.target.value) || 0))
+                                  setBetSize(v)
+                                }}
+                                style={{
+                                  width: 60, background: '#2a2a2e', border: '1px solid #3a3a42', borderRadius: 6,
+                                  color: '#fdfdfd', fontSize: 14, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                                  textAlign: 'center', padding: '4px 6px', outline: 'none',
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <input
+                            type="range"
+                            min={sizingInfo.minBet}
+                            max={sizingInfo.maxBet}
+                            step={1}
+                            value={betSize}
+                            onChange={e => setBetSize(Number(e.target.value))}
+                            style={{ width: '100%', accentColor: '#4fce82', cursor: 'pointer' }}
+                          />
+                          <div className="flex justify-between mt-1" style={{ fontSize: 10, color: '#676671' }}>
+                            <span>Min {sizingInfo.minBet}</span>
+                            <div className="flex gap-2">
+                              {[0.33, 0.5, 0.66, 1].map(pct => {
+                                const val = Math.min(Math.round(gameState.pot * pct), sizingInfo.maxBet)
+                                return (
+                                  <button key={pct} onClick={() => setBetSize(val)}
+                                    style={{
+                                      padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+                                      background: '#2a2a2e', color: '#b3b3b8', border: 'none', cursor: 'pointer',
+                                    }}>
+                                    {pct === 1 ? 'Pot' : `${Math.round(pct * 100)}%`}
+                                  </button>
+                                )
+                              })}
+                              <button onClick={() => setBetSize(sizingInfo.maxBet)}
+                                style={{
+                                  padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+                                  background: '#ff8f00', color: '#0f0f0f', border: 'none', cursor: 'pointer',
+                                }}>
+                                All-In
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Botoes de acao */}
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => handleHeroAction('fold')}
                           style={{
                             flex: 1, padding: '14px 4px', borderRadius: 8,
                             fontWeight: 600, fontSize: 13, border: 'none',
-                            cursor: 'pointer', color: '#0f0f0f', background: b.bg,
+                            cursor: 'pointer', color: '#0f0f0f', background: '#e5484d',
                           }}>
-                          {b.label}
+                          Fold
                         </button>
-                      ))}
+                        {gameState.lastBet > 0 ? (
+                          <>
+                            <button onClick={() => handleHeroAction('call')}
+                              style={{
+                                flex: 1, padding: '14px 4px', borderRadius: 8,
+                                fontWeight: 600, fontSize: 13, border: 'none',
+                                cursor: 'pointer', color: '#0f0f0f', background: '#0a84d7',
+                              }}>
+                              Call {gameState.lastBet.toFixed(0)}
+                            </button>
+                            {sizingInfo?.canBet && (
+                              <button onClick={() => handleHeroAction('raise', betSize)}
+                                style={{
+                                  flex: 1, padding: '14px 4px', borderRadius: 8,
+                                  fontWeight: 600, fontSize: 13, border: 'none',
+                                  cursor: 'pointer', color: '#0f0f0f',
+                                  background: betSize >= sizingInfo.maxBet ? '#ff8f00' : '#4fce82',
+                                }}>
+                                {betSize >= sizingInfo.maxBet ? `All-In` : `Raise ${betSize}`}
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => handleHeroAction('check')}
+                              style={{
+                                flex: 1, padding: '14px 4px', borderRadius: 8,
+                                fontWeight: 600, fontSize: 13, border: 'none',
+                                cursor: 'pointer', color: '#0f0f0f', background: '#0a84d7',
+                              }}>
+                              Check
+                            </button>
+                            <button onClick={() => handleHeroAction('bet', betSize)}
+                              style={{
+                                flex: 1, padding: '14px 4px', borderRadius: 8,
+                                fontWeight: 600, fontSize: 13, border: 'none',
+                                cursor: 'pointer', color: '#0f0f0f',
+                                background: betSize >= sizingInfo?.maxBet ? '#ff8f00' : '#4fce82',
+                              }}>
+                              {betSize >= sizingInfo?.maxBet ? `All-In` : `Bet ${betSize}`}
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <button onClick={() => {
