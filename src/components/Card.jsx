@@ -1,7 +1,7 @@
-// Componente de carta estilo GTO Wizard — cor de fundo = naipe, rank branco centralizado
+// Cartas estilo GTO Wizard — bloco contiguo, cor de fundo = naipe, rank branco
 
-// 4-color: spades=cinza escuro, hearts=vermelho, diamonds=azul, clubs=verde
-const SUIT_BG = { s: '#5a5a6e', h: '#c0392b', d: '#2980b9', c: '#27ae60' }
+// Cores extraidas do GTO Wizard (screenshot real)
+const SUIT_BG = { s: '#4b4b5e', h: '#b8312a', d: '#2563b5', c: '#48824a' }
 
 export function parseCard(str) {
   if (!str || str.length < 2) return null
@@ -35,17 +35,25 @@ export function handToCards(hand) {
   return [ranks[0] + 's', ranks[1] + 'h']
 }
 
-export default function Card({ card, size = 'md' }) {
+export default function Card({ card, size = 'md', position }) {
   const parsed = typeof card === 'string' ? parseCard(card) : card
   if (!parsed) return null
 
   const { rank, suit } = parsed
-  const bg = SUIT_BG[suit] || '#5a5a6e'
+  const bg = SUIT_BG[suit] || '#4b4b5e'
   const rankDisplay = rank === 'T' ? '10' : rank
 
   const dims = size === 'sm'
-    ? { w: 28, h: 36, r: 5, fs: 15, fw: 800 }
-    : { w: 38, h: 50, r: 6, fs: 20, fw: 800 }
+    ? { w: 26, h: 34, fs: 15, fw: 700 }
+    : size === 'lg'
+    ? { w: 44, h: 54, fs: 26, fw: 700 }
+    : { w: 36, h: 44, fs: 21, fw: 700 }
+
+  // Cantos: so arredonda nas extremidades do grupo
+  let borderRadius = 0
+  if (position === 'first') borderRadius = `5px 0 0 5px`
+  else if (position === 'last') borderRadius = `0 5px 5px 0`
+  else if (position === 'single' || !position) borderRadius = 5
 
   return (
     <div
@@ -53,18 +61,32 @@ export default function Card({ card, size = 'md' }) {
       style={{
         width: dims.w,
         height: dims.h,
-        borderRadius: dims.r,
+        borderRadius,
         background: bg,
         color: '#ffffff',
         fontFamily: 'Poppins, sans-serif',
         fontWeight: dims.fw,
         fontSize: dims.fs,
         lineHeight: 1,
-        boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
-        letterSpacing: -0.5,
       }}
     >
       {rankDisplay}
+    </div>
+  )
+}
+
+// Grupo de cartas contiguas (sem gap, cantos so nas pontas)
+export function CardGroup({ cards, size = 'md' }) {
+  if (!cards || cards.length === 0) return null
+  return (
+    <div className="inline-flex" style={{ borderRadius: 5, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+      {cards.map((c, i) => {
+        const pos = cards.length === 1 ? 'single'
+          : i === 0 ? 'first'
+          : i === cards.length - 1 ? 'last'
+          : 'middle'
+        return <Card key={i} card={c} size={size} position={pos} />
+      })}
     </div>
   )
 }
