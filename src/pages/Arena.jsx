@@ -468,103 +468,195 @@ function streetName(s) {
   return { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', showdown: 'Showdown' }[s] || s
 }
 
+// ─── Blind structure (sobe a cada 5 maos) ─────────────────
+const BLIND_LEVELS = [
+  { sb: 1, bb: 2 },
+  { sb: 2, bb: 4 },
+  { sb: 3, bb: 6 },
+  { sb: 5, bb: 10 },
+  { sb: 7, bb: 14 },
+  { sb: 10, bb: 20 },
+  { sb: 15, bb: 30 },
+  { sb: 20, bb: 40 },
+  { sb: 30, bb: 60 },
+  { sb: 50, bb: 100 },
+  { sb: 75, bb: 150 },
+  { sb: 100, bb: 200 },
+]
+const HANDS_PER_LEVEL = 5
+const STARTING_STACK = 500
+
+// ─── localStorage helpers ─────────────────────────────────
+const STORAGE_KEY = 'poker-arena-match'
+
+function saveMatch(match) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(match)) } catch {}
+}
+
+function loadMatch() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+function clearMatch() {
+  try { localStorage.removeItem(STORAGE_KEY) } catch {}
+}
+
 // ─── Componente principal ─────────────────────────────────
 export default function Arena() {
+  // Match = partida longa (muitas maos ate alguem zerar)
+  const [match, setMatch] = useState(() => loadMatch())
   const [gameState, setGameState] = useState(null)
-  const [heroAction, setHeroAction] = useState(null)
   const [feedback, setFeedback] = useState(null)
-  const [handHistory, setHandHistory] = useState([])
-  const [stats, setStats] = useState({ hands: 0, won: 0, correctActions: 0, totalActions: 0 })
-  const deckRef = useRef(null)
+
+  // Persist match on every change
+  const updateMatch = useCallback((updater) => {
+    setMatch(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      if (next) saveMatch(next)
+      return next
+    })
+  }, [])
+
+  const getBlinds = useCallback((handNum) => {
+    const levelIdx = Math.min(Math.floor(handNum / HANDS_PER_LEVEL), BLIND_LEVELS.length - 1)
+    return BLIND_LEVELS[levelIdx]
+  }, [])
+
+  const startMatch = useCallback(() => {
+    const m = {
+      heroStack: STARTING_STACK,
+      villainStack: STARTING_STACK,
+      handNum: 0,
+      stats: { hands: 0, won: 0, correctActions: 0, totalActions: 0 },
+      handHistory: [],
+      matchOver: false,
+      winner: null,
+    }
+    updateMatch(m)
+    setGameState(null)
+    setFeedback(null)
+  }, [updateMatch])
 
   const startNewHand = useCallback(() => {
+    if (!match || match.matchOver) return
+
     const deck = newDeck()
-    deckRef.current = deck
-    const heroIsBtn = Math.random() < 0.5
+    const heroIsBtn = match.handNum % 2 === 0 // alternate positions
+    const blinds = getBlinds(match.handNum)
 
     const heroCards = [deck[0], deck[1]]
     const villainCards = [deck[2], deck[3]]
-    // Pre-deal flop, turn, river
     const fullBoard = [deck[4], deck[5], deck[6], deck[7], deck[8]]
 
-    // Pre-flop: BTN/SB posts 0.5, BB posts 1. BTN acts first.
-    // If hero is BTN: hero acts first, facing 1bb (the BB).
-    // If hero is BB: villain (BTN) acts first — bot decides.
+    // Post blinds
+    const heroPosts = heroIsBtn ? blinds.sb : blinds.bb
+    const villainPosts = heroIsBtn ? blinds.bb : blinds.sb
+
     const gs = {
       heroCards,
       villainCards,
       fullBoard,
       board: [],
       street: 'preflop',
-      pot: 1.5, // SB (0.5) + BB (1)
+      pot: heroPosts + villainPosts,
       heroIsBtn,
-      heroStack: 99,
-      villainStack: 99,
-      lastBet: 1, // BB is the "bet" to call pre-flop
+      heroChipsInPot: heroPosts,
+      villainChipsInPot: villainPosts,
+      lastBet: blinds.bb,
       heroActed: false,
       villainActed: false,
       actions: [],
       result: null,
       showVillain: false,
+      blinds,
     }
 
     if (!heroIsBtn) {
-      // Hero is BB, villain is SB. Bot decides using GTO ranges.
-      const botAction = botPreflopDecision(villainCards, true) // bot is SB
+      // Hero is BB, villain is SB — bot acts first
+      const botAction = botPreflopDecision(villainCards, true)
       if (botAction === 'raise') {
-        gs.pot = 1.5 + 2.5
-        gs.lastBet = 2.5
-        gs.actions = [{ who: 'villain', action: 'raise', label: 'Raise 2.5bb' }]
+        const raiseSize = blinds.bb * 2.5
+        gs.pot = heroPosts + raiseSize
+        gs.villainChipsInPot = raiseSize
+        gs.lastBet = raiseSize
+        gs.actions = [{ who: 'villain', action: 'raise', label: `Raise ${raiseSize}` }]
       } else if (botAction === 'call') {
-        // SB limps/completes
-        gs.pot = 2 // 1 + 1 (SB completes to 1bb)
+        gs.pot = blinds.bb * 2
+        gs.villainChipsInPot = blinds.bb
         gs.lastBet = 0
         gs.actions = [{ who: 'villain', action: 'call', label: 'Complete' }]
       } else {
-        // SB folds — hero wins blinds
-        setStats(prev => ({ ...prev, hands: prev.hands + 1, won: prev.won + 1 }))
-        setHandHistory(prev => [{
-          heroCards, villainCards, board: [], winner: 'hero',
-          pot: 1.5, heroHand: 'BB', villainHand: 'SB Fold',
-        }, ...prev].slice(0, 20))
-        gs.result = { winner: 'hero', heroEval: { label: 'SB foldou' }, villainEval: { label: 'Fold' }, pot: 1.5 }
+        // SB folds
+        const winAmount = villainPosts
+        updateMatch(prev => ({
+          ...prev,
+          heroStack: prev.heroStack + winAmount,
+          villainStack: prev.villainStack - winAmount,
+          handNum: prev.handNum + 1,
+          stats: { ...prev.stats, hands: prev.stats.hands + 1, won: prev.stats.won + 1 },
+          handHistory: [{ heroCards, villainCards, board: [], winner: 'hero', pot: gs.pot, heroHand: 'BB', villainHand: 'SB Fold' }, ...prev.handHistory].slice(0, 20),
+        }))
+        gs.result = { winner: 'hero', heroEval: { label: 'SB foldou' }, villainEval: { label: 'Fold' }, pot: gs.pot }
         gs.showVillain = true
       }
       gs.villainActed = true
     }
 
     setGameState(gs)
-    setHeroAction(null)
     setFeedback(null)
-  }, [])
+  }, [match, getBlinds, updateMatch])
+
+  // Resolve hand result — update stacks
+  const resolveHand = useCallback((winner, pot, heroCards, villainCards, board, heroLabel, villainLabel) => {
+    updateMatch(prev => {
+      if (!prev) return prev
+      const heroBet = prev.heroStack >= 0 ? 0 : 0 // chips already subtracted from pot tracking
+      // Winner gets the full pot. Loser already posted their chips.
+      // We track net: hero posted heroChipsInPot, villain posted villainChipsInPot
+      // pot = heroChipsInPot + villainChipsInPot
+      // if hero wins: hero net = +villainChipsInPot, villain net = -villainChipsInPot
+      // For simplicity: heroStack and villainStack are adjusted by the pot result
+      let heroNet = 0, villainNet = 0
+      if (winner === 'hero') { heroNet = pot / 2; villainNet = -pot / 2 }
+      else if (winner === 'villain') { heroNet = -pot / 2; villainNet = pot / 2 }
+      // tie: no change
+
+      const newHeroStack = prev.heroStack + heroNet
+      const newVillainStack = prev.villainStack + villainNet
+      const matchOver = newHeroStack <= 0 || newVillainStack <= 0
+
+      return {
+        ...prev,
+        heroStack: Math.max(0, newHeroStack),
+        villainStack: Math.max(0, newVillainStack),
+        handNum: prev.handNum + 1,
+        stats: {
+          ...prev.stats,
+          hands: prev.stats.hands + 1,
+          won: prev.stats.won + (winner === 'hero' ? 1 : winner === 'tie' ? 0.5 : 0),
+        },
+        handHistory: [{ heroCards, villainCards, board: board || [], winner, pot, heroHand: heroLabel, villainHand: villainLabel }, ...prev.handHistory].slice(0, 20),
+        matchOver,
+        winner: matchOver ? (newHeroStack <= 0 ? 'villain' : 'hero') : null,
+      }
+    })
+  }, [updateMatch])
 
   const advanceStreet = useCallback((gs) => {
     const nextStreets = { preflop: 'flop', flop: 'turn', turn: 'river', river: 'showdown' }
     const next = nextStreets[gs.street]
 
     if (next === 'showdown') {
-      // Showdown
       const board = gs.fullBoard
       const cmp = compareHands(gs.heroCards, gs.villainCards, board)
       const heroEval = evalHand(gs.heroCards, board)
       const villainEval = evalHand(gs.villainCards, board)
       const winner = cmp > 0 ? 'hero' : cmp < 0 ? 'villain' : 'tie'
 
-      setStats(prev => ({
-        ...prev,
-        hands: prev.hands + 1,
-        won: prev.won + (winner === 'hero' ? 1 : winner === 'tie' ? 0.5 : 0),
-      }))
-
-      setHandHistory(prev => [{
-        heroCards: gs.heroCards,
-        villainCards: gs.villainCards,
-        board,
-        winner,
-        pot: gs.pot,
-        heroHand: heroEval.label,
-        villainHand: villainEval.label,
-      }, ...prev].slice(0, 20))
+      resolveHand(winner, gs.pot, gs.heroCards, gs.villainCards, board, heroEval.label, villainEval.label)
 
       return {
         ...gs,
@@ -586,7 +678,7 @@ export default function Arena() {
       heroActed: false,
       villainActed: false,
     }
-  }, [])
+  }, [resolveHand])
 
   const handleHeroAction = useCallback((action) => {
     if (!gameState || gameState.result || gameState.heroActed) return
@@ -602,21 +694,19 @@ export default function Arena() {
     }
     if (fb) {
       setFeedback(fb)
-      setStats(prev => ({
+      updateMatch(prev => prev && ({
         ...prev,
-        correctActions: prev.correctActions + (fb.isCorrect ? 1 : 0),
-        totalActions: prev.totalActions + 1,
+        stats: {
+          ...prev.stats,
+          correctActions: prev.stats.correctActions + (fb.isCorrect ? 1 : 0),
+          totalActions: prev.stats.totalActions + 1,
+        },
       }))
     }
 
     // Handle fold
     if (action === 'fold') {
-      setStats(prev => ({ ...prev, hands: prev.hands + 1 }))
-      setHandHistory(prev => [{
-        heroCards: gs.heroCards, villainCards: gs.villainCards,
-        board: gs.board, winner: 'villain', pot: gs.pot,
-        heroHand: 'Fold', villainHand: '—',
-      }, ...prev].slice(0, 20))
+      resolveHand('villain', gs.pot, gs.heroCards, gs.villainCards, gs.board, 'Fold', '—')
       setGameState({
         ...gs,
         result: { winner: 'villain', heroEval: { label: 'Fold' }, villainEval: { label: '—' }, pot: gs.pot },
@@ -631,10 +721,10 @@ export default function Arena() {
     let heroLabel = ''
 
     if (action === 'bet' || action === 'raise') {
-      const betSize = action === 'raise' ? gs.lastBet * 2.5 : gs.pot * 0.66
-      newPot += betSize + (gs.lastBet > 0 ? gs.lastBet : 0) // call + raise
+      const betSize = action === 'raise' ? Math.max(gs.lastBet * 2.5, gs.blinds.bb * 2) : gs.pot * 0.66
+      newPot += betSize + (gs.lastBet > 0 ? gs.lastBet : 0)
       newLastBet = betSize
-      heroLabel = action === 'raise' ? `Raise ${betSize.toFixed(1)}bb` : `Bet ${betSize.toFixed(1)}bb`
+      heroLabel = action === 'raise' ? `Raise ${betSize.toFixed(0)}` : `Bet ${betSize.toFixed(0)}`
     } else if (action === 'call') {
       newPot += gs.lastBet
       heroLabel = 'Call'
@@ -648,17 +738,11 @@ export default function Arena() {
 
     // Bot response
     if (action === 'bet' || action === 'raise') {
-      // Bot faces a bet
       const botAction = gs.street === 'preflop'
-        ? botPreflopDecision(gs.villainCards, !gs.heroIsBtn) // bot's position
+        ? botPreflopDecision(gs.villainCards, !gs.heroIsBtn)
         : botDecision(gs.villainCards, gs.board, gs.street, gs.pot, newLastBet, !gs.heroIsBtn)
       if (botAction === 'fold') {
-        setStats(prev => ({ ...prev, hands: prev.hands + 1, won: prev.won + 1 }))
-        setHandHistory(prev => [{
-          heroCards: gs.heroCards, villainCards: gs.villainCards,
-          board: gs.board, winner: 'hero', pot: gs.pot,
-          heroHand: heroLabel, villainHand: 'Fold',
-        }, ...prev].slice(0, 20))
+        resolveHand('hero', gs.pot, gs.heroCards, gs.villainCards, gs.board, heroLabel, 'Fold')
         setGameState({
           ...gs,
           result: { winner: 'hero', heroEval: { label: 'Villain Fold' }, villainEval: { label: 'Fold' }, pot: gs.pot },
@@ -668,12 +752,11 @@ export default function Arena() {
       }
       if (botAction === 'call') {
         gs.pot += newLastBet
-        gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${newLastBet.toFixed(1)}bb` }]
+        gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${newLastBet.toFixed(0)}` }]
       } else if (botAction === 'raise') {
         const reRaise = newLastBet * 2.5
         gs.pot += newLastBet + reRaise
-        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: `Raise ${reRaise.toFixed(1)}bb` }]
-        // Simplify: hero auto-calls the re-raise
+        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: `Raise ${reRaise.toFixed(0)}` }]
         gs.pot += reRaise
         gs.actions = [...gs.actions, { who: 'hero', action: 'call', label: 'Call' }]
       }
@@ -683,23 +766,20 @@ export default function Arena() {
       return
     }
 
-    // Hero checked or called
     if (action === 'check') {
       if (!gs.villainActed) {
-        // Bot acts after hero check
         const botAction = botDecision(gs.villainCards, gs.board, gs.street, gs.pot, 0, !gs.heroIsBtn)
         if (botAction === 'bet') {
-          const betSize = gs.pot * 0.66
+          const betSize = Math.round(gs.pot * 0.66)
           gs.pot += betSize
           gs.lastBet = betSize
           gs.villainActed = true
-          gs.heroActed = false // hero needs to respond
-          gs.actions = [...gs.actions, { who: 'villain', action: 'bet', label: `Bet ${betSize.toFixed(1)}bb` }]
+          gs.heroActed = false
+          gs.actions = [...gs.actions, { who: 'villain', action: 'bet', label: `Bet ${betSize}` }]
           setGameState({ ...gs })
-          setFeedback(null) // clear feedback for new action
+          setFeedback(null)
           return
         }
-        // Bot also checks
         gs.villainActed = true
         gs.actions = [...gs.actions, { who: 'villain', action: 'check', label: 'Check' }]
         const nextGs = advanceStreet(gs)
@@ -715,33 +795,30 @@ export default function Arena() {
       return
     }
 
-    // Default: advance
     const nextGs = advanceStreet(gs)
     setGameState(nextGs)
-  }, [gameState, advanceStreet])
+  }, [gameState, advanceStreet, resolveHand, updateMatch])
 
   // Determine available actions
   const getActions = () => {
     if (!gameState || gameState.result) return []
+    const bb = gameState.blinds?.bb || 2
+
     if (gameState.street === 'preflop') {
       if (gameState.heroIsBtn) {
-        // Hero é SB, age primeiro
         return [
           { id: 'fold', label: 'Fold', bg: '#e5484d' },
           { id: 'call', label: 'Complete', bg: '#0a84d7' },
-          { id: 'raise', label: 'Raise 2.5bb', bg: '#4fce82' },
+          { id: 'raise', label: `Raise ${(bb * 2.5).toFixed(0)}`, bg: '#4fce82' },
         ]
       }
-      // Hero é BB
       if (gameState.lastBet > 0) {
-        // Facing raise do SB
         return [
           { id: 'fold', label: 'Fold', bg: '#e5484d' },
           { id: 'call', label: 'Call', bg: '#0a84d7' },
           { id: 'raise', label: '3-Bet', bg: '#4fce82' },
         ]
       }
-      // SB completed/limped — BB pode check ou raise
       return [
         { id: 'check', label: 'Check', bg: '#0a84d7' },
         { id: 'raise', label: 'Raise', bg: '#4fce82' },
@@ -749,163 +826,132 @@ export default function Arena() {
     }
 
     if (gameState.lastBet > 0) {
-      // Facing bet
       return [
         { id: 'fold', label: 'Fold', bg: '#e5484d' },
-        { id: 'call', label: `Call ${gameState.lastBet.toFixed(1)}bb`, bg: '#0a84d7' },
+        { id: 'call', label: `Call ${gameState.lastBet.toFixed(0)}`, bg: '#0a84d7' },
         { id: 'raise', label: 'Raise', bg: '#4fce82' },
       ]
     }
 
-    // Can check or bet
     return [
       { id: 'check', label: 'Check', bg: '#0a84d7' },
       { id: 'bet', label: 'Bet 66%', bg: '#4fce82' },
     ]
   }
 
-  const acc = stats.totalActions > 0 ? Math.round((stats.correctActions / stats.totalActions) * 100) : 0
-  const winRate = stats.hands > 0 ? Math.round((stats.won / stats.hands) * 100) : 0
+  // Check match over
+  const matchOver = match?.matchOver
+  const blinds = match ? getBlinds(match.handNum) : BLIND_LEVELS[0]
+  const handsUntilBlindUp = match ? (HANDS_PER_LEVEL - (match.handNum % HANDS_PER_LEVEL)) : HANDS_PER_LEVEL
+  const acc = match?.stats.totalActions > 0 ? Math.round((match.stats.correctActions / match.stats.totalActions) * 100) : 0
+  const winRate = match?.stats.hands > 0 ? Math.round((match.stats.won / match.stats.hands) * 100) : 0
 
   return (
     <div className="min-h-screen pb-28 md:pb-8 md:pt-16" style={{ background: '#0f0f0f' }}>
       <div className="max-w-lg mx-auto px-4 pt-6">
 
         {/* Header */}
-        <div className="text-center mb-5">
+        <div className="text-center mb-4">
           <h1 style={{ color: 'white', fontSize: 22, fontWeight: 700, fontFamily: 'Poppins' }}>
             Arena HU
           </h1>
           <p style={{ color: '#676671', fontSize: 13 }}>Heads-Up vs Bot GTO</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-5">
-          {[
-            { label: 'Maos', value: stats.hands, color: '#e5484d' },
-            { label: 'Win Rate', value: stats.hands ? `${winRate}%` : '--', color: winRate >= 50 ? '#4fce82' : '#f5a623' },
-            { label: 'Acerto GTO', value: stats.totalActions ? `${acc}%` : '--', color: acc >= 70 ? '#4fce82' : acc >= 50 ? '#f5a623' : '#e5484d' },
-          ].map(s => (
-            <div key={s.label} className="rounded-xl py-3 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-              <div style={{ color: s.color, fontSize: 20, fontWeight: 700, fontFamily: 'JetBrains Mono', lineHeight: 1 }}>{s.value}</div>
-              <div style={{ color: '#676671', fontSize: 11, marginTop: 3 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Tela principal */}
-        {!gameState ? (
+        {/* No match started */}
+        {!match ? (
           <div className="text-center" style={{ paddingTop: 40 }}>
             <div style={{ fontSize: 60, marginBottom: 16 }}>♠♥</div>
             <p style={{ color: '#b3b3b8', fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
-              Jogue Heads-Up contra um bot que segue conceitos GTO.<br />
-              Receba feedback em tempo real sobre suas decisoes.
+              Jogue Heads-Up contra um bot GTO.<br />
+              500 vs 500 fichas. Blinds sobem a cada 5 maos.<br />
+              A partida so acaba quando alguem zerar.
             </p>
-            <button onClick={startNewHand}
+            <button onClick={startMatch}
               className="px-10 py-4 rounded-xl font-bold text-lg"
               style={{ background: '#4fce82', color: '#0f0f0f', border: 'none', cursor: 'pointer' }}>
               Iniciar Partida
             </button>
           </div>
+        ) : matchOver ? (
+          /* Match over */
+          <div className="text-center" style={{ paddingTop: 30 }}>
+            <div style={{ fontSize: 60, marginBottom: 12 }}>{match.winner === 'hero' ? '🏆' : '💀'}</div>
+            <h2 style={{ color: match.winner === 'hero' ? '#4fce82' : '#e5484d', fontSize: 28, fontWeight: 700 }}>
+              {match.winner === 'hero' ? 'Voce venceu!' : 'Bot venceu'}
+            </h2>
+            <div style={{ color: '#b3b3b8', fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
+              {match.stats.hands} maos jogadas · Win rate {winRate}% · Acerto GTO {acc}%
+            </div>
+            <div className="flex gap-3 justify-center mt-6">
+              <button onClick={() => { clearMatch(); setMatch(null); setGameState(null) }}
+                className="px-6 py-3 rounded-xl font-bold"
+                style={{ background: '#2a2a2e', color: '#b3b3b8', border: 'none', cursor: 'pointer' }}>
+                Menu
+              </button>
+              <button onClick={startMatch}
+                className="px-6 py-3 rounded-xl font-bold"
+                style={{ background: '#4fce82', color: '#0f0f0f', border: 'none', cursor: 'pointer' }}>
+                Revanche
+              </button>
+            </div>
+          </div>
         ) : (
+          /* Active match */
           <div>
-            {/* Street indicator */}
-            <div className="flex gap-1 mb-3 justify-center">
-              {STREETS.slice(0, -1).map(s => (
-                <div key={s} className="px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{
-                    background: s === gameState.street ? '#4fce8222' : '#1a1a1d',
-                    color: s === gameState.street ? '#4fce82' : '#676671',
-                    border: `1px solid ${s === gameState.street ? '#4fce82' : '#2a2a2e'}`,
+            {/* Stacks + Blinds HUD */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="rounded-xl py-2 text-center" style={{ background: '#1a1a1d', border: '1px solid #4fce8244' }}>
+                <div style={{ color: '#4fce82', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{match.heroStack}</div>
+                <div style={{ color: '#676671', fontSize: 10 }}>Voce</div>
+              </div>
+              <div className="rounded-xl py-2 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                <div style={{ color: '#f5a623', fontSize: 14, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{blinds.sb}/{blinds.bb}</div>
+                <div style={{ color: '#676671', fontSize: 10 }}>Blinds · sobe em {handsUntilBlindUp}</div>
+              </div>
+              <div className="rounded-xl py-2 text-center" style={{ background: '#1a1a1d', border: '1px solid #e5484d44' }}>
+                <div style={{ color: '#e5484d', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{match.villainStack}</div>
+                <div style={{ color: '#676671', fontSize: 10 }}>Bot</div>
+              </div>
+            </div>
+
+            {/* Stats bar */}
+            <div className="flex gap-3 mb-3 justify-center">
+              <span style={{ color: '#676671', fontSize: 11 }}>Mao #{match.handNum + 1}</span>
+              <span style={{ color: '#676671', fontSize: 11 }}>·</span>
+              <span style={{ color: '#676671', fontSize: 11 }}>Win {winRate}%</span>
+              <span style={{ color: '#676671', fontSize: 11 }}>·</span>
+              <span style={{ color: '#676671', fontSize: 11 }}>GTO {acc}%</span>
+            </div>
+
+            {/* No hand in progress — deal */}
+            {!gameState || (gameState.result && !matchOver) ? (
+              <div>
+                {/* Show last hand result if exists */}
+                {gameState?.result && (
+                  <div className="rounded-xl p-4 mb-3" style={{
+                    background: gameState.result.winner === 'hero' ? 'rgba(79,206,130,0.1)' : gameState.result.winner === 'tie' ? 'rgba(245,166,35,0.1)' : 'rgba(229,72,77,0.1)',
+                    border: `1px solid ${gameState.result.winner === 'hero' ? '#4fce82' : gameState.result.winner === 'tie' ? '#f5a623' : '#e5484d'}`,
                   }}>
-                  {streetName(s)}
-                </div>
-              ))}
-            </div>
-
-            {/* Mesa */}
-            <div className="rounded-2xl mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e', padding: '8px 4px' }}>
-              <HUTable
-                heroCards={gameState.heroCards}
-                villainCards={gameState.villainCards}
-                board={gameState.board}
-                pot={gameState.pot}
-                heroIsBtn={gameState.heroIsBtn}
-                showVillain={gameState.showVillain}
-                heroLabel={gameState.actions.filter(a => a.who === 'hero').slice(-1)[0]?.label}
-                villainLabel={gameState.actions.filter(a => a.who === 'villain').slice(-1)[0]?.label}
-              />
-            </div>
-
-            {/* Action log */}
-            {gameState.actions.length > 0 && (
-              <div className="rounded-xl px-3 py-2 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-                <div className="flex flex-wrap gap-2">
-                  {gameState.actions.map((a, i) => (
-                    <span key={i} style={{
-                      fontSize: 11, fontWeight: 600,
-                      color: a.who === 'hero' ? '#4fce82' : '#e5484d',
+                    <div style={{
+                      color: gameState.result.winner === 'hero' ? '#4fce82' : gameState.result.winner === 'tie' ? '#f5a623' : '#e5484d',
+                      fontWeight: 700, fontSize: 16, marginBottom: 4,
                     }}>
-                      {a.who === 'hero' ? 'Voce' : 'Bot'}: {a.label}
-                      {i < gameState.actions.length - 1 ? ' →' : ''}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+                      {gameState.result.winner === 'hero' ? 'Voce ganhou!' : gameState.result.winner === 'tie' ? 'Empate' : 'Bot ganhou'}
+                      <span style={{ fontSize: 13, fontWeight: 500, marginLeft: 8 }}>
+                        Pot: {gameState.result.pot.toFixed(0)}
+                      </span>
+                    </div>
+                    {gameState.showVillain && (
+                      <div style={{ color: '#b3b3b8', fontSize: 12 }}>
+                        Voce: <strong style={{ color: '#4fce82' }}>{gameState.result.heroEval.label}</strong>
+                        {' · '}
+                        Bot: <strong style={{ color: '#e5484d' }}>{gameState.result.villainEval.label}</strong>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-            {/* Feedback */}
-            {feedback && !gameState.result && (
-              <div className="rounded-xl px-4 py-3 mb-3" style={{
-                background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
-                border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
-              }}>
-                <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
-                  {feedback.isCorrect ? 'Boa jogada!' : `GTO recomenda: ${feedback.recommended}`}
-                </div>
-                <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 3 }}>{feedback.reason}</div>
-              </div>
-            )}
-
-            {/* Result */}
-            {gameState.result && (
-              <div className="rounded-xl p-4 mb-3" style={{
-                background: gameState.result.winner === 'hero' ? 'rgba(79,206,130,0.1)' : gameState.result.winner === 'tie' ? 'rgba(245,166,35,0.1)' : 'rgba(229,72,77,0.1)',
-                border: `1px solid ${gameState.result.winner === 'hero' ? '#4fce82' : gameState.result.winner === 'tie' ? '#f5a623' : '#e5484d'}`,
-              }}>
-                <div style={{
-                  color: gameState.result.winner === 'hero' ? '#4fce82' : gameState.result.winner === 'tie' ? '#f5a623' : '#e5484d',
-                  fontWeight: 700, fontSize: 18, marginBottom: 4,
-                }}>
-                  {gameState.result.winner === 'hero' ? 'Voce ganhou!' : gameState.result.winner === 'tie' ? 'Empate' : 'Villain ganhou'}
-                  <span style={{ fontSize: 14, fontWeight: 500, marginLeft: 8 }}>
-                    Pot: {gameState.result.pot.toFixed(1)}bb
-                  </span>
-                </div>
-                <div style={{ color: '#b3b3b8', fontSize: 13 }}>
-                  Voce: <strong style={{ color: '#4fce82' }}>{gameState.result.heroEval.label}</strong>
-                  {' · '}
-                  Bot: <strong style={{ color: '#e5484d' }}>{gameState.result.villainEval.label}</strong>
-                </div>
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="mb-4">
-              {!gameState.result && !gameState.heroActed ? (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {getActions().map(b => (
-                    <button key={b.id} onClick={() => handleHeroAction(b.id)}
-                      style={{
-                        flex: 1, padding: '14px 4px', borderRadius: 8,
-                        fontWeight: 600, fontSize: 13, border: 'none',
-                        cursor: 'pointer', color: '#0f0f0f', background: b.bg,
-                      }}>
-                      {b.label}
-                    </button>
-                  ))}
-                </div>
-              ) : gameState.result ? (
                 <button onClick={startNewHand}
                   style={{
                     width: '100%', padding: '14px', borderRadius: 8,
@@ -913,50 +959,136 @@ export default function Arena() {
                     color: '#0f0f0f', fontWeight: 600, fontSize: 15,
                     cursor: 'pointer',
                   }}>
-                  Proxima Mao &gt;
+                  {gameState ? 'Proxima Mao >' : 'Comecar Mao #1'}
                 </button>
-              ) : (
-                <button onClick={() => {
-                  const nextGs = advanceStreet(gameState)
-                  setGameState(nextGs)
-                  setFeedback(null)
-                }}
-                style={{
-                  width: '100%', padding: '14px', borderRadius: 8,
-                  background: '#f5a623', border: 'none',
-                  color: '#0f0f0f', fontWeight: 600, fontSize: 15,
-                  cursor: 'pointer',
-                }}>
-                Proximo Street &gt;
-              </button>
-              )}
-            </div>
 
-            {/* Hand history */}
-            {handHistory.length > 0 && (
-              <div className="rounded-xl p-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-                <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>HISTORICO</div>
-                <div className="space-y-2">
-                  {handHistory.slice(0, 5).map((h, i) => (
-                    <div key={i} className="flex items-center gap-2" style={{ fontSize: 12 }}>
-                      <span style={{
-                        color: h.winner === 'hero' ? '#4fce82' : h.winner === 'tie' ? '#f5a623' : '#e5484d',
-                        fontWeight: 700, width: 14,
+                {/* Hand history */}
+                {match.handHistory.length > 0 && (
+                  <div className="rounded-xl p-3 mt-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                    <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>HISTORICO</div>
+                    <div className="space-y-2">
+                      {match.handHistory.slice(0, 5).map((h, i) => (
+                        <div key={i} className="flex items-center gap-2" style={{ fontSize: 12 }}>
+                          <span style={{
+                            color: h.winner === 'hero' ? '#4fce82' : h.winner === 'tie' ? '#f5a623' : '#e5484d',
+                            fontWeight: 700, width: 14,
+                          }}>
+                            {h.winner === 'hero' ? 'W' : h.winner === 'tie' ? 'T' : 'L'}
+                          </span>
+                          <div className="flex gap-1">
+                            {h.heroCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
+                          </div>
+                          <span style={{ color: '#676671' }}>vs</span>
+                          <div className="flex gap-1">
+                            {h.villainCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
+                          </div>
+                          <span style={{ color: '#676671', flex: 1, textAlign: 'right' }}>
+                            {h.pot.toFixed(0)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Abandon match */}
+                <button onClick={() => { clearMatch(); setMatch(null); setGameState(null) }}
+                  className="w-full mt-3 py-2 rounded-lg text-sm"
+                  style={{ background: 'transparent', color: '#676671', border: '1px solid #2a2a2e', cursor: 'pointer' }}>
+                  Abandonar partida
+                </button>
+              </div>
+            ) : (
+              /* Hand in progress */
+              <div>
+                {/* Street indicator */}
+                <div className="flex gap-1 mb-3 justify-center">
+                  {STREETS.slice(0, -1).map(s => (
+                    <div key={s} className="px-3 py-1 rounded-full text-xs font-semibold"
+                      style={{
+                        background: s === gameState.street ? '#4fce8222' : '#1a1a1d',
+                        color: s === gameState.street ? '#4fce82' : '#676671',
+                        border: `1px solid ${s === gameState.street ? '#4fce82' : '#2a2a2e'}`,
                       }}>
-                        {h.winner === 'hero' ? 'W' : h.winner === 'tie' ? 'T' : 'L'}
-                      </span>
-                      <div className="flex gap-1">
-                        {h.heroCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
-                      </div>
-                      <span style={{ color: '#676671' }}>vs</span>
-                      <div className="flex gap-1">
-                        {h.villainCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
-                      </div>
-                      <span style={{ color: '#676671', flex: 1, textAlign: 'right' }}>
-                        {h.pot.toFixed(1)}bb
-                      </span>
+                      {streetName(s)}
                     </div>
                   ))}
+                </div>
+
+                {/* Mesa */}
+                <div className="rounded-2xl mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e', padding: '8px 4px' }}>
+                  <HUTable
+                    heroCards={gameState.heroCards}
+                    villainCards={gameState.villainCards}
+                    board={gameState.board}
+                    pot={gameState.pot}
+                    heroIsBtn={gameState.heroIsBtn}
+                    showVillain={gameState.showVillain}
+                    heroLabel={gameState.actions.filter(a => a.who === 'hero').slice(-1)[0]?.label}
+                    villainLabel={gameState.actions.filter(a => a.who === 'villain').slice(-1)[0]?.label}
+                  />
+                </div>
+
+                {/* Action log */}
+                {gameState.actions.length > 0 && (
+                  <div className="rounded-xl px-3 py-2 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                    <div className="flex flex-wrap gap-2">
+                      {gameState.actions.map((a, i) => (
+                        <span key={i} style={{
+                          fontSize: 11, fontWeight: 600,
+                          color: a.who === 'hero' ? '#4fce82' : '#e5484d',
+                        }}>
+                          {a.who === 'hero' ? 'Voce' : 'Bot'}: {a.label}
+                          {i < gameState.actions.length - 1 ? ' →' : ''}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Feedback */}
+                {feedback && !gameState.result && (
+                  <div className="rounded-xl px-4 py-3 mb-3" style={{
+                    background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
+                    border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
+                  }}>
+                    <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
+                      {feedback.isCorrect ? 'Boa jogada!' : `GTO recomenda: ${feedback.recommended}`}
+                    </div>
+                    <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 3 }}>{feedback.reason}</div>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="mb-4">
+                  {!gameState.heroActed ? (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      {getActions().map(b => (
+                        <button key={b.id} onClick={() => handleHeroAction(b.id)}
+                          style={{
+                            flex: 1, padding: '14px 4px', borderRadius: 8,
+                            fontWeight: 600, fontSize: 13, border: 'none',
+                            cursor: 'pointer', color: '#0f0f0f', background: b.bg,
+                          }}>
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <button onClick={() => {
+                      const nextGs = advanceStreet(gameState)
+                      setGameState(nextGs)
+                      setFeedback(null)
+                    }}
+                    style={{
+                      width: '100%', padding: '14px', borderRadius: 8,
+                      background: '#f5a623', border: 'none',
+                      color: '#0f0f0f', fontWeight: 600, fontSize: 15,
+                      cursor: 'pointer',
+                    }}>
+                      Proximo Street &gt;
+                    </button>
+                  )}
                 </div>
               </div>
             )}
