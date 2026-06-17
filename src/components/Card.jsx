@@ -43,7 +43,9 @@ export default function Card({ card, size = 'md' }) {
   const bg = SUIT_BG[suit] || '#4b4b5e'
   const rankDisplay = rank === 'T' ? '10' : rank
 
-  const dims = size === 'sm'
+  const dims = size === 'xs'
+    ? { w: 20, h: 26, r: 3, fs: 11 }
+    : size === 'sm'
     ? { w: 26, h: 34, r: 4, fs: 15 }
     : size === 'lg'
     ? { w: 44, h: 54, r: 6, fs: 26 }

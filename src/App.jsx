@@ -31,6 +31,7 @@ import Module21 from './pages/modules/Module21'
 import Tools from './pages/Tools'
 import MentalGame from './pages/MentalGame'
 import Infinite from './pages/Infinite'
+import Arena from './pages/Arena'
 import Stats from './pages/Stats'
 
 function App() {
@@ -100,6 +101,7 @@ function App() {
           <Route path="/ferramentas" element={<Tools />} />
           <Route path="/mental" element={<MentalGame />} />
           <Route path="/infinito" element={<Infinite />} />
+          <Route path="/arena" element={<Arena />} />
         </Routes>
       </BrowserRouter>
     </ProgressProvider>
