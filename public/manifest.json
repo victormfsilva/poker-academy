@@ -4,8 +4,8 @@
   "description": "Estude GTO do jeito certo",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0f",
-  "theme_color": "#e94560",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
   "orientation": "portrait",
   "icons": [
     {
