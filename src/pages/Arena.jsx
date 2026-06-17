@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import Card, { parseCard, handToCards } from '../components/Card'
+import { BLIND_WARS, BB_VS_RFI } from '../data/ranges'
 
 // ─── Constantes ────────────────────────────────────────────
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
@@ -148,9 +149,88 @@ function handStrength(hole, board) {
   return 'air'
 }
 
+// ─── Converter hole cards reais para notacao de hand ──────
+// Ex: ['As','Kh'] → 'AKo', ['Ah','Kh'] → 'AKs', ['Ts','Td'] → 'TT'
+function holeToNotation(hole) {
+  const r1 = hole[0].slice(0, -1)
+  const r2 = hole[1].slice(0, -1)
+  const s1 = hole[0].slice(-1)
+  const s2 = hole[1].slice(-1)
+  const v1 = RANK_VAL[r1], v2 = RANK_VAL[r2]
+  const high = v1 >= v2 ? r1 : r2
+  const low = v1 >= v2 ? r2 : r1
+  if (r1 === r2) return high + low // pocket pair
+  const suited = s1 === s2 ? 's' : 'o'
+  return high + low + suited
+}
+
+// ─── Bot pre-flop usando ranges GTO ──────────────────────
+// botIsSB: true = bot é SB (age primeiro), false = bot é BB (defende)
+function botPreflopDecision(botHole, botIsSB) {
+  const hand = holeToNotation(botHole)
+
+  if (botIsSB) {
+    // Bot é SB: usar SB_raise range
+    const raiseRange = BLIND_WARS.SB_raise?.raise || []
+    if (raiseRange.includes(hand)) return 'raise'
+    // Complete range (limp)
+    const completeRange = BLIND_WARS.SB_complete?.complete || []
+    if (completeRange.includes(hand)) return 'call' // limp/complete
+    return 'fold'
+  } else {
+    // Bot é BB: facing SB raise, usar BB_VS_RFI.vsSB
+    const bbRange = BB_VS_RFI.vsSB || {}
+    if (bbRange.threebet?.includes(hand)) return 'raise' // 3-bet
+    if (bbRange.call?.includes(hand)) return 'call'
+    return 'fold'
+  }
+}
+
+// ─── Feedback pre-flop para o hero ────────────────────────
+function getHeroPreflopFeedback(heroHole, heroAction, heroIsSB) {
+  const hand = holeToNotation(heroHole)
+
+  if (heroIsSB) {
+    // Hero é SB: deveria raise, complete ou fold?
+    const raiseRange = BLIND_WARS.SB_raise?.raise || []
+    const completeRange = BLIND_WARS.SB_complete?.complete || []
+    let recommended, reason
+    if (raiseRange.includes(hand)) {
+      recommended = 'raise'
+      reason = `${hand} esta no range de RAISE do SB. Abra com raise para pressionar o BB.`
+    } else if (completeRange.includes(hand)) {
+      recommended = 'call'
+      reason = `${hand} esta no range de COMPLETE do SB. Limp para ver flop barato com boa jogabilidade.`
+    } else {
+      recommended = 'fold'
+      reason = `${hand} nao tem equity suficiente para jogar do SB.`
+    }
+    const isCorrect = heroAction === recommended ||
+      (recommended === 'raise' && heroAction === 'raise') ||
+      (recommended === 'call' && heroAction === 'call')
+    return { recommended, reason, isCorrect }
+  } else {
+    // Hero é BB: facing SB raise, deveria 3-bet, call ou fold?
+    const bbRange = BB_VS_RFI.vsSB || {}
+    let recommended, reason
+    if (bbRange.threebet?.includes(hand)) {
+      recommended = 'raise'
+      reason = `${hand} esta no range de 3-BET do BB vs SB. Relance para construir pote ou fazer o SB foldar.`
+    } else if (bbRange.call?.includes(hand)) {
+      recommended = 'call'
+      reason = `${hand} esta no range de CALL do BB vs SB. Boa equity para ver o flop.`
+    } else {
+      recommended = 'fold'
+      reason = `${hand} nao tem equity suficiente para defender do BB vs raise do SB.`
+    }
+    const isCorrect = heroAction === recommended
+    return { recommended, reason, isCorrect }
+  }
+}
+
 // ─── Bot GTO (decisoes heuristicas) ───────────────────────
 function botDecision(botHole, board, street, pot, lastBet, isIP) {
-  if (board.length === 0) return 'call' // pre-flop: bot always calls for now (will improve later)
+  if (board.length === 0) return 'call' // fallback pre-flop (should use botPreflopDecision)
 
   const strength = handStrength(botHole, board)
 
@@ -297,7 +377,7 @@ function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, vi
           textAlign: 'center',
         }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#e5484d' }}>
-            {heroIsBtn ? 'BB' : 'BTN'}
+            {heroIsBtn ? 'BB' : 'SB'}
           </div>
           <div style={{ fontSize: 9, color: '#676671', fontFamily: 'JetBrains Mono' }}>Bot GTO</div>
         </div>
@@ -345,8 +425,8 @@ function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, vi
       {/* Dealer button */}
       <div style={{
         position: 'absolute',
-        top: heroIsBtn ? '72%' : '12%',
-        left: heroIsBtn ? '62%' : '62%',
+        top: heroIsBtn ? '68%' : '8%',
+        left: heroIsBtn ? '64%' : '64%',
         width: 16, height: 16, borderRadius: '50%',
         background: '#fdfdfd', color: '#0f0f0f',
         fontSize: 8, fontWeight: 900,
@@ -369,7 +449,7 @@ function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, vi
           textAlign: 'center',
         }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#4fce82' }}>
-            {heroIsBtn ? 'BTN' : 'BB'}
+            {heroIsBtn ? 'SB' : 'BB'}
           </div>
           <div style={{ fontSize: 9, color: '#676671', fontFamily: 'JetBrains Mono' }}>Voce</div>
         </div>
@@ -429,10 +509,27 @@ export default function Arena() {
     }
 
     if (!heroIsBtn) {
-      // Hero is BB, villain is BTN/SB. Bot opens (always raises pre-flop from BTN).
-      gs.pot = 1.5 + 2.5 // SB + BB + raise to 2.5
-      gs.lastBet = 2.5
-      gs.actions = [{ who: 'villain', action: 'raise', label: 'Raise 2.5bb' }]
+      // Hero is BB, villain is SB. Bot decides using GTO ranges.
+      const botAction = botPreflopDecision(villainCards, true) // bot is SB
+      if (botAction === 'raise') {
+        gs.pot = 1.5 + 2.5
+        gs.lastBet = 2.5
+        gs.actions = [{ who: 'villain', action: 'raise', label: 'Raise 2.5bb' }]
+      } else if (botAction === 'call') {
+        // SB limps/completes
+        gs.pot = 2 // 1 + 1 (SB completes to 1bb)
+        gs.lastBet = 0
+        gs.actions = [{ who: 'villain', action: 'call', label: 'Complete' }]
+      } else {
+        // SB folds — hero wins blinds
+        setStats(prev => ({ ...prev, hands: prev.hands + 1, won: prev.won + 1 }))
+        setHandHistory(prev => [{
+          heroCards, villainCards, board: [], winner: 'hero',
+          pot: 1.5, heroHand: 'BB', villainHand: 'SB Fold',
+        }, ...prev].slice(0, 20))
+        gs.result = { winner: 'hero', heroEval: { label: 'SB foldou' }, villainEval: { label: 'Fold' }, pot: 1.5 }
+        gs.showVillain = true
+      }
       gs.villainActed = true
     }
 
@@ -497,7 +594,12 @@ export default function Arena() {
     const gs = { ...gameState }
 
     // Record feedback
-    const fb = getHeroFeedback(gs.heroCards, gs.board, action, gs.pot, gs.lastBet)
+    let fb = null
+    if (gs.street === 'preflop') {
+      fb = getHeroPreflopFeedback(gs.heroCards, action, gs.heroIsBtn)
+    } else {
+      fb = getHeroFeedback(gs.heroCards, gs.board, action, gs.pot, gs.lastBet)
+    }
     if (fb) {
       setFeedback(fb)
       setStats(prev => ({
@@ -547,7 +649,9 @@ export default function Arena() {
     // Bot response
     if (action === 'bet' || action === 'raise') {
       // Bot faces a bet
-      const botAction = botDecision(gs.villainCards, gs.board, gs.street, gs.pot, newLastBet, !gs.heroIsBtn)
+      const botAction = gs.street === 'preflop'
+        ? botPreflopDecision(gs.villainCards, !gs.heroIsBtn) // bot's position
+        : botDecision(gs.villainCards, gs.board, gs.street, gs.pot, newLastBet, !gs.heroIsBtn)
       if (botAction === 'fold') {
         setStats(prev => ({ ...prev, hands: prev.hands + 1, won: prev.won + 1 }))
         setHandHistory(prev => [{
@@ -620,20 +724,27 @@ export default function Arena() {
   const getActions = () => {
     if (!gameState || gameState.result) return []
     if (gameState.street === 'preflop') {
-      // Simplificado: call ou fold (raise mais tarde)
       if (gameState.heroIsBtn) {
-        // Hero is BTN/SB, first to act pre-flop
+        // Hero é SB, age primeiro
+        return [
+          { id: 'fold', label: 'Fold', bg: '#e5484d' },
+          { id: 'call', label: 'Complete', bg: '#0a84d7' },
+          { id: 'raise', label: 'Raise 2.5bb', bg: '#4fce82' },
+        ]
+      }
+      // Hero é BB
+      if (gameState.lastBet > 0) {
+        // Facing raise do SB
         return [
           { id: 'fold', label: 'Fold', bg: '#e5484d' },
           { id: 'call', label: 'Call', bg: '#0a84d7' },
-          { id: 'raise', label: 'Raise 3x', bg: '#4fce82' },
+          { id: 'raise', label: '3-Bet', bg: '#4fce82' },
         ]
       }
-      // Hero is BB, villain already raised from BTN
+      // SB completed/limped — BB pode check ou raise
       return [
-        { id: 'fold', label: 'Fold', bg: '#e5484d' },
-        { id: 'call', label: 'Call', bg: '#0a84d7' },
-        { id: 'raise', label: '3-Bet', bg: '#4fce82' },
+        { id: 'check', label: 'Check', bg: '#0a84d7' },
+        { id: 'raise', label: 'Raise', bg: '#4fce82' },
       ]
     }
 
