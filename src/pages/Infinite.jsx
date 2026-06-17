@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useProgress } from '../context/ProgressContext'
 import { RFI_RANGES, PUSH_FOLD_RANGES, BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI, BLIND_WARS } from '../data/ranges'
-import Card, { CardGroup, handToCards, parseCard } from '../components/Card'
+import Card, { handToCards, parseCard } from '../components/Card'
 import RangeViewer from '../components/RangeViewer'
 
 // ─── Constantes ────────────────────────────────────────────
@@ -252,9 +252,13 @@ function PokerTable({ scenario }) {
       }}>
         {boardCards ? (
           <>
-            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 5 }}>
-              <CardGroup cards={boardCards.slice(0, 3).map(c => parseCard(c))} size="sm" />
-              {boardCards.length > 3 && <CardGroup cards={boardCards.slice(3).map(c => parseCard(c))} size="sm" />}
+            <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginBottom: 5 }}>
+              {boardCards.map((c, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
+                  <Card card={parseCard(c)} size="sm" />
+                  {scenario.flop && i === 2 && boardCards.length > 3 && <div style={{ width: 4 }} />}
+                </div>
+              ))}
             </div>
             <div style={{ color: '#fdfdfd', fontSize: 13, fontWeight: 700 }}>{displayPot}</div>
           </>
@@ -1081,8 +1085,8 @@ export default function Infinite() {
 
           {cards && showTable && (
             <>
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: -8, marginBottom: 12 }}>
-                <CardGroup cards={cards.map(c => parseCard(c))} size="md" />
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: -8, marginBottom: 12 }}>
+                {cards.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
               </div>
               <div className="px-5 pb-3 text-center">
                 <div style={{ color: '#4fce82', fontSize: 26, fontWeight: 700, fontFamily: 'JetBrains Mono', letterSpacing: 2 }}>
@@ -1098,8 +1102,8 @@ export default function Infinite() {
           {scenario.hole && showTable && (
             <div className="px-5 pb-3">
               <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8, textAlign: 'center' }}>SUA MAO</div>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <CardGroup cards={scenario.hole.map(c => parseCard(c))} size="md" />
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
+                {scenario.hole.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
               </div>
             </div>
           )}

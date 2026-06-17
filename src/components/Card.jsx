@@ -1,4 +1,4 @@
-// Cartas estilo GTO Wizard — bloco contiguo, cor de fundo = naipe, rank branco
+// Cartas estilo GTO Wizard — cada carta separada, cor de fundo = naipe, rank branco
 
 // Cores extraidas do GTO Wizard (screenshot real)
 const SUIT_BG = { s: '#4b4b5e', h: '#b8312a', d: '#2563b5', c: '#48824a' }
@@ -35,7 +35,7 @@ export function handToCards(hand) {
   return [ranks[0] + 's', ranks[1] + 'h']
 }
 
-export default function Card({ card, size = 'md', position }) {
+export default function Card({ card, size = 'md' }) {
   const parsed = typeof card === 'string' ? parseCard(card) : card
   if (!parsed) return null
 
@@ -44,16 +44,10 @@ export default function Card({ card, size = 'md', position }) {
   const rankDisplay = rank === 'T' ? '10' : rank
 
   const dims = size === 'sm'
-    ? { w: 26, h: 34, fs: 15, fw: 700 }
+    ? { w: 26, h: 34, r: 4, fs: 15 }
     : size === 'lg'
-    ? { w: 44, h: 54, fs: 26, fw: 700 }
-    : { w: 36, h: 44, fs: 21, fw: 700 }
-
-  // Cantos: so arredonda nas extremidades do grupo
-  let borderRadius = 0
-  if (position === 'first') borderRadius = `5px 0 0 5px`
-  else if (position === 'last') borderRadius = `0 5px 5px 0`
-  else if (position === 'single' || !position) borderRadius = 5
+    ? { w: 44, h: 54, r: 6, fs: 26 }
+    : { w: 36, h: 44, r: 5, fs: 21 }
 
   return (
     <div
@@ -61,32 +55,16 @@ export default function Card({ card, size = 'md', position }) {
       style={{
         width: dims.w,
         height: dims.h,
-        borderRadius,
+        borderRadius: dims.r,
         background: bg,
         color: '#ffffff',
         fontFamily: 'Poppins, sans-serif',
-        fontWeight: dims.fw,
+        fontWeight: 700,
         fontSize: dims.fs,
         lineHeight: 1,
       }}
     >
       {rankDisplay}
-    </div>
-  )
-}
-
-// Grupo de cartas contiguas (sem gap, cantos so nas pontas)
-export function CardGroup({ cards, size = 'md' }) {
-  if (!cards || cards.length === 0) return null
-  return (
-    <div className="inline-flex" style={{ borderRadius: 5, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-      {cards.map((c, i) => {
-        const pos = cards.length === 1 ? 'single'
-          : i === 0 ? 'first'
-          : i === cards.length - 1 ? 'last'
-          : 'middle'
-        return <Card key={i} card={c} size={size} position={pos} />
-      })}
     </div>
   )
 }
