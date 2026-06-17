@@ -1119,22 +1119,13 @@ export default function Infinite() {
             </div>
           )}
 
-          {cards && showTable && (
+          {showTable && (cards || scenario.hole) && (
             <div className="px-5 pb-3 text-center">
-              <div style={{ color: '#4fce82', fontSize: 26, fontWeight: 700, fontFamily: 'JetBrains Mono', letterSpacing: 2 }}>
-                {scenario.hand}
+              <div style={{ color: '#4fce82', fontSize: 22, fontWeight: 700, fontFamily: 'JetBrains Mono', letterSpacing: 2 }}>
+                {scenario.hand || 'Sua Mao'}
               </div>
               <div style={{ color: '#676671', fontSize: 12, marginTop: 2 }}>
                 {scenario.stack ? `${scenario.stack}bb` : '100bb'}
-              </div>
-            </div>
-          )}
-
-          {scenario.hole && !cards && showTable && (
-            <div className="px-5 pb-3 text-center">
-              <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>SUA MAO</div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
-                {scenario.hole.map((c, i) => <Card key={i} card={parseCard(c)} size="sm" />)}
               </div>
             </div>
           )}
@@ -1157,10 +1148,10 @@ export default function Infinite() {
               border: `1px solid ${result.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`
             }}>
               <div style={{ color: result.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 16 }}>
-                {result.isCorrect ? '\u2713 Correto!' : `\u2717 Errou \u2014 era ${result.correctLabel}`}
+                {result.isCorrect ? 'Correto!' : `Errou - era ${result.correctLabel}`}
               </div>
               {result.isMix && (
-                <div style={{ color: '#f5a623', fontSize: 12, marginTop: 3 }}>Mao de transicao \u2014 ambas as acoes sao aceitaveis.</div>
+                <div style={{ color: '#f5a623', fontSize: 12, marginTop: 3 }}>Mao de transicao - ambas as acoes sao aceitaveis.</div>
               )}
               {rangeViewerProps && (
                 <RangeViewer {...rangeViewerProps} />
@@ -1191,7 +1182,7 @@ export default function Infinite() {
                   color: '#0f0f0f', fontWeight: 600, fontSize: 15,
                   cursor: 'pointer',
                 }}>
-                Next Hand \u2192
+                {'Next Hand >'}
               </button>
             )}
           </div>
