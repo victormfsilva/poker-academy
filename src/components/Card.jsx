@@ -1,7 +1,7 @@
 // Componente de carta de baralho visual
 
 const SUIT_SYMBOLS = { s: '♠', h: '♥', d: '♦', c: '♣' }
-const SUIT_COLORS = { s: '#1a1a2e', h: '#e94560', d: '#e94560', c: '#1a1a2e' }
+const SUIT_COLORS = { s: '#4488ff', h: '#ff4466', d: '#ff4466', c: '#4488ff' }
 
 // Converte notação "As" → { rank: 'A', suit: 's' }
 export function parseCard(str) {
@@ -59,10 +59,10 @@ export default function Card({ card, size = 'md' }) {
   if (size === 'sm') {
     return (
       <div
-        className="w-10 h-14 bg-white rounded-md flex flex-col items-center justify-center shadow-lg select-none overflow-hidden"
-        style={{ border: '1.5px solid #ddd', gap: 0 }}
+        className="w-10 h-14 rounded-md flex flex-col items-center justify-center select-none overflow-hidden"
+        style={{ background: '#0c0c12', border: `1.5px solid ${color}44`, gap: 0 }}
       >
-        <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 800, fontSize: 13, lineHeight: 1 }}>
+        <div style={{ color, fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: 13, lineHeight: 1 }}>
           {rankDisplay}
         </div>
         <div style={{ color, fontSize: 16, lineHeight: 1, marginTop: 1 }}>
@@ -74,17 +74,17 @@ export default function Card({ card, size = 'md' }) {
 
   return (
     <div
-      className={`${sizes[size]} bg-white rounded-lg flex flex-col justify-between p-1 shadow-lg select-none overflow-hidden`}
-      style={{ border: '2px solid #ddd' }}
+      className={`${sizes[size]} rounded-lg flex flex-col justify-between p-1 select-none overflow-hidden`}
+      style={{ background: '#0c0c12', border: `2px solid ${color}44` }}
     >
-      <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 700, lineHeight: 1 }}>
+      <div style={{ color, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, lineHeight: 1 }}>
         <div style={{ fontSize: 16 }}>{rankDisplay}</div>
         <div style={{ fontSize: 14 }}>{symbol}</div>
       </div>
       <div style={{ color, fontSize: 28, textAlign: 'center', lineHeight: 1 }}>
         {symbol}
       </div>
-      <div style={{ color, fontFamily: 'Space Mono, monospace', fontWeight: 700, lineHeight: 1, alignSelf: 'flex-end', transform: 'rotate(180deg)' }}>
+      <div style={{ color, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, lineHeight: 1, alignSelf: 'flex-end', transform: 'rotate(180deg)' }}>
         <div style={{ fontSize: 16 }}>{rankDisplay}</div>
         <div style={{ fontSize: 14 }}>{symbol}</div>
       </div>

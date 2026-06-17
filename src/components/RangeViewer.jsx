@@ -10,29 +10,18 @@ function getHandNotation(r1, r2, i, j) {
 }
 
 const STATUS_COLORS = {
-  raise: { bg: '#00d4aa', text: '#0a0a0f' },
-  mix:   { bg: '#f5a623', text: '#0a0a0f' },
-  fold:  { bg: '#1e1e2e', text: '#444' },
-  call:  { bg: '#4a90e2', text: '#0a0a0f' },
-  threebet: { bg: '#e94560', text: 'white' },
-  push:  { bg: '#00d4aa', text: '#0a0a0f' },
-  complete: { bg: '#f5a623', text: '#0a0a0f' },
+  raise: { bg: '#00e68a', text: '#050508' },
+  mix:   { bg: '#ffaa33', text: '#050508' },
+  fold:  { bg: '#1e1e30', text: '#55556a' },
+  call:  { bg: '#4488ff', text: '#050508' },
+  threebet: { bg: '#ff4466', text: 'white' },
+  push:  { bg: '#00e68a', text: '#050508' },
+  complete: { bg: '#ffaa33', text: '#050508' },
 }
 
-/**
- * RangeViewer — grid 13x13 interativo
- *
- * Props:
- *   pos, stack         — para RFI (busca range em RFI_RANGES automaticamente)
- *   customRange        — { raise: [], mix: [] } ou { push: [], fold: [] } ou { call: [], threebet: [] }
- *   label              — texto do botão (ex: "Ver range push/fold")
- *   legend             — array de [status, label] para a legenda
- *   highlightHand      — mão a destacar com borda vermelha
- */
 export default function RangeViewer({ pos, stack, customRange, label, legend, highlightHand }) {
   const [open, setOpen] = useState(false)
 
-  // Resolve o range: customRange tem prioridade, senão usa RFI_RANGES
   function getStatus(hand) {
     if (customRange) {
       for (const [key, list] of Object.entries(customRange)) {
@@ -55,19 +44,19 @@ export default function RangeViewer({ pos, stack, customRange, label, legend, hi
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold w-full"
-        style={{ background: '#1e1e2e', color: '#4a90e2', border: '1px solid #4a90e230' }}
+        style={{ background: '#12121c', color: '#4488ff', border: '1px solid #4488ff30' }}
       >
         <span>{open ? '▼' : '▶'}</span>
         {resolvedLabel}
       </button>
 
       {open && (
-        <div className="mt-3 rounded-xl p-3 overflow-x-auto" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
+        <div className="mt-3 rounded-xl p-3 overflow-x-auto" style={{ background: '#050508', border: '1px solid #1e1e30' }}>
           <div className="flex gap-3 mb-3 flex-wrap">
             {resolvedLegend.map(([s, l]) => (
               <div key={s} className="flex items-center gap-1">
-                <div style={{ width: 12, height: 12, borderRadius: 3, background: STATUS_COLORS[s]?.bg || '#1e1e2e' }} />
-                <span style={{ color: '#888', fontSize: 11 }}>{l}</span>
+                <div style={{ width: 12, height: 12, borderRadius: 3, background: STATUS_COLORS[s]?.bg || '#1e1e30' }} />
+                <span style={{ color: '#8888a0', fontSize: 11 }}>{l}</span>
               </div>
             ))}
           </div>
@@ -88,12 +77,12 @@ export default function RangeViewer({ pos, stack, customRange, label, legend, hi
                       background: bg,
                       color: text,
                       fontSize: 8,
-                      fontFamily: 'Space Mono',
+                      fontFamily: 'JetBrains Mono',
                       fontWeight: isHighlighted ? 900 : 400,
                       padding: '3px 1px',
                       textAlign: 'center',
                       borderRadius: 2,
-                      outline: isHighlighted ? '2px solid #e94560' : 'none',
+                      outline: isHighlighted ? '2px solid #ff4466' : 'none',
                       minWidth: 0,
                       lineHeight: 1.2,
                       opacity: status === 'fold' ? 0.35 : 1,
@@ -106,7 +95,7 @@ export default function RangeViewer({ pos, stack, customRange, label, legend, hi
             )}
           </div>
 
-          <div className="mt-3 flex gap-4 text-xs" style={{ color: '#555' }}>
+          <div className="mt-3 flex gap-4 text-xs" style={{ color: '#55556a' }}>
             <span>↗ Acima diagonal = suited</span>
             <span>↙ Abaixo diagonal = offsuit</span>
           </div>

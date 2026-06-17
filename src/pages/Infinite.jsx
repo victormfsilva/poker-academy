@@ -132,30 +132,29 @@ function ChipDot({ color }) {
 
 function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, betAmt, actionLabel }) {
   const posLabel = pos === 'UTG+1' ? 'UTG1' : pos
-  const border = isHero ? '2px solid #00ac8d'
-               : isRaiser ? '2px solid #ff8f00'
-               : '2px solid #3a3a3a'
-  const bg = isHero ? '#1a2e2a' : '#2a2a2a'
-  const txtCol = isHero ? '#00ac8d'
-               : isRaiser ? '#ff8f00'
-               : '#ccc'
+  const border = isHero ? '2px solid #00e68a'
+               : isRaiser ? '2px solid #ffaa33'
+               : '2px solid #1e1e30'
+  const bg = isHero ? '#0c1c16' : '#0c0c12'
+  const txtCol = isHero ? '#00e68a'
+               : isRaiser ? '#ffaa33'
+               : '#8888a0'
   const hasBet = isRaiser || isSB || isBB || betAmt
-  const chipColor = isRaiser ? '#ff8f00' : isSB ? '#5ab966' : '#4a9eff'
+  const chipColor = isRaiser ? '#ffaa33' : isSB ? '#00e68a' : '#4488ff'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-      {/* Action label (CHECK, BET etc) above bet chips */}
       {actionLabel && !betAmt && (
         <div style={{
-          fontSize: 9, fontWeight: 800, color: '#888',
-          background: '#1a1a24', borderRadius: 4, padding: '1px 5px',
+          fontSize: 9, fontWeight: 800, color: '#8888a0',
+          background: '#0c0c12', borderRadius: 4, padding: '1px 5px',
           letterSpacing: 0.5,
         }}>{actionLabel}</div>
       )}
       {hasBet && betAmt && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <ChipDot color={chipColor} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#ddd' }}>{betAmt}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#e8e8ed' }}>{betAmt}</span>
         </div>
       )}
       <div style={{
@@ -167,7 +166,7 @@ function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, betAmt, actionLabel })
         <span style={{ fontSize: posLabel.length > 3 ? 7.5 : 10, color: txtCol, fontWeight: 700, lineHeight: 1.1 }}>
           {posLabel}
         </span>
-        <span style={{ fontSize: 9, color: '#666', lineHeight: 1.2 }}>{stack}</span>
+        <span style={{ fontSize: 9, color: '#55556a', lineHeight: 1.2 }}>{stack}</span>
       </div>
     </div>
   )
@@ -189,14 +188,12 @@ const SLOT_POS = [
 function PokerTable({ scenario }) {
   const ctx = scenario.tableContext || {}
 
-  // Determinar posicao do heroi e do raiser baseado no tipo
   let heroPos = ctx.heroPos || 'BTN'
   let raiserPos = ctx.villainPos || null
-  let villainAction = ctx.villainAction || null // 'check', 'bet', 'raise'
+  let villainAction = ctx.villainAction || null
   let villainBetBB = ctx.villainBetBB || null
   let potBB = ctx.potBB || null
 
-  // Fallback: determinar do tipo se nao tem tableContext
   if (!scenario.tableContext) {
     if (scenario.type === 'rfi') {
       heroPos = scenario.pos
@@ -228,14 +225,12 @@ function PokerTable({ scenario }) {
 
   const stack = scenario.stack || 100
 
-  // Pot display
   const displayPot = potBB
     ? `${potBB} bb`
     : raiserPos
       ? `${(stack * 2.5).toFixed(1)} bb`
       : `${(stack * 1.5).toFixed(1)} bb`
 
-  // Board cards no centro da mesa
   const boardCards = scenario.board || null
 
   return (
@@ -243,16 +238,14 @@ function PokerTable({ scenario }) {
       position: 'relative', width: '100%', paddingBottom: '72%',
       userSelect: 'none', overflow: 'visible',
     }}>
-      {/* Mesa oval */}
       <div style={{
         position: 'absolute',
         top: '12%', left: '5%', right: '5%', bottom: '14%',
         borderRadius: 999,
-        border: '2px solid #3a3a3a',
+        border: '2px solid #1e1e30',
         background: 'transparent',
       }} />
 
-      {/* Centro: pot + board cards */}
       <div style={{
         position: 'absolute', top: boardCards ? '42%' : '40%', left: '50%',
         transform: 'translate(-50%, -50%)',
@@ -268,17 +261,16 @@ function PokerTable({ scenario }) {
                 </div>
               ))}
             </div>
-            <div style={{ color: '#ccc', fontSize: 13, fontWeight: 800 }}>{displayPot}</div>
+            <div style={{ color: '#e8e8ed', fontSize: 13, fontWeight: 800 }}>{displayPot}</div>
           </>
         ) : (
           <>
-            <div style={{ color: '#555', fontSize: 10, fontWeight: 600 }}>{stack}bb</div>
-            <div style={{ color: '#ccc', fontSize: 15, fontWeight: 800 }}>{displayPot}</div>
+            <div style={{ color: '#55556a', fontSize: 10, fontWeight: 600 }}>{stack}bb</div>
+            <div style={{ color: '#e8e8ed', fontSize: 15, fontWeight: 800 }}>{displayPot}</div>
           </>
         )}
       </div>
 
-      {/* Dealer button */}
       {btnPos && (
         <div style={{
           position: 'absolute',
@@ -288,18 +280,16 @@ function PokerTable({ scenario }) {
           background: '#d0d0d0', color: '#111',
           fontSize: 9, fontWeight: 900,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '1px solid #888', zIndex: 10,
+          border: '1px solid #8888a0', zIndex: 10,
         }}>D</div>
       )}
 
-      {/* Assentos */}
       {rotated.map((pos, slotIdx) => {
         const p = SLOT_POS[slotIdx]
         const isVillain = pos === raiserPos
         const isSB = pos === 'SB'
         const isBB = pos === 'BB'
 
-        // Bet amount: villain bet, preflop raise, or blind
         let betAmt = null
         let actionLabel = null
 
@@ -308,7 +298,6 @@ function PokerTable({ scenario }) {
         } else if (isVillain && villainAction === 'check') {
           actionLabel = 'CHECK'
         } else if (isVillain && !villainAction) {
-          // Preflop raiser (no tableContext)
           betAmt = `${(stack * 2).toFixed(0)}`
         } else if (isSB && !boardCards) {
           betAmt = `${(stack * 0.5).toFixed(1)}`
@@ -363,10 +352,10 @@ function rfiScenario() {
     moduleId: 1, type: 'rfi', hand, pos, stack,
     label: `RFI · ${pos} · ${stack}bb`,
     buttons: [
-      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
-      { id: 'call', label: 'Call', bg: '#5ab966' },
-      { id: 'raise', label: 'Raise', bg: '#F03C3C' },
-      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+      { id: 'fold', label: 'Fold', bg: '#4488ff' },
+      { id: 'call', label: 'Call', bg: '#00e68a' },
+      { id: 'raise', label: 'Raise', bg: '#ff4466' },
+      { id: 'allin', label: 'All-in', bg: '#ffaa33' },
     ],
     evaluate: (action) => {
       const mapped = action === 'allin' ? 'raise' : action
@@ -397,10 +386,10 @@ function pushfoldScenario() {
     moduleId: 2, type: 'pushfold', hand, pos, stack,
     label: `Push/Fold · ${pos} · ${stack}bb`,
     buttons: [
-      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
-      { id: 'call', label: 'Call', bg: '#5ab966' },
-      { id: 'raise', label: 'Raise', bg: '#F03C3C' },
-      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+      { id: 'fold', label: 'Fold', bg: '#4488ff' },
+      { id: 'call', label: 'Call', bg: '#00e68a' },
+      { id: 'raise', label: 'Raise', bg: '#ff4466' },
+      { id: 'allin', label: 'All-in', bg: '#ffaa33' },
     ],
     evaluate: (action) => ({
       isCorrect: (action === 'allin' ? 'push' : 'fold') === correct,
@@ -423,7 +412,6 @@ function potoddsScenario() {
   const betPct = betPcts[Math.floor(Math.random() * betPcts.length)]
   const potOdds = Math.round((betPct / (100 + betPct)) * 100)
   const correct = equity >= potOdds ? 'call' : 'fold'
-  // Pot after preflop: ~6.5bb (2.5bb raise + call + blinds)
   const potPreflop = 6.5
   const villainBet = +(potPreflop * betPct / 100).toFixed(1)
   const totalPot = +(potPreflop + villainBet).toFixed(1)
@@ -436,10 +424,10 @@ function potoddsScenario() {
       villainBetBB: villainBet, potBB: totalPot,
     },
     buttons: [
-      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
-      { id: 'call', label: 'Call', bg: '#5ab966' },
-      { id: 'raise', label: 'Raise', bg: '#F03C3C' },
-      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+      { id: 'fold', label: 'Fold', bg: '#4488ff' },
+      { id: 'call', label: 'Call', bg: '#00e68a' },
+      { id: 'raise', label: 'Raise', bg: '#ff4466' },
+      { id: 'allin', label: 'All-in', bg: '#ffaa33' },
     ],
     evaluate: (action) => ({
       isCorrect: (action === 'call' || action === 'raise' || action === 'allin' ? 'call' : 'fold') === correct,
@@ -471,10 +459,10 @@ function bbScenario() {
     moduleId: 4, type: 'bb', hand, pos,
     label: `BB vs ${pos}`,
     buttons: [
-      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
-      { id: 'call', label: 'Call', bg: '#5ab966' },
-      { id: 'raise', label: '3-Bet', bg: '#F03C3C' },
-      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+      { id: 'fold', label: 'Fold', bg: '#4488ff' },
+      { id: 'call', label: 'Call', bg: '#00e68a' },
+      { id: 'raise', label: '3-Bet', bg: '#ff4466' },
+      { id: 'allin', label: 'All-in', bg: '#ffaa33' },
     ],
     evaluate: (action) => {
       const mapped = action === 'raise' || action === 'allin' ? '3bet' : action
@@ -507,7 +495,7 @@ function cbetFlopScenario() {
       heroPos: 'BTN', villainPos: 'BB', villainAction: 'check',
       potBB: 6.5,
     },
-    buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet33', label: '33%', bg: '#5ab966' }, { id: 'bet50', label: '50%', bg: '#F03C3C' }, { id: 'bet75', label: '75%', bg: '#ff8f00' }],
+    buttons: [{ id: 'check', label: 'Check', bg: '#4488ff' }, { id: 'bet33', label: '33%', bg: '#00e68a' }, { id: 'bet50', label: '50%', bg: '#ff4466' }, { id: 'bet75', label: '75%', bg: '#ffaa33' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel, isMix: false })
   }
 }
@@ -533,7 +521,7 @@ function blindWarsScenario() {
     return {
       moduleId: 6, type: 'blindwars', hand,
       label: 'Blind Wars · SB',
-      buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'complete', label: 'Complete', bg: '#5ab966' }, { id: 'raise', label: 'Raise', bg: '#F03C3C' }],
+      buttons: [{ id: 'fold', label: 'Fold', bg: '#4488ff' }, { id: 'complete', label: 'Complete', bg: '#00e68a' }, { id: 'raise', label: 'Raise', bg: '#ff4466' }],
       evaluate: (action) => ({ isCorrect: action === correct, correctLabel: correct, isMix: false })
     }
   } else {
@@ -545,7 +533,7 @@ function blindWarsScenario() {
     return {
       moduleId: 6, type: 'blindwars', hand,
       label: 'Blind Wars · BB vs Complete',
-      buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet', label: 'Bet', bg: '#F03C3C' }],
+      buttons: [{ id: 'check', label: 'Check', bg: '#4488ff' }, { id: 'bet', label: 'Bet', bg: '#ff4466' }],
       evaluate: (action) => ({ isCorrect: action === correct, correctLabel: correct, isMix: false })
     }
   }
@@ -597,10 +585,10 @@ function rangeScenario(moduleId) {
     moduleId, type: 'range', hand, pos: raiser,
     label: `${names[moduleId]} · ${myPos} vs ${raiser}`,
     buttons: [
-      { id: 'fold', label: 'Fold', bg: '#3D7CB8' },
-      { id: 'call', label: 'Call', bg: '#5ab966' },
-      { id: 'raise', label: '3-Bet', bg: '#F03C3C' },
-      { id: 'allin', label: 'All-in', bg: '#ff8f00' },
+      { id: 'fold', label: 'Fold', bg: '#4488ff' },
+      { id: 'call', label: 'Call', bg: '#00e68a' },
+      { id: 'raise', label: '3-Bet', bg: '#ff4466' },
+      { id: 'allin', label: 'All-in', bg: '#ffaa33' },
     ],
     evaluate: (action) => {
       const mapped = action === 'raise' || action === 'allin' ? '3bet' : action
@@ -635,7 +623,7 @@ function defenseCbetScenario() {
       heroPos: 'BB', villainPos: 'CO', villainAction: 'bet',
       villainBetBB: villainBet, potBB: totalPot,
     },
-    buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }, { id: 'raise', label: 'Check-Raise', bg: '#F03C3C' }],
+    buttons: [{ id: 'fold', label: 'Fold', bg: '#4488ff' }, { id: 'call', label: 'Call', bg: '#00e68a' }, { id: 'raise', label: 'Check-Raise', bg: '#ff4466' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'raise' ? 'Check-Raise' : correctAction, isMix: false })
   }
 }
@@ -656,7 +644,7 @@ function checkRaiseScenario() {
   else if (hasAnyPair(hole, flop) && tex.isDry) correctAction = 'call'
   else if (hasFlushDraw(hole, flop)) correctAction = 'call'
   else correctAction = 'fold'
-  const cbetBB = +(6.5 * 0.5).toFixed(1) // villain bets 50%
+  const cbetBB = +(6.5 * 0.5).toFixed(1)
   return {
     moduleId: 11, type: 'board', hand: null, board: flop, hole,
     label: `Check-Raise · ${tex.isWet ? 'Wet' : 'Dry'}`,
@@ -664,7 +652,7 @@ function checkRaiseScenario() {
       heroPos: 'BB', villainPos: 'BTN', villainAction: 'bet',
       villainBetBB: cbetBB, potBB: +(6.5 + cbetBB).toFixed(1),
     },
-    buttons: [{ id: 'fold', label: 'Fold', bg: '#3D7CB8' }, { id: 'call', label: 'Call', bg: '#5ab966' }, { id: 'raise', label: 'Check-Raise', bg: '#F03C3C' }],
+    buttons: [{ id: 'fold', label: 'Fold', bg: '#4488ff' }, { id: 'call', label: 'Call', bg: '#00e68a' }, { id: 'raise', label: 'Check-Raise', bg: '#ff4466' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'raise' ? 'Check-Raise' : correctAction, isMix: false })
   }
 }
@@ -693,7 +681,7 @@ function betSizingScenario() {
       heroPos: 'BTN', villainPos: 'BB', villainAction: 'check',
       potBB: 6.5,
     },
-    buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet33', label: '33%', bg: '#5ab966' }, { id: 'bet50', label: '50%', bg: '#F03C3C' }, { id: 'bet75', label: '75%', bg: '#ff8f00' }],
+    buttons: [{ id: 'check', label: 'Check', bg: '#4488ff' }, { id: 'bet33', label: '33%', bg: '#00e68a' }, { id: 'bet50', label: '50%', bg: '#ff4466' }, { id: 'bet75', label: '75%', bg: '#ffaa33' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'check' ? 'Check' : correctAction.replace('bet', 'Bet '), isMix: false })
   }
 }
@@ -719,7 +707,7 @@ function donkBetScenario() {
       heroPos: 'BB', villainPos: 'CO',
       potBB: 6.5,
     },
-    buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'donk', label: 'Donk Bet', bg: '#F03C3C' }],
+    buttons: [{ id: 'check', label: 'Check', bg: '#4488ff' }, { id: 'donk', label: 'Donk Bet', bg: '#ff4466' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'donk' ? 'Donk Bet' : 'Check', isMix: false })
   }
 }
@@ -753,9 +741,9 @@ function cbetTurnScenario() {
     label: `CBet Turn · ${scary ? 'Scary' : 'Brick'}`,
     tableContext: {
       heroPos: 'BTN', villainPos: 'BB', villainAction: 'check',
-      potBB: 13, // after flop cbet + call
+      potBB: 13,
     },
-    buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'bet', label: 'Double Barrel', bg: '#F03C3C' }],
+    buttons: [{ id: 'check', label: 'Check', bg: '#4488ff' }, { id: 'bet', label: 'Double Barrel', bg: '#ff4466' }],
     evaluate: (action) => ({ isCorrect: action === correctAction, correctLabel: correctAction === 'bet' ? 'Double Barrel' : 'Check', isMix: false })
   }
 }
@@ -790,9 +778,9 @@ function riverPlayScenario() {
     label: 'River Play',
     tableContext: {
       heroPos: 'BTN', villainPos: 'BB', villainAction: 'check',
-      potBB: 26, // after flop + turn action
+      potBB: 26,
     },
-    buttons: [{ id: 'check', label: 'Check', bg: '#3D7CB8' }, { id: 'value-med', label: 'Value Med', bg: '#5ab966' }, { id: 'value-big', label: 'Value Big', bg: '#F03C3C' }, { id: 'bluff', label: 'Blefe', bg: '#ff8f00' }],
+    buttons: [{ id: 'check', label: 'Check', bg: '#4488ff' }, { id: 'value-med', label: 'Value Med', bg: '#00e68a' }, { id: 'value-big', label: 'Value Big', bg: '#ff4466' }, { id: 'bluff', label: 'Blefe', bg: '#ffaa33' }],
     evaluate: (action) => ({
       isCorrect: action === correctAction,
       correctLabel: { check: 'Check', 'value-med': 'Value Medio', 'value-big': 'Value Big', bluff: 'Blefe' }[correctAction],
@@ -878,7 +866,7 @@ function dynamicScenarioQuestion(moduleId) {
   return {
     moduleId, type: 'scenario', hand: null, question: t.q,
     label: '',
-    buttons: opts.map(o => ({ id: o.id, label: o.label, bg: '#3D7CB8' })),
+    buttons: opts.map(o => ({ id: o.id, label: o.label, bg: '#4488ff' })),
     evaluate: (action) => {
       const chosen = opts.find(o => o.id === action)
       const correctOpt = opts.find(o => o.correct)
@@ -925,10 +913,10 @@ function newScenario(unlockedIds) {
 // MODULE COLORS & NAMES
 // ================================================================
 const MOD_COLORS = {
-  1: '#e94560', 2: '#f5a623', 3: '#4a90e2', 4: '#00d4aa', 5: '#f5a623',
-  6: '#e94560', 7: '#00d4aa', 8: '#e94560', 9: '#f5a623', 10: '#4a90e2',
-  11: '#f5a623', 12: '#00d4aa', 13: '#e94560', 14: '#f5a623', 15: '#4a90e2',
-  16: '#00d4aa', 17: '#f5a623', 18: '#4a90e2', 19: '#e94560', 20: '#00d4aa', 21: '#e94560',
+  1: '#ff4466', 2: '#ffaa33', 3: '#4488ff', 4: '#00e68a', 5: '#ffaa33',
+  6: '#ff4466', 7: '#00e68a', 8: '#ff4466', 9: '#ffaa33', 10: '#4488ff',
+  11: '#ffaa33', 12: '#00e68a', 13: '#ff4466', 14: '#ffaa33', 15: '#4488ff',
+  16: '#00e68a', 17: '#ffaa33', 18: '#4488ff', 19: '#ff4466', 20: '#00e68a', 21: '#ff4466',
 }
 
 const MOD_NAMES_SHORT = {
@@ -991,9 +979,8 @@ export default function Infinite() {
   const selectNone = () => setSelectedModules(new Set())
 
   const acc = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
-  const accColor = acc >= 90 ? '#00d4aa' : acc >= 70 ? '#f5a623' : '#e94560'
+  const accColor = acc >= 90 ? '#00e68a' : acc >= 70 ? '#ffaa33' : '#ff4466'
 
-  // Build range data for RangeViewer on feedback
   const rangeViewerProps = (() => {
     if (!result) return null
     const s = scenario
@@ -1019,7 +1006,6 @@ export default function Infinite() {
       if (s.moduleId === 7) { dataSource = SB_VS_RFI; myPos = 'SB' }
       else if (s.moduleId === 8) { dataSource = BTN_VS_RFI; myPos = 'BTN' }
       else {
-        // Module 9: detect from label
         if (s.label.includes('SB vs')) { dataSource = SB_VS_RFI; myPos = 'SB' }
         else if (s.label.includes('BTN vs')) { dataSource = BTN_VS_RFI; myPos = 'BTN' }
         else { dataSource = BB_VS_RFI; myPos = 'BB' }
@@ -1034,7 +1020,6 @@ export default function Infinite() {
       }
     }
     if (s.type === 'bb') {
-      // BB defense — rebuild range from scenario data
       const bbKeyMap = { UTG: 'vsUTG', 'UTG+1': 'vsUTG1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO', BTN: 'vsBTN', SB: 'vsSB' }
       const range = BB_VS_RFI?.[bbKeyMap[s.pos]] || {}
       return {
@@ -1063,97 +1048,89 @@ export default function Infinite() {
     return null
   })()
 
-  // Cards for hand-based scenarios
   const cards = scenario.hand ? handToCards(scenario.hand) : null
 
-  // Determine if we show the poker table (range/preflop scenarios) or just cards
   const showTable = scenario.type === 'rfi' || scenario.type === 'pushfold' || scenario.type === 'bb'
     || scenario.type === 'blindwars' || scenario.type === 'range'
     || scenario.type === 'board' || scenario.type === 'potodds'
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20" style={{ background: '#050508' }}>
       <div className="max-w-2xl mx-auto px-4 pt-6">
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mb-5">
           {[
-            { label: 'Maos', value: stats.total, color: '#e94560' },
+            { label: 'Maos', value: stats.total, color: '#ff4466' },
             { label: 'Acerto', value: stats.total ? `${acc}%` : '--', color: accColor },
-            { label: 'Sequencia', value: streak, color: '#f5a623' },
+            { label: 'Sequencia', value: streak, color: '#ffaa33' },
           ].map(s => (
-            <div key={s.label} className="rounded-xl py-3 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-              <div style={{ color: s.color, fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{s.value}</div>
-              <div style={{ color: '#444', fontSize: 11, marginTop: 3 }}>{s.label}</div>
+            <div key={s.label} className="rounded-xl py-3 text-center" style={{ background: '#0c0c12', border: '1px solid #1e1e30' }}>
+              <div style={{ color: s.color, fontSize: 22, fontWeight: 800, fontFamily: 'JetBrains Mono', lineHeight: 1 }}>{s.value}</div>
+              <div style={{ color: '#55556a', fontSize: 11, marginTop: 3 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Card principal */}
         <div className="rounded-2xl mb-4"
-          style={{ background: '#12121a', border: `1px solid ${result ? (result.isCorrect ? '#00ac8d55' : '#F03C3C55') : '#1e1e2e'}` }}>
+          style={{ background: '#0c0c12', border: `1px solid ${result ? (result.isCorrect ? '#00e68a55' : '#ff446655') : '#1e1e30'}` }}>
 
           <div style={{ height: 12 }} />
 
-          {/* Poker Table for all non-scenario types */}
           {showTable && (
             <div className="px-2 pt-1 pb-1">
               <PokerTable scenario={scenario} />
             </div>
           )}
 
-          {/* Hero cards below table for hand-based */}
           {cards && showTable && (
             <>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: -8, marginBottom: 12 }}>
                 {cards.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
               </div>
               <div className="px-5 pb-3 text-center">
-                <div style={{ color: '#ffb800', fontSize: 26, fontWeight: 800, letterSpacing: 2, textShadow: '0 0 12px #ffb80060' }}>
+                <div style={{ color: '#00e68a', fontSize: 26, fontWeight: 800, fontFamily: 'JetBrains Mono', letterSpacing: 2, textShadow: '0 0 12px #00e68a60' }}>
                   {scenario.hand}
                 </div>
-                <div style={{ color: '#444', fontSize: 12, marginTop: 2 }}>
+                <div style={{ color: '#55556a', fontSize: 12, marginTop: 2 }}>
                   {scenario.stack ? `${scenario.stack}bb` : '100bb'}
                 </div>
               </div>
             </>
           )}
 
-          {/* Hole cards for board-based (shown below table) */}
           {scenario.hole && showTable && (
             <div className="px-5 pb-3">
-              <div style={{ color: '#666', fontSize: 11, fontWeight: 600, marginBottom: 8, textAlign: 'center' }}>SUA MAO</div>
+              <div style={{ color: '#55556a', fontSize: 11, fontWeight: 600, marginBottom: 8, textAlign: 'center' }}>SUA MAO</div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
                 {scenario.hole.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
               </div>
             </div>
           )}
 
-          {/* Scenario question for text-based (no table) */}
           {scenario.type === 'scenario' && (
             <div className="px-5 pb-3">
-              <p style={{ color: '#ccc', fontSize: 15, lineHeight: 1.6 }}>{scenario.question}</p>
+              <p style={{ color: '#e8e8ed', fontSize: 15, lineHeight: 1.6 }}>{scenario.question}</p>
             </div>
           )}
 
-          {/* Extra info (pot odds etc) */}
           {scenario.extraInfo && (
-            <div className="mx-4 mb-3 rounded-lg p-3" style={{ background: '#0a0a0f' }}>
-              <div style={{ color: '#888', fontSize: 13 }}>{scenario.extraInfo}</div>
+            <div className="mx-4 mb-3 rounded-lg p-3" style={{ background: '#050508' }}>
+              <div style={{ color: '#8888a0', fontSize: 13, fontFamily: 'JetBrains Mono' }}>{scenario.extraInfo}</div>
             </div>
           )}
 
-          {/* Feedback */}
           {result && (
             <div className="mx-4 mb-3 rounded-lg px-4 py-3" style={{
-              background: result.isCorrect ? '#00ac8d15' : '#F03C3C15',
-              border: `1px solid ${result.isCorrect ? '#00ac8d40' : '#F03C3C40'}`
+              background: result.isCorrect ? '#00e68a15' : '#ff446615',
+              border: `1px solid ${result.isCorrect ? '#00e68a40' : '#ff446640'}`
             }}>
-              <div style={{ color: result.isCorrect ? '#00ac8d' : '#F03C3C', fontWeight: 700, fontSize: 16 }}>
+              <div style={{ color: result.isCorrect ? '#00e68a' : '#ff4466', fontWeight: 700, fontSize: 16 }}>
                 {result.isCorrect ? '✓ Correto!' : `✗ Errou — era ${result.correctLabel}`}
               </div>
               {result.isMix && (
-                <div style={{ color: '#ff8f00', fontSize: 12, marginTop: 3 }}>Mao de transicao — ambas as acoes sao aceitaveis.</div>
+                <div style={{ color: '#ffaa33', fontSize: 12, marginTop: 3 }}>Mao de transicao — ambas as acoes sao aceitaveis.</div>
               )}
               {rangeViewerProps && (
                 <RangeViewer {...rangeViewerProps} />
@@ -1170,7 +1147,7 @@ export default function Infinite() {
                     style={{
                       flex: 1, minWidth: 0, padding: '14px 4px', borderRadius: 8, fontWeight: 700,
                       fontSize: 13, border: 'none', cursor: 'pointer', letterSpacing: 0.3,
-                      color: '#f5f5f5', textShadow: '0 1px 2px #0008', background: b.bg,
+                      color: '#050508', textShadow: 'none', background: b.bg,
                     }}>
                     {b.label}
                   </button>
@@ -1180,8 +1157,8 @@ export default function Infinite() {
               <button onClick={handleNext}
                 style={{
                   width: '100%', padding: '14px', borderRadius: 8,
-                  background: '#1e1e2e', border: '1px solid #333',
-                  color: '#f5f5f5', fontWeight: 700, fontSize: 15,
+                  background: '#12121c', border: '1px solid #1e1e30',
+                  color: '#e8e8ed', fontWeight: 700, fontSize: 15,
                   cursor: 'pointer', letterSpacing: 0.5,
                 }}>
                 Proxima Mao →
@@ -1194,24 +1171,24 @@ export default function Infinite() {
         <div className="flex gap-2 mb-3">
           <button onClick={() => { setShowFilter(!showFilter); setShowModuleStats(false) }}
             className="flex-1 py-2 rounded-lg text-sm font-semibold"
-            style={{ background: showFilter ? '#e9456022' : '#12121a', color: showFilter ? '#e94560' : '#666', border: `1px solid ${showFilter ? '#e94560' : '#1e1e2e'}` }}>
+            style={{ background: showFilter ? '#00e68a22' : '#0c0c12', color: showFilter ? '#00e68a' : '#55556a', border: `1px solid ${showFilter ? '#00e68a' : '#1e1e30'}` }}>
             Filtrar Modulos
           </button>
           <button onClick={() => { setShowModuleStats(!showModuleStats); setShowFilter(false) }}
             className="flex-1 py-2 rounded-lg text-sm font-semibold"
-            style={{ background: showModuleStats ? '#4a90e222' : '#12121a', color: showModuleStats ? '#4a90e2' : '#666', border: `1px solid ${showModuleStats ? '#4a90e2' : '#1e1e2e'}` }}>
+            style={{ background: showModuleStats ? '#4488ff22' : '#0c0c12', color: showModuleStats ? '#4488ff' : '#55556a', border: `1px solid ${showModuleStats ? '#4488ff' : '#1e1e30'}` }}>
             Stats por Modulo
           </button>
         </div>
 
         {/* Module filter */}
         {showFilter && (
-          <div className="rounded-xl p-4 mb-3" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-4 mb-3" style={{ background: '#0c0c12', border: '1px solid #1e1e30' }}>
             <div className="flex justify-between items-center mb-3">
-              <div style={{ color: '#888', fontSize: 12, fontWeight: 600 }}>SELECIONE OS MODULOS</div>
+              <div style={{ color: '#8888a0', fontSize: 12, fontWeight: 600 }}>SELECIONE OS MODULOS</div>
               <div className="flex gap-2">
-                <button onClick={selectAll} className="text-xs px-2 py-1 rounded" style={{ color: '#00d4aa', background: '#00d4aa15' }}>Todos</button>
-                <button onClick={selectNone} className="text-xs px-2 py-1 rounded" style={{ color: '#e94560', background: '#e9456015' }}>Nenhum</button>
+                <button onClick={selectAll} className="text-xs px-2 py-1 rounded" style={{ color: '#00e68a', background: '#00e68a15' }}>Todos</button>
+                <button onClick={selectNone} className="text-xs px-2 py-1 rounded" style={{ color: '#ff4466', background: '#ff446615' }}>Nenhum</button>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -1221,16 +1198,16 @@ export default function Infinite() {
                   <button key={id} onClick={() => toggleModule(id)}
                     className="rounded-lg px-3 py-2 text-xs font-bold transition-all"
                     style={{
-                      background: active ? `${MOD_COLORS[id]}22` : '#0a0a0f',
-                      color: active ? MOD_COLORS[id] : '#444',
-                      border: `1px solid ${active ? MOD_COLORS[id] : '#1e1e2e'}`,
+                      background: active ? `${MOD_COLORS[id]}22` : '#050508',
+                      color: active ? MOD_COLORS[id] : '#55556a',
+                      border: `1px solid ${active ? MOD_COLORS[id] : '#1e1e30'}`,
                     }}>
                     {id}. {MOD_NAMES_SHORT[id]}
                   </button>
                 )
               })}
             </div>
-            <div style={{ color: '#555', fontSize: 11, marginTop: 8 }}>
+            <div style={{ color: '#55556a', fontSize: 11, marginTop: 8 }}>
               {activeIds.length === 0 ? 'Nenhum selecionado — usando todos' : `${activeIds.length} modulo${activeIds.length > 1 ? 's' : ''} ativo${activeIds.length > 1 ? 's' : ''}`}
             </div>
           </div>
@@ -1238,10 +1215,10 @@ export default function Infinite() {
 
         {/* Per-module stats */}
         {showModuleStats && (
-          <div className="rounded-xl p-4 mb-3" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-            <div style={{ color: '#888', fontSize: 12, fontWeight: 600, marginBottom: 8 }}>ACERTO POR MODULO</div>
+          <div className="rounded-xl p-4 mb-3" style={{ background: '#0c0c12', border: '1px solid #1e1e30' }}>
+            <div style={{ color: '#8888a0', fontSize: 12, fontWeight: 600, marginBottom: 8 }}>ACERTO POR MODULO</div>
             {Object.keys(moduleStats).length === 0 ? (
-              <div style={{ color: '#444', fontSize: 13 }}>Jogue algumas maos para ver as estatisticas.</div>
+              <div style={{ color: '#55556a', fontSize: 13 }}>Jogue algumas maos para ver as estatisticas.</div>
             ) : (
               <div className="space-y-2">
                 {Object.entries(moduleStats)
@@ -1252,15 +1229,15 @@ export default function Infinite() {
                   })
                   .map(([id, ms]) => {
                     const modAcc = ms.total > 0 ? Math.round((ms.correct / ms.total) * 100) : 0
-                    const color = modAcc >= 90 ? '#00d4aa' : modAcc >= 70 ? '#f5a623' : '#e94560'
+                    const color = modAcc >= 90 ? '#00e68a' : modAcc >= 70 ? '#ffaa33' : '#ff4466'
                     return (
                       <div key={id} className="flex items-center gap-3">
                         <div style={{ width: 90, color: MOD_COLORS[id], fontSize: 12, fontWeight: 600 }}>{MOD_NAMES_SHORT[id]}</div>
-                        <div className="flex-1 rounded-full h-2" style={{ background: '#1e1e2e' }}>
+                        <div className="flex-1 rounded-full h-2" style={{ background: '#1e1e30' }}>
                           <div className="rounded-full h-2 transition-all" style={{ width: `${modAcc}%`, background: color }} />
                         </div>
-                        <div style={{ color, fontSize: 13, fontWeight: 700, width: 45, textAlign: 'right' }}>{modAcc}%</div>
-                        <div style={{ color: '#555', fontSize: 11, width: 30 }}>{ms.total}x</div>
+                        <div style={{ color, fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono', width: 45, textAlign: 'right' }}>{modAcc}%</div>
+                        <div style={{ color: '#55556a', fontSize: 11, width: 30 }}>{ms.total}x</div>
                       </div>
                     )
                   })}

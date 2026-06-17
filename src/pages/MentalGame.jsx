@@ -12,9 +12,6 @@ function saveData(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 }
 
-// ============================================================
-// CHECK-IN PRÉ-SESSÃO
-// ============================================================
 function PreSessionCheckin({ onComplete }) {
   const [humor, setHumor] = useState(null)
   const [sono, setSono] = useState(null)
@@ -32,10 +29,10 @@ function PreSessionCheckin({ onComplete }) {
   const allSelected = humor && sono && estresse
 
   function getRecommendation() {
-    if (score >= 13) return { text: 'Você está em ótimo estado! Jogue com confiança.', color: '#00d4aa', icon: '🟢' }
-    if (score >= 10) return { text: 'Estado bom. Jogue normalmente, mas fique atento aos sinais de tilt.', color: '#f5a623', icon: '🟡' }
-    if (score >= 7) return { text: 'Estado médio. Considere jogar menos mesas ou sessão mais curta.', color: '#f5a623', icon: '🟠' }
-    return { text: 'Estado ruim. Recomendamos NAO jogar agora. Descanse, exercite-se ou medite.', color: '#e94560', icon: '🔴' }
+    if (score >= 13) return { text: 'Você está em ótimo estado! Jogue com confiança.', color: '#00e68a', icon: '🟢' }
+    if (score >= 10) return { text: 'Estado bom. Jogue normalmente, mas fique atento aos sinais de tilt.', color: '#ffaa33', icon: '🟡' }
+    if (score >= 7) return { text: 'Estado médio. Considere jogar menos mesas ou sessão mais curta.', color: '#ffaa33', icon: '🟠' }
+    return { text: 'Estado ruim. Recomendamos NAO jogar agora. Descanse, exercite-se ou medite.', color: '#ff4466', icon: '🔴' }
   }
 
   function handleSave() {
@@ -50,17 +47,17 @@ function PreSessionCheckin({ onComplete }) {
   function RatingRow({ label, value, onChange }) {
     return (
       <div className="mb-4">
-        <div style={{ color: '#aaa', fontSize: 14, marginBottom: 8 }}>{label}</div>
+        <div style={{ color: '#8888a0', fontSize: 14, marginBottom: 8 }}>{label}</div>
         <div className="flex gap-2">
           {options.map(o => (
             <button key={o.value} onClick={() => onChange(o.value)}
               className="flex-1 py-3 rounded-lg text-center transition-all"
               style={{
-                background: value === o.value ? '#1e1e2e' : '#0a0a0f',
-                border: `2px solid ${value === o.value ? '#e94560' : '#1e1e2e'}`,
+                background: value === o.value ? '#12121c' : '#050508',
+                border: `2px solid ${value === o.value ? '#00e68a' : '#1e1e30'}`,
               }}>
               <div style={{ fontSize: 22 }}>{o.label}</div>
-              <div style={{ color: '#666', fontSize: 11 }}>{o.desc}</div>
+              <div style={{ color: '#55556a', fontSize: 11 }}>{o.desc}</div>
             </button>
           ))}
         </div>
@@ -70,24 +67,24 @@ function PreSessionCheckin({ onComplete }) {
 
   return (
     <div>
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>🧘 Check-in Pré-Sessão</h2>
+      <h2 style={{ color: '#e8e8ed', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>Check-in Pré-Sessão</h2>
       <RatingRow label="Como está seu humor?" value={humor} onChange={setHumor} />
       <RatingRow label="Como dormiu?" value={sono} onChange={setSono} />
       <RatingRow label="Nível de estresse? (5 = sem estresse)" value={estresse} onChange={setEstresse} />
 
       {rec && (
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${rec.color}` }}>
+        <div className="rounded-xl p-4 mb-4" style={{ background: '#0c0c12', border: `2px solid ${rec.color}` }}>
           <div className="flex items-center gap-2 mb-2">
             <span style={{ fontSize: 20 }}>{rec.icon}</span>
-            <span style={{ color: rec.color, fontWeight: 700, fontSize: 16 }}>Score: {score}/15</span>
+            <span style={{ color: rec.color, fontWeight: 700, fontSize: 16, fontFamily: 'JetBrains Mono' }}>Score: {score}/15</span>
           </div>
-          <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6 }}>{rec.text}</p>
+          <p style={{ color: '#e8e8ed', fontSize: 14, lineHeight: 1.6 }}>{rec.text}</p>
         </div>
       )}
 
       {allSelected && (
         <button onClick={handleSave} className="w-full py-3 rounded-xl font-bold"
-          style={{ background: '#e94560', color: 'white' }}>
+          style={{ background: '#00e68a', color: '#050508' }}>
           Salvar Check-in
         </button>
       )}
@@ -95,9 +92,6 @@ function PreSessionCheckin({ onComplete }) {
   )
 }
 
-// ============================================================
-// DIÁRIO DE SESSÃO
-// ============================================================
 function SessionDiary({ onComplete }) {
   const [buyins, setBuyins] = useState('')
   const [result, setResult] = useState('')
@@ -115,82 +109,72 @@ function SessionDiary({ onComplete }) {
 
   function handleSave() {
     const data = loadData()
-    data.sessions.push({
-      buyins: parseFloat(buyins) || 0,
-      result: parseFloat(result) || 0,
-      emotion,
-      tiltMoment,
-      lesson,
-      date: Date.now(),
-    })
+    data.sessions.push({ buyins: parseFloat(buyins) || 0, result: parseFloat(result) || 0, emotion, tiltMoment, lesson, date: Date.now() })
     saveData(data)
     onComplete()
   }
 
   return (
     <div>
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>📓 Diário de Sessão</h2>
+      <h2 style={{ color: '#e8e8ed', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>Diário de Sessão</h2>
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div>
-          <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>BUY-INS JOGADOS</label>
+          <label style={{ color: '#8888a0', fontSize: 11, display: 'block', marginBottom: 4, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Buy-ins jogados</label>
           <input type="number" value={buyins} onChange={e => setBuyins(e.target.value)} placeholder="Ex: 3"
-            className="w-full px-3 py-2 rounded-lg text-white"
-            style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+            className="w-full px-3 py-2 rounded-lg"
+            style={{ background: '#050508', border: '1px solid #1e1e30', outline: 'none', color: '#e8e8ed', fontSize: 14 }} />
         </div>
         <div>
-          <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>RESULTADO (bb)</label>
+          <label style={{ color: '#8888a0', fontSize: 11, display: 'block', marginBottom: 4, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Resultado (bb)</label>
           <input type="number" value={result} onChange={e => setResult(e.target.value)} placeholder="Ex: -150"
-            className="w-full px-3 py-2 rounded-lg text-white"
-            style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+            className="w-full px-3 py-2 rounded-lg"
+            style={{ background: '#050508', border: '1px solid #1e1e30', outline: 'none', color: '#e8e8ed', fontSize: 14 }} />
         </div>
       </div>
 
       <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>COMO VOCE SE SENTIU?</div>
+        <div style={{ color: '#8888a0', fontSize: 11, marginBottom: 8, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Como voce se sentiu?</div>
         <div className="flex gap-2">
           {emotions.map(e => (
             <button key={e.value} onClick={() => setEmotion(e.value)}
               className="flex-1 py-3 rounded-lg text-center"
               style={{
-                background: emotion === e.value ? '#1e1e2e' : '#0a0a0f',
-                border: `2px solid ${emotion === e.value ? '#e94560' : '#1e1e2e'}`,
+                background: emotion === e.value ? '#12121c' : '#050508',
+                border: `2px solid ${emotion === e.value ? '#00e68a' : '#1e1e30'}`,
               }}>
               <div style={{ fontSize: 20 }}>{e.label}</div>
-              <div style={{ color: '#666', fontSize: 10 }}>{e.desc}</div>
+              <div style={{ color: '#55556a', fontSize: 10 }}>{e.desc}</div>
             </button>
           ))}
         </div>
       </div>
 
       <div className="mb-4">
-        <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>MOMENTO DE TILT (opcional)</label>
+        <label style={{ color: '#8888a0', fontSize: 11, display: 'block', marginBottom: 4, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Momento de tilt (opcional)</label>
         <textarea value={tiltMoment} onChange={e => setTiltMoment(e.target.value)}
           placeholder="Descreva um momento em que você sentiu tilt..."
-          className="w-full px-3 py-2 rounded-lg text-white resize-none"
+          className="w-full px-3 py-2 rounded-lg resize-none"
           rows={2}
-          style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+          style={{ background: '#050508', border: '1px solid #1e1e30', outline: 'none', color: '#e8e8ed', fontSize: 14 }} />
       </div>
 
       <div className="mb-4">
-        <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>LIÇÃO DA SESSÃO (opcional)</label>
+        <label style={{ color: '#8888a0', fontSize: 11, display: 'block', marginBottom: 4, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Lição da sessão (opcional)</label>
         <textarea value={lesson} onChange={e => setLesson(e.target.value)}
           placeholder="O que você aprendeu hoje?"
-          className="w-full px-3 py-2 rounded-lg text-white resize-none"
+          className="w-full px-3 py-2 rounded-lg resize-none"
           rows={2}
-          style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+          style={{ background: '#050508', border: '1px solid #1e1e30', outline: 'none', color: '#e8e8ed', fontSize: 14 }} />
       </div>
 
       <button onClick={handleSave} className="w-full py-3 rounded-xl font-bold"
-        style={{ background: '#e94560', color: 'white' }}>
+        style={{ background: '#00e68a', color: '#050508' }}>
         Salvar Sessão
       </button>
     </div>
   )
 }
 
-// ============================================================
-// EXERCÍCIOS DE RESPIRAÇÃO
-// ============================================================
 function BreathingExercise() {
   const [active, setActive] = useState(false)
   const [phase, setPhase] = useState('inhale')
@@ -217,17 +201,17 @@ function BreathingExercise() {
   }, [active, phase])
 
   const phaseLabels = { inhale: 'INSPIRE', hold: 'SEGURE', exhale: 'EXPIRE' }
-  const phaseColors = { inhale: '#4a90e2', hold: '#f5a623', exhale: '#00d4aa' }
+  const phaseColors = { inhale: '#4488ff', hold: '#ffaa33', exhale: '#00e68a' }
 
   return (
     <div className="text-center">
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>🫁 Respiração 4-7-8</h2>
-      <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Técnica anti-tilt: inspire 4s, segure 7s, expire 8s</p>
+      <h2 style={{ color: '#e8e8ed', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Respiração 4-7-8</h2>
+      <p style={{ color: '#8888a0', fontSize: 13, marginBottom: 20 }}>Técnica anti-tilt: inspire 4s, segure 7s, expire 8s</p>
 
       {!active ? (
         <button onClick={() => { setActive(true); setPhase('inhale'); setCount(4); setCycles(0) }}
           className="px-8 py-4 rounded-xl font-bold text-lg"
-          style={{ background: '#e94560', color: 'white' }}>
+          style={{ background: '#00e68a', color: '#050508' }}>
           Iniciar Exercício
         </button>
       ) : (
@@ -241,14 +225,14 @@ function BreathingExercise() {
               transform: phase === 'inhale' ? 'scale(1.1)' : phase === 'exhale' ? 'scale(0.9)' : 'scale(1)',
             }}>
             <div>
-              <div style={{ color: phaseColors[phase], fontSize: 14, fontWeight: 700 }}>{phaseLabels[phase]}</div>
-              <div style={{ color: 'white', fontSize: 48, fontWeight: 700 }}>{count}</div>
+              <div style={{ color: phaseColors[phase], fontSize: 14, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{phaseLabels[phase]}</div>
+              <div style={{ color: '#e8e8ed', fontSize: 48, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{count}</div>
             </div>
           </div>
-          <div style={{ color: '#666', fontSize: 13 }}>Ciclos completos: {cycles}</div>
+          <div style={{ color: '#55556a', fontSize: 13 }}>Ciclos completos: {cycles}</div>
           <button onClick={() => setActive(false)}
             className="mt-4 px-6 py-2 rounded-lg text-sm"
-            style={{ background: '#1e1e2e', color: '#888' }}>
+            style={{ background: '#12121c', color: '#8888a0' }}>
             Parar
           </button>
         </>
@@ -257,9 +241,6 @@ function BreathingExercise() {
   )
 }
 
-// ============================================================
-// FRASES DE ANCORAGEM
-// ============================================================
 function MindsetCards() {
   const phrases = [
     { text: 'Foque no processo, não no resultado.', category: 'Mindset' },
@@ -277,39 +258,30 @@ function MindsetCards() {
   ]
 
   const [current, setCurrent] = useState(0)
-
-  function next() {
-    setCurrent((current + 1) % phrases.length)
-  }
-
   const p = phrases[current]
-  const catColor = { Mindset: '#4a90e2', Tilt: '#e94560', Variance: '#f5a623', Processo: '#00d4aa', 'Stop-loss': '#e94560' }
+  const catColor = { Mindset: '#4488ff', Tilt: '#ff4466', Variance: '#ffaa33', Processo: '#00e68a', 'Stop-loss': '#ff4466' }
 
   return (
     <div className="text-center">
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 20 }}>💎 Frases de Ancoragem</h2>
-      <div className="rounded-xl p-6 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e', minHeight: 120 }}>
+      <h2 style={{ color: '#e8e8ed', fontWeight: 700, fontSize: 18, marginBottom: 20 }}>Frases de Ancoragem</h2>
+      <div className="rounded-xl p-6 mb-4" style={{ background: '#0c0c12', border: '1px solid #1e1e30', minHeight: 120 }}>
         <span className="px-2 py-1 rounded text-xs font-bold mb-3 inline-block"
           style={{ background: `${catColor[p.category]}22`, color: catColor[p.category] }}>
           {p.category}
         </span>
-        <p style={{ color: 'white', fontSize: 20, fontWeight: 600, lineHeight: 1.5, marginTop: 8 }}>"{p.text}"</p>
+        <p style={{ color: '#e8e8ed', fontSize: 20, fontWeight: 600, lineHeight: 1.5, marginTop: 8 }}>"{p.text}"</p>
       </div>
-      <button onClick={next} className="px-6 py-3 rounded-xl font-bold"
-        style={{ background: '#e94560', color: 'white' }}>
+      <button onClick={() => setCurrent((current + 1) % phrases.length)} className="px-6 py-3 rounded-xl font-bold"
+        style={{ background: '#00e68a', color: '#050508' }}>
         Próxima Frase →
       </button>
-      <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>{current + 1}/{phrases.length}</div>
+      <div style={{ color: '#55556a', fontSize: 12, marginTop: 8 }}>{current + 1}/{phrases.length}</div>
     </div>
   )
 }
 
-// ============================================================
-// HISTÓRICO
-// ============================================================
 function History() {
-  const [data, setData] = useState(loadData)
-
+  const [data] = useState(loadData)
   const sessions = [...(data.sessions || [])].reverse().slice(0, 20)
   const checkins = [...(data.checkins || [])].reverse().slice(0, 10)
 
@@ -317,7 +289,7 @@ function History() {
     return (
       <div className="text-center py-12">
         <div style={{ fontSize: 48, marginBottom: 8 }}>📊</div>
-        <p style={{ color: '#666' }}>Nenhum registro ainda. Faça um check-in ou registre uma sessão!</p>
+        <p style={{ color: '#55556a' }}>Nenhum registro ainda. Faça um check-in ou registre uma sessão!</p>
       </div>
     )
   }
@@ -326,22 +298,22 @@ function History() {
 
   return (
     <div>
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>📊 Histórico</h2>
+      <h2 style={{ color: '#e8e8ed', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>Histórico</h2>
       {sessions.length > 0 && (
         <>
-          <div style={{ color: '#888', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>SESSÕES RECENTES</div>
+          <div style={{ color: '#8888a0', fontSize: 11, fontWeight: 600, marginBottom: 8, fontFamily: 'JetBrains Mono', letterSpacing: 1 }}>SESSOES RECENTES</div>
           <div className="space-y-2 mb-6">
             {sessions.map((s, i) => (
               <div key={i} className="rounded-lg p-3 flex items-center justify-between"
-                style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
+                style={{ background: '#050508', border: '1px solid #1e1e30' }}>
                 <div className="flex items-center gap-3">
                   <span style={{ fontSize: 20 }}>{emotionMap[s.emotion] || '❓'}</span>
                   <div>
-                    <div style={{ color: '#ccc', fontSize: 13 }}>{new Date(s.date).toLocaleDateString('pt-BR')}</div>
-                    <div style={{ color: '#666', fontSize: 11 }}>{s.buyins} buy-ins</div>
+                    <div style={{ color: '#e8e8ed', fontSize: 13 }}>{new Date(s.date).toLocaleDateString('pt-BR')}</div>
+                    <div style={{ color: '#55556a', fontSize: 11 }}>{s.buyins} buy-ins</div>
                   </div>
                 </div>
-                <div style={{ color: s.result >= 0 ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 16 }}>
+                <div style={{ color: s.result >= 0 ? '#00e68a' : '#ff4466', fontWeight: 700, fontSize: 16, fontFamily: 'JetBrains Mono' }}>
                   {s.result >= 0 ? '+' : ''}{s.result}bb
                 </div>
               </div>
@@ -351,13 +323,13 @@ function History() {
       )}
       {checkins.length > 0 && (
         <>
-          <div style={{ color: '#888', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>CHECK-INS RECENTES</div>
+          <div style={{ color: '#8888a0', fontSize: 11, fontWeight: 600, marginBottom: 8, fontFamily: 'JetBrains Mono', letterSpacing: 1 }}>CHECK-INS RECENTES</div>
           <div className="space-y-2">
             {checkins.map((c, i) => (
               <div key={i} className="rounded-lg p-3 flex items-center justify-between"
-                style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
-                <div style={{ color: '#ccc', fontSize: 13 }}>{new Date(c.date).toLocaleDateString('pt-BR')}</div>
-                <div style={{ color: c.score >= 13 ? '#00d4aa' : c.score >= 10 ? '#f5a623' : c.score >= 7 ? '#f5a623' : '#e94560', fontWeight: 700 }}>
+                style={{ background: '#050508', border: '1px solid #1e1e30' }}>
+                <div style={{ color: '#e8e8ed', fontSize: 13 }}>{new Date(c.date).toLocaleDateString('pt-BR')}</div>
+                <div style={{ color: c.score >= 13 ? '#00e68a' : c.score >= 10 ? '#ffaa33' : c.score >= 7 ? '#ffaa33' : '#ff4466', fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
                   {c.score}/15
                 </div>
               </div>
@@ -369,9 +341,6 @@ function History() {
   )
 }
 
-// ============================================================
-// STOP-LOSS TRACKER
-// ============================================================
 function StopLoss() {
   const [limit, setLimit] = useState('')
   const [current, setCurrent] = useState('')
@@ -383,45 +352,45 @@ function StopLoss() {
 
   return (
     <div>
-      <h2 style={{ color: 'white', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>🛑 Stop-Loss Tracker</h2>
-      <p style={{ color: '#888', fontSize: 13, marginBottom: 16 }}>Defina seu limite de perda ANTES da sessão</p>
+      <h2 style={{ color: '#e8e8ed', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Stop-Loss Tracker</h2>
+      <p style={{ color: '#8888a0', fontSize: 13, marginBottom: 16 }}>Defina seu limite de perda ANTES da sessão</p>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div>
-          <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>LIMITE DE PERDA (bb)</label>
+          <label style={{ color: '#8888a0', fontSize: 11, display: 'block', marginBottom: 4, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Limite de perda (bb)</label>
           <input type="number" value={limit} onChange={e => setLimit(e.target.value)} placeholder="Ex: 300"
-            className="w-full px-3 py-2 rounded-lg text-white"
-            style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+            className="w-full px-3 py-2 rounded-lg"
+            style={{ background: '#050508', border: '1px solid #1e1e30', outline: 'none', color: '#e8e8ed', fontSize: 14 }} />
         </div>
         <div>
-          <label style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>RESULTADO ATUAL (bb)</label>
+          <label style={{ color: '#8888a0', fontSize: 11, display: 'block', marginBottom: 4, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Resultado atual (bb)</label>
           <input type="number" value={current} onChange={e => setCurrent(e.target.value)} placeholder="Ex: -150"
-            className="w-full px-3 py-2 rounded-lg text-white"
-            style={{ background: '#0a0a0f', border: '1px solid #1e1e2e', outline: 'none' }} />
+            className="w-full px-3 py-2 rounded-lg"
+            style={{ background: '#050508', border: '1px solid #1e1e30', outline: 'none', color: '#e8e8ed', fontSize: 14 }} />
         </div>
       </div>
 
       {limitNum > 0 && (
-        <div className="rounded-xl p-4" style={{ background: '#12121a', border: `2px solid ${shouldStop ? '#e94560' : pct > 60 ? '#f5a623' : '#1e1e2e'}` }}>
+        <div className="rounded-xl p-4" style={{ background: '#0c0c12', border: `2px solid ${shouldStop ? '#ff4466' : pct > 60 ? '#ffaa33' : '#1e1e30'}` }}>
           <div className="flex justify-between mb-2">
-            <span style={{ color: '#888', fontSize: 12 }}>Perda atual</span>
-            <span style={{ color: shouldStop ? '#e94560' : '#888', fontSize: 12, fontWeight: 700 }}>{pct.toFixed(0)}% do limite</span>
+            <span style={{ color: '#8888a0', fontSize: 12 }}>Perda atual</span>
+            <span style={{ color: shouldStop ? '#ff4466' : '#8888a0', fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{pct.toFixed(0)}% do limite</span>
           </div>
-          <div className="rounded-full h-3" style={{ background: '#1e1e2e' }}>
+          <div className="rounded-full h-3" style={{ background: '#12121c' }}>
             <div className="rounded-full h-3 transition-all" style={{
               width: `${pct}%`,
-              background: shouldStop ? '#e94560' : pct > 60 ? '#f5a623' : '#00d4aa',
+              background: shouldStop ? '#ff4466' : pct > 60 ? '#ffaa33' : '#00e68a',
             }} />
           </div>
           {shouldStop && (
             <div className="mt-3 text-center">
-              <div style={{ color: '#e94560', fontSize: 20, fontWeight: 700 }}>🛑 PARE DE JOGAR!</div>
-              <p style={{ color: '#888', fontSize: 13, marginTop: 4 }}>Você atingiu seu limite de stop-loss. Encerre a sessão agora.</p>
+              <div style={{ color: '#ff4466', fontSize: 20, fontWeight: 700 }}>🛑 PARE DE JOGAR!</div>
+              <p style={{ color: '#8888a0', fontSize: 13, marginTop: 4 }}>Você atingiu seu limite de stop-loss. Encerre a sessão agora.</p>
             </div>
           )}
           {pct > 60 && !shouldStop && (
             <div className="mt-3 text-center">
-              <div style={{ color: '#f5a623', fontSize: 14, fontWeight: 600 }}>⚠️ Atenção — próximo do limite</div>
+              <div style={{ color: '#ffaa33', fontSize: 14, fontWeight: 600 }}>⚠️ Atenção — próximo do limite</div>
             </div>
           )}
         </div>
@@ -430,9 +399,6 @@ function StopLoss() {
   )
 }
 
-// ============================================================
-// PÁGINA PRINCIPAL
-// ============================================================
 export default function MentalGame() {
   const [activeTab, setActiveTab] = useState('checkin')
   const [saved, setSaved] = useState(false)
@@ -452,14 +418,14 @@ export default function MentalGame() {
   }
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#050508' }}>
       <div className="max-w-2xl mx-auto pt-6">
-        <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>🧠 Mental Game</h1>
-        <p style={{ color: '#666', marginBottom: 24 }}>Controle emocional e anti-tilt</p>
+        <h1 style={{ color: '#e8e8ed', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Mental Game</h1>
+        <p style={{ color: '#55556a', marginBottom: 24, fontSize: 14 }}>Controle emocional e anti-tilt</p>
 
         {saved && (
-          <div className="rounded-lg p-3 mb-4 text-center" style={{ background: '#00d4aa22', border: '1px solid #00d4aa' }}>
-            <span style={{ color: '#00d4aa', fontWeight: 600 }}>✓ Salvo com sucesso!</span>
+          <div className="rounded-lg p-3 mb-4 text-center" style={{ background: '#00e68a22', border: '1px solid #00e68a' }}>
+            <span style={{ color: '#00e68a', fontWeight: 600 }}>✓ Salvo com sucesso!</span>
           </div>
         )}
 
@@ -467,7 +433,7 @@ export default function MentalGame() {
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
-              style={{ background: activeTab === t.id ? '#e94560' : '#12121a', color: activeTab === t.id ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
+              style={{ background: activeTab === t.id ? '#00e68a' : '#0c0c12', color: activeTab === t.id ? '#050508' : '#8888a0', border: '1px solid #1e1e30' }}>
               {t.icon} {t.label}
             </button>
           ))}

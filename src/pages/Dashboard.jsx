@@ -39,10 +39,10 @@ function getBadge(completedIds) {
   const intermediateDone = [7,8,9,10,11,12].every(has)
   const basicDone = [1,2,3,4,5,6].every(has)
 
-  if (advancedDone && intermediateDone && basicDone) return { name: 'Avançado', icon: '🏆', color: '#f5a623', desc: 'Todos os 21 módulos completos!' }
-  if (intermediateDone && basicDone) return { name: 'Intermediário Avançado', icon: '💎', color: '#4a90e2', desc: 'Módulos 1-12 completos' }
-  if (basicDone) return { name: 'Iniciante Sólido', icon: '⭐', color: '#00d4aa', desc: 'Módulos 1-6 completos' }
-  return { name: 'Aprendiz', icon: '📖', color: '#888', desc: 'Complete os módulos 1-6' }
+  if (advancedDone && intermediateDone && basicDone) return { name: 'Avançado', icon: '🏆', color: '#ffaa33' }
+  if (intermediateDone && basicDone) return { name: 'Intermediário', icon: '💎', color: '#4488ff' }
+  if (basicDone) return { name: 'Sólido', icon: '⭐', color: '#00e68a' }
+  return { name: 'Aprendiz', icon: '📖', color: '#8888a0' }
 }
 
 export default function Dashboard() {
@@ -61,57 +61,57 @@ export default function Dashboard() {
   }) || MODULES[MODULES.length - 1]
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#050508' }}>
       <div className="max-w-2xl mx-auto pt-6">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <h1 style={{ color: 'white', fontSize: 26, fontWeight: 700 }}>
-              ♠ Poker Academy <span style={{ color: '#e94560' }}>BR</span>
+            <h1 style={{ color: '#e8e8ed', fontSize: 24, fontWeight: 700 }}>
+              <span style={{ color: '#00e68a', fontFamily: 'JetBrains Mono' }}>♠</span> Poker Academy <span style={{ color: '#00e68a' }}>BR</span>
             </h1>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: `${badge.color}15`, border: `1px solid ${badge.color}44` }}>
-              <span style={{ fontSize: 16 }}>{badge.icon}</span>
-              <span style={{ color: badge.color, fontSize: 13, fontWeight: 700 }}>{badge.name}</span>
+              <span style={{ fontSize: 14 }}>{badge.icon}</span>
+              <span style={{ color: badge.color, fontSize: 12, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>{badge.name}</span>
             </div>
           </div>
-          <p style={{ color: '#666', marginTop: 4 }}>{motivationalMessage(progress.globalStats)}</p>
+          <p style={{ color: '#55556a', marginTop: 4, fontSize: 14 }}>{motivationalMessage(progress.globalStats)}</p>
         </div>
 
         {/* Stats globais */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: 'Mãos Treinadas', value: progress.globalStats.totalHands, color: '#4a90e2' },
-            { label: 'Taxa de Acerto', value: `${globalAcc}%`, color: globalAcc >= 90 ? '#00d4aa' : globalAcc >= 60 ? '#f5a623' : '#e94560' },
-            { label: 'Melhor Sequência', value: progress.globalStats.bestStreak, color: '#f5a623' },
+            { label: 'Mãos Treinadas', value: progress.globalStats.totalHands, color: '#00e68a' },
+            { label: 'Taxa de Acerto', value: `${globalAcc}%`, color: globalAcc >= 90 ? '#00e68a' : globalAcc >= 60 ? '#ffaa33' : '#ff4466' },
+            { label: 'Melhor Streak', value: progress.globalStats.bestStreak, color: '#ffaa33' },
           ].map(s => (
             <div key={s.label} className="rounded-xl p-4 text-center"
-              style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-              <div style={{ color: s.color, fontSize: 24, fontWeight: 700 }}>{s.value}</div>
-              <div style={{ color: '#666', fontSize: 12, marginTop: 2 }}>{s.label}</div>
+              style={{ background: '#0c0c12', border: '1px solid #1e1e30' }}>
+              <div style={{ color: s.color, fontSize: 24, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{s.value}</div>
+              <div style={{ color: '#55556a', fontSize: 11, marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Módulo atual */}
         {currentModule && (
-          <div className="rounded-xl p-4 mb-6" style={{ background: '#12121a', border: '1px solid #e94560' }}>
-            <div style={{ color: '#e94560', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>MÓDULO ATUAL</div>
-            <div style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>
+          <div className="rounded-xl p-4 mb-6" style={{ background: '#0c0c12', border: '1px solid #00e68a44' }}>
+            <div style={{ color: '#00e68a', fontSize: 11, fontWeight: 600, marginBottom: 4, fontFamily: 'JetBrains Mono', letterSpacing: 1.5 }}>MODULO ATUAL</div>
+            <div style={{ color: '#e8e8ed', fontSize: 17, fontWeight: 700 }}>
               {currentModule.icon} {currentModule.name}
             </div>
-            <div style={{ color: '#888', fontSize: 14, marginTop: 2 }}>{currentModule.desc}</div>
+            <div style={{ color: '#8888a0', fontSize: 13, marginTop: 2 }}>{currentModule.desc}</div>
             <Link
               to={`/modulos/${currentModule.id}`}
               className="inline-block mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-              style={{ background: '#e94560', color: 'white' }}
+              style={{ background: '#00e68a', color: '#050508' }}
             >
-              Continuar →
+              Continuar
             </Link>
           </div>
         )}
 
         {/* Lista de módulos */}
-        <h2 style={{ color: 'white', fontWeight: 600, marginBottom: 12 }}>Todos os Módulos</h2>
+        <h2 style={{ color: '#e8e8ed', fontWeight: 600, marginBottom: 12, fontSize: 16 }}>Todos os Módulos</h2>
         <div className="flex flex-col gap-3">
           {MODULES.map(m => {
             const p = getModuleProgress(m.id)
@@ -123,43 +123,42 @@ export default function Dashboard() {
               <div key={m.id}
                 className="rounded-xl p-4"
                 style={{
-                  background: '#12121a',
-                  border: `1px solid ${p.completed ? '#00d4aa' : locked ? '#1e1e2e' : '#1e1e2e'}`,
-                  opacity: locked ? 0.6 : 1,
+                  background: '#0c0c12',
+                  border: `1px solid ${p.completed ? '#00e68a44' : '#1e1e30'}`,
+                  opacity: locked ? 0.5 : 1,
                 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span style={{ fontSize: 24 }}>{locked ? '🔒' : p.completed ? '✅' : m.icon}</span>
+                    <span style={{ fontSize: 22 }}>{locked ? '🔒' : p.completed ? '✅' : m.icon}</span>
                     <div>
-                      <div style={{ color: 'white', fontWeight: 600 }}>Módulo {m.id} — {m.name}</div>
-                      <div style={{ color: '#666', fontSize: 13 }}>{m.desc}</div>
+                      <div style={{ color: '#e8e8ed', fontWeight: 600, fontSize: 14 }}>Módulo {m.id} — {m.name}</div>
+                      <div style={{ color: '#55556a', fontSize: 12 }}>{m.desc}</div>
                     </div>
                   </div>
                   {!locked && (
                     <Link
                       to={`/modulos/${m.id}`}
-                      className="px-3 py-1 rounded-lg text-sm font-semibold"
-                      style={{ background: '#1e1e2e', color: '#e94560' }}
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold"
+                      style={{ background: p.completed ? '#00e68a22' : '#12121c', color: p.completed ? '#00e68a' : '#8888a0', border: '1px solid #1e1e30' }}
                     >
                       {p.completed ? 'Revisar' : 'Abrir'}
                     </Link>
                   )}
                 </div>
 
-                {/* Barra de progresso */}
                 {!locked && (
                   <div className="mt-3">
-                    <div className="flex justify-between text-xs mb-1" style={{ color: '#666' }}>
-                      <span>{acc}% de acerto · {p.totalAnswered || 0} mãos</span>
-                      <span style={{ color: goodSessions >= 2 ? '#00d4aa' : '#666' }}>{goodSessions}/2 sessões 90%+</span>
+                    <div className="flex justify-between text-xs mb-1" style={{ color: '#55556a' }}>
+                      <span style={{ fontFamily: 'JetBrains Mono', fontSize: 11 }}>{acc}% · {p.totalAnswered || 0} mãos</span>
+                      <span style={{ color: goodSessions >= 2 ? '#00e68a' : '#55556a', fontFamily: 'JetBrains Mono', fontSize: 11 }}>{goodSessions}/2 sessões 90%+</span>
                     </div>
-                    <div className="rounded-full h-2" style={{ background: '#1e1e2e' }}>
+                    <div className="rounded-full h-1.5" style={{ background: '#12121c' }}>
                       <div
-                        className="rounded-full h-2 transition-all"
+                        className="rounded-full h-1.5 transition-all"
                         style={{
                           width: `${Math.min(acc, 100)}%`,
-                          background: acc >= 90 ? '#00d4aa' : acc >= 60 ? '#f5a623' : '#e94560'
+                          background: acc >= 90 ? '#00e68a' : acc >= 60 ? '#ffaa33' : '#ff4466'
                         }}
                       />
                     </div>
