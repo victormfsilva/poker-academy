@@ -267,7 +267,6 @@ function PokerTable({ scenario, heroCards }) {
       }}>
         {boardCards ? (
           <>
-            <div style={{ fontSize: 11, color: '#676671', marginBottom: 4 }}>{displayPot}</div>
             <div style={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
               {boardCards.map((c, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
@@ -276,19 +275,36 @@ function PokerTable({ scenario, heroCards }) {
                 </div>
               ))}
             </div>
-            {/* Chip stack icon */}
-            <div style={{ marginTop: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 3 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4fce82', border: '1px solid rgba(0,0,0,0.3)' }} />
-              <span style={{ color: '#676671', fontSize: 10 }}>{displayPot.replace('bb','')}</span>
+            {/* Chip stack */}
+            <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+              <div style={{ position: 'relative', width: 14, height: 16 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    position: 'absolute', bottom: i * 3, left: 0,
+                    width: 14, height: 6, borderRadius: 3,
+                    background: i === 2 ? '#4fce82' : i === 1 ? '#3ab870' : '#2a9a5a',
+                    border: '1px solid rgba(0,0,0,0.25)',
+                  }} />
+                ))}
+              </div>
+              <span style={{ color: '#b3b3b8', fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>{displayPot}</span>
             </div>
           </>
         ) : (
           <>
-            <div style={{ fontSize: 11, color: '#676671', marginBottom: 2 }}>{displayPot}</div>
-            {/* Chip icon */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 3, marginTop: 2 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4fce82', border: '1.5px solid rgba(0,0,0,0.3)' }} />
-              <span style={{ color: '#676671', fontSize: 10 }}>{displayPot.replace('bb','')}</span>
+            {/* Chip stack */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+              <div style={{ position: 'relative', width: 14, height: 16 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    position: 'absolute', bottom: i * 3, left: 0,
+                    width: 14, height: 6, borderRadius: 3,
+                    background: i === 2 ? '#4fce82' : i === 1 ? '#3ab870' : '#2a9a5a',
+                    border: '1px solid rgba(0,0,0,0.25)',
+                  }} />
+                ))}
+              </div>
+              <span style={{ color: '#b3b3b8', fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>{displayPot}</span>
             </div>
           </>
         )}
