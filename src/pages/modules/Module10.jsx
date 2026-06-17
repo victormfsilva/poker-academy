@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import Card from '../../components/Card'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
@@ -417,32 +418,22 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
-        <div style={{ color: '#e5484d', fontSize: 18, fontWeight: 700 }}>Voce esta no BB (OOP)</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Adversario fez c-bet de <strong style={{ color: '#f5a623' }}>{cbetSize}</strong> do pote</div>
-        {texture && (
-          <div className="mt-2 flex gap-2 justify-center flex-wrap">
-            <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#4fce8222' : '#e5484d22', color: texture.isDry ? '#4fce82' : '#e5484d' }}>
-              {texture.isDry ? 'Board Seco' : 'Board Umido'}
-            </span>
-            {texture.monotone && <span className="px-2 py-1 rounded text-xs" style={{ background: '#e5484d22', color: '#e5484d' }}>Monotone</span>}
-            {texture.suited && !texture.monotone && <span className="px-2 py-1 rounded text-xs" style={{ background: '#4a90e222', color: '#4a90e2' }}>Flush Possivel</span>}
-            {texture.connected && <span className="px-2 py-1 rounded text-xs" style={{ background: '#f5a62322', color: '#f5a623' }}>Conectado</span>}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>SUAS CARTAS</div>
-        <div className="flex justify-center gap-3 mb-4">
-          {hole?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>FLOP</div>
-        <div className="flex justify-center gap-3">
-          {flop?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-      </div>
+      <ModulePokerTable
+        heroPos="BB"
+        villainPos="CO"
+        heroCards={hole || []}
+        boardCards={flop || []}
+        villainAction={`Bet ${cbetSize}`}
+        potLabel="6.5bb"
+        contextTitle="Voce esta no BB (OOP)"
+        contextDesc={`Adversario fez c-bet de ${cbetSize} do pote`}
+        textureTags={texture ? [
+          { label: texture.isDry ? 'Board Seco' : 'Board Umido', color: texture.isDry ? '#4fce82' : '#e5484d' },
+          ...(texture.monotone ? [{ label: 'Monotone', color: '#e5484d' }] : []),
+          ...(texture.suited && !texture.monotone ? [{ label: 'Flush Possivel', color: '#0a84d7' }] : []),
+          ...(texture.connected ? [{ label: 'Conectado', color: '#f5a623' }] : []),
+        ] : null}
+      />
 
       {!feedback && (
         <div className="grid grid-cols-3 gap-3 mb-4">

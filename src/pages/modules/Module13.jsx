@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import Card from '../../components/Card'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
@@ -285,31 +286,19 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        <div style={{ color: '#e5484d', fontSize: 18, fontWeight: 700 }}>Você está no BB (OOP)</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Você chamou o raise pre-flop. Flop saiu. Donk bet ou check?</div>
-        {texture && (
-          <div className="mt-2 flex gap-2 justify-center flex-wrap">
-            <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#4fce8222' : '#e5484d22', color: texture.isDry ? '#4fce82' : '#e5484d' }}>
-              {texture.isDry ? 'Board Seco' : 'Board Umido'}
-            </span>
-            {texture.lowBoard && <span className="px-2 py-1 rounded text-xs" style={{ background: '#f5a62322', color: '#f5a623' }}>Board Baixo</span>}
-            {!texture.lowBoard && <span className="px-2 py-1 rounded text-xs" style={{ background: '#88888822', color: '#888' }}>Board Alto</span>}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>SUAS CARTAS</div>
-        <div className="flex justify-center gap-3 mb-4">
-          {hole?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>FLOP</div>
-        <div className="flex justify-center gap-3">
-          {flop?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-      </div>
+      <ModulePokerTable
+        heroPos="BB"
+        villainPos="CO"
+        heroCards={hole || []}
+        boardCards={flop || []}
+        potLabel="6.5bb"
+        contextTitle="Voce esta no BB (OOP)"
+        contextDesc="Voce chamou o raise pre-flop. Flop saiu. Donk bet ou check?"
+        textureTags={texture ? [
+          { label: texture.isDry ? 'Board Seco' : 'Board Umido', color: texture.isDry ? '#4fce82' : '#e5484d' },
+          { label: texture.lowBoard ? 'Board Baixo' : 'Board Alto', color: texture.lowBoard ? '#f5a623' : '#888' },
+        ] : null}
+      />
 
       {!feedback && (
         <div className="grid grid-cols-2 gap-3 mb-4">

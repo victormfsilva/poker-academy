@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import Card from '../../components/Card'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
@@ -425,34 +426,19 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        <div style={{ color: '#4fce82', fontSize: 18, fontWeight: 700 }}>Você está IP — Turn</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Você c-betou no flop e chamaram. Turn saiu. Double barrel?</div>
-        {turnInfo && (
-          <div className="mt-2">
-            <span className="px-2 py-1 rounded text-xs" style={{
-              background: turnInfo.scary ? '#e5484d22' : '#4fce8222',
-              color: turnInfo.scary ? '#e5484d' : '#4fce82'
-            }}>
-              {turnInfo.desc}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>SUAS CARTAS</div>
-        <div className="flex justify-center gap-3 mb-4">
-          {hole?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>FLOP + TURN</div>
-        <div className="flex justify-center gap-3">
-          {flop?.map((c, i) => <Card key={i} card={c} size="md" />)}
-          {turn && <div style={{ borderLeft: '2px solid #333', margin: '0 4px' }} />}
-          {turn && <Card card={turn} size="md" />}
-        </div>
-      </div>
+      <ModulePokerTable
+        heroPos="BTN"
+        villainPos="BB"
+        heroCards={hole || []}
+        boardCards={flop && turn ? [...flop, turn] : flop || []}
+        villainAction="Call"
+        potLabel="13bb"
+        contextTitle="Voce esta IP — Turn"
+        contextDesc="Voce c-betou no flop e chamaram. Turn saiu. Double barrel?"
+        textureTags={turnInfo ? [
+          { label: turnInfo.desc, color: turnInfo.scary ? '#e5484d' : '#4fce82' },
+        ] : null}
+      />
 
       {!feedback && (
         <div className="grid grid-cols-2 gap-3 mb-4">

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import Card from '../../components/Card'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
@@ -303,32 +304,22 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
-        <div style={{ color: '#4a90e2', fontSize: 18, fontWeight: 700 }}>Voce esta IP (em posicao)</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Voce fez o raise pre-flop. Adversario checou para voce no flop.</div>
-        {texture && (
-          <div className="mt-2 flex gap-2 justify-center flex-wrap">
-            <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#4fce8222' : '#e5484d22', color: texture.isDry ? '#4fce82' : '#e5484d' }}>
-              {texture.isDry ? 'Board Seco' : 'Board Umido'}
-            </span>
-            {texture.suited && <span className="px-2 py-1 rounded text-xs" style={{ background: '#4a90e222', color: '#4a90e2' }}>Flush Draw</span>}
-            {texture.connected && <span className="px-2 py-1 rounded text-xs" style={{ background: '#f5a62322', color: '#f5a623' }}>Conectado</span>}
-            {texture.paired && <span className="px-2 py-1 rounded text-xs" style={{ background: '#88888822', color: '#888' }}>Pareado</span>}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>SUAS CARTAS</div>
-        <div className="flex justify-center gap-3 mb-4">
-          {hole?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>FLOP</div>
-        <div className="flex justify-center gap-3">
-          {flop?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-      </div>
+      <ModulePokerTable
+        heroPos="BTN"
+        villainPos="BB"
+        heroCards={hole || []}
+        boardCards={flop || []}
+        villainAction="Check"
+        potLabel="6.5bb"
+        contextTitle="Voce esta IP (em posicao)"
+        contextDesc="Voce fez o raise pre-flop. Adversario checou para voce no flop."
+        textureTags={texture ? [
+          { label: texture.isDry ? 'Board Seco' : 'Board Umido', color: texture.isDry ? '#4fce82' : '#e5484d' },
+          ...(texture.suited ? [{ label: 'Flush Draw', color: '#0a84d7' }] : []),
+          ...(texture.connected ? [{ label: 'Conectado', color: '#f5a623' }] : []),
+          ...(texture.paired ? [{ label: 'Pareado', color: '#888' }] : []),
+        ] : null}
+      />
 
       {!feedback && (
         <div className="space-y-3 mb-4">

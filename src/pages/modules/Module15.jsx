@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import Card from '../../components/Card'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
@@ -353,26 +354,16 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        <div style={{ color: '#4fce82', fontSize: 18, fontWeight: 700 }}>Você está IP — River</div>
-        <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Todas as cartas foram reveladas. Qual sua ação final?</div>
-      </div>
-
-      <div className="mb-4">
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>SUAS CARTAS</div>
-        <div className="flex justify-center gap-3 mb-4">
-          {hole?.map((c, i) => <Card key={i} card={c} size="md" />)}
-        </div>
-        <div style={{ color: '#888', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>BOARD COMPLETO</div>
-        <div className="flex justify-center gap-2">
-          {board?.slice(0, 3).map((c, i) => <Card key={i} card={c} size="md" />)}
-          {board && <div style={{ borderLeft: '2px solid #333', margin: '0 2px' }} />}
-          {board?.[3] && <Card card={board[3]} size="md" />}
-          {board && <div style={{ borderLeft: '2px solid #333', margin: '0 2px' }} />}
-          {board?.[4] && <Card card={board[4]} size="md" />}
-        </div>
-      </div>
+      <ModulePokerTable
+        heroPos="BTN"
+        villainPos="BB"
+        heroCards={hole || []}
+        boardCards={board || []}
+        villainAction="Check"
+        potLabel="26bb"
+        contextTitle="Voce esta IP — River"
+        contextDesc="Todas as cartas foram reveladas. Qual sua acao final?"
+      />
 
       {!feedback && (
         <div className="grid grid-cols-2 gap-3 mb-4">
