@@ -113,9 +113,9 @@ function Lesson({ onComplete }) {
             onClick={() => setTab(t.id)}
             className="px-4 py-2 rounded-lg text-sm font-semibold"
             style={{
-              background: tab === t.id ? '#e94560' : '#12121a',
+              background: tab === t.id ? '#e5484d' : '#1a1a1d',
               color: tab === t.id ? 'white' : '#888',
-              border: '1px solid #1e1e2e',
+              border: '1px solid #2a2a2e',
             }}
           >
             {t.label}
@@ -126,16 +126,16 @@ function Lesson({ onComplete }) {
       {tab === 'conceitos' && (
         <div className="space-y-4">
           <Section title="O que é RFI?">
-            RFI significa "Raise First In" — em português, <strong style={{ color: '#e94560' }}>você é o primeiro a apostar na rodada</strong>. Ninguém abriu antes de você. É a situação mais comum no poker de torneios e a mais importante de dominar.
+            RFI significa "Raise First In" — em português, <strong style={{ color: '#e5484d' }}>você é o primeiro a apostar na rodada</strong>. Ninguém abriu antes de você. É a situação mais comum no poker de torneios e a mais importante de dominar.
           </Section>
 
           <Section title="Fichas na Mesa — Quanto Importa">
             <div className="grid grid-cols-2 gap-3 mt-2">
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-                <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>Muitas fichas (50-100bb)</div>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+                <div style={{ color: '#4fce82', fontWeight: 600, marginBottom: 4 }}>Muitas fichas (50-100bb)</div>
                 <div style={{ color: '#ccc', fontSize: 14 }}>Você pode se dar ao luxo de entrar com mãos conectadas do mesmo naipe (tipo 8♠7♠) — tem fichas para jogar depois do flop.</div>
               </div>
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #f5a623' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Poucas fichas (15-25bb)</div>
                 <div style={{ color: '#ccc', fontSize: 14 }}>Priorize mãos grandes e fortes (AK, AQ, KQ) — com poucas fichas, você quer ganhar na hora, não depender do flop.</div>
               </div>
@@ -147,7 +147,7 @@ function Lesson({ onComplete }) {
               {POSITIONS.map(pos => (
                 <div key={pos} className="flex items-center gap-3">
                   <div style={{ width: 60, color: POSITION_INFO[pos].color, fontWeight: 600, fontSize: 14 }}>{pos}</div>
-                  <div className="flex-1 rounded-full h-3" style={{ background: '#1e1e2e' }}>
+                  <div className="flex-1 rounded-full h-3" style={{ background: '#2a2a2e' }}>
                     <div
                       className="rounded-full h-3"
                       style={{
@@ -167,14 +167,14 @@ function Lesson({ onComplete }) {
 
           <Section title="O Truque do Ás com Poucas Fichas">
             Quando você tem poucas fichas e vai all-in, ter um Ás na mão é valioso não só pelo Ás em si — ele <strong style={{ color: '#f5a623' }}>reduz a chance do adversário também ter um Ás</strong>, o que significa menos chance de ele te chamar com mão forte. <br /><br />
-            Exemplo: <strong style={{ color: '#e94560' }}>A5 do mesmo naipe com 12 fichas</strong> — mesmo sendo uma mão mediana, vai all-in mais que K5 por causa desse efeito.
+            Exemplo: <strong style={{ color: '#e5484d' }}>A5 do mesmo naipe com 12 fichas</strong> — mesmo sendo uma mão mediana, vai all-in mais que K5 por causa desse efeito.
           </Section>
 
           <Section title="Quantos Jogadores Podem Te Atrapalhar?">
             Quanto mais cedo você age na mesa, mais jogadores têm a chance de entrar no pote depois de você — e isso é ruim. Por isso quando você está nas primeiras posições (UTG), só abre com as melhores mãos.
             <div className="grid grid-cols-3 gap-2 mt-3">
               {POSITIONS.map(pos => (
-                <div key={pos} className="text-center rounded-lg p-2" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
+                <div key={pos} className="text-center rounded-lg p-2" style={{ background: '#0f0f0f', border: '1px solid #2a2a2e' }}>
                   <div style={{ color: POSITION_INFO[pos].color, fontWeight: 700 }}>{pos}</div>
                   <div style={{ color: '#888', fontSize: 12 }}>{POSITION_INFO[pos].playersAfter} jogadores depois</div>
                 </div>
@@ -187,7 +187,7 @@ function Lesson({ onComplete }) {
       {tab === 'ranges' && (
         <div>
           <p style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>
-            Aqui você vê quantas mãos cada posição pode abrir dependendo de quantas fichas você tem. <span style={{ color: '#00d4aa' }}>Verde</span> = abre, <span style={{ color: '#f5a623' }}>Amarelo</span> = depende do contexto, cinza = folda.
+            Aqui você vê quantas mãos cada posição pode abrir dependendo de quantas fichas você tem. <span style={{ color: '#4fce82' }}>Verde</span> = abre, <span style={{ color: '#f5a623' }}>Amarelo</span> = depende do contexto, cinza = folda.
           </p>
           <div className="overflow-x-auto">
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -201,7 +201,7 @@ function Lesson({ onComplete }) {
               </thead>
               <tbody>
                 {POSITIONS.map(pos => (
-                  <tr key={pos} style={{ borderTop: '1px solid #1e1e2e' }}>
+                  <tr key={pos} style={{ borderTop: '1px solid #2a2a2e' }}>
                     <td style={{ color: POSITION_INFO[pos].color, padding: '10px 8px', fontWeight: 600, fontSize: 14 }}>{pos}</td>
                     {STACKS.map(s => {
                       const pct = getRangePercent(pos, s)
@@ -210,7 +210,7 @@ function Lesson({ onComplete }) {
                       return (
                         <td key={s} style={{ padding: '10px 8px', textAlign: 'center' }}>
                           <span style={{
-                            color: pct >= 40 ? '#00d4aa' : pct >= 25 ? '#f5a623' : '#e94560',
+                            color: pct >= 40 ? '#4fce82' : pct >= 25 ? '#f5a623' : '#e5484d',
                             fontWeight: 700, fontSize: 15
                           }}>
                             ~{pct}%
@@ -227,8 +227,8 @@ function Lesson({ onComplete }) {
 
           <div className="mt-6">
             <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 12 }}>Exemplo: Mãos do BTN com 100 fichas</h3>
-            <div className="rounded-lg p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
-              <div style={{ color: '#00d4aa', fontSize: 13, marginBottom: 8 }}>✓ ABRE (você está no BTN — pode abrir bastante)</div>
+            <div className="rounded-lg p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+              <div style={{ color: '#4fce82', fontSize: 13, marginBottom: 8 }}>✓ ABRE (você está no BTN — pode abrir bastante)</div>
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.8 }}>
                 Todos os pares • AKs-A2s • KQs-K2s • QJs-Q5s • JTs-J6s • T9s-T6s • 98s-95s • 87s-84s • 76s-74s • 65s-63s • 54s-52s • AKo-A5o • KQo-K9o • QJo-Q9o • JTo-J9o • T9o-T8o • 98o-97o • 87o-86o • 76o
               </div>
@@ -246,11 +246,11 @@ function Lesson({ onComplete }) {
           <Section title="Quanto Apostar ao Abrir?">
             Quando você decide abrir o pote, aposta entre 2x e 2.5x a ficha grande. Não mais que isso.
             <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #2a2a2e' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600 }}>2x (aposta menor)</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Mais comum em torneios. Custa menos mas cria a mesma pressão.</div>
               </div>
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #1e1e2e' }}>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #2a2a2e' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600 }}>2.5x (aposta maior)</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Quando você tem muitas fichas ou o adversário entra fácil demais.</div>
               </div>
@@ -265,12 +265,12 @@ function Lesson({ onComplete }) {
           <Section title="Início vs Final do Torneio">
             O jogo muda conforme o torneio avança:
             <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-                <div style={{ color: '#00d4aa', fontWeight: 600 }}>No começo</div>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+                <div style={{ color: '#4fce82', fontWeight: 600 }}>No começo</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Foco em acumular fichas. Jogue para ganhar o maior pote possível.</div>
               </div>
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-                <div style={{ color: '#e94560', fontWeight: 600 }}>Perto do prêmio</div>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+                <div style={{ color: '#e5484d', fontWeight: 600 }}>Perto do prêmio</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sobreviver vale dinheiro. Feche o range — só jogue com mãos boas.</div>
               </div>
             </div>
@@ -291,7 +291,7 @@ function Lesson({ onComplete }) {
       <button
         onClick={onComplete}
         className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg"
-        style={{ background: '#e94560' }}
+        style={{ background: '#e5484d' }}
       >
         Entendi — Quero Treinar ♠
       </button>
@@ -301,7 +301,7 @@ function Lesson({ onComplete }) {
 
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+    <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
       <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 8 }}>{title}</h3>
       <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{children}</div>
     </div>
@@ -384,17 +384,17 @@ function Trainer() {
         <div style={{ fontSize: 60 }}>{accuracy >= 90 ? '🎉' : accuracy >= 70 ? '👍' : '💪'}</div>
         <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: '#888', marginTop: 8 }}>{sessionCorrect}/{sessionTotal} acertos</div>
-        <div style={{ color: accuracy >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700, marginTop: 8 }}>
+        <div style={{ color: accuracy >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700, marginTop: 8 }}>
           {accuracy}%
         </div>
         {accuracy >= 90
-          ? <p style={{ color: '#00d4aa', marginTop: 8 }}>Excelente! Sessão conta para desbloquear o próximo módulo.</p>
+          ? <p style={{ color: '#4fce82', marginTop: 8 }}>Excelente! Sessão conta para desbloquear o próximo módulo.</p>
           : <p style={{ color: '#888', marginTop: 8 }}>Treine mais para chegar a 90% e desbloquear o próximo módulo.</p>
         }
         <button
           onClick={restart}
           className="mt-6 px-8 py-3 rounded-xl font-bold"
-          style={{ background: '#e94560', color: 'white' }}
+          style={{ background: '#e5484d', color: 'white' }}
         >
           Nova Sessão
         </button>
@@ -417,9 +417,9 @@ function Trainer() {
                 onClick={() => { setFilterPos(p); setFeedback(null); setCurrentHand(null) }}
                 className="px-3 py-1 rounded-lg text-sm"
                 style={{
-                  background: filterPos === p ? '#e94560' : '#12121a',
+                  background: filterPos === p ? '#e5484d' : '#1a1a1d',
                   color: filterPos === p ? 'white' : '#888',
-                  border: '1px solid #1e1e2e'
+                  border: '1px solid #2a2a2e'
                 }}
               >
                 {p}
@@ -436,9 +436,9 @@ function Trainer() {
                 onClick={() => { setFilterStack(s); setFeedback(null); setCurrentHand(null) }}
                 className="px-3 py-1 rounded-lg text-sm"
                 style={{
-                  background: filterStack === s ? '#e94560' : '#12121a',
+                  background: filterStack === s ? '#e5484d' : '#1a1a1d',
                   color: filterStack === s ? 'white' : '#888',
-                  border: '1px solid #1e1e2e'
+                  border: '1px solid #2a2a2e'
                 }}
               >
                 {s === 'Todos' ? s : `${s}bb`}
@@ -450,17 +450,17 @@ function Trainer() {
 
       {/* Progresso da sessão */}
       <div className="rounded-xl p-3 mb-4 flex justify-between items-center"
-        style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+        style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Sequência: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos (90%+)</div>
       </div>
-      <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
-        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
+      <div className="rounded-full h-2 mb-6" style={{ background: '#2a2a2e' }}>
+        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
       {/* Situação */}
       {currentPos && (
-        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
           <div style={{ color: '#888', fontSize: 12 }}>POSIÇÃO · STACK</div>
           <div style={{ color: POSITION_INFO[currentPos]?.color || 'white', fontSize: 22, fontWeight: 700 }}>
             {currentPos} · {currentStack}bb
@@ -487,14 +487,14 @@ function Trainer() {
           <button
             onClick={() => answer('raise')}
             className="py-5 rounded-xl font-bold text-xl"
-            style={{ background: '#00d4aa', color: '#0a0a0f' }}
+            style={{ background: '#4fce82', color: '#0f0f0f' }}
           >
             RAISE ↑
           </button>
           <button
             onClick={() => answer('fold')}
             className="py-5 rounded-xl font-bold text-xl"
-            style={{ background: '#e94560', color: 'white' }}
+            style={{ background: '#e5484d', color: 'white' }}
           >
             FOLD ✕
           </button>
@@ -505,16 +505,16 @@ function Trainer() {
       {feedback && (
         <div className="rounded-xl p-4 mb-4"
           style={{
-            background: '#12121a',
-            border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}`
+            background: '#1a1a1d',
+            border: `2px solid ${feedback.isCorrect ? '#4fce82' : '#e5484d'}`
           }}>
-          <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+          <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isMix ? '🟡 Mix — Ambos Aceitáveis' : feedback.isCorrect ? '✓ Correto!' : '✗ Incorreto'}
           </div>
           <button
             onClick={newHand}
             className="w-full py-3 rounded-lg font-semibold mb-4"
-            style={{ background: '#e94560', color: 'white', fontSize: 16 }}
+            style={{ background: '#e5484d', color: 'white', fontSize: 16 }}
           >
             Próxima Mão →
           </button>
@@ -541,14 +541,14 @@ export default function Module1() {
   }
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         {/* Toggle aula/trainer */}
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setView('lesson')}
             className="px-4 py-2 rounded-lg text-sm font-semibold"
-            style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}
+            style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}
           >
             📖 Aula
           </button>
@@ -556,9 +556,9 @@ export default function Module1() {
             onClick={() => progress.modules[1].lessonRead && setView('trainer')}
             className="px-4 py-2 rounded-lg text-sm font-semibold"
             style={{
-              background: view === 'trainer' ? '#e94560' : '#12121a',
+              background: view === 'trainer' ? '#e5484d' : '#1a1a1d',
               color: view === 'trainer' ? 'white' : (progress.modules[1].lessonRead ? '#888' : '#444'),
-              border: '1px solid #1e1e2e',
+              border: '1px solid #2a2a2e',
               cursor: progress.modules[1].lessonRead ? 'pointer' : 'not-allowed'
             }}
           >

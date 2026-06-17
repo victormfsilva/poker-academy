@@ -417,18 +417,18 @@ function Lesson({ onComplete }) {
       <div className="space-y-4">
         <Section title="O Que é ICM?">
           Em cash game, cada ficha vale exatamente seu valor em dinheiro. 1000 fichas = $1000.<br /><br />
-          Em torneio, <strong style={{ color: '#e94560' }}>fichas NAO valem linearmente</strong>. Dobrar seu stack NAO dobra seu premio esperado. Isso porque a estrutura de premiacao não é linear (1o não ganha o dobro do 2o).<br /><br />
+          Em torneio, <strong style={{ color: '#e5484d' }}>fichas NAO valem linearmente</strong>. Dobrar seu stack NAO dobra seu premio esperado. Isso porque a estrutura de premiacao não é linear (1o não ganha o dobro do 2o).<br /><br />
           ICM é o modelo que converte fichas em valor real ($) baseado na estrutura de premiacao.
         </Section>
         <Section title="Por Que ICM Importa?">
           <div className="grid grid-cols-2 gap-3 mt-2">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700 }}>Ganhar fichas</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+              <div style={{ color: '#4fce82', fontWeight: 700 }}>Ganhar fichas</div>
               <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>+$X</div>
               <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Valor marginal decrescente</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700 }}>Perder fichas</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+              <div style={{ color: '#e5484d', fontWeight: 700 }}>Perder fichas</div>
               <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>-$2X</div>
               <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>Perder custa MAIS que ganhar</div>
             </div>
@@ -440,12 +440,12 @@ function Lesson({ onComplete }) {
         <Section title="Onde ICM Tem Mais Impacto">
           <div className="space-y-2">
             {[
-              { spot: 'Bolha do torneio', impact: 'MAXIMO', color: '#e94560', desc: 'Diferenca entre ganhar premio é sair sem nada' },
+              { spot: 'Bolha do torneio', impact: 'MAXIMO', color: '#e5484d', desc: 'Diferenca entre ganhar premio é sair sem nada' },
               { spot: 'Mesa final', impact: 'ALTO', color: '#f5a623', desc: 'Cada eliminacao = salto grande de premiacao' },
-              { spot: 'Satelites', impact: 'EXTREMO', color: '#e94560', desc: 'Premio igual = sobrevivencia é tudo' },
-              { spot: 'Inicio do torneio', impact: 'ZERO', color: '#00d4aa', desc: 'Jogue ChipEV puro' },
+              { spot: 'Satelites', impact: 'EXTREMO', color: '#e5484d', desc: 'Premio igual = sobrevivencia é tudo' },
+              { spot: 'Inicio do torneio', impact: 'ZERO', color: '#4fce82', desc: 'Jogue ChipEV puro' },
             ].map(r => (
-              <div key={r.spot} className="flex justify-between items-center rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+              <div key={r.spot} className="flex justify-between items-center rounded-lg p-3" style={{ background: '#0f0f0f' }}>
                 <div>
                   <div style={{ color: 'white', fontWeight: 600, fontSize: 13 }}>{r.spot}</div>
                   <div style={{ color: '#888', fontSize: 12 }}>{r.desc}</div>
@@ -456,14 +456,14 @@ function Lesson({ onComplete }) {
           </div>
         </Section>
         <Section title="Bubble Factor">
-          <p style={{ marginBottom: 8 }}>O <strong style={{ color: '#e94560' }}>Bubble Factor (BF)</strong> mede quanto ICM custa em cada spot. Ele multiplica a equity que voce precisa pra break even:</p>
-          <div className="rounded-lg p-3 mt-2" style={{ background: '#0a0a0f' }}>
+          <p style={{ marginBottom: 8 }}>O <strong style={{ color: '#e5484d' }}>Bubble Factor (BF)</strong> mede quanto ICM custa em cada spot. Ele multiplica a equity que voce precisa pra break even:</p>
+          <div className="rounded-lg p-3 mt-2" style={{ background: '#0f0f0f' }}>
             <div className="space-y-2">
               {[
-                { bf: '1.0', meaning: 'ChipEV puro (inicio torneio)', example: 'Precisa 50% equity', color: '#00d4aa' },
+                { bf: '1.0', meaning: 'ChipEV puro (inicio torneio)', example: 'Precisa 50% equity', color: '#4fce82' },
                 { bf: '1.3', meaning: 'ICM leve (longe da bolha)', example: 'Precisa 57% equity', color: '#4a90e2' },
                 { bf: '1.5-2.0', meaning: 'ICM pesado (bolha)', example: 'Precisa 60-67% equity', color: '#f5a623' },
-                { bf: '2.0+', meaning: 'ICM extremo (satelite/FT curta)', example: 'Precisa 67%+ equity', color: '#e94560' },
+                { bf: '2.0+', meaning: 'ICM extremo (satelite/FT curta)', example: 'Precisa 67%+ equity', color: '#e5484d' },
               ].map(r => (
                 <div key={r.bf} className="flex justify-between items-center">
                   <div>
@@ -481,12 +481,12 @@ function Lesson({ onComplete }) {
         <Section title="Risk Premium">
           <p>Em ICM, chamar um all-in custa MAIS do que parece. Isso é o <strong style={{ color: '#f5a623' }}>risk premium</strong>:</p>
           <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700, fontSize: 13 }}>Se ganhar</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+              <div style={{ color: '#4fce82', fontWeight: 700, fontSize: 13 }}>Se ganhar</div>
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Dobra fichas, mas valor em $ sobe pouco (retornos decrescentes)</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700, fontSize: 13 }}>Se perder</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+              <div style={{ color: '#e5484d', fontWeight: 700, fontSize: 13 }}>Se perder</div>
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Bustar ou virar short = perda enorme de $EV</div>
             </div>
           </div>
@@ -495,12 +495,12 @@ function Lesson({ onComplete }) {
 
         <Section title="Pay Jump Analysis">
           <p>Sempre calcule o <strong style={{ color: '#4a90e2' }}>pay jump real</strong> antes de tomar decisoes em FT:</p>
-          <div className="rounded-lg p-3 mt-2" style={{ background: '#0a0a0f' }}>
+          <div className="rounded-lg p-3 mt-2" style={{ background: '#0f0f0f' }}>
             <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.8 }}>
               <strong style={{ color: 'white' }}>Exemplo:</strong> FT 3-way. 1o: $10.000, 2o: $6.000, 3o: $3.500<br />
               <span style={{ color: '#f5a623' }}>Jump 3o→2o:</span> $2.500 (garantido se short bustar)<br />
-              <span style={{ color: '#e94560' }}>Jump 2o→1o:</span> $4.000 (precisa ganhar heads-up)<br /><br />
-              Se o short tem 3bb, esperar ele bustar vale <strong style={{ color: '#00d4aa' }}>$2.500 gratis</strong>. Não arrisque com maos marginais.
+              <span style={{ color: '#e5484d' }}>Jump 2o→1o:</span> $4.000 (precisa ganhar heads-up)<br /><br />
+              Se o short tem 3bb, esperar ele bustar vale <strong style={{ color: '#4fce82' }}>$2.500 gratis</strong>. Não arrisque com maos marginais.
             </div>
           </div>
         </Section>
@@ -529,12 +529,12 @@ function Lesson({ onComplete }) {
         <Section title="Ferramentas de ICM">
           <div className="space-y-2">
             {[
-              { name: 'ICMizer', desc: 'Calculadora ICM dedicada — push/fold e spots complexos', color: '#e94560' },
+              { name: 'ICMizer', desc: 'Calculadora ICM dedicada — push/fold e spots complexos', color: '#e5484d' },
               { name: 'HRC (Holdem Resources)', desc: 'Analise push/fold com ICM integrado', color: '#f5a623' },
               { name: 'GTO Wizard', desc: 'Solver com modo ICM pra FT e bolha', color: '#4a90e2' },
-              { name: 'ICMIZER Free', desc: 'Versao gratuita pra praticar spots basicos', color: '#00d4aa' },
+              { name: 'ICMIZER Free', desc: 'Versao gratuita pra praticar spots basicos', color: '#4fce82' },
             ].map(t => (
-              <div key={t.name} className="flex gap-3 items-start rounded-lg p-2" style={{ background: '#0a0a0f' }}>
+              <div key={t.name} className="flex gap-3 items-start rounded-lg p-2" style={{ background: '#0f0f0f' }}>
                 <div style={{ width: 4, minHeight: 32, borderRadius: 2, background: t.color, marginTop: 2 }} />
                 <div>
                   <div style={{ color: 'white', fontWeight: 600, fontSize: 13 }}>{t.name}</div>
@@ -545,7 +545,7 @@ function Lesson({ onComplete }) {
           </div>
         </Section>
       </div>
-      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
+      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e5484d' }}>
         Entendi — Quero Treinar
       </button>
     </div>
@@ -554,7 +554,7 @@ function Lesson({ onComplete }) {
 
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+    <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
       <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 8 }}>{title}</h3>
       <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{children}</div>
     </div>
@@ -600,25 +600,25 @@ function Trainer() {
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
         <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
-        <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
+        <div style={{ color: acc >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
-      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenários</div>
       </div>
-      <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
-        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
+      <div className="rounded-full h-2 mb-6" style={{ background: '#2a2a2e' }}>
+        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
       {scenario && (
         <>
-          <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>CENARIO ICM</div>
             <div style={{ color: '#ccc', fontSize: 15, lineHeight: 1.7 }}>{scenario.situation}</div>
             <div style={{ color: 'white', fontWeight: 700, fontSize: 16, marginTop: 12 }}>{scenario.question}</div>
@@ -628,7 +628,7 @@ function Trainer() {
             <div className="grid grid-cols-2 gap-3 mb-4">
               {scenario.options.map(opt => (
                 <button key={opt.id} onClick={() => answer(opt.id)} className="py-4 rounded-xl font-bold text-sm"
-                  style={{ background: opt.id === 'fold' || opt.id === 'check' ? '#4a90e2' : '#f5a623', color: opt.id === 'fold' || opt.id === 'check' ? 'white' : '#0a0a0f' }}>
+                  style={{ background: opt.id === 'fold' || opt.id === 'check' ? '#4a90e2' : '#f5a623', color: opt.id === 'fold' || opt.id === 'check' ? 'white' : '#0f0f0f' }}>
                   {opt.label}
                 </button>
               ))}
@@ -636,13 +636,13 @@ function Trainer() {
           )}
 
           {feedback && (
-            <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
-              <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+            <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: `2px solid ${feedback.isCorrect ? '#4fce82' : '#e5484d'}` }}>
+              <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
                 {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
               </div>
-              <button onClick={newScenario} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proximo Cenario</button>
+              <button onClick={newScenario} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e5484d', color: 'white', fontSize: 16 }}>Proximo Cenario</button>
               <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.explanation}</div>
-              <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a62330' }}>
+              <div className="mt-3 rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #f5a62330' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13 }}>Conceito-chave</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>{feedback.concept}</div>
               </div>
@@ -658,16 +658,16 @@ export default function Module17() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[17]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[17]?.unlocked) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 16 para desbloquear.</p></div>
     </div>
   )
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[17]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[17]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[17]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[17]?.lessonRead && '🔒'}</button>
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>Aula</button>
+          <button onClick={() => progress.modules[17]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[17]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[17]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[17]?.lessonRead && '🔒'}</button>
         </div>
         {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(17); setView('trainer') }} /> : <Trainer />}
       </div>

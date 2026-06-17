@@ -66,20 +66,20 @@ function Lesson({ onComplete }) {
       <p style={{ color: '#888', marginBottom: 24 }}>Você já pagou obrigatório — agora aprenda a usar isso a seu favor</p>
       <div className="space-y-4">
         <Section title="Por Que o Big Blind é Diferente?">
-          No Big Blind, você é obrigado a colocar uma ficha na mesa antes de ver as cartas. Isso parece ruim — mas na verdade te dá uma vantagem: quando alguém faz um raise e chega em você, <strong style={{ color: '#e94560' }}>você já pagou parte do preço</strong>. <br /><br />
+          No Big Blind, você é obrigado a colocar uma ficha na mesa antes de ver as cartas. Isso parece ruim — mas na verdade te dá uma vantagem: quando alguém faz um raise e chega em você, <strong style={{ color: '#e5484d' }}>você já pagou parte do preço</strong>. <br /><br />
           É como se você tivesse comprado meia entrada pro show — complementar é mais barato do que comprar do zero. Por isso o Big Blind pode entrar no pote com muito mais mãos do que qualquer outra posição.
         </Section>
         <Section title="Suas 3 Opções">
           <div className="grid grid-cols-3 gap-3 mt-2">
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700 }}>FOLD</div>
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+              <div style={{ color: '#e5484d', fontWeight: 700 }}>FOLD</div>
               <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito fraca — sem chance de ganhar</div>
             </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: "1px solid #00d4aa" }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700 }}>CALL</div>
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: "1px solid #4fce82" }}>
+              <div style={{ color: '#4fce82', fontWeight: 700 }}>CALL</div>
               <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão razoável — paga é vê o flop</div>
             </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+            <div className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700 }}>3-BET</div>
               <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão muito forte — relança para pressionar</div>
             </div>
@@ -95,8 +95,8 @@ function Lesson({ onComplete }) {
               { pos: 'HJ / CO', desc: 'Posição do meio — range razoável. Defenda com mãos medianas.' },
               { pos: 'BTN / SB', desc: 'Atacou tarde — usa mãos fracas também. Você pode defender muito mais.' },
             ].map(r => (
-              <div key={r.pos} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
-                <div style={{ color: '#e94560', fontWeight: 700, width: 65, flexShrink: 0 }}>{r.pos}</div>
+              <div key={r.pos} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0f0f0f' }}>
+                <div style={{ color: '#e5484d', fontWeight: 700, width: 65, flexShrink: 0 }}>{r.pos}</div>
                 <div style={{ color: '#ccc', fontSize: 14 }}>{r.desc}</div>
               </div>
             ))}
@@ -108,18 +108,18 @@ function Lesson({ onComplete }) {
         <Section title="Quando Relançar (3-Bet)?">
           Você relança quando quer pressionar o adversário é forçar ele a tomar uma decisão difícil. Isso acontece com dois tipos de mão:
           <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 600, marginBottom: 4 }}>Mãos Muito Fortes</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+              <div style={{ color: '#4fce82', fontWeight: 600, marginBottom: 4 }}>Mãos Muito Fortes</div>
               <div style={{ color: '#ccc', fontSize: 13 }}>AA, KK, QQ, AK — você relança porque quer colocar mais dinheiro com a melhor mão.</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Mãos com Ás Medio</div>
               <div style={{ color: '#ccc', fontSize: 13 }}>A5, A4, A2 do mesmo naipe — o Ás na sua mão reduz a chance do adversário ter Ás. Você relança como blefe inteligente.</div>
             </div>
           </div>
         </Section>
       </div>
-      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
+      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e5484d' }}>
         Entendi — Quero Treinar 🛡️
       </button>
     </div>
@@ -128,7 +128,7 @@ function Lesson({ onComplete }) {
 
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+    <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
       <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 8 }}>{title}</h3>
       <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{children}</div>
     </div>
@@ -178,8 +178,8 @@ function Trainer() {
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
         <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
-        <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
+        <div style={{ color: acc >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -194,23 +194,23 @@ function Trainer() {
           {['Todas', ...RAISER_POSITIONS].map(p => (
             <button key={p} onClick={() => { setFilterPos(p); setFeedback(null); setCurrentHand(null) }}
               className="px-3 py-1 rounded-lg text-sm"
-              style={{ background: filterPos === p ? '#e94560' : '#12121a', color: filterPos === p ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
+              style={{ background: filterPos === p ? '#e5484d' : '#1a1a1d', color: filterPos === p ? 'white' : '#888', border: '1px solid #2a2a2e' }}>
               {p}
             </button>
           ))}
         </div>
       </div>
-      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
       </div>
-      <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
-        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
+      <div className="rounded-full h-2 mb-6" style={{ background: '#2a2a2e' }}>
+        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
       {currentRaiser && (
-        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
           <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-          <div style={{ color: '#e94560', fontSize: 22, fontWeight: 700 }}>Você está no BB</div>
+          <div style={{ color: '#e5484d', fontSize: 22, fontWeight: 700 }}>Você está no BB</div>
           <div style={{ color: '#ccc', fontSize: 14, marginTop: 4 }}>{currentRaiser} fez raise. Todos foldaram. O que fazer?</div>
         </div>
       )}
@@ -220,17 +220,17 @@ function Trainer() {
       {currentHand && <div className="text-center mb-4"><span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span></div>}
       {!feedback && (
         <div className="grid grid-cols-3 gap-3 mb-4">
-          {[['fold', 'FOLD ✕', '#e94560', 'white'], ['call', 'CALL →', '#4a90e2', 'white'], ['3bet', '3-BET ↑↑', '#f5a623', '#0a0a0f']].map(([action, label, bg, color]) => (
+          {[['fold', 'FOLD ✕', '#e5484d', 'white'], ['call', 'CALL →', '#4a90e2', 'white'], ['3bet', '3-BET ↑↑', '#f5a623', '#0f0f0f']].map(([action, label, bg, color]) => (
             <button key={action} onClick={() => answer(action)} className="py-4 rounded-xl font-bold" style={{ background: bg, color }}>{label}</button>
           ))}
         </div>
       )}
       {feedback && (
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
-          <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+        <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: `2px solid ${feedback.isCorrect ? '#4fce82' : '#e5484d'}` }}>
+          <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? '✓ Correto!' : '✗ Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mão →</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e5484d', color: 'white', fontSize: 16 }}>Próxima Mão →</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>Correto: <strong style={{ color: '#f5a623' }}>{feedback.correct.toUpperCase()}</strong></div>
           {!feedback.isCorrect && (() => {
@@ -255,16 +255,16 @@ export default function Module4() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[4].lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[4].unlocked) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 3 para desbloquear.</p></div>
     </div>
   )
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>📖 Aula</button>
-          <button onClick={() => progress.modules[4].lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[4].lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[4].lessonRead ? 'pointer' : 'not-allowed' }}>🎯 Trainer {!progress.modules[4].lessonRead && '🔒'}</button>
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>📖 Aula</button>
+          <button onClick={() => progress.modules[4].lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[4].lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[4].lessonRead ? 'pointer' : 'not-allowed' }}>🎯 Trainer {!progress.modules[4].lessonRead && '🔒'}</button>
         </div>
         {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(4); setView('trainer') }} /> : <Trainer />}
       </div>

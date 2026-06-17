@@ -256,23 +256,23 @@ function generateScenario() {
 
 function Lesson({ onComplete }) {
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 16 }}>📊 Módulo 20 — HUD, Stats e Solvers</h1>
 
         <div className="space-y-6" style={{ color: '#ccc', fontSize: 15, lineHeight: 1.8 }}>
           <section>
-            <h2 style={{ color: '#e94560', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>O que é um HUD?</h2>
+            <h2 style={{ color: '#e5484d', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>O que é um HUD?</h2>
             <p>HUD (Heads-Up Display) é um software que exibe estatísticas dos oponentes em tempo real na mesa. Ele coleta dados de todas as mãos jogadas e calcula métricas como VPIP, PFR, 3-Bet%, CBet%, entre outras.</p>
             <p style={{ marginTop: 8 }}>No poker online, o HUD é sua principal ferramenta de coleta de informação. No presencial, você precisa fazer essas anotações mentalmente.</p>
           </section>
 
           <section>
             <h2 style={{ color: '#f5a623', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Stats Essenciais</h2>
-            <div className="rounded-lg p-4" style={{ background: '#1a1a2e' }}>
+            <div className="rounded-lg p-4" style={{ background: '#1a1a1d' }}>
               <div className="space-y-4">
                 <div>
-                  <p><strong style={{ color: '#e94560' }}>VPIP (Voluntarily Put $ in Pot):</strong> % de mãos que o jogador entra voluntariamente</p>
+                  <p><strong style={{ color: '#e5484d' }}>VPIP (Voluntarily Put $ in Pot):</strong> % de mãos que o jogador entra voluntariamente</p>
                   <p style={{ color: '#888', fontSize: 13 }}>Nit: 12-16% | TAG: 20-25% | LAG: 28-35% | Fish: 40%+</p>
                 </div>
                 <div>
@@ -284,7 +284,7 @@ function Lesson({ onComplete }) {
                   <p style={{ color: '#888', fontSize: 13 }}>{'<'}5% = só valor | 5-8% = tight | 8-12% = equilibrado | {'>'}12% = light</p>
                 </div>
                 <div>
-                  <p><strong style={{ color: '#00d4aa' }}>CBet Flop %:</strong> Frequência de continuation bet no flop</p>
+                  <p><strong style={{ color: '#4fce82' }}>CBet Flop %:</strong> Frequência de continuation bet no flop</p>
                   <p style={{ color: '#888', fontSize: 13 }}>{'<'}50% = seletivo | 50-65% = equilibrado | {'>'}70% = aposta demais</p>
                 </div>
                 <div>
@@ -297,10 +297,10 @@ function Lesson({ onComplete }) {
 
           <section>
             <h2 style={{ color: '#4a90e2', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Stats Pós-Flop</h2>
-            <div className="rounded-lg p-4" style={{ background: '#1a1a2e' }}>
+            <div className="rounded-lg p-4" style={{ background: '#1a1a1d' }}>
               <div className="space-y-4">
                 <div>
-                  <p><strong style={{ color: '#e94560' }}>WTSD (Went to Showdown):</strong> % das vezes que vai ao showdown quando vê o flop</p>
+                  <p><strong style={{ color: '#e5484d' }}>WTSD (Went to Showdown):</strong> % das vezes que vai ao showdown quando vê o flop</p>
                   <p style={{ color: '#888', fontSize: 13 }}>{'<'}22% = folda muito | 25-30% = equilibrado | {'>'}33% = calling station</p>
                 </div>
                 <div>
@@ -316,8 +316,8 @@ function Lesson({ onComplete }) {
           </section>
 
           <section>
-            <h2 style={{ color: '#00d4aa', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Usando Solvers</h2>
-            <div className="rounded-lg p-4" style={{ background: '#1a1a2e', border: '1px solid #00d4aa' }}>
+            <h2 style={{ color: '#4fce82', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Usando Solvers</h2>
+            <div className="rounded-lg p-4" style={{ background: '#1a1a1d', border: '1px solid #4fce82' }}>
               <p><strong style={{ color: 'white' }}>O que é um solver?</strong> Software que calcula a estratégia GTO (Nash Equilibrium) para cada spot do poker.</p>
               <p style={{ marginTop: 12 }}><strong style={{ color: '#f5a623' }}>Como usar:</strong></p>
               <p style={{ marginTop: 4 }}>1. <strong style={{ color: 'white' }}>Estude spots específicos</strong> — não tente memorizar tudo</p>
@@ -329,12 +329,12 @@ function Lesson({ onComplete }) {
           </section>
 
           <section>
-            <h2 style={{ color: '#e94560', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Sample Size Mínimo</h2>
-            <div className="rounded-lg p-4" style={{ background: '#1a1a2e' }}>
+            <h2 style={{ color: '#e5484d', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Sample Size Mínimo</h2>
+            <div className="rounded-lg p-4" style={{ background: '#1a1a1d' }}>
               <p style={{ color: 'white', fontWeight: 600 }}>Quantas mãos precisa para confiar nos stats?</p>
-              <p style={{ marginTop: 8 }}><strong style={{ color: '#00d4aa' }}>VPIP/PFR:</strong> 100+ mãos (confiável com 300+)</p>
+              <p style={{ marginTop: 8 }}><strong style={{ color: '#4fce82' }}>VPIP/PFR:</strong> 100+ mãos (confiável com 300+)</p>
               <p style={{ marginTop: 4 }}><strong style={{ color: '#f5a623' }}>3-Bet %:</strong> 300+ mãos (confiável com 500+)</p>
-              <p style={{ marginTop: 4 }}><strong style={{ color: '#e94560' }}>CBet/Fold to CBet:</strong> 200+ mãos</p>
+              <p style={{ marginTop: 4 }}><strong style={{ color: '#e5484d' }}>CBet/Fold to CBet:</strong> 200+ mãos</p>
               <p style={{ marginTop: 4 }}><strong style={{ color: '#4a90e2' }}>WTSD/W$SD:</strong> 500+ mãos (confiável com 1000+)</p>
               <p style={{ marginTop: 8, color: '#888', fontSize: 13 }}>Regra geral: quanto mais raro o evento (3-bet, check-raise), mais mãos você precisa.</p>
             </div>
@@ -342,7 +342,7 @@ function Lesson({ onComplete }) {
         </div>
 
         <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-lg"
-          style={{ background: '#e94560', color: 'white' }}>
+          style={{ background: '#e5484d', color: 'white' }}>
           Entendi — Vamos Treinar! →
         </button>
       </div>
@@ -392,14 +392,14 @@ function Trainer() {
   if (finished) {
     const accuracy = Math.round(score / 10 * 100)
     return (
-      <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4 flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+      <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4 flex items-center justify-center" style={{ background: '#0f0f0f' }}>
         <div className="text-center">
           <div style={{ fontSize: 48, marginBottom: 16 }}>{accuracy >= 90 ? '🏆' : accuracy >= 70 ? '💪' : '📚'}</div>
           <div style={{ color: 'white', fontSize: 28, fontWeight: 700 }}>{accuracy}% de acerto</div>
           <div style={{ color: '#888', marginTop: 8 }}>{score}/10 decisões corretas</div>
           <div style={{ color: '#666', marginTop: 4, fontSize: 14 }}>Meta: 90%+ em 2 sessões seguidas</div>
           <button onClick={() => window.location.reload()}
-            className="mt-6 px-6 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>
+            className="mt-6 px-6 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>
             Tentar Novamente
           </button>
         </div>
@@ -408,17 +408,17 @@ function Trainer() {
   }
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex justify-between items-center mb-6">
           <div style={{ color: '#888', fontSize: 14 }}>Questão {current + 1}/10</div>
           <div className="flex gap-3">
-            <span style={{ color: '#00d4aa', fontSize: 14 }}>✓ {score}</span>
-            <span style={{ color: '#e94560', fontSize: 14 }}>✗ {current - score + (showResult && !selected?.correct ? 1 : 0)}</span>
+            <span style={{ color: '#4fce82', fontSize: 14 }}>✓ {score}</span>
+            <span style={{ color: '#e5484d', fontSize: 14 }}>✗ {current - score + (showResult && !selected?.correct ? 1 : 0)}</span>
           </div>
         </div>
 
-        <div className="rounded-xl p-5" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+        <div className="rounded-xl p-5" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
           <div style={{ color: '#f5a623', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>SITUAÇÃO</div>
           <p style={{ color: '#ccc', fontSize: 15, lineHeight: 1.6 }}>{scenario.situation}</p>
           <p style={{ color: 'white', fontSize: 16, fontWeight: 600, marginTop: 12 }}>{scenario.question}</p>
@@ -429,9 +429,9 @@ function Trainer() {
             <button key={opt.id} onClick={() => handleSelect(opt)}
               className="p-4 rounded-xl text-left font-semibold transition-all"
               style={{
-                background: !showResult ? '#1a1a2e' : opt.correct ? '#00d4aa22' : selected?.id === opt.id ? '#e9456033' : '#1a1a2e',
-                border: `2px solid ${!showResult ? '#2a2a3e' : opt.correct ? '#00d4aa' : selected?.id === opt.id ? '#e94560' : '#2a2a3e'}`,
-                color: !showResult ? 'white' : opt.correct ? '#00d4aa' : selected?.id === opt.id ? '#e94560' : '#666',
+                background: !showResult ? '#1a1a1d' : opt.correct ? '#4fce8222' : selected?.id === opt.id ? '#e5484d33' : '#1a1a1d',
+                border: `2px solid ${!showResult ? '#2a2a3e' : opt.correct ? '#4fce82' : selected?.id === opt.id ? '#e5484d' : '#2a2a3e'}`,
+                color: !showResult ? 'white' : opt.correct ? '#4fce82' : selected?.id === opt.id ? '#e5484d' : '#666',
                 opacity: showResult && !opt.correct && selected?.id !== opt.id ? 0.5 : 1,
               }}>
               {opt.label}
@@ -440,17 +440,17 @@ function Trainer() {
         </div>
 
         {showResult && (
-          <div className="mt-4 rounded-xl p-4" style={{ background: '#1a1a2e', border: '1px solid #333' }}>
-            <div style={{ color: selected?.correct ? '#00d4aa' : '#e94560', fontWeight: 700, marginBottom: 8 }}>
+          <div className="mt-4 rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #333' }}>
+            <div style={{ color: selected?.correct ? '#4fce82' : '#e5484d', fontWeight: 700, marginBottom: 8 }}>
               {selected?.correct ? '✓ Correto!' : '✗ Incorreto'}
             </div>
             <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.6 }}>{scenario.explanation}</p>
-            <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+            <div className="mt-3 rounded-lg p-3" style={{ background: '#0f0f0f' }}>
               <div style={{ color: '#f5a623', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>CONCEITO-CHAVE</div>
               <p style={{ color: '#aaa', fontSize: 13 }}>{scenario.concept}</p>
             </div>
             <button onClick={handleNext} className="w-full mt-4 py-3 rounded-xl font-bold"
-              style={{ background: '#e94560', color: 'white' }}>
+              style={{ background: '#e5484d', color: 'white' }}>
               {current + 1 >= 10 ? 'Ver Resultado' : 'Próxima →'}
             </button>
           </div>
@@ -465,7 +465,7 @@ export default function Module20() {
   const mod = progress.modules[20]
 
   if (!mod?.unlocked) return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4 flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4 flex items-center justify-center" style={{ background: '#0f0f0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 19 para desbloquear.</p></div>
     </div>
   )

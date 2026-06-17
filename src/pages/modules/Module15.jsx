@@ -202,27 +202,27 @@ function Lesson({ onComplete }) {
         <Section title="Por Que River é Diferente?">
           No river, não existem mais draws. Não existe "proteção". Toda aposta é por um de dois motivos:<br /><br />
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700 }}>Value Bet</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+              <div style={{ color: '#4fce82', fontWeight: 700 }}>Value Bet</div>
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você tem mão forte é quer que chamem</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700 }}>Blefe</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+              <div style={{ color: '#e5484d', fontWeight: 700 }}>Blefe</div>
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Você não tem nada é quer que foldem</div>
             </div>
           </div>
-          <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #888' }}>
+          <div className="mt-3 rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #888' }}>
             <div style={{ color: '#888', fontSize: 13 }}>Não existe "aposta de proteção" no river — não tem mais cartas pra proteger contra.</div>
           </div>
         </Section>
         <Section title="Value Bet no River">
           <div className="space-y-2">
             {[
-              { hand: 'Nuts (flush, straight, set)', sizing: '75-100%', color: '#00d4aa' },
+              { hand: 'Nuts (flush, straight, set)', sizing: '75-100%', color: '#4fce82' },
               { hand: 'Dois pares, overpair', sizing: '50%', color: '#f5a623' },
               { hand: 'Top pair bom kicker', sizing: '33-50%', color: '#f5a623' },
             ].map(r => (
-              <div key={r.hand} className="flex justify-between items-center rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+              <div key={r.hand} className="flex justify-between items-center rounded-lg p-3" style={{ background: '#0f0f0f' }}>
                 <span style={{ color: '#ccc', fontSize: 13 }}>{r.hand}</span>
                 <span style={{ color: r.color, fontWeight: 700, fontSize: 14 }}>{r.sizing}</span>
               </div>
@@ -247,8 +247,8 @@ function Lesson({ onComplete }) {
               </div>
             ))}
           </div>
-          <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-            <div style={{ color: '#e94560', fontWeight: 600, fontSize: 13 }}>Sizing do blefe: GRANDE (75%+)</div>
+          <div className="mt-3 rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+            <div style={{ color: '#e5484d', fontWeight: 600, fontSize: 13 }}>Sizing do blefe: GRANDE (75%+)</div>
             <div style={{ color: '#ccc', fontSize: 12, marginTop: 2 }}>Blefes pequenos no river não funcionam — o adversário tem pot odds bons demais pra foldar.</div>
           </div>
         </Section>
@@ -267,7 +267,7 @@ function Lesson({ onComplete }) {
           </div>
         </Section>
       </div>
-      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
+      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e5484d' }}>
         Entendi — Quero Treinar
       </button>
     </div>
@@ -276,7 +276,7 @@ function Lesson({ onComplete }) {
 
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+    <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
       <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 8 }}>{title}</h3>
       <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{children}</div>
     </div>
@@ -328,8 +328,8 @@ function Trainer() {
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
         <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
-        <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
+        <div style={{ color: acc >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -343,17 +343,17 @@ function Trainer() {
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
-      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 mãos</div>
       </div>
-      <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
-        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
+      <div className="rounded-full h-2 mb-6" style={{ background: '#2a2a2e' }}>
+        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        <div style={{ color: '#00d4aa', fontSize: 18, fontWeight: 700 }}>Você está IP — River</div>
+        <div style={{ color: '#4fce82', fontSize: 18, fontWeight: 700 }}>Você está IP — River</div>
         <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Todas as cartas foram reveladas. Qual sua ação final?</div>
       </div>
 
@@ -375,9 +375,9 @@ function Trainer() {
       {!feedback && (
         <div className="grid grid-cols-2 gap-3 mb-4">
           {[
-            ['value-big', 'VALUE BIG', '#00d4aa', '#0a0a0f'],
-            ['value-small', 'VALUE MEDIO', '#f5a623', '#0a0a0f'],
-            ['bluff', 'BLEFE', '#e94560', 'white'],
+            ['value-big', 'VALUE BIG', '#4fce82', '#0f0f0f'],
+            ['value-small', 'VALUE MEDIO', '#f5a623', '#0f0f0f'],
+            ['bluff', 'BLEFE', '#e5484d', 'white'],
             ['check', 'CHECK', '#4a90e2', 'white'],
           ].map(([action, label, bg, color]) => (
             <button key={action} onClick={() => answer(action)} className="py-4 rounded-xl font-bold text-sm" style={{ background: bg, color }}>{label}</button>
@@ -386,11 +386,11 @@ function Trainer() {
       )}
 
       {feedback && (
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
-          <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+        <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: `2px solid ${feedback.isCorrect ? '#4fce82' : '#e5484d'}` }}>
+          <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Próxima Mao</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e5484d', color: 'white', fontSize: 16 }}>Próxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
             Correto: <strong style={{ color: '#f5a623' }}>{ACTION_LABELS[feedback.action]}</strong>
@@ -405,16 +405,16 @@ export default function Module15() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[15]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[15]?.unlocked) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 14 para desbloquear.</p></div>
     </div>
   )
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[15]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[15]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[15]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[15]?.lessonRead && '🔒'}</button>
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>Aula</button>
+          <button onClick={() => progress.modules[15]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[15]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[15]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[15]?.lessonRead && '🔒'}</button>
         </div>
         {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(15); setView('trainer') }} /> : <Trainer />}
       </div>

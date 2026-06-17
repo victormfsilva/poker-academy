@@ -317,7 +317,7 @@ function Lesson({ onComplete }) {
 
       <div className="space-y-4">
         <Section title="O Que e Late Game?">
-          Late game comeca quando os <strong style={{ color: '#e94560' }}>blinds ficam grandes</strong> em relacao aos stacks. Tipicamente quando o stack medio cai para 15-25bb.
+          Late game comeca quando os <strong style={{ color: '#e5484d' }}>blinds ficam grandes</strong> em relacao aos stacks. Tipicamente quando o stack medio cai para 15-25bb.
           <br /><br />
           Nessa fase, decisoes pre-flop dominam. A maioria das maos nao chega ao flop. <strong style={{ color: '#f5a623' }}>Fold equity, posicao e timing</strong> valem mais que a forca da sua mao.
         </Section>
@@ -325,12 +325,12 @@ function Lesson({ onComplete }) {
         <Section title="Stack Zones">
           <div className="space-y-2">
             {[
-              { range: '25-40bb', label: 'Open-raise normal', desc: 'Raise 2-2.5x. Pode 3-bet normal. Pos-flop existe.', color: '#00d4aa' },
+              { range: '25-40bb', label: 'Open-raise normal', desc: 'Raise 2-2.5x. Pode 3-bet normal. Pos-flop existe.', color: '#4fce82' },
               { range: '15-25bb', label: 'Raise or shove', desc: 'Open raise, mas 3-bet = shove. Sem flat call de 3-bet.', color: '#f5a623' },
-              { range: '10-15bb', label: 'Shove or fold', desc: 'Open shove da maioria das posicoes. Min-raise so em posicao com reads.', color: '#e94560' },
-              { range: '5-10bb', label: 'Desperate shove', desc: 'Shove qualquer mao decente. Fold equity diminuindo a cada mao.', color: '#e94560' },
+              { range: '10-15bb', label: 'Shove or fold', desc: 'Open shove da maioria das posicoes. Min-raise so em posicao com reads.', color: '#e5484d' },
+              { range: '5-10bb', label: 'Desperate shove', desc: 'Shove qualquer mao decente. Fold equity diminuindo a cada mao.', color: '#e5484d' },
             ].map(z => (
-              <div key={z.range} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+              <div key={z.range} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0f0f0f' }}>
                 <div style={{ minWidth: 70 }}>
                   <span style={{ color: z.color, fontWeight: 700, fontSize: 14 }}>{z.range}</span>
                 </div>
@@ -345,20 +345,20 @@ function Lesson({ onComplete }) {
 
         <Section title="Conceitos-Chave do Late Game">
           <div className="grid grid-cols-2 gap-3 mt-2">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700, fontSize: 13 }}>Fold Equity</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+              <div style={{ color: '#e5484d', fontWeight: 700, fontSize: 13 }}>Fold Equity</div>
               <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Com stacks curtos, fazer o oponente foldar vale mais que a mao em si. Timing e posicao sao tudo.</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 13 }}>Dead Money</div>
               <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Antes + blinds = pot gordo. Roubar 1x por orbita mantem seu stack vivo sem showdown.</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4a90e2' }}>
               <div style={{ color: '#4a90e2', fontWeight: 700, fontSize: 13 }}>Resteal</div>
               <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>3-bet shove contra opens late. O raiser abriu light e vai foldar a maioria do range.</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700, fontSize: 13 }}>Stop and Go</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+              <div style={{ color: '#4fce82', fontWeight: 700, fontSize: 13 }}>Stop and Go</div>
               <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Call pre, shove qualquer flop. Ganha fold equity extra quando oponente erra o board.</div>
             </div>
           </div>
@@ -373,9 +373,9 @@ function Lesson({ onComplete }) {
               { err: 'Abrir muito tight esperando maos boas', fix: 'Blinds comem seu stack. Roube antes com range amplo.' },
               { err: 'Chamar flip perto do ITM', fix: 'Evite flips. ICM torna ganhar fichas menos valioso que sobreviver.' },
             ].map((e, i) => (
-              <div key={i} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
-                <div style={{ color: '#e94560', fontSize: 13, fontWeight: 600 }}>{e.err}</div>
-                <div style={{ color: '#00d4aa', fontSize: 12, marginTop: 2 }}>{e.fix}</div>
+              <div key={i} className="rounded-lg p-3" style={{ background: '#0f0f0f' }}>
+                <div style={{ color: '#e5484d', fontSize: 13, fontWeight: 600 }}>{e.err}</div>
+                <div style={{ color: '#4fce82', fontSize: 12, marginTop: 2 }}>{e.fix}</div>
               </div>
             ))}
           </div>
@@ -402,7 +402,7 @@ function Lesson({ onComplete }) {
         </Section>
       </div>
 
-      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
+      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e5484d' }}>
         Entendi — Quero Treinar
       </button>
     </div>
@@ -411,7 +411,7 @@ function Lesson({ onComplete }) {
 
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+    <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
       <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 8 }}>{title}</h3>
       <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{children}</div>
     </div>
@@ -457,25 +457,25 @@ function Trainer() {
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
         <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
-        <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <div style={{ color: acc >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>Nova Sessao</button>
       </div>
     )
   }
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
-      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 cenarios</div>
       </div>
-      <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
-        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
+      <div className="rounded-full h-2 mb-6" style={{ background: '#2a2a2e' }}>
+        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
       {scenario && (
         <>
-          <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>LATE GAME MTT</div>
             <div style={{ color: '#ccc', fontSize: 15, lineHeight: 1.7 }}>{scenario.situation}</div>
             <div style={{ color: 'white', fontWeight: 700, fontSize: 16, marginTop: 12 }}>{scenario.question}</div>
@@ -485,7 +485,7 @@ function Trainer() {
             <div className="grid grid-cols-2 gap-3 mb-4">
               {scenario.options.map(opt => (
                 <button key={opt.id} onClick={() => answer(opt.id)} className="py-4 rounded-xl font-bold text-sm"
-                  style={{ background: opt.id === 'fold' || opt.id === 'call' || opt.id === 'stop' ? '#4a90e2' : '#f5a623', color: opt.id === 'fold' || opt.id === 'call' || opt.id === 'stop' ? 'white' : '#0a0a0f' }}>
+                  style={{ background: opt.id === 'fold' || opt.id === 'call' || opt.id === 'stop' ? '#4a90e2' : '#f5a623', color: opt.id === 'fold' || opt.id === 'call' || opt.id === 'stop' ? 'white' : '#0f0f0f' }}>
                   {opt.label}
                 </button>
               ))}
@@ -493,13 +493,13 @@ function Trainer() {
           )}
 
           {feedback && (
-            <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
-              <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+            <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: `2px solid ${feedback.isCorrect ? '#4fce82' : '#e5484d'}` }}>
+              <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
                 {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
               </div>
-              <button onClick={newScenario} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proximo Cenario</button>
+              <button onClick={newScenario} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e5484d', color: 'white', fontSize: 16 }}>Proximo Cenario</button>
               <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.explanation}</div>
-              <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a62330' }}>
+              <div className="mt-3 rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #f5a62330' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13 }}>Conceito-chave</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>{feedback.concept}</div>
               </div>
@@ -515,16 +515,16 @@ export default function Module21() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[21]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[21]?.unlocked) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 20 para desbloquear.</p></div>
     </div>
   )
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[21]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[21]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[21]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[21]?.lessonRead && '🔒'}</button>
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>Aula</button>
+          <button onClick={() => progress.modules[21]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[21]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[21]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[21]?.lessonRead && '🔒'}</button>
         </div>
         {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(21); setView('trainer') }} /> : <Trainer />}
       </div>

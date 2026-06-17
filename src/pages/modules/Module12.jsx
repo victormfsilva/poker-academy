@@ -17,7 +17,7 @@ export default function Module12() {
   }, [])
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
       <div style={{ color: '#888' }}>Redirecionando...</div>
     </div>
   )

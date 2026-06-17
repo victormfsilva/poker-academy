@@ -187,7 +187,7 @@ function generateExercise() {
 
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+    <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
       <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 8 }}>{title}</h3>
       <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{children}</div>
     </div>
@@ -218,7 +218,7 @@ function Lesson({ onComplete }) {
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className="px-4 py-2 rounded-lg text-sm font-semibold"
-            style={{ background: tab === t.id ? '#e94560' : '#12121a', color: tab === t.id ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
+            style={{ background: tab === t.id ? '#e5484d' : '#1a1a1d', color: tab === t.id ? 'white' : '#888', border: '1px solid #2a2a2e' }}>
             {t.label}
           </button>
         ))}
@@ -227,7 +227,7 @@ function Lesson({ onComplete }) {
       {tab === 'outs' && (
         <div className="space-y-4">
           <Section title="O que são Outs?">
-            Outs são as <strong style={{ color: '#e94560' }}>cartas que faltam no baralho é que melhoram sua mão</strong>. Se você tem 4 cartas do mesmo naipe é precisa de mais uma para fazer flush, as cartas que faltam desse naipe são seus outs.
+            Outs são as <strong style={{ color: '#e5484d' }}>cartas que faltam no baralho é que melhoram sua mão</strong>. Se você tem 4 cartas do mesmo naipe é precisa de mais uma para fazer flush, as cartas que faltam desse naipe são seus outs.
             <br /><br />
             Pense assim: você está esperando um ônibus. Os outs são quantos ônibus diferentes podem te levar ao destino. Quanto mais outs, mais chance de pegar um.
           </Section>
@@ -236,13 +236,13 @@ function Lesson({ onComplete }) {
             <div className="space-y-3 mt-2">
               {[
                 { name: 'Flush Draw', outs: 9, desc: '4 cartas do mesmo naipe — faltam 9 (13 do naipe - 4 visíveis)', color: '#4a90e2' },
-                { name: 'Straight Aberto (OESD)', outs: 8, desc: '4 cartas em sequência — falta 1 carta em cada ponta', color: '#00d4aa' },
+                { name: 'Straight Aberto (OESD)', outs: 8, desc: '4 cartas em sequência — falta 1 carta em cada ponta', color: '#4fce82' },
                 { name: 'Duas Overcards', outs: 6, desc: 'Suas 2 cartas maiores que o board — 3 de cada no baralho', color: '#f5a623' },
-                { name: 'Gutshot (Furo no Meio)', outs: 4, desc: 'Quase uma sequência, mas falta 1 carta no meio', color: '#e94560' },
-                { name: 'Flush + Straight Aberto', outs: 15, desc: 'Combinação monstro! 9 + 8 - 2 repetidas = 15', color: '#00d4aa' },
+                { name: 'Gutshot (Furo no Meio)', outs: 4, desc: 'Quase uma sequência, mas falta 1 carta no meio', color: '#e5484d' },
+                { name: 'Flush + Straight Aberto', outs: 15, desc: 'Combinação monstro! 9 + 8 - 2 repetidas = 15', color: '#4fce82' },
                 { name: 'Flush + Gutshot', outs: 12, desc: 'Flush draw + furo no meio: 9 + 4 - 1 = 12', color: '#4a90e2' },
               ].map(d => (
-                <div key={d.name} className="flex items-start gap-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: `1px solid ${d.color}33` }}>
+                <div key={d.name} className="flex items-start gap-3 rounded-lg p-3" style={{ background: '#0f0f0f', border: `1px solid ${d.color}33` }}>
                   <div className="rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 44, height: 44, background: `${d.color}22`, color: d.color, fontWeight: 700, fontSize: 18 }}>
                     {d.outs}
                   </div>
@@ -258,12 +258,12 @@ function Lesson({ onComplete }) {
           <Section title="Regra do x2 e x4 — Cálculo Rápido">
             Essa é a regra mais útil do poker:
             <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-                <div style={{ color: '#00d4aa', fontWeight: 600 }}>No Flop (x4)</div>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+                <div style={{ color: '#4fce82', fontWeight: 600 }}>No Flop (x4)</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ainda vem 2 cartas (turn + river). Multiplique seus outs por 4.</div>
                 <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>9 outs x 4 = ~36%</div>
               </div>
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #f5a623' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600 }}>No Turn (x2)</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Só vem 1 carta (river). Multiplique seus outs por 2.</div>
                 <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>9 outs x 2 = ~18%</div>
@@ -276,13 +276,13 @@ function Lesson({ onComplete }) {
       {tab === 'potodds' && (
         <div className="space-y-4">
           <Section title="O que são Pot Odds?">
-            Pot odds é a <strong style={{ color: '#e94560' }}>relação entre o que você precisa pagar é o que pode ganhar</strong>. É como calcular se vale a pena pagar para ver a próxima carta.
+            Pot odds é a <strong style={{ color: '#e5484d' }}>relação entre o que você precisa pagar é o que pode ganhar</strong>. É como calcular se vale a pena pagar para ver a próxima carta.
             <br /><br />
             Imagine que alguém te oferece: pague R$10 para concorrer a R$100. Você só precisa acertar 1 em 11 vezes para sair no lucro. Isso é pot odds.
           </Section>
 
           <Section title="Como Calcular">
-            <div className="rounded-lg p-4 mt-2" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
+            <div className="rounded-lg p-4 mt-2" style={{ background: '#0f0f0f', border: '1px solid #4a90e2' }}>
               <div style={{ color: '#4a90e2', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
                 Fórmula: quanto você paga / pote total após seu call
               </div>
@@ -292,7 +292,7 @@ function Lesson({ onComplete }) {
                   <li>1. Pote atual: R$100</li>
                   <li>2. Adversário aposta: R$50</li>
                   <li>3. Pote total após seu call: R$100 + R$50 + R$50 = R$200</li>
-                  <li>4. Você paga R$50 de R$200 = <strong style={{ color: '#e94560' }}>25%</strong></li>
+                  <li>4. Você paga R$50 de R$200 = <strong style={{ color: '#e5484d' }}>25%</strong></li>
                   <li>5. Você precisa ganhar 25% das vezes para empatar</li>
                 </ol>
               </div>
@@ -301,13 +301,13 @@ function Lesson({ onComplete }) {
 
           <Section title="A Decisão: Outs vs Pot Odds">
             <div className="grid grid-cols-2 gap-3 mt-2">
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-                <div style={{ color: '#00d4aa', fontWeight: 600 }}>CALL</div>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+                <div style={{ color: '#4fce82', fontWeight: 600 }}>CALL</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sua % de outs é <strong>MAIOR</strong> que a % de pot odds.</div>
                 <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>36% de chance vs 25% necessário = CALL</div>
               </div>
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-                <div style={{ color: '#e94560', fontWeight: 600 }}>FOLD</div>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+                <div style={{ color: '#e5484d', fontWeight: 600 }}>FOLD</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Sua % de outs é <strong>MENOR</strong> que a % de pot odds.</div>
                 <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>16% de chance vs 25% necessário = FOLD</div>
               </div>
@@ -333,10 +333,10 @@ function Lesson({ onComplete }) {
                     { bet: '75% do pote', pct: 30, outsF: 8, outsT: 15 },
                     { bet: '100% do pote', pct: 33, outsF: 9, outsT: 17 },
                   ].map(r => (
-                    <tr key={r.bet} style={{ borderTop: '1px solid #1e1e2e' }}>
+                    <tr key={r.bet} style={{ borderTop: '1px solid #2a2a2e' }}>
                       <td style={{ color: '#ccc', padding: 8, fontSize: 13 }}>{r.bet}</td>
                       <td style={{ color: '#f5a623', padding: 8, textAlign: 'center', fontWeight: 600 }}>{r.pct}%</td>
-                      <td style={{ color: '#00d4aa', padding: 8, textAlign: 'center' }}>{r.outsF}+</td>
+                      <td style={{ color: '#4fce82', padding: 8, textAlign: 'center' }}>{r.outsF}+</td>
                       <td style={{ color: '#4a90e2', padding: 8, textAlign: 'center' }}>{r.outsT}+</td>
                     </tr>
                   ))}
@@ -350,23 +350,23 @@ function Lesson({ onComplete }) {
       {tab === 'implied' && (
         <div className="space-y-4">
           <Section title="O que são Implied Odds?">
-            Implied odds são o <strong style={{ color: '#e94560' }}>dinheiro extra que você pode ganhar no futuro</strong> se completar seu draw. É um bônus além do pote atual.
+            Implied odds são o <strong style={{ color: '#e5484d' }}>dinheiro extra que você pode ganhar no futuro</strong> se completar seu draw. É um bônus além do pote atual.
             <br /><br />
             Pense assim: você compra um bilhete barato. O prêmio atual não é grande, mas se você ganhar, o adversário provavelmente vai pagar mais apostas no turn e river — aí o prêmio final fica enorme.
           </Section>
 
           <Section title="Quando Contar com Implied Odds">
             <div className="space-y-3 mt-2">
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-                <div style={{ color: '#00d4aa', fontWeight: 600 }}>Boas Implied Odds</div>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+                <div style={{ color: '#4fce82', fontWeight: 600 }}>Boas Implied Odds</div>
                 <ul className="mt-2 space-y-1" style={{ color: '#ccc', fontSize: 13 }}>
                   <li>- Adversário tem muitas fichas (pode pagar mais depois)</li>
                   <li>- Seu draw é discreto (adversário não percebe)</li>
                   <li>- Gutshot que completa straight — difícil de detectar</li>
                 </ul>
               </div>
-              <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-                <div style={{ color: '#e94560', fontWeight: 600 }}>Más Implied Odds</div>
+              <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+                <div style={{ color: '#e5484d', fontWeight: 600 }}>Más Implied Odds</div>
                 <ul className="mt-2 space-y-1" style={{ color: '#ccc', fontSize: 13 }}>
                   <li>- Adversário tem poucas fichas (não pode pagar mais)</li>
                   <li>- Seu draw é óbvio (3 cartas do mesmo naipe no board)</li>
@@ -381,15 +381,15 @@ function Lesson({ onComplete }) {
       {tab === 'ev' && (
         <div className="space-y-4">
           <Section title="O que é EV (Valor Esperado)?">
-            EV é o <strong style={{ color: '#e94560' }}>quanto uma jogada vale no longo prazo</strong>. Se você repetisse a mesma situação 1000 vezes, o EV mostra se você sairia no lucro ou no prejuízo.
+            EV é o <strong style={{ color: '#e5484d' }}>quanto uma jogada vale no longo prazo</strong>. Se você repetisse a mesma situação 1000 vezes, o EV mostra se você sairia no lucro ou no prejuízo.
             <br /><br />
             <strong style={{ color: '#f5a623' }}>EV positivo (+EV)</strong> = jogada lucrativa
             <br />
-            <strong style={{ color: '#e94560' }}>EV negativo (-EV)</strong> = jogada que perde dinheiro
+            <strong style={{ color: '#e5484d' }}>EV negativo (-EV)</strong> = jogada que perde dinheiro
           </Section>
 
           <Section title="Como Calcular">
-            <div className="rounded-lg p-4 mt-2" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
+            <div className="rounded-lg p-4 mt-2" style={{ background: '#0f0f0f', border: '1px solid #4a90e2' }}>
               <div style={{ color: '#4a90e2', fontWeight: 700, marginBottom: 8 }}>
                 EV = (% de ganhar x quanto ganha) - (% de perder x quanto perde)
               </div>
@@ -398,7 +398,7 @@ function Lesson({ onComplete }) {
                 <ul className="mt-2 space-y-1">
                   <li>40% de chance de ganhar R$200</li>
                   <li>60% de chance de perder R$100</li>
-                  <li>EV = (0.40 x 200) - (0.60 x 100) = 80 - 60 = <strong style={{ color: '#00d4aa' }}>+R$20</strong></li>
+                  <li>EV = (0.40 x 200) - (0.60 x 100) = 80 - 60 = <strong style={{ color: '#4fce82' }}>+R$20</strong></li>
                   <li>No longo prazo, essa jogada ganha R$20 por vez!</li>
                 </ul>
               </div>
@@ -406,7 +406,7 @@ function Lesson({ onComplete }) {
           </Section>
 
           <Section title="Decisão Certa com Resultado Ruim">
-            Ponto importante: <strong style={{ color: '#e94560' }}>uma decisão certa pode dar resultado ruim numa mão específica</strong>, é tudo bem.
+            Ponto importante: <strong style={{ color: '#e5484d' }}>uma decisão certa pode dar resultado ruim numa mão específica</strong>, é tudo bem.
             <br /><br />
             Se você tem 70% de chance e perde, você não errou — você só caiu nos 30%. No longo prazo, tomar essa decisão sempre te deixa no lucro.
             <br /><br />
@@ -427,10 +427,10 @@ function Lesson({ onComplete }) {
                 { sit: 'Gutshot no flop', outs: 4, flop: '~16%', turn: '~8%' },
                 { sit: 'Flush + straight aberto', outs: 15, flop: '~60%', turn: '~30%' },
               ].map(s => (
-                <div key={s.sit} className="flex items-center justify-between rounded-lg p-2" style={{ background: '#0a0a0f' }}>
+                <div key={s.sit} className="flex items-center justify-between rounded-lg p-2" style={{ background: '#0f0f0f' }}>
                   <span style={{ color: '#ccc', fontSize: 13 }}>{s.sit}</span>
                   <div className="flex gap-3">
-                    <span style={{ color: '#00d4aa', fontSize: 13 }}>Flop: {s.flop}</span>
+                    <span style={{ color: '#4fce82', fontSize: 13 }}>Flop: {s.flop}</span>
                     <span style={{ color: '#f5a623', fontSize: 13 }}>Turn: {s.turn}</span>
                   </div>
                 </div>
@@ -439,8 +439,8 @@ function Lesson({ onComplete }) {
           </Section>
 
           <Section title="Regra de Ouro">
-            <div className="rounded-lg p-4 mt-2" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
+            <div className="rounded-lg p-4 mt-2" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+              <div style={{ color: '#e5484d', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
                 Se seus outs x multiplicador {'>'} pot odds → CALL
               </div>
               <div style={{ color: '#ccc', fontSize: 14 }}>
@@ -464,7 +464,7 @@ function Lesson({ onComplete }) {
         </div>
       )}
 
-      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
+      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e5484d' }}>
         Entendi — Quero Treinar
       </button>
     </div>
@@ -525,11 +525,11 @@ function Trainer() {
         <div style={{ fontSize: 60 }}>{accuracy >= 90 ? '🎉' : accuracy >= 70 ? '👍' : '💪'}</div>
         <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
         <div style={{ color: '#888', marginTop: 8 }}>{sessionCorrect}/{sessionTotal} acertos</div>
-        <div style={{ color: accuracy >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700, marginTop: 8 }}>{accuracy}%</div>
+        <div style={{ color: accuracy >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700, marginTop: 8 }}>{accuracy}%</div>
         {accuracy >= 90
-          ? <p style={{ color: '#00d4aa', marginTop: 8 }}>Excelente! Sessão conta para desbloquear o próximo módulo.</p>
+          ? <p style={{ color: '#4fce82', marginTop: 8 }}>Excelente! Sessão conta para desbloquear o próximo módulo.</p>
           : <p style={{ color: '#888', marginTop: 8 }}>Treine mais para chegar a 90%.</p>}
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessão</button>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>Nova Sessão</button>
       </div>
     )
   }
@@ -539,19 +539,19 @@ function Trainer() {
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       {/* Progresso */}
-      <div className="rounded-xl p-3 mb-4 flex justify-between items-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-3 mb-4 flex justify-between items-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessão: {sessionCorrect}/{sessionTotal} · Sequência: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 (90%+)</div>
       </div>
-      <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
-        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
+      <div className="rounded-full h-2 mb-6" style={{ background: '#2a2a2e' }}>
+        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
       {/* Badge tipo */}
       <div className="mb-4 text-center">
         <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{
-          background: exercise.type === 'outs' ? '#4a90e222' : exercise.type === 'potodds' ? '#f5a62322' : exercise.type === 'ev' ? '#00d4aa22' : '#e9456022',
-          color: exercise.type === 'outs' ? '#4a90e2' : exercise.type === 'potodds' ? '#f5a623' : exercise.type === 'ev' ? '#00d4aa' : '#e94560',
+          background: exercise.type === 'outs' ? '#4a90e222' : exercise.type === 'potodds' ? '#f5a62322' : exercise.type === 'ev' ? '#4fce8222' : '#e5484d22',
+          color: exercise.type === 'outs' ? '#4a90e2' : exercise.type === 'potodds' ? '#f5a623' : exercise.type === 'ev' ? '#4fce82' : '#e5484d',
         }}>
           {exercise.type === 'outs' ? 'Contar Outs' : exercise.type === 'potodds' ? 'Pot Odds' : exercise.type === 'ev' ? 'Valor Esperado (EV)' : 'Decisão Completa'}
         </span>
@@ -560,7 +560,7 @@ function Trainer() {
       {/* OUTS */}
       {exercise.type === 'outs' && (
         <div>
-          <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>SUAS CARTAS</div>
             <div className="flex justify-center gap-3 mb-4">
               {exercise.hole.map((c, i) => <Card key={i} card={c} size="lg" />)}
@@ -576,7 +576,7 @@ function Trainer() {
           {!feedback && (
             <div className="grid grid-cols-4 gap-3 mb-4">
               {exercise.options.map(opt => (
-                <button key={opt} onClick={() => answer(opt)} className="py-4 rounded-xl font-bold text-lg" style={{ background: '#1e1e2e', color: 'white', border: '1px solid #333' }}>{opt}</button>
+                <button key={opt} onClick={() => answer(opt)} className="py-4 rounded-xl font-bold text-lg" style={{ background: '#2a2a2e', color: 'white', border: '1px solid #333' }}>{opt}</button>
               ))}
             </div>
           )}
@@ -586,7 +586,7 @@ function Trainer() {
       {/* POT ODDS */}
       {exercise.type === 'potodds' && (
         <div>
-          <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
                 <div style={{ color: '#888', fontSize: 12 }}>POTE</div>
@@ -594,7 +594,7 @@ function Trainer() {
               </div>
               <div>
                 <div style={{ color: '#888', fontSize: 12 }}>APOSTA</div>
-                <div style={{ color: '#e94560', fontSize: 24, fontWeight: 700 }}>{exercise.bet}</div>
+                <div style={{ color: '#e5484d', fontSize: 24, fontWeight: 700 }}>{exercise.bet}</div>
               </div>
             </div>
             <div className="text-center mt-3">
@@ -608,7 +608,7 @@ function Trainer() {
           {!feedback && (
             <div className="grid grid-cols-4 gap-3 mb-4">
               {exercise.options.map(opt => (
-                <button key={opt} onClick={() => answer(opt)} className="py-4 rounded-xl font-bold text-lg" style={{ background: '#1e1e2e', color: 'white', border: '1px solid #333' }}>{opt}%</button>
+                <button key={opt} onClick={() => answer(opt)} className="py-4 rounded-xl font-bold text-lg" style={{ background: '#2a2a2e', color: 'white', border: '1px solid #333' }}>{opt}%</button>
               ))}
             </div>
           )}
@@ -618,7 +618,7 @@ function Trainer() {
       {/* DECISAO */}
       {exercise.type === 'decision' && (
         <div>
-          <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <div style={{ color: '#888', fontSize: 12, marginBottom: 8 }}>SUAS CARTAS</div>
             <div className="flex justify-center gap-3 mb-4">
               {exercise.hole.map((c, i) => <Card key={i} card={c} size="lg" />)}
@@ -629,7 +629,7 @@ function Trainer() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div><div style={{ color: '#888', fontSize: 12 }}>POTE</div><div style={{ color: '#f5a623', fontSize: 20, fontWeight: 700 }}>{exercise.pot}</div></div>
-              <div><div style={{ color: '#888', fontSize: 12 }}>APOSTA</div><div style={{ color: '#e94560', fontSize: 20, fontWeight: 700 }}>{exercise.bet}</div></div>
+              <div><div style={{ color: '#888', fontSize: 12 }}>APOSTA</div><div style={{ color: '#e5484d', fontSize: 20, fontWeight: 700 }}>{exercise.bet}</div></div>
             </div>
           </div>
           <div className="text-center mb-4">
@@ -638,8 +638,8 @@ function Trainer() {
           </div>
           {!feedback && (
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <button onClick={() => answer('call')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#00d4aa', color: '#0a0a0f' }}>CALL</button>
-              <button onClick={() => answer('fold')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#e94560', color: 'white' }}>FOLD</button>
+              <button onClick={() => answer('call')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#4fce82', color: '#0f0f0f' }}>CALL</button>
+              <button onClick={() => answer('fold')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#e5484d', color: 'white' }}>FOLD</button>
             </div>
           )}
         </div>
@@ -648,17 +648,17 @@ function Trainer() {
       {/* EV */}
       {exercise.type === 'ev' && (
         <div>
-          <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <div className="text-center mb-4"><div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO DE ALL-IN</div></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #00d4aa33' }}>
-                <div style={{ color: '#00d4aa', fontSize: 14, fontWeight: 600 }}>Se ganhar</div>
-                <div style={{ color: '#00d4aa', fontSize: 24, fontWeight: 700 }}>+R${exercise.winAmount}</div>
+              <div className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: '1px solid #4fce8233' }}>
+                <div style={{ color: '#4fce82', fontSize: 14, fontWeight: 600 }}>Se ganhar</div>
+                <div style={{ color: '#4fce82', fontSize: 24, fontWeight: 700 }}>+R${exercise.winAmount}</div>
                 <div style={{ color: '#888', fontSize: 13 }}>{exercise.winPct}% de chance</div>
               </div>
-              <div className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: '1px solid #e9456033' }}>
-                <div style={{ color: '#e94560', fontSize: 14, fontWeight: 600 }}>Se perder</div>
-                <div style={{ color: '#e94560', fontSize: 24, fontWeight: 700 }}>-R${exercise.loseAmount}</div>
+              <div className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: '1px solid #e5484d33' }}>
+                <div style={{ color: '#e5484d', fontSize: 14, fontWeight: 600 }}>Se perder</div>
+                <div style={{ color: '#e5484d', fontSize: 24, fontWeight: 700 }}>-R${exercise.loseAmount}</div>
                 <div style={{ color: '#888', fontSize: 13 }}>{exercise.losePct}% de chance</div>
               </div>
             </div>
@@ -669,8 +669,8 @@ function Trainer() {
           </div>
           {!feedback && (
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <button onClick={() => answer('positivo')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#00d4aa', color: '#0a0a0f' }}>+EV</button>
-              <button onClick={() => answer('negativo')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#e94560', color: 'white' }}>-EV</button>
+              <button onClick={() => answer('positivo')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#4fce82', color: '#0f0f0f' }}>+EV</button>
+              <button onClick={() => answer('negativo')} className="py-5 rounded-xl font-bold text-xl" style={{ background: '#e5484d', color: 'white' }}>-EV</button>
             </div>
           )}
         </div>
@@ -678,11 +678,11 @@ function Trainer() {
 
       {/* FEEDBACK */}
       {feedback && (
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.correct ? '#00d4aa' : '#e94560'}` }}>
-          <div style={{ color: feedback.correct ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+        <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: `2px solid ${feedback.correct ? '#4fce82' : '#e5484d'}` }}>
+          <div style={{ color: feedback.correct ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.correct ? '✓ Correto!' : '✗ Incorreto'}
           </div>
-          <button onClick={newExercise} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>
+          <button onClick={newExercise} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e5484d', color: 'white', fontSize: 16 }}>
             Próximo Exercício →
           </button>
 
@@ -709,9 +709,9 @@ function Trainer() {
               <strong>Outs:</strong> {exercise.draw.outs} ({exercise.draw.type})<br />
               <strong>Chance:</strong> {exercise.draw.outs} x {exercise.multiplier} = ~{exercise.equity}%<br />
               <strong>Pot odds:</strong> {exercise.potOdds}%<br />
-              <div className="rounded-lg p-2 mt-2" style={{ background: exercise.correctAnswer === 'call' ? '#00d4aa11' : '#e9456011', border: `1px solid ${exercise.correctAnswer === 'call' ? '#00d4aa33' : '#e9456033'}` }}>
+              <div className="rounded-lg p-2 mt-2" style={{ background: exercise.correctAnswer === 'call' ? '#4fce8211' : '#e5484d11', border: `1px solid ${exercise.correctAnswer === 'call' ? '#4fce8233' : '#e5484d33'}` }}>
                 {exercise.equity}% {exercise.equity >= exercise.potOdds ? '>' : '<'} {exercise.potOdds}% →{' '}
-                <strong style={{ color: exercise.correctAnswer === 'call' ? '#00d4aa' : '#e94560' }}>
+                <strong style={{ color: exercise.correctAnswer === 'call' ? '#4fce82' : '#e5484d' }}>
                   {exercise.correctAnswer === 'call' ? 'CALL' : 'FOLD'}
                 </strong>
               </div>
@@ -723,7 +723,7 @@ function Trainer() {
               <div style={{ color: '#f5a623', fontWeight: 600, marginBottom: 4 }}>Resposta: {exercise.correctAnswer === 'positivo' ? '+EV' : '-EV'}</div>
               ({exercise.winPct}% x R${exercise.winAmount}) - ({exercise.losePct}% x R${exercise.loseAmount})<br />
               = R${Math.round(exercise.winPct / 100 * exercise.winAmount)} - R${Math.round(exercise.losePct / 100 * exercise.loseAmount)}<br />
-              = <strong style={{ color: exercise.ev >= 0 ? '#00d4aa' : '#e94560' }}>{exercise.ev >= 0 ? '+' : ''}R${exercise.ev}</strong>
+              = <strong style={{ color: exercise.ev >= 0 ? '#4fce82' : '#e5484d' }}>{exercise.ev >= 0 ? '+' : ''}R${exercise.ev}</strong>
             </div>
           )}
         </div>
@@ -744,16 +744,16 @@ export default function Module3() {
   }
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
           <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold"
-            style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>
+            style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>
             📖 Aula
           </button>
           <button onClick={() => progress.modules[3]?.lessonRead && setView('trainer')}
             className="px-4 py-2 rounded-lg text-sm font-semibold"
-            style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[3]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[3]?.lessonRead ? 'pointer' : 'not-allowed' }}>
+            style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[3]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[3]?.lessonRead ? 'pointer' : 'not-allowed' }}>
             🎯 Trainer {!progress.modules[3]?.lessonRead && '🔒'}
           </button>
         </div>

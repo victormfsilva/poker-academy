@@ -181,7 +181,7 @@ function Lesson({ onComplete }) {
       <div className="space-y-4">
         <Section title="O Cenario">
           Voce esta no Big Blind. Alguem fez raise pre-flop, voce chamou. O flop saiu e o adversario faz uma aposta de continuacao (c-bet).<br /><br />
-          Agora voce tem 3 opcoes: <strong style={{ color: '#e94560' }}>fold</strong>, <strong style={{ color: '#4a90e2' }}>call</strong> ou <strong style={{ color: '#f5a623' }}>check-raise</strong>.
+          Agora voce tem 3 opcoes: <strong style={{ color: '#e5484d' }}>fold</strong>, <strong style={{ color: '#4a90e2' }}>call</strong> ou <strong style={{ color: '#f5a623' }}>check-raise</strong>.
         </Section>
 
         <Section title="Quando Foldar">
@@ -192,7 +192,7 @@ function Lesson({ onComplete }) {
               'Board favorece muito o range do adversario (ex: A-K-Q e voce tem 7-6)',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
-                <span style={{ color: '#e94560' }}>✗</span>
+                <span style={{ color: '#e5484d' }}>✗</span>
                 <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
               </div>
             ))}
@@ -219,8 +219,8 @@ function Lesson({ onComplete }) {
         <Section title="Pot Odds na Defesa">
           O tamanho da aposta muda quanto voce precisa ganhar pra justificar o call:
           <div className="grid grid-cols-3 gap-2 mt-3">
-            {[['33%', '20%', '#00d4aa'], ['50%', '25%', '#f5a623'], ['75%', '30%', '#e94560']].map(([bet, need, c]) => (
-              <div key={bet} className="rounded-lg p-3 text-center" style={{ background: '#0a0a0f', border: `1px solid ${c}` }}>
+            {[['33%', '20%', '#4fce82'], ['50%', '25%', '#f5a623'], ['75%', '30%', '#e5484d']].map(([bet, need, c]) => (
+              <div key={bet} className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: `1px solid ${c}` }}>
                 <div style={{ color: c, fontWeight: 700 }}>CBet {bet}</div>
                 <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginTop: 4 }}>{need}</div>
                 <div style={{ color: '#888', fontSize: 11 }}>equity necessaria</div>
@@ -231,18 +231,18 @@ function Lesson({ onComplete }) {
 
         <Section title="Board Texture Importa">
           <div className="grid grid-cols-2 gap-3 mt-2">
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 600 }}>Board Seco</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+              <div style={{ color: '#4fce82', fontWeight: 600 }}>Board Seco</div>
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ex: K♠ 7♦ 2♣<br />Adversario c-beta com muito lixo. Pode chamar mais leve ou flotar.</div>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #e94560' }}>
-              <div style={{ color: '#e94560', fontWeight: 600 }}>Board Umido</div>
+            <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
+              <div style={{ color: '#e5484d', fontWeight: 600 }}>Board Umido</div>
               <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>Ex: 9♠ 8♥ 7♠<br />Adversario c-beta mais seletivamente. Exija mais equity pra continuar.</div>
             </div>
           </div>
         </Section>
 
-        <div className="rounded-xl p-4" style={{ background: '#12121a', border: '2px solid #f5a623' }}>
+        <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '2px solid #f5a623' }}>
           <h3 style={{ color: '#f5a623', fontWeight: 700, fontSize: 18, marginBottom: 12 }}>Check-Raise — A Arma Mais Poderosa do OOP</h3>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>
             Voce checa, o adversario aposta, e voce <strong style={{ color: '#f5a623' }}>relanca</strong>.<br /><br />
@@ -252,15 +252,15 @@ function Lesson({ onComplete }) {
 
         <Section title="2 Tipos de Check-Raise">
           <div className="grid grid-cols-2 gap-3 mt-2">
-            <div className="rounded-lg p-4" style={{ background: '#0a0a0f', border: '1px solid #00d4aa' }}>
-              <div style={{ color: '#00d4aa', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Check-Raise de Valor</div>
+            <div className="rounded-lg p-4" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
+              <div style={{ color: '#4fce82', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Check-Raise de Valor</div>
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.6 }}>
                 Maos muito fortes que querem construir pote:<br />
                 <strong>Sets, dois pares, flush completo</strong><br /><br />
                 Voce checa pra induzir a aposta, depois relanca pra maximizar valor.
               </div>
             </div>
-            <div className="rounded-lg p-4" style={{ background: '#0a0a0f', border: '1px solid #f5a623' }}>
+            <div className="rounded-lg p-4" style={{ background: '#0f0f0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Check-Raise de Blefe</div>
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.6 }}>
                 Draws fortes que querem fold equity:<br />
@@ -278,7 +278,7 @@ function Lesson({ onComplete }) {
               { board: 'Board com par (ex: 7♠ 7♦ 3♣)', reason: 'Se voce tem o 7, check-raise de valor e devastador — adversario nao te coloca nessa mao.' },
               { board: 'Board medio-baixo (ex: 8♦ 5♣ 3♠)', reason: 'Favorece seu range de BB — voce tem mais 85s, 53s, 33 que o raiser.' },
             ].map(r => (
-              <div key={r.board} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
+              <div key={r.board} className="rounded-lg p-3" style={{ background: '#0f0f0f' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13 }}>{r.board}</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>{r.reason}</div>
               </div>
@@ -292,8 +292,8 @@ function Lesson({ onComplete }) {
               { board: 'Board alto e seco (ex: A♠ K♦ 7♣)', reason: 'Favorece o range do raiser (ele tem mais AK, AQ, KK). Check-raise e arriscado.' },
               { board: 'Board monotone (ex: Q♥ 9♥ 4♥)', reason: 'Muito perigoso — se voce nao tem a flush, o adversario pode ter. Cautela.' },
             ].map(r => (
-              <div key={r.board} className="rounded-lg p-3" style={{ background: '#0a0a0f' }}>
-                <div style={{ color: '#e94560', fontWeight: 600, fontSize: 13 }}>{r.board}</div>
+              <div key={r.board} className="rounded-lg p-3" style={{ background: '#0f0f0f' }}>
+                <div style={{ color: '#e5484d', fontWeight: 600, fontSize: 13 }}>{r.board}</div>
                 <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>{r.reason}</div>
               </div>
             ))}
@@ -301,7 +301,7 @@ function Lesson({ onComplete }) {
         </Section>
 
         <Section title="Sizing do Check-Raise">
-          <div className="rounded-lg p-3 mt-2" style={{ background: '#0a0a0f', border: '1px solid #4a90e2' }}>
+          <div className="rounded-lg p-3 mt-2" style={{ background: '#0f0f0f', border: '1px solid #4a90e2' }}>
             <div style={{ color: '#4a90e2', fontWeight: 700, marginBottom: 4 }}>Regra geral: 3x a aposta do adversario</div>
             <div style={{ color: '#ccc', fontSize: 13 }}>
               Adversario aposta 5bb → voce raise pra 15bb.<br />
@@ -319,14 +319,14 @@ function Lesson({ onComplete }) {
               'Adversario que nunca folda — check-raise de blefe nao funciona',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
-                <span style={{ color: '#e94560' }}>✗</span>
+                <span style={{ color: '#e5484d' }}>✗</span>
                 <span style={{ color: '#ccc', fontSize: 14 }}>{t}</span>
               </div>
             ))}
           </div>
         </Section>
       </div>
-      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e94560' }}>
+      <button onClick={onComplete} className="w-full mt-8 py-4 rounded-xl font-bold text-white text-lg" style={{ background: '#e5484d' }}>
         Entendi — Quero Treinar
       </button>
     </div>
@@ -335,7 +335,7 @@ function Lesson({ onComplete }) {
 
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+    <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
       <h3 style={{ color: 'white', fontWeight: 600, marginBottom: 8 }}>{title}</h3>
       <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{children}</div>
     </div>
@@ -385,8 +385,8 @@ function Trainer() {
       <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
         <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
         <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
-        <div style={{ color: acc >= 90 ? '#00d4aa' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e94560', color: 'white' }}>Nova Sessao</button>
+        <div style={{ color: acc >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
+        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>Nova Sessao</button>
       </div>
     )
   }
@@ -395,24 +395,24 @@ function Trainer() {
 
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
-      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-3 mb-4 flex justify-between" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 13 }}>Sessao: {sessionCorrect}/{sessionTotal} · Seq: {streak}</div>
         <div style={{ color: '#888', fontSize: 13 }}>Meta: 10 maos</div>
       </div>
-      <div className="rounded-full h-2 mb-6" style={{ background: '#1e1e2e' }}>
-        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e94560' }} />
+      <div className="rounded-full h-2 mb-6" style={{ background: '#2a2a2e' }}>
+        <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#12121a', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
         <div style={{ color: '#888', fontSize: 12 }}>SITUACAO</div>
-        <div style={{ color: '#e94560', fontSize: 18, fontWeight: 700 }}>Voce esta no BB (OOP)</div>
+        <div style={{ color: '#e5484d', fontSize: 18, fontWeight: 700 }}>Voce esta no BB (OOP)</div>
         <div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Adversario fez c-bet de <strong style={{ color: '#f5a623' }}>{cbetSize}</strong> do pote</div>
         {texture && (
           <div className="mt-2 flex gap-2 justify-center flex-wrap">
-            <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#00d4aa22' : '#e9456022', color: texture.isDry ? '#00d4aa' : '#e94560' }}>
+            <span className="px-2 py-1 rounded text-xs" style={{ background: texture.isDry ? '#4fce8222' : '#e5484d22', color: texture.isDry ? '#4fce82' : '#e5484d' }}>
               {texture.isDry ? 'Board Seco' : 'Board Umido'}
             </span>
-            {texture.monotone && <span className="px-2 py-1 rounded text-xs" style={{ background: '#e9456022', color: '#e94560' }}>Monotone</span>}
+            {texture.monotone && <span className="px-2 py-1 rounded text-xs" style={{ background: '#e5484d22', color: '#e5484d' }}>Monotone</span>}
             {texture.suited && !texture.monotone && <span className="px-2 py-1 rounded text-xs" style={{ background: '#4a90e222', color: '#4a90e2' }}>Flush Possivel</span>}
             {texture.connected && <span className="px-2 py-1 rounded text-xs" style={{ background: '#f5a62322', color: '#f5a623' }}>Conectado</span>}
           </div>
@@ -432,18 +432,18 @@ function Trainer() {
 
       {!feedback && (
         <div className="grid grid-cols-3 gap-3 mb-4">
-          {[['fold', 'FOLD', '#e94560', 'white'], ['call', 'CALL', '#4a90e2', 'white'], ['raise', 'CHECK-RAISE', '#f5a623', '#0a0a0f']].map(([action, label, bg, color]) => (
+          {[['fold', 'FOLD', '#e5484d', 'white'], ['call', 'CALL', '#4a90e2', 'white'], ['raise', 'CHECK-RAISE', '#f5a623', '#0f0f0f']].map(([action, label, bg, color]) => (
             <button key={action} onClick={() => answer(action)} className="py-4 rounded-xl font-bold text-sm" style={{ background: bg, color }}>{label}</button>
           ))}
         </div>
       )}
 
       {feedback && (
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#12121a', border: `2px solid ${feedback.isCorrect ? '#00d4aa' : '#e94560'}` }}>
-          <div style={{ color: feedback.isCorrect ? '#00d4aa' : '#e94560', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
+        <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: `2px solid ${feedback.isCorrect ? '#4fce82' : '#e5484d'}` }}>
+          <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
             {feedback.isCorrect ? 'Correto!' : 'Incorreto'}
           </div>
-          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e94560', color: 'white', fontSize: 16 }}>Proxima Mao</button>
+          <button onClick={newHand} className="w-full py-3 rounded-lg font-semibold mb-4" style={{ background: '#e5484d', color: 'white', fontSize: 16 }}>Proxima Mao</button>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>{feedback.reason}</div>
           <div style={{ color: '#555', fontSize: 12, marginTop: 8 }}>
             Correto: <strong style={{ color: '#f5a623' }}>
@@ -451,16 +451,16 @@ function Trainer() {
             </strong>
           </div>
           {!feedback.isCorrect && (
-            <div className="mt-3 rounded-lg p-3" style={{ background: '#0a0a0f', border: '1px solid #4a90e230' }}>
+            <div className="mt-3 rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4a90e230' }}>
               <div style={{ color: '#4a90e2', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Regra geral</div>
               <div style={{ color: '#ccc', fontSize: 12, lineHeight: 1.7 }}>
-                <div>• <strong style={{ color: '#00d4aa' }}>Set / Dois pares / Flush</strong> → CHECK-RAISE de valor</div>
+                <div>• <strong style={{ color: '#4fce82' }}>Set / Dois pares / Flush</strong> → CHECK-RAISE de valor</div>
                 <div>• <strong style={{ color: '#f5a623' }}>Flush draw + board umido + bet grande</strong> → CHECK-RAISE de blefe</div>
                 <div>• <strong style={{ color: '#f5a623' }}>Combo draw (flush + straight)</strong> → CHECK-RAISE de blefe</div>
                 <div>• <strong style={{ color: '#4a90e2' }}>Top pair / Overpair</strong> → CALL</div>
                 <div>• <strong style={{ color: '#4a90e2' }}>Draw com pot odds bons</strong> → CALL</div>
                 <div>• <strong style={{ color: '#4a90e2' }}>Par medio em board seco</strong> → CALL</div>
-                <div>• <strong style={{ color: '#e94560' }}>Sem mao, sem draw</strong> → FOLD</div>
+                <div>• <strong style={{ color: '#e5484d' }}>Sem mao, sem draw</strong> → FOLD</div>
               </div>
             </div>
           )}
@@ -474,16 +474,16 @@ export default function Module10() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[10]?.lessonRead ? 'trainer' : 'lesson')
   if (!progress.modules[10]?.unlocked) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Modulo 9 para desbloquear.</p></div>
     </div>
   )
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0a0a0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e94560' : '#12121a', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #1e1e2e' }}>Aula</button>
-          <button onClick={() => progress.modules[10]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e94560' : '#12121a', color: view === 'trainer' ? 'white' : (progress.modules[10]?.lessonRead ? '#888' : '#444'), border: '1px solid #1e1e2e', cursor: progress.modules[10]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[10]?.lessonRead && '🔒'}</button>
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>Aula</button>
+          <button onClick={() => progress.modules[10]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[10]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[10]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[10]?.lessonRead && '🔒'}</button>
         </div>
         {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(10); setView('trainer') }} /> : <Trainer />}
       </div>
