@@ -136,35 +136,32 @@ function Seat({ pos, isHero, isRaiser, isFolded, stack, actionLabel, heroCards }
           whiteSpace: 'nowrap',
         }}>{actionLabel}</div>
       )}
-      {/* Hero cards + seat lado a lado */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        {/* Seat: retangulo arredondado estilo GTO Wizard */}
+      {/* Seat: retangulo arredondado estilo GTO Wizard */}
+      <div style={{
+        padding: '4px 10px',
+        borderRadius: 6,
+        background: isHero ? '#2a2a2e' : isFolded ? 'transparent' : '#2a2a2e',
+        border: isHero ? '1px solid #4fce82' : 'none',
+        opacity: isFolded ? 0.35 : 1,
+        textAlign: 'center',
+        minWidth: 40,
+      }}>
         <div style={{
-          padding: '4px 10px',
-          borderRadius: 6,
-          background: isHero ? '#2a2a2e' : isFolded ? 'transparent' : '#2a2a2e',
-          border: isHero ? '1px solid #4fce82' : 'none',
-          opacity: isFolded ? 0.35 : 1,
-          textAlign: 'center',
-          minWidth: 40,
-        }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700,
-            color: isHero ? '#4fce82' : '#b3b3b8',
-            lineHeight: 1.3,
-          }}>{posLabel}</div>
-          <div style={{
-            fontSize: 10, color: '#676671', lineHeight: 1.2,
-            fontFamily: 'JetBrains Mono',
-          }}>{stack}</div>
-        </div>
-        {/* Hero cards ao lado do seat */}
-        {isHero && heroCards && heroCards.length > 0 && (
-          <div style={{ display: 'flex', gap: 2 }}>
-            {heroCards.map((c, i) => <Card key={i} card={parseCard(c)} size="sm" />)}
-          </div>
-        )}
+          fontSize: 11, fontWeight: 700,
+          color: isHero ? '#4fce82' : '#b3b3b8',
+          lineHeight: 1.3,
+        }}>{posLabel}</div>
+        <div style={{
+          fontSize: 10, color: '#676671', lineHeight: 1.2,
+          fontFamily: 'JetBrains Mono',
+        }}>{stack}</div>
       </div>
+      {/* Hero cards abaixo do seat */}
+      {isHero && heroCards && heroCards.length > 0 && (
+        <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
+          {heroCards.map((c, i) => <Card key={i} card={parseCard(c)} size="sm" />)}
+        </div>
+      )}
     </div>
   )
 }
@@ -247,8 +244,8 @@ function PokerTable({ scenario, heroCards }) {
 
   return (
     <div style={{
-      position: 'relative', width: '100%', paddingBottom: '72%',
-      userSelect: 'none', overflow: 'visible',
+      position: 'relative', width: '100%', paddingBottom: '75%',
+      userSelect: 'none', overflow: 'hidden',
     }}>
       {/* Mesa oval */}
       <div style={{
