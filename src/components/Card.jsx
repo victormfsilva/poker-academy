@@ -1,7 +1,7 @@
-// Componente de carta estilo GTO Wizard (4-color, dark bg)
+// Componente de carta estilo GTO Wizard — cor de fundo = naipe, rank branco centralizado
 
-const SUIT_SYMBOLS = { s: '\u2660', h: '\u2665', d: '\u2666', c: '\u2663' }
-const SUIT_COLORS = { s: '#c8c8d0', h: '#e5484d', d: '#559bef', c: '#4fce82' }
+// 4-color: spades=cinza escuro, hearts=vermelho, diamonds=azul, clubs=verde
+const SUIT_BG = { s: '#5a5a6e', h: '#c0392b', d: '#2980b9', c: '#27ae60' }
 
 export function parseCard(str) {
   if (!str || str.length < 2) return null
@@ -40,67 +40,31 @@ export default function Card({ card, size = 'md' }) {
   if (!parsed) return null
 
   const { rank, suit } = parsed
-  const symbol = SUIT_SYMBOLS[suit] || suit
-  const color = SUIT_COLORS[suit] || '#c8c8d0'
+  const bg = SUIT_BG[suit] || '#5a5a6e'
   const rankDisplay = rank === 'T' ? '10' : rank
 
-  if (size === 'sm') {
-    return (
-      <div
-        className="flex flex-col items-center justify-center select-none"
-        style={{
-          width: 34, height: 48, borderRadius: 5,
-          background: '#1e1e24',
-          border: '1px solid #2e2e36',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
-        }}
-      >
-        <div style={{ color, fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 14, lineHeight: 1 }}>
-          {rankDisplay}
-        </div>
-        <div style={{ color, fontSize: 12, lineHeight: 1, marginTop: 1 }}>
-          {symbol}
-        </div>
-      </div>
-    )
-  }
+  const dims = size === 'sm'
+    ? { w: 28, h: 36, r: 5, fs: 15, fw: 800 }
+    : { w: 38, h: 50, r: 6, fs: 20, fw: 800 }
 
   return (
     <div
-      className="flex flex-col select-none"
+      className="inline-flex items-center justify-center select-none"
       style={{
-        width: 52, height: 74, borderRadius: 7,
-        background: '#1e1e24',
-        border: '1px solid #2e2e36',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.7)',
-        position: 'relative',
-        overflow: 'hidden',
+        width: dims.w,
+        height: dims.h,
+        borderRadius: dims.r,
+        background: bg,
+        color: '#ffffff',
+        fontFamily: 'Poppins, sans-serif',
+        fontWeight: dims.fw,
+        fontSize: dims.fs,
+        lineHeight: 1,
+        boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
+        letterSpacing: -0.5,
       }}
     >
-      {/* Top-left rank + suit */}
-      <div style={{ padding: '5px 0 0 6px', lineHeight: 1 }}>
-        <div style={{ color, fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 16, lineHeight: 1 }}>
-          {rankDisplay}
-        </div>
-        <div style={{ color, fontSize: 11, lineHeight: 1, marginTop: 1 }}>
-          {symbol}
-        </div>
-      </div>
-
-      {/* Center suit large */}
-      <div style={{
-        color,
-        fontSize: 24,
-        textAlign: 'center',
-        lineHeight: 1,
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: -4,
-      }}>
-        {symbol}
-      </div>
+      {rankDisplay}
     </div>
   )
 }
