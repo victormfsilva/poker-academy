@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import { ProgressProvider } from './context/ProgressContext'
 import Navbar from './components/Navbar'
 import Auth from './pages/Auth'
+import Onboarding from './components/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Modules from './pages/Modules'
 import Module1 from './pages/modules/Module1'
@@ -58,6 +59,14 @@ function App() {
   }
 
   if (!user) return <Auth />
+
+  const onboardingDone = localStorage.getItem('poker-academy-onboarding-done')
+  if (!onboardingDone) {
+    return <Onboarding onComplete={() => {
+      localStorage.setItem('poker-academy-onboarding-done', '1')
+      window.location.reload()
+    }} />
+  }
 
   return (
     <ProgressProvider userId={user.id}>
