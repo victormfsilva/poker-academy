@@ -10,13 +10,13 @@ function getHandNotation(r1, r2, i, j) {
 }
 
 const STATUS_COLORS = {
-  raise: { bg: '#00e68a', text: '#050508' },
-  mix:   { bg: '#ffaa33', text: '#050508' },
-  fold:  { bg: '#1e1e30', text: '#55556a' },
-  call:  { bg: '#4488ff', text: '#050508' },
-  threebet: { bg: '#ff4466', text: 'white' },
-  push:  { bg: '#00e68a', text: '#050508' },
-  complete: { bg: '#ffaa33', text: '#050508' },
+  raise: { bg: '#4fce82', text: '#0f0f0f' },
+  mix:   { bg: '#f5a623', text: '#0f0f0f' },
+  fold:  { bg: '#2a2a2e', text: '#676671' },
+  call:  { bg: '#0a84d7', text: '#fdfdfd' },
+  threebet: { bg: '#e5484d', text: '#fdfdfd' },
+  push:  { bg: '#4fce82', text: '#0f0f0f' },
+  complete: { bg: '#f5a623', text: '#0f0f0f' },
 }
 
 export default function RangeViewer({ pos, stack, customRange, label, legend, highlightHand }) {
@@ -36,27 +36,27 @@ export default function RangeViewer({ pos, stack, customRange, label, legend, hi
     return 'fold'
   }
 
-  const resolvedLabel = label || `Ver range completo — ${pos} ${stack}bb`
+  const resolvedLabel = label || `Ver range completo \u2014 ${pos} ${stack}bb`
   const resolvedLegend = legend || [['raise', 'Raise'], ['mix', 'Mix'], ['fold', 'Fold']]
 
   return (
     <div className="mt-3">
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold w-full"
-        style={{ background: '#12121c', color: '#4488ff', border: '1px solid #4488ff30' }}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium w-full"
+        style={{ background: '#222225', color: '#0a84d7', border: '1px solid #2a2a2e' }}
       >
-        <span>{open ? '▼' : '▶'}</span>
+        <span>{open ? '\u25BC' : '\u25B6'}</span>
         {resolvedLabel}
       </button>
 
       {open && (
-        <div className="mt-3 rounded-xl p-3 overflow-x-auto" style={{ background: '#050508', border: '1px solid #1e1e30' }}>
+        <div className="mt-3 rounded-xl p-3 overflow-x-auto" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
           <div className="flex gap-3 mb-3 flex-wrap">
             {resolvedLegend.map(([s, l]) => (
-              <div key={s} className="flex items-center gap-1">
-                <div style={{ width: 12, height: 12, borderRadius: 3, background: STATUS_COLORS[s]?.bg || '#1e1e30' }} />
-                <span style={{ color: '#8888a0', fontSize: 11 }}>{l}</span>
+              <div key={s} className="flex items-center gap-1.5">
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: STATUS_COLORS[s]?.bg || '#2a2a2e' }} />
+                <span style={{ color: '#b3b3b8', fontSize: 11 }}>{l}</span>
               </div>
             ))}
           </div>
@@ -78,14 +78,14 @@ export default function RangeViewer({ pos, stack, customRange, label, legend, hi
                       color: text,
                       fontSize: 8,
                       fontFamily: 'JetBrains Mono',
-                      fontWeight: isHighlighted ? 900 : 400,
+                      fontWeight: isHighlighted ? 900 : 500,
                       padding: '3px 1px',
                       textAlign: 'center',
                       borderRadius: 2,
-                      outline: isHighlighted ? '2px solid #ff4466' : 'none',
+                      outline: isHighlighted ? '2px solid #e5484d' : 'none',
                       minWidth: 0,
                       lineHeight: 1.2,
-                      opacity: status === 'fold' ? 0.35 : 1,
+                      opacity: status === 'fold' ? 0.4 : 1,
                     }}
                   >
                     {hand.length <= 3 ? hand : hand.slice(0, 2)}
@@ -95,9 +95,9 @@ export default function RangeViewer({ pos, stack, customRange, label, legend, hi
             )}
           </div>
 
-          <div className="mt-3 flex gap-4 text-xs" style={{ color: '#55556a' }}>
-            <span>↗ Acima diagonal = suited</span>
-            <span>↙ Abaixo diagonal = offsuit</span>
+          <div className="mt-3 flex gap-4 text-xs" style={{ color: '#676671' }}>
+            <span>\u2197 Acima diagonal = suited</span>
+            <span>\u2199 Abaixo diagonal = offsuit</span>
           </div>
         </div>
       )}

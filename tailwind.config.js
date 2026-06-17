@@ -7,20 +7,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0a0a0f',
-        card: '#12121a',
-        border: '#1e1e2e',
-        poker_red: '#e94560',
-        poker_green: '#00d4aa',
-        poker_gold: '#f5a623',
-        poker_blue: '#4a90e2',
+        bg: '#0f0f0f',
+        surface: '#1a1a1d',
+        'surface-2': '#222225',
+        border: '#2a2a2e',
+        accent: '#4fce82',
+        'accent-soft': '#aafbb2',
+        info: '#0a84d7',
+        danger: '#e5484d',
+        warning: '#f5a623',
       },
       fontFamily: {
-        sans: ['Space Grotesk', 'Inter', 'sans-serif'],
-        mono: ['Space Mono', 'monospace'],
+        sans: ['Poppins', 'Arial', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
     },
   },
   plugins: [],
 }
-

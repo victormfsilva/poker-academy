@@ -9,25 +9,27 @@
 }
 
 body {
-  background: #050508;
-  font-family: 'DM Sans', sans-serif;
+  background: #0f0f0f;
+  font-family: 'Poppins', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #e8e8ed;
+  color: #fdfdfd;
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Scrollbar dark */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #050508; }
-::-webkit-scrollbar-thumb { background: #1e1e30; border-radius: 3px; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #0f0f0f; }
+::-webkit-scrollbar-thumb { background: #2a2a2e; border-radius: 3px; }
 
-/* Input placeholder */
-input::placeholder { color: #55556a; }
-input:focus { border-color: #00e68a !important; }
+/* Input */
+input::placeholder { color: #676671; }
+input:focus { border-color: #4fce82 !important; outline: none; }
+textarea::placeholder { color: #676671; }
+textarea:focus { border-color: #4fce82 !important; outline: none; }
 
-/* Animacoes suaves */
-* { transition: background-color 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s; }
+/* Smooth transitions */
+button, a { transition: opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s; }

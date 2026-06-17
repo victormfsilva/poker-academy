@@ -2,12 +2,55 @@ import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const links = [
-  { to: '/', label: 'Home', icon: '🏠' },
-  { to: '/modulos', label: 'Modulos', icon: '📚' },
-  { to: '/infinito', label: 'Infinito', icon: '♾️' },
-  { to: '/stats', label: 'Stats', icon: '📊' },
-  { to: '/ferramentas', label: 'Tools', icon: '🧮' },
-  { to: '/mental', label: 'Mental', icon: '🧠' },
+  {
+    to: '/', label: 'Home',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+  },
+  {
+    to: '/modulos', label: 'Treinar',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    ),
+  },
+  {
+    to: '/infinito', label: 'Infinito',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z" />
+      </svg>
+    ),
+  },
+  {
+    to: '/stats', label: 'Stats',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
+  },
+  {
+    to: '/ferramentas', label: 'Tools',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+      </svg>
+    ),
+  },
+  {
+    to: '/mental', label: 'Mental',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+        <line x1="9" y1="21" x2="15" y2="21" />
+      </svg>
+    ),
+  },
 ]
 
 export default function Navbar({ user }) {
@@ -20,12 +63,17 @@ export default function Navbar({ user }) {
   return (
     <>
       {/* Top bar desktop */}
-      <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 items-center justify-between px-6 py-3"
-        style={{ background: '#0c0c12', borderBottom: '1px solid #1e1e30' }}>
-        <Link to="/" className="flex items-center gap-2">
-          <span style={{ color: '#00e68a', fontSize: 20, fontFamily: 'JetBrains Mono' }}>♠</span>
-          <span style={{ color: '#e8e8ed', fontWeight: 700, fontSize: 17 }}>
-            Poker Academy <span style={{ color: '#00e68a' }}>BR</span>
+      <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 items-center justify-between px-6"
+        style={{ background: 'rgba(15,15,15,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #2a2a2e', height: 56 }}>
+        <Link to="/" className="flex items-center gap-2.5">
+          <div style={{
+            width: 28, height: 28, borderRadius: 6,
+            background: '#4fce82', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ color: '#0f0f0f', fontSize: 15, fontWeight: 700, fontFamily: 'Poppins' }}>P</span>
+          </div>
+          <span style={{ color: '#fdfdfd', fontWeight: 600, fontSize: 15 }}>
+            Poker Academy
           </span>
         </Link>
         <div className="flex items-center gap-1">
@@ -35,53 +83,58 @@ export default function Navbar({ user }) {
               <Link
                 key={l.to}
                 to={l.to}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md"
                 style={{
-                  color: active ? '#00e68a' : '#8888a0',
-                  background: active ? '#12121c' : 'transparent',
+                  color: active ? '#fdfdfd' : '#b3b3b8',
+                  background: active ? '#222225' : 'transparent',
                   fontWeight: 500,
-                  fontSize: 14,
+                  fontSize: 13,
                 }}
               >
-                <span style={{ fontSize: 15 }}>{l.icon}</span>
+                {l.icon}
                 <span>{l.label}</span>
               </Link>
             )
           })}
+          <div style={{ width: 1, height: 20, background: '#2a2a2e', margin: '0 8px' }} />
           <button
             onClick={handleLogout}
-            className="px-3 py-2 rounded-lg text-sm ml-2"
-            style={{ color: '#55556a', border: '1px solid #1e1e30', fontWeight: 500 }}
+            className="px-2 py-1.5 rounded-md"
+            style={{ color: '#676671' }}
           >
-            Sair
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
           </button>
         </div>
       </nav>
 
       {/* Bottom nav mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex"
-        style={{ background: '#0c0c12', borderTop: '1px solid #1e1e30' }}>
+        style={{ background: 'rgba(15,15,15,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid #2a2a2e', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {links.map(l => {
           const active = location.pathname === l.to || (l.to !== '/' && location.pathname.startsWith(l.to))
           return (
             <Link
               key={l.to}
               to={l.to}
-              className="flex-1 flex flex-col items-center py-3 gap-1"
-              style={{ color: active ? '#00e68a' : '#55556a' }}
+              className="flex-1 flex flex-col items-center py-2.5 gap-1"
+              style={{ color: active ? '#4fce82' : '#676671' }}
             >
-              <span style={{ fontSize: 18 }}>{l.icon}</span>
-              <span style={{ fontSize: 10, fontWeight: active ? 600 : 400 }}>{l.label}</span>
+              {l.icon}
+              <span style={{ fontSize: 9, fontWeight: active ? 600 : 400 }}>{l.label}</span>
             </Link>
           )
         })}
         <button
           onClick={handleLogout}
-          className="flex-1 flex flex-col items-center py-3 gap-1"
-          style={{ color: '#55556a' }}
+          className="flex-1 flex flex-col items-center py-2.5 gap-1"
+          style={{ color: '#676671' }}
         >
-          <span style={{ fontSize: 18 }}>🚪</span>
-          <span style={{ fontSize: 10 }}>Sair</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          <span style={{ fontSize: 9 }}>Sair</span>
         </button>
       </nav>
     </>

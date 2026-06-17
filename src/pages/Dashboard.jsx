@@ -2,47 +2,31 @@ import { Link } from 'react-router-dom'
 import { useProgress } from '../context/ProgressContext'
 
 const MODULES = [
-  { id: 1, name: 'RFI ChipEV', desc: 'Raise First In — o spot mais importante', icon: '🎯' },
-  { id: 2, name: 'Push/Fold', desc: 'Short stack abaixo de 15bb', icon: '💥' },
-  { id: 3, name: 'Pot Odds e Outs', desc: 'A matemática por trás de cada decisão', icon: '🧮' },
-  { id: 4, name: 'BB vs RFI', desc: 'Defender o Big Blind', icon: '🛡️' },
-  { id: 5, name: 'CBet Flop IP + Bet Sizing', desc: 'Apostar no flop em posição e escolher o tamanho certo', icon: '⚡' },
-  { id: 6, name: 'Blind Wars', desc: 'SB vs BB — confronto direto', icon: '⚔️' },
-  { id: 7, name: 'SB vs RFI', desc: 'Defendendo o Small Blind contra raises', icon: '🛡️' },
-  { id: 8, name: 'BTN vs RFI', desc: 'A melhor posição da mesa contra raises', icon: '👑' },
-  { id: 9, name: '3-Bet Ranges', desc: 'Quando relançar pre-flop — valor e blefe', icon: '🔥' },
-  { id: 10, name: 'Defesa vs CBet + Check-Raise', desc: 'Fold, call ou check-raise quando apostam em você', icon: '🛡️' },
-  { id: 13, name: 'Donk Bet', desc: 'Quando apostar antes do raiser no flop', icon: '💣' },
-  { id: 14, name: 'CBet Turn', desc: 'Double barrel — continuar no turn', icon: '🔄' },
-  { id: 15, name: 'River Play', desc: 'Value bet, blefe ou check no river', icon: '🏁' },
-  { id: 16, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: '🧠' },
-  { id: 17, name: 'ICM', desc: 'Modelo de chip independente em torneios', icon: '🏆' },
-  { id: 18, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: '👥' },
-  { id: 19, name: 'Blockers', desc: 'Card removal e decisões avançadas', icon: '🧩' },
-  { id: 20, name: 'HUD e Solvers', desc: 'Estatísticas e estudo com solver', icon: '📊' },
-  { id: 21, name: 'Late Game MTT', desc: 'Dominando os momentos decisivos do torneio', icon: '🎰' },
+  { id: 1, name: 'RFI ChipEV', desc: 'Raise First In', icon: 'R', cat: 'fundamentals' },
+  { id: 2, name: 'Push/Fold', desc: 'Short stack < 15bb', icon: 'P', cat: 'fundamentals' },
+  { id: 3, name: 'Pot Odds', desc: 'Matematica do poker', icon: 'O', cat: 'fundamentals' },
+  { id: 4, name: 'BB vs RFI', desc: 'Defender o Big Blind', icon: 'D', cat: 'fundamentals' },
+  { id: 5, name: 'CBet Flop IP', desc: 'Apostar no flop em posicao', icon: 'C', cat: 'fundamentals' },
+  { id: 6, name: 'Blind Wars', desc: 'SB vs BB confronto direto', icon: 'W', cat: 'fundamentals' },
+  { id: 7, name: 'SB vs RFI', desc: 'Defendendo o Small Blind', icon: 'S', cat: 'intermediate' },
+  { id: 8, name: 'BTN vs RFI', desc: 'Melhor posicao vs raises', icon: 'B', cat: 'intermediate' },
+  { id: 9, name: '3-Bet Ranges', desc: 'Quando relancar pre-flop', icon: '3', cat: 'intermediate' },
+  { id: 10, name: 'Def vs CBet', desc: 'Fold, call ou check-raise', icon: 'X', cat: 'intermediate' },
+  { id: 13, name: 'Donk Bet', desc: 'Apostar antes do raiser', icon: 'K', cat: 'advanced' },
+  { id: 14, name: 'CBet Turn', desc: 'Double barrel no turn', icon: 'T', cat: 'advanced' },
+  { id: 15, name: 'River Play', desc: 'Value bet, blefe ou check', icon: 'V', cat: 'advanced' },
+  { id: 16, name: 'GTO vs Exploit', desc: 'Quando sair do livro', icon: 'G', cat: 'advanced' },
+  { id: 17, name: 'ICM', desc: 'Chip independente em MTT', icon: 'I', cat: 'advanced' },
+  { id: 18, name: 'Multiway', desc: 'Potes com 3+ jogadores', icon: 'M', cat: 'advanced' },
+  { id: 19, name: 'Blockers', desc: 'Card removal avancado', icon: 'L', cat: 'advanced' },
+  { id: 20, name: 'HUD & Solvers', desc: 'Estatisticas e solver', icon: 'H', cat: 'advanced' },
+  { id: 21, name: 'Late Game MTT', desc: 'Momentos decisivos', icon: 'F', cat: 'advanced' },
 ]
 
-function motivationalMessage(globalStats) {
-  const total = globalStats.totalHands
-  const acc = total > 0 ? Math.round((globalStats.totalCorrect / total) * 100) : 0
-  if (total === 0) return 'Bem-vindo! Comece pelo Módulo 1 — RFI é o fundamento de tudo.'
-  if (acc >= 90) return `Incrível! ${acc}% de acerto. Você está jogando no nível dos regulares.`
-  if (acc >= 75) return `Bom trabalho! ${acc}% de acerto. Continue praticando para chegar a 90%.`
-  if (acc >= 60) return `Evoluindo! ${acc}% de acerto. Cada mão treinada te aproxima do profissionalismo.`
-  return `${total} mãos treinadas. Consistência é o segredo — continue!`
-}
-
-function getBadge(completedIds) {
-  const has = id => completedIds.includes(id)
-  const advancedDone = [13,14,15,16,17,18,19,20,21].every(has)
-  const intermediateDone = [7,8,9,10,11,12].every(has)
-  const basicDone = [1,2,3,4,5,6].every(has)
-
-  if (advancedDone && intermediateDone && basicDone) return { name: 'Avançado', icon: '🏆', color: '#ffaa33' }
-  if (intermediateDone && basicDone) return { name: 'Intermediário', icon: '💎', color: '#4488ff' }
-  if (basicDone) return { name: 'Sólido', icon: '⭐', color: '#00e68a' }
-  return { name: 'Aprendiz', icon: '📖', color: '#8888a0' }
+const CATEGORIES = {
+  fundamentals: 'Fundamentos',
+  intermediate: 'Intermediario',
+  advanced: 'Avancado',
 }
 
 export default function Dashboard() {
@@ -52,122 +36,181 @@ export default function Dashboard() {
     ? Math.round((progress.globalStats.totalCorrect / progress.globalStats.totalHands) * 100)
     : 0
 
-  const completedIds = MODULES.filter(m => getModuleProgress(m.id).completed).map(m => m.id)
-  const badge = getBadge(completedIds)
+  const completedCount = MODULES.filter(m => getModuleProgress(m.id).completed).length
+  const totalModules = MODULES.length
+  const overallProgress = Math.round((completedCount / totalModules) * 100)
 
   const currentModule = MODULES.find(m => {
     const p = getModuleProgress(m.id)
     return !p.completed && p.unlocked
   }) || MODULES[MODULES.length - 1]
 
+  const today = new Date().toISOString().slice(0, 10)
+  const dayData = progress.dailyHistory?.[today] || { hands: 0, correct: 0 }
+  const goal = progress.dailyGoal || 50
+
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#050508' }}>
-      <div className="max-w-2xl mx-auto pt-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h1 style={{ color: '#e8e8ed', fontSize: 24, fontWeight: 700 }}>
-              <span style={{ color: '#00e68a', fontFamily: 'JetBrains Mono' }}>♠</span> Poker Academy <span style={{ color: '#00e68a' }}>BR</span>
-            </h1>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: `${badge.color}15`, border: `1px solid ${badge.color}44` }}>
-              <span style={{ fontSize: 14 }}>{badge.icon}</span>
-              <span style={{ color: badge.color, fontSize: 12, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>{badge.name}</span>
-            </div>
-          </div>
-          <p style={{ color: '#55556a', marginTop: 4, fontSize: 14 }}>{motivationalMessage(progress.globalStats)}</p>
-        </div>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-16 px-4" style={{ background: '#0f0f0f' }}>
+      <div className="max-w-5xl mx-auto pt-6">
 
-        {/* Stats globais */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { label: 'Mãos Treinadas', value: progress.globalStats.totalHands, color: '#00e68a' },
-            { label: 'Taxa de Acerto', value: `${globalAcc}%`, color: globalAcc >= 90 ? '#00e68a' : globalAcc >= 60 ? '#ffaa33' : '#ff4466' },
-            { label: 'Melhor Streak', value: progress.globalStats.bestStreak, color: '#ffaa33' },
-          ].map(s => (
-            <div key={s.label} className="rounded-xl p-4 text-center"
-              style={{ background: '#0c0c12', border: '1px solid #1e1e30' }}>
-              <div style={{ color: s.color, fontSize: 24, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{s.value}</div>
-              <div style={{ color: '#55556a', fontSize: 11, marginTop: 2 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Módulo atual */}
-        {currentModule && (
-          <div className="rounded-xl p-4 mb-6" style={{ background: '#0c0c12', border: '1px solid #00e68a44' }}>
-            <div style={{ color: '#00e68a', fontSize: 11, fontWeight: 600, marginBottom: 4, fontFamily: 'JetBrains Mono', letterSpacing: 1.5 }}>MODULO ATUAL</div>
-            <div style={{ color: '#e8e8ed', fontSize: 17, fontWeight: 700 }}>
-              {currentModule.icon} {currentModule.name}
-            </div>
-            <div style={{ color: '#8888a0', fontSize: 13, marginTop: 2 }}>{currentModule.desc}</div>
-            <Link
-              to={`/modulos/${currentModule.id}`}
-              className="inline-block mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-              style={{ background: '#00e68a', color: '#050508' }}
-            >
-              Continuar
-            </Link>
-          </div>
-        )}
-
-        {/* Lista de módulos */}
-        <h2 style={{ color: '#e8e8ed', fontWeight: 600, marginBottom: 12, fontSize: 16 }}>Todos os Módulos</h2>
-        <div className="flex flex-col gap-3">
-          {MODULES.map(m => {
-            const p = getModuleProgress(m.id)
-            const locked = !p.unlocked
-            const acc = p.accuracy
-            const goodSessions = (p.trainerSessions || []).slice(-2).filter(s => s.accuracy >= 90).length
-
-            return (
-              <div key={m.id}
-                className="rounded-xl p-4"
-                style={{
-                  background: '#0c0c12',
-                  border: `1px solid ${p.completed ? '#00e68a44' : '#1e1e30'}`,
-                  opacity: locked ? 0.5 : 1,
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span style={{ fontSize: 22 }}>{locked ? '🔒' : p.completed ? '✅' : m.icon}</span>
-                    <div>
-                      <div style={{ color: '#e8e8ed', fontWeight: 600, fontSize: 14 }}>Módulo {m.id} — {m.name}</div>
-                      <div style={{ color: '#55556a', fontSize: 12 }}>{m.desc}</div>
-                    </div>
-                  </div>
-                  {!locked && (
-                    <Link
-                      to={`/modulos/${m.id}`}
-                      className="px-3 py-1.5 rounded-lg text-sm font-semibold"
-                      style={{ background: p.completed ? '#00e68a22' : '#12121c', color: p.completed ? '#00e68a' : '#8888a0', border: '1px solid #1e1e30' }}
-                    >
-                      {p.completed ? 'Revisar' : 'Abrir'}
-                    </Link>
-                  )}
-                </div>
-
-                {!locked && (
-                  <div className="mt-3">
-                    <div className="flex justify-between text-xs mb-1" style={{ color: '#55556a' }}>
-                      <span style={{ fontFamily: 'JetBrains Mono', fontSize: 11 }}>{acc}% · {p.totalAnswered || 0} mãos</span>
-                      <span style={{ color: goodSessions >= 2 ? '#00e68a' : '#55556a', fontFamily: 'JetBrains Mono', fontSize: 11 }}>{goodSessions}/2 sessões 90%+</span>
-                    </div>
-                    <div className="rounded-full h-1.5" style={{ background: '#12121c' }}>
-                      <div
-                        className="rounded-full h-1.5 transition-all"
-                        style={{
-                          width: `${Math.min(acc, 100)}%`,
-                          background: acc >= 90 ? '#00e68a' : acc >= 60 ? '#ffaa33' : '#ff4466'
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
+        {/* Hero section */}
+        <div className="rounded-xl p-6 md:p-8 mb-8" style={{
+          background: '#1a1a1d',
+          border: '1px solid #2a2a2e',
+        }}>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <div style={{ color: '#4fce82', fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', marginBottom: 8 }}>
+                POKER ACADEMY
               </div>
-            )
-          })}
+              <h1 style={{ color: '#fdfdfd', fontSize: 28, fontWeight: 600, lineHeight: 1.2, marginBottom: 8 }}>
+                {progress.globalStats.totalHands === 0
+                  ? 'Comece sua jornada GTO'
+                  : `${globalAcc}% de acerto geral`
+                }
+              </h1>
+              <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.5, maxWidth: 400 }}>
+                {progress.globalStats.totalHands === 0
+                  ? 'Domine ranges pre-flop, pot odds, e estrategia avancada com treino pratico.'
+                  : `${progress.globalStats.totalHands} maos treinadas. ${completedCount}/${totalModules} modulos completos.`
+                }
+              </p>
+              {currentModule && (
+                <Link
+                  to={`/modulos/${currentModule.id}`}
+                  className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-lg text-sm font-semibold"
+                  style={{ background: '#4fce82', color: '#0f0f0f' }}
+                >
+                  Continuar treinando
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
+                </Link>
+              )}
+            </div>
+
+            {/* Stats cards */}
+            <div className="grid grid-cols-3 gap-3 md:gap-4" style={{ minWidth: 280 }}>
+              {[
+                { label: 'Maos', value: progress.globalStats.totalHands, color: '#4fce82' },
+                { label: 'Acerto', value: `${globalAcc}%`, color: globalAcc >= 90 ? '#4fce82' : globalAcc >= 60 ? '#f5a623' : '#e5484d' },
+                { label: 'Streak', value: progress.globalStats.bestStreak, color: '#f5a623' },
+              ].map(s => (
+                <div key={s.label} className="rounded-lg p-3 text-center"
+                  style={{ background: '#222225', border: '1px solid #2a2a2e' }}>
+                  <div style={{ color: s.color, fontSize: 22, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{s.value}</div>
+                  <div style={{ color: '#676671', fontSize: 10, fontFamily: 'JetBrains Mono', marginTop: 2 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Daily progress bar */}
+          {dayData.hands > 0 && (
+            <div className="mt-6 pt-5" style={{ borderTop: '1px solid #2a2a2e' }}>
+              <div className="flex items-center justify-between mb-2">
+                <span style={{ color: '#b3b3b8', fontSize: 12, fontFamily: 'JetBrains Mono' }}>Meta diaria</span>
+                <span style={{ color: '#b3b3b8', fontSize: 12, fontFamily: 'JetBrains Mono' }}>{dayData.hands}/{goal}</span>
+              </div>
+              <div className="rounded-full h-1.5" style={{ background: '#2a2a2e' }}>
+                <div className="rounded-full h-1.5" style={{
+                  width: `${Math.min(Math.round((dayData.hands / goal) * 100), 100)}%`,
+                  background: dayData.hands >= goal ? '#4fce82' : '#0a84d7',
+                }} />
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Progress overview bar */}
+        <div className="flex items-center gap-4 mb-8">
+          <div style={{ flex: 1 }}>
+            <div className="flex items-center justify-between mb-2">
+              <span style={{ color: '#fdfdfd', fontSize: 14, fontWeight: 600 }}>Progresso geral</span>
+              <span style={{ color: '#b3b3b8', fontSize: 12, fontFamily: 'JetBrains Mono' }}>{completedCount}/{totalModules}</span>
+            </div>
+            <div className="rounded-full h-1" style={{ background: '#2a2a2e' }}>
+              <div className="rounded-full h-1" style={{ width: `${overallProgress}%`, background: '#4fce82' }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Module grid by category */}
+        {Object.entries(CATEGORIES).map(([catKey, catLabel]) => {
+          const catModules = MODULES.filter(m => m.cat === catKey)
+          return (
+            <div key={catKey} className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <h2 style={{ color: '#fdfdfd', fontSize: 15, fontWeight: 600 }}>{catLabel}</h2>
+                <div style={{ flex: 1, height: 1, background: '#2a2a2e' }} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {catModules.map(m => {
+                  const p = getModuleProgress(m.id)
+                  const locked = !p.unlocked
+                  const acc = p.accuracy || 0
+
+                  return (
+                    <div key={m.id} style={{
+                      opacity: locked ? 0.35 : 1,
+                      pointerEvents: locked ? 'none' : 'auto',
+                    }}>
+                      <Link
+                        to={`/modulos/${m.id}`}
+                        className="block rounded-xl p-4 group"
+                        style={{
+                          background: p.completed ? 'rgba(79,206,130,0.05)' : '#1a1a1d',
+                          border: `1px solid ${p.completed ? 'rgba(79,206,130,0.2)' : '#2a2a2e'}`,
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div style={{
+                            width: 36, height: 36, borderRadius: 8,
+                            background: p.completed ? 'rgba(79,206,130,0.12)' : locked ? '#222225' : 'rgba(10,132,215,0.1)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: p.completed ? '#4fce82' : locked ? '#676671' : '#0a84d7',
+                            fontSize: 14, fontWeight: 700, fontFamily: 'JetBrains Mono', flexShrink: 0,
+                          }}>
+                            {locked ? (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                              </svg>
+                            ) : p.completed ? (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            ) : m.icon}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div className="flex items-center gap-2">
+                              <span style={{ color: '#fdfdfd', fontWeight: 600, fontSize: 13 }}>
+                                {m.name}
+                              </span>
+                              {!locked && acc > 0 && (
+                                <span style={{
+                                  color: acc >= 90 ? '#4fce82' : acc >= 60 ? '#f5a623' : '#e5484d',
+                                  fontSize: 11, fontFamily: 'JetBrains Mono', fontWeight: 600,
+                                }}>{acc}%</span>
+                              )}
+                            </div>
+                            <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 2 }}>{m.desc}</div>
+                            {!locked && !p.completed && acc > 0 && (
+                              <div className="mt-2.5 rounded-full h-1" style={{ background: '#2a2a2e' }}>
+                                <div className="rounded-full h-1" style={{
+                                  width: `${Math.min(acc, 100)}%`,
+                                  background: acc >= 90 ? '#4fce82' : acc >= 60 ? '#f5a623' : '#e5484d',
+                                }} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
