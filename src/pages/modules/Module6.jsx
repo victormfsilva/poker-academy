@@ -3,6 +3,7 @@ import { useProgress } from '../../context/ProgressContext'
 import { BLIND_WARS } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 function generateAllHands() {
   const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
@@ -189,17 +190,14 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-        <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-        {scenario === 'sb_vs_bb'
-          ? <><div style={{ color: '#e5484d', fontSize: 18, fontWeight: 700 }}>Você é o SB</div><div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>Todos foldaram. O que fazer vs BB?</div></>
-          : <><div style={{ color: '#4a90e2', fontSize: 18, fontWeight: 700 }}>Você é o BB</div><div style={{ color: '#ccc', fontSize: 13, marginTop: 2 }}>SB completou. O que fazer?</div></>
-        }
-      </div>
-
-      <div className="flex justify-center gap-4 mb-6">
-        {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
-      </div>
+      <ModulePokerTable
+        heroPos={scenario === 'sb_vs_bb' ? 'SB' : 'BB'}
+        villainPos={scenario === 'sb_vs_bb' ? 'BB' : 'SB'}
+        heroCards={cards}
+        villainAction={scenario === 'sb_vs_bb' ? null : 'Complete'}
+        contextTitle={scenario === 'sb_vs_bb' ? 'Voce e o SB' : 'Voce e o BB'}
+        contextDesc={scenario === 'sb_vs_bb' ? 'Todos foldaram. O que fazer vs BB?' : 'SB completou. O que fazer?'}
+      />
       {currentHand && <div className="text-center mb-4"><span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span></div>}
 
       {!feedback && scenario === 'sb_vs_bb' && (

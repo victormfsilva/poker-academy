@@ -3,6 +3,7 @@ import { useProgress } from '../../context/ProgressContext'
 import { BTN_VS_RFI } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 const RAISER_POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO']
 const RAISER_KEYS = { UTG: 'vsUTG', 'UTG+1': 'vsUTG+1', LJ: 'vsLJ', HJ: 'vsHJ', CO: 'vsCO' }
@@ -231,15 +232,15 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
       {currentRaiser && (
-        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-          <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-          <div style={{ color: '#4fce82', fontSize: 22, fontWeight: 700 }}>Você está no BTN</div>
-          <div style={{ color: '#ccc', fontSize: 14, marginTop: 4 }}>{currentRaiser} fez raise. O que fazer?</div>
-        </div>
+        <ModulePokerTable
+          heroPos="BTN"
+          villainPos={currentRaiser}
+          heroCards={cards}
+          villainAction="Raise"
+          contextTitle="Voce esta no BTN"
+          contextDesc={`${currentRaiser} fez raise. O que fazer?`}
+        />
       )}
-      <div className="flex justify-center gap-4 mb-6">
-        {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
-      </div>
       {currentHand && <div className="text-center mb-4"><span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span></div>}
       {!feedback && (
         <div className="grid grid-cols-3 gap-3 mb-4">

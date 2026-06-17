@@ -3,6 +3,7 @@ import { useProgress } from '../../context/ProgressContext'
 import { BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 // Todas as combinações possíveis: [minha posição, posição do raiser]
 const SPOTS = [
@@ -283,20 +284,16 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
       {currentSpot && (
-        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-          <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-          <div style={{ color: currentSpot.myPos === 'BTN' ? '#4fce82' : '#e5484d', fontSize: 22, fontWeight: 700 }}>
-            Você está no {currentSpot.myPos}
-          </div>
-          <div style={{ color: '#ccc', fontSize: 14, marginTop: 4 }}>{currentSpot.raiser} fez raise. O que fazer?</div>
-          <div style={{ color: '#555', fontSize: 12, marginTop: 4 }}>
-            {currentSpot.myPos === 'BTN' ? '(Em posição — IP)' : '(Fora de posição — OOP)'}
-          </div>
-        </div>
+        <ModulePokerTable
+          heroPos={currentSpot.myPos}
+          villainPos={currentSpot.raiser}
+          heroCards={cards}
+          villainAction="Raise"
+          contextTitle={`Voce esta no ${currentSpot.myPos}`}
+          contextDesc={`${currentSpot.raiser} fez raise. O que fazer?`}
+          textureTags={[currentSpot.myPos === 'BTN' ? 'IP' : 'OOP']}
+        />
       )}
-      <div className="flex justify-center gap-4 mb-6">
-        {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
-      </div>
       {currentHand && <div className="text-center mb-4"><span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span></div>}
       {!feedback && (
         <div className="grid grid-cols-3 gap-3 mb-4">

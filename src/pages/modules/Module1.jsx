@@ -3,6 +3,7 @@ import { useProgress } from '../../context/ProgressContext'
 import { RFI_RANGES, POSITION_INFO } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 // Tabela de ranges por posição e stack (visual)
 const POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN']
@@ -458,23 +459,16 @@ function Trainer() {
         <div className="rounded-full h-2 transition-all" style={{ width: `${(sessionTotal / 10) * 100}%`, background: '#e5484d' }} />
       </div>
 
-      {/* Situação */}
+      {/* Mesa + Situação */}
       {currentPos && (
-        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-          <div style={{ color: '#888', fontSize: 12 }}>POSIÇÃO · STACK</div>
-          <div style={{ color: POSITION_INFO[currentPos]?.color || 'white', fontSize: 22, fontWeight: 700 }}>
-            {currentPos} · {currentStack}bb
-          </div>
-          <div style={{ color: '#666', fontSize: 12, marginTop: 2 }}>
-            {POSITION_INFO[currentPos]?.playersAfter} jogadores ainda falam · range ~{getRangePercent(currentPos, currentStack)}%
-          </div>
-        </div>
+        <ModulePokerTable
+          heroPos={currentPos}
+          heroCards={cards}
+          potLabel={`${currentStack}bb`}
+          contextTitle={`${currentPos} · ${currentStack}bb`}
+          contextDesc={`${POSITION_INFO[currentPos]?.playersAfter} jogadores ainda falam · range ~${getRangePercent(currentPos, currentStack)}%`}
+        />
       )}
-
-      {/* Cartas */}
-      <div className="flex justify-center gap-4 mb-6">
-        {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
-      </div>
       {currentHand && (
         <div className="text-center mb-4">
           <span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span>

@@ -3,6 +3,7 @@ import { useProgress } from '../../context/ProgressContext'
 import { PUSH_FOLD_RANGES, POSITION_INFO } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import ModulePokerTable from '../../components/ModulePokerTable'
 
 const POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB']
 const STACKS_OPTIONS = [5, 8, 10]
@@ -258,16 +259,14 @@ function Trainer() {
       </div>
 
       {currentPos && (
-        <div className="rounded-xl p-4 mb-4 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-          <div style={{ color: '#888', fontSize: 12 }}>SITUAÇÃO</div>
-          <div style={{ color: '#e5484d', fontSize: 22, fontWeight: 700 }}>{currentPos} · {currentStack}bb</div>
-          <div style={{ color: '#666', fontSize: 12, marginTop: 2 }}>Todos foldaram até você. Foldar ou ir all-in?</div>
-        </div>
+        <ModulePokerTable
+          heroPos={currentPos}
+          heroCards={cards}
+          potLabel={`${currentStack}bb`}
+          contextTitle={`${currentPos} · ${currentStack}bb`}
+          contextDesc="Todos foldaram ate voce. Foldar ou ir all-in?"
+        />
       )}
-
-      <div className="flex justify-center gap-4 mb-6">
-        {cards.map((c, i) => <Card key={i} card={c} size="lg" />)}
-      </div>
       {currentHand && (
         <div className="text-center mb-4">
           <span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span>
