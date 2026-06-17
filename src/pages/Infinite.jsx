@@ -120,7 +120,7 @@ const ALL_HANDS = generateAllHands()
 // MESA ESTILO GTO WIZARD (identico a screenshot)
 // ================================================================
 
-function Seat({ pos, isHero, isRaiser, isFolded, stack, actionLabel }) {
+function Seat({ pos, isHero, isRaiser, isFolded, stack, actionLabel, heroCards }) {
   const posLabel = pos === 'UTG+1' ? 'UTG1' : pos
 
   return (
@@ -136,25 +136,34 @@ function Seat({ pos, isHero, isRaiser, isFolded, stack, actionLabel }) {
           whiteSpace: 'nowrap',
         }}>{actionLabel}</div>
       )}
-      {/* Seat: retangulo arredondado estilo GTO Wizard */}
-      <div style={{
-        padding: '4px 10px',
-        borderRadius: 6,
-        background: isHero ? '#2a2a2e' : isFolded ? 'transparent' : '#2a2a2e',
-        border: isHero ? '1px solid #4fce82' : 'none',
-        opacity: isFolded ? 0.35 : 1,
-        textAlign: 'center',
-        minWidth: 40,
-      }}>
+      {/* Hero cards + seat lado a lado */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        {/* Seat: retangulo arredondado estilo GTO Wizard */}
         <div style={{
-          fontSize: 11, fontWeight: 700,
-          color: isHero ? '#4fce82' : '#b3b3b8',
-          lineHeight: 1.3,
-        }}>{posLabel}</div>
-        <div style={{
-          fontSize: 10, color: '#676671', lineHeight: 1.2,
-          fontFamily: 'JetBrains Mono',
-        }}>{stack}</div>
+          padding: '4px 10px',
+          borderRadius: 6,
+          background: isHero ? '#2a2a2e' : isFolded ? 'transparent' : '#2a2a2e',
+          border: isHero ? '1px solid #4fce82' : 'none',
+          opacity: isFolded ? 0.35 : 1,
+          textAlign: 'center',
+          minWidth: 40,
+        }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700,
+            color: isHero ? '#4fce82' : '#b3b3b8',
+            lineHeight: 1.3,
+          }}>{posLabel}</div>
+          <div style={{
+            fontSize: 10, color: '#676671', lineHeight: 1.2,
+            fontFamily: 'JetBrains Mono',
+          }}>{stack}</div>
+        </div>
+        {/* Hero cards ao lado do seat */}
+        {isHero && heroCards && heroCards.length > 0 && (
+          <div style={{ display: 'flex', gap: 2 }}>
+            {heroCards.map((c, i) => <Card key={i} card={parseCard(c)} size="sm" />)}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -174,7 +183,7 @@ const SLOT_POS = [
   { top: '50%', left: '6%'  },
 ]
 
-function PokerTable({ scenario }) {
+function PokerTable({ scenario, heroCards }) {
   const ctx = scenario.tableContext || {}
 
   let heroPos = ctx.heroPos || 'BTN'
@@ -333,6 +342,7 @@ function PokerTable({ scenario }) {
               isFolded={!!isFolded}
               stack={stack}
               actionLabel={actionLabel}
+              heroCards={isHero ? heroCards : null}
             />
           </div>
         )
@@ -1092,31 +1102,26 @@ export default function Infinite() {
 
           {showTable && (
             <div className="px-2 pt-1 pb-1">
-              <PokerTable scenario={scenario} />
+              <PokerTable scenario={scenario} heroCards={cards || scenario.hole} />
             </div>
           )}
 
           {cards && showTable && (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: -8, marginBottom: 12 }}>
-                {cards.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
+            <div className="px-5 pb-3 text-center">
+              <div style={{ color: '#4fce82', fontSize: 26, fontWeight: 700, fontFamily: 'JetBrains Mono', letterSpacing: 2 }}>
+                {scenario.hand}
               </div>
-              <div className="px-5 pb-3 text-center">
-                <div style={{ color: '#4fce82', fontSize: 26, fontWeight: 700, fontFamily: 'JetBrains Mono', letterSpacing: 2 }}>
-                  {scenario.hand}
-                </div>
-                <div style={{ color: '#676671', fontSize: 12, marginTop: 2 }}>
-                  {scenario.stack ? `${scenario.stack}bb` : '100bb'}
-                </div>
+              <div style={{ color: '#676671', fontSize: 12, marginTop: 2 }}>
+                {scenario.stack ? `${scenario.stack}bb` : '100bb'}
               </div>
-            </>
+            </div>
           )}
 
-          {scenario.hole && showTable && (
-            <div className="px-5 pb-3">
-              <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8, textAlign: 'center' }}>SUA MAO</div>
+          {scenario.hole && !cards && showTable && (
+            <div className="px-5 pb-3 text-center">
+              <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>SUA MAO</div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
-                {scenario.hole.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
+                {scenario.hole.map((c, i) => <Card key={i} card={parseCard(c)} size="sm" />)}
               </div>
             </div>
           )}
