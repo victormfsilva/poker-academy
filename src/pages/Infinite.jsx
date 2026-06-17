@@ -1153,24 +1153,17 @@ export default function Infinite() {
           {/* Action buttons — estilo GTO Wizard */}
           <div className="px-4 pb-4">
             {!result ? (
-              <div style={{ display: 'flex', gap: 6 }}>
-                {scenario.buttons.map(b => {
-                  const borderColor = b.id === 'fold' ? '#676671'
-                    : b.id === 'call' ? '#4fce82'
-                    : b.id === 'raise' ? '#e5484d'
-                    : '#f5a623'
-                  return (
-                    <button key={b.id} onClick={() => handleAnswer(b.id)}
-                      style={{
-                        flex: 1, minWidth: 0, padding: '12px 4px', borderRadius: 8, fontWeight: 600,
-                        fontSize: 13, cursor: 'pointer',
-                        color: '#fdfdfd', background: '#222225',
-                        border: `1.5px solid ${borderColor}`,
-                      }}>
-                      {b.label}
-                    </button>
-                  )
-                })}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {scenario.buttons.map(b => (
+                  <button key={b.id} onClick={() => handleAnswer(b.id)}
+                    style={{
+                      flex: 1, minWidth: 0, padding: '14px 4px', borderRadius: 8, fontWeight: 600,
+                      fontSize: 13, border: 'none', cursor: 'pointer',
+                      color: '#0f0f0f', background: b.bg,
+                    }}>
+                    {b.label}
+                  </button>
+                ))}
               </div>
             ) : (
               <button onClick={handleNext}
