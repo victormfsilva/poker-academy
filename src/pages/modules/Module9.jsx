@@ -71,7 +71,7 @@ function getFeedback(hand, action, spot) {
   const correct = getAction(hand, spot)
   const isCorrect = action === correct
   const isIP = spot.myPos === 'BTN'
-  const isOOP = spot.myPos === 'SB'
+  const isOOP = spot.myPos === 'SB' || spot.myPos === 'BB'
   let reason = ''
 
   if (correct === '3bet') {

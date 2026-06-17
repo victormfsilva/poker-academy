@@ -134,10 +134,15 @@ const TEMPLATES = [
   () => {
     const suit = pick(['copas', 'espadas', 'ouros'])
     const suitChar = suit === 'copas' ? 'h' : suit === 'espadas' ? 's' : 'd'
+    const otherSuit = pick(['c', 'h', 's', 'd'].filter(s => s !== suitChar))
     const rank = pick(['K', 'Q', 'J'])
-    const board = pick([`A-${rank === 'K' ? 'Q' : 'K'}-8-5-2`, `K-${rank === 'K' ? 'J' : 'Q'}-7-3-9`])
+    const highCard = rank === 'K' ? 'Q' : 'K'
+    const board = pick([
+      `A${suitChar}-${highCard}${suitChar}-8${suitChar}-5${otherSuit}-2${otherSuit}`,
+      `K${suitChar}-${rank === 'K' ? 'J' : 'Q'}${suitChar}-7${suitChar}-3${otherSuit}-9${otherSuit}`
+    ])
     return {
-      situation: `River: board ${board} com 3 ${suit}. Vilão aposta 75%. Você tem ${rank}${suitChar} em mão (segundo par).`,
+      situation: `River: board ${board}. Flush de ${suit} possivel. Vilão aposta 75%. Você tem ${rank}${suitChar} em mão (segundo par).`,
       question: 'O que você faz?',
       options: [
         { id: 'call', label: 'Call — vilão pode blefar', correct: false },
