@@ -4,6 +4,7 @@ import Card from '../../components/Card'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
+const RANK_VAL = { A:14, K:13, Q:12, J:11, T:10, '9':9, '8':8, '7':7, '6':6, '5':5, '4':4, '3':3, '2':2 }
 
 function randomFlop() {
   const cards = []
@@ -24,14 +25,14 @@ function randomHoleCards(exclude) {
 }
 
 function getBoardTexture(flop) {
-  const ranks = flop.map(c => RANKS.indexOf(c.slice(0, -1)))
+  const vals = flop.map(c => RANK_VAL[c.slice(0, -1)])
   const suits = flop.map(c => c.slice(-1))
   const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
-  const sorted = [...ranks].sort((a, b) => a - b)
-  const isBroadway = sorted[2] <= 4
-  const connected = (sorted[2] - sorted[0]) <= 4 && !isBroadway
-  const paired = ranks[0] === ranks[1] || ranks[1] === ranks[2] || ranks[0] === ranks[2]
-  const lowBoard = Math.min(...ranks) >= 5 // todas as cartas 9 ou menos
+  const sorted = [...vals].sort((a, b) => a - b)
+  const span = sorted[2] - sorted[0]
+  const connected = span <= 4
+  const paired = vals[0] === vals[1] || vals[1] === vals[2] || vals[0] === vals[2]
+  const lowBoard = Math.max(...vals) <= 9 // todas as cartas 9 ou menos
   return { suited, connected, paired, lowBoard, isWet: suited || connected, isDry: !suited && !connected }
 }
 
@@ -53,17 +54,28 @@ function hasFlushDraw(hole, flop) {
   return Object.values(suitCounts).some(v => v === 4)
 }
 
-function hasStraightDraw(hole, flop) {
-  const holeRankIdx = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const allRanks = [...hole, ...flop].map(c => RANKS.indexOf(c.slice(0, -1)))
-  const unique = [...new Set(allRanks)].sort((a, b) => a - b)
-  for (let i = 0; i <= unique.length - 5; i++) {
-    if (unique[i + 4] - unique[i] === 4) return false
+function hasMadeStraight(hole, flop) {
+  const holeVals = hole.map(c => RANK_VAL[c.slice(0, -1)])
+  const allVals = [...new Set([...hole, ...flop].map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
+  if (allVals.includes(14)) allVals.unshift(1)
+  for (let i = 0; i <= allVals.length - 5; i++) {
+    if (allVals[i + 4] - allVals[i] === 4) {
+      const run = [allVals[i], allVals[i+1], allVals[i+2], allVals[i+3], allVals[i+4]]
+      if (holeVals.some(v => run.includes(v) || (v === 14 && run.includes(1)))) return true
+    }
   }
-  for (let i = 0; i < unique.length - 3; i++) {
-    if (unique[i + 3] - unique[i] <= 4) {
-      const windowRanks = unique.slice(i, i + 4)
-      if (holeRankIdx.some(r => windowRanks.includes(r))) return true
+  return false
+}
+
+function hasStraightDraw(hole, flop) {
+  if (hasMadeStraight(hole, flop)) return false
+  const holeVals = hole.map(c => RANK_VAL[c.slice(0, -1)])
+  const allVals = [...new Set([...hole, ...flop].map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
+  if (allVals.includes(14)) allVals.unshift(1)
+  for (let i = 0; i < allVals.length - 3; i++) {
+    if (allVals[i + 3] - allVals[i] <= 4) {
+      const window = allVals.slice(i, i + 4)
+      if (holeVals.some(v => window.includes(v) || (v === 14 && window.includes(1)))) return true
     }
   }
   return false
@@ -96,6 +108,12 @@ function getCorrectAction(hole, flop) {
   // Donk bet de valor: mão muito forte em board que favorece SEU range
   if (hasMadeFlush(hole, flop)) {
     return { action: 'donk', reason: 'Flush completo! Donk bet de valor — você tem mão nuts e o adversário pode checar atras. Não de carta gratis, aposte!' }
+  }
+  if (hasMadeStraight(hole, flop)) {
+    if (texture.lowBoard) {
+      return { action: 'donk', reason: 'Straight em board baixo — donk bet! Mão nuts e o board favorece seu range de BB. Aposte pra construir pote.' }
+    }
+    return { action: 'check', reason: 'Straight em board alto — check pro raiser. Ele provavelmente vai c-betar e você pode check-raise pra construir pote grande.' }
   }
   if (hasSetFn(hole, flop)) {
     if (texture.lowBoard) {

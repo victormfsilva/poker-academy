@@ -4,6 +4,7 @@ import Card from '../../components/Card'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
+const RANK_VAL = { A:14, K:13, Q:12, J:11, T:10, '9':9, '8':8, '7':7, '6':6, '5':5, '4':4, '3':3, '2':2 }
 
 function randomCards(n, exclude = []) {
   const cards = []
@@ -33,16 +34,15 @@ function hasMadeFlush(hole, board) {
 }
 
 function hasMadeStraight(hole, board) {
-  const allRanks = [...new Set([...hole, ...board].map(c => RANKS.indexOf(c.slice(0, -1))))].sort((a, b) => a - b)
-  const holeRankIdx = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
-  for (let i = 0; i <= allRanks.length - 5; i++) {
-    if (allRanks[i + 4] - allRanks[i] === 4) {
-      const window = allRanks.slice(i, i + 5)
-      if (holeRankIdx.some(r => window.includes(r))) return true
+  const holeVals = hole.map(c => RANK_VAL[c.slice(0, -1)])
+  const allVals = [...new Set([...hole, ...board].map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
+  if (allVals.includes(14)) allVals.unshift(1)
+  for (let i = 0; i <= allVals.length - 5; i++) {
+    if (allVals[i + 4] - allVals[i] === 4) {
+      const run = [allVals[i], allVals[i+1], allVals[i+2], allVals[i+3], allVals[i+4]]
+      if (holeVals.some(v => run.includes(v) || (v === 14 && run.includes(1)))) return true
     }
   }
-  // Wheel
-  if ([0, 9, 10, 11, 12].every(v => allRanks.includes(v)) && holeRankIdx.some(r => [0, 9, 10, 11, 12].includes(r))) return true
   return false
 }
 
@@ -62,29 +62,31 @@ function hasTwoPairFn(hole, board) {
 function hasOverpair(hole, board) {
   const holeRanks = hole.map(c => c.slice(0, -1))
   if (holeRanks[0] !== holeRanks[1]) return false
-  const pocketIdx = RANKS.indexOf(holeRanks[0])
-  const topBoardIdx = Math.min(...board.map(c => RANKS.indexOf(c.slice(0, -1))))
-  return pocketIdx < topBoardIdx
+  const pocketVal = RANK_VAL[holeRanks[0]]
+  const topBoardVal = Math.max(...board.map(c => RANK_VAL[c.slice(0, -1)]))
+  return pocketVal > topBoardVal
 }
 
 function hasFlushDrawMissed(hole, board) {
-  // Tinha flush draw no turn (4 cartas do mesmo naipe) mas não completou no river
+  // Tinha flush draw no turn (4 cartas do mesmo naipe com pelo menos 1 hole card) mas não completou no river
+  const holeSuits = hole.map(c => c.slice(-1))
   const suitCounts = {}
   ;[...hole, ...board].forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  // Se tivesse 4 no turn (hole+flop+turn) é agora tem 4 (não 5), o draw falhou
-  return Object.values(suitCounts).some(v => v === 4)
+  // Precisa ter exatamente 4 suited (não 5 = flush feito) E pelo menos 1 hole card daquele naipe
+  return Object.entries(suitCounts).some(([suit, count]) => count === 4 && holeSuits.includes(suit))
 }
 
-function boardHasFlushComplete(board) {
+function boardHasFlushPossible(board) {
   const suitCounts = {}
   board.forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
   return Object.values(suitCounts).some(v => v >= 3)
 }
 
 function boardHasStraightPossible(board) {
-  const ranks = [...new Set(board.map(c => RANKS.indexOf(c.slice(0, -1))))].sort((a, b) => a - b)
-  for (let i = 0; i < ranks.length - 2; i++) {
-    if (ranks[i + 2] - ranks[i] <= 4) return true
+  const vals = [...new Set(board.map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
+  if (vals.includes(14)) vals.unshift(1)
+  for (let i = 0; i < vals.length - 2; i++) {
+    if (vals[i + 2] - vals[i] <= 4) return true
   }
   return false
 }
@@ -114,11 +116,11 @@ function wouldPlayToRiver(hole, board) {
   ;[...hole, ...flop].forEach(c => { const s = c.slice(-1); flopSuitCounts[s] = (flopSuitCounts[s] || 0) + 1 })
   if (Object.values(flopSuitCounts).some(v => v >= 4)) return true // flush draw no flop
 
-  const ranks = flop.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const suits = flop.map(c => c.slice(-1))
-  const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
-  const sorted = [...ranks].sort((a, b) => a - b)
-  const connected = (sorted[2] - sorted[0]) <= 4
+  const flopVals = flop.map(c => RANK_VAL[c.slice(0, -1)])
+  const flopSuitsArr = flop.map(c => c.slice(-1))
+  const suited = flopSuitsArr[0] === flopSuitsArr[1] || flopSuitsArr[1] === flopSuitsArr[2] || flopSuitsArr[0] === flopSuitsArr[2]
+  const sortedVals = [...flopVals].sort((a, b) => a - b)
+  const connected = (sortedVals[2] - sortedVals[0]) <= 4
   const isDry = !suited && !connected
   if (isDry) return true // teria blefado em board seco
 
@@ -127,7 +129,7 @@ function wouldPlayToRiver(hole, board) {
 
 // River: você está IP, pot control até aqui ou apostou flop+turn. River saiu. Valor, blefe ou check?
 function getCorrectAction(hole, board) {
-  const flushOnBoard = boardHasFlushComplete(board)
+  const flushOnBoard = boardHasFlushPossible(board)
   const straightOnBoard = boardHasStraightPossible(board)
 
   // Nuts ou perto: value bet grande

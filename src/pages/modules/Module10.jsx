@@ -4,6 +4,7 @@ import Card from '../../components/Card'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
+const RANK_VAL = { A:14, K:13, Q:12, J:11, T:10, '9':9, '8':8, '7':7, '6':6, '5':5, '4':4, '3':3, '2':2 }
 
 function randomFlop() {
   const cards = []
@@ -24,14 +25,14 @@ function randomHoleCards(exclude) {
 }
 
 function getBoardTexture(flop) {
-  const ranks = flop.map(c => RANKS.indexOf(c.slice(0, -1)))
+  const vals = flop.map(c => RANK_VAL[c.slice(0, -1)])
   const suits = flop.map(c => c.slice(-1))
   const suited = suits[0] === suits[1] || suits[1] === suits[2] || suits[0] === suits[2]
   const monotone = suits[0] === suits[1] && suits[1] === suits[2]
-  const sorted = [...ranks].sort((a, b) => a - b)
-  const isBroadway = sorted[2] <= 4
-  const connected = (sorted[2] - sorted[0]) <= 4 && !isBroadway
-  const paired = ranks[0] === ranks[1] || ranks[1] === ranks[2] || ranks[0] === ranks[2]
+  const sorted = [...vals].sort((a, b) => a - b)
+  const span = sorted[2] - sorted[0]
+  const connected = span <= 4
+  const paired = vals[0] === vals[1] || vals[1] === vals[2] || vals[0] === vals[2]
   return { suited, monotone, connected, paired, isWet: suited || connected, isDry: !suited && !connected }
 }
 
@@ -53,18 +54,28 @@ function hasFlushDraw(hole, flop) {
   return Object.values(suitCounts).some(v => v === 4)
 }
 
-function hasStraightDraw(hole, flop) {
-  const holeRankIdx = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const allRanks = [...hole, ...flop].map(c => RANKS.indexOf(c.slice(0, -1)))
-  const unique = [...new Set(allRanks)].sort((a, b) => a - b)
-  for (let i = 0; i <= unique.length - 5; i++) {
-    if (unique[i + 4] - unique[i] === 4) return false
+function hasMadeStraight(hole, flop) {
+  const holeVals = hole.map(c => RANK_VAL[c.slice(0, -1)])
+  const allVals = [...new Set([...hole, ...flop].map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
+  if (allVals.includes(14)) allVals.unshift(1)
+  for (let i = 0; i <= allVals.length - 5; i++) {
+    if (allVals[i + 4] - allVals[i] === 4) {
+      const run = [allVals[i], allVals[i+1], allVals[i+2], allVals[i+3], allVals[i+4]]
+      if (holeVals.some(v => run.includes(v) || (v === 14 && run.includes(1)))) return true
+    }
   }
-  if ([0, 9, 10, 11, 12].every(v => unique.includes(v))) return false
-  for (let i = 0; i < unique.length - 3; i++) {
-    if (unique[i + 3] - unique[i] <= 4) {
-      const windowRanks = unique.slice(i, i + 4)
-      if (holeRankIdx.some(r => windowRanks.includes(r))) return true
+  return false
+}
+
+function hasStraightDraw(hole, flop) {
+  if (hasMadeStraight(hole, flop)) return false
+  const holeVals = hole.map(c => RANK_VAL[c.slice(0, -1)])
+  const allVals = [...new Set([...hole, ...flop].map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
+  if (allVals.includes(14)) allVals.unshift(1)
+  for (let i = 0; i < allVals.length - 3; i++) {
+    if (allVals[i + 3] - allVals[i] <= 4) {
+      const window = allVals.slice(i, i + 4)
+      if (holeVals.some(v => window.includes(v) || (v === 14 && window.includes(1)))) return true
     }
   }
   return false
@@ -92,9 +103,9 @@ function hasTwoPair(hole, flop) {
 function hasOverpair(hole, flop) {
   const holeRanks = hole.map(c => c.slice(0, -1))
   if (holeRanks[0] !== holeRanks[1]) return false
-  const pocketIdx = RANKS.indexOf(holeRanks[0])
-  const topFlopIdx = Math.min(...flop.map(c => RANKS.indexOf(c.slice(0, -1))))
-  return pocketIdx < topFlopIdx
+  const pocketVal = RANK_VAL[holeRanks[0]]
+  const topFlopVal = Math.max(...flop.map(c => RANK_VAL[c.slice(0, -1)]))
+  return pocketVal > topFlopVal
 }
 
 const CBET_SIZES = ['33%', '50%', '75%']
@@ -106,6 +117,9 @@ function getCorrectAction(hole, flop, cbetSize) {
   // Mao monstruosa: check-raise de valor
   if (hasMadeFlush(hole, flop)) {
     return { action: 'raise', actionType: 'raise-value', reason: 'Flush completo! Check-raise de VALOR — mao nuts ou perto. Construa o pote ao maximo. O adversario ja apostou, relance pra extrair valor.' }
+  }
+  if (hasMadeStraight(hole, flop)) {
+    return { action: 'raise', actionType: 'raise-value', reason: 'Straight no flop! Check-raise de VALOR — mao muito forte. O adversario nao espera voce ter straight do BB.' }
   }
   if (hasSet(hole, flop)) {
     return { action: 'raise', actionType: 'raise-value', reason: 'Set (trinca)! Check-raise de VALOR — mao muito forte e disfarcada. O adversario dificilmente coloca voce nessa mao.' }
