@@ -117,55 +117,44 @@ function generateAllHands() {
 const ALL_HANDS = generateAllHands()
 
 // ================================================================
-// MESA ESTILO GTO WIZARD
+// MESA ESTILO GTO WIZARD (identico a screenshot)
 // ================================================================
-function ChipDot({ color }) {
-  return (
-    <div style={{
-      width: 10, height: 10, borderRadius: '50%',
-      background: color, border: '1px solid rgba(0,0,0,0.3)',
-      flexShrink: 0,
-    }} />
-  )
-}
 
-function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, betAmt, actionLabel }) {
+function Seat({ pos, isHero, isRaiser, isFolded, stack, actionLabel }) {
   const posLabel = pos === 'UTG+1' ? 'UTG1' : pos
-  const border = isHero ? '2px solid #4fce82'
-               : isRaiser ? '2px solid #f5a623'
-               : '2px solid #2a2a2e'
-  const bg = isHero ? '#1a2e22' : '#1a1a1d'
-  const txtCol = isHero ? '#4fce82'
-               : isRaiser ? '#f5a623'
-               : '#b3b3b8'
-  const hasBet = isRaiser || isSB || isBB || betAmt
-  const chipColor = isRaiser ? '#f5a623' : isSB ? '#4fce82' : '#0a84d7'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-      {actionLabel && !betAmt && (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      {/* Action label (Fold, Raise, Call, etc) acima do seat */}
+      {actionLabel && (
         <div style={{
-          fontSize: 9, fontWeight: 700, color: '#b3b3b8',
-          background: '#1a1a1d', borderRadius: 4, padding: '1px 5px',
-          letterSpacing: 0.5,
+          fontSize: 10, fontWeight: 600,
+          color: actionLabel === 'Fold' ? '#676671'
+               : actionLabel.startsWith('Raise') ? '#4fce82'
+               : actionLabel === 'Call' ? '#0a84d7'
+               : '#b3b3b8',
+          whiteSpace: 'nowrap',
         }}>{actionLabel}</div>
       )}
-      {hasBet && betAmt && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <ChipDot color={chipColor} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#fdfdfd' }}>{betAmt}</span>
-        </div>
-      )}
+      {/* Seat: retangulo arredondado estilo GTO Wizard */}
       <div style={{
-        width: 48, height: 48, borderRadius: '50%',
-        background: bg, border,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
+        padding: '4px 10px',
+        borderRadius: 6,
+        background: isHero ? '#2a2a2e' : isFolded ? 'transparent' : '#2a2a2e',
+        border: isHero ? '1px solid #4fce82' : 'none',
+        opacity: isFolded ? 0.35 : 1,
+        textAlign: 'center',
+        minWidth: 40,
       }}>
-        <span style={{ fontSize: posLabel.length > 3 ? 7.5 : 10, color: txtCol, fontWeight: 700, lineHeight: 1.1 }}>
-          {posLabel}
-        </span>
-        <span style={{ fontSize: 9, color: '#676671', lineHeight: 1.2 }}>{stack}</span>
+        <div style={{
+          fontSize: 11, fontWeight: 700,
+          color: isHero ? '#4fce82' : '#b3b3b8',
+          lineHeight: 1.3,
+        }}>{posLabel}</div>
+        <div style={{
+          fontSize: 10, color: '#676671', lineHeight: 1.2,
+          fontFamily: 'JetBrains Mono',
+        }}>{stack}</div>
       </div>
     </div>
   )
@@ -173,15 +162,16 @@ function Seat({ pos, isHero, isRaiser, isSB, isBB, stack, betAmt, actionLabel })
 
 const ALL_SEATS_ORDER = ['UTG','UTG+1','LJ','HJ','CO','BTN','SB','BB']
 
+// Posicoes em volta da mesa oval (6-max layout estilo GTO Wizard)
 const SLOT_POS = [
-  { top: '10%', left: '22%' },
-  { top: '3%',  left: '50%' },
-  { top: '10%', left: '78%' },
-  { top: '50%', left: '93%' },
-  { top: '82%', left: '75%' },
-  { top: '88%', left: '50%' },
-  { top: '82%', left: '25%' },
-  { top: '50%', left: '7%'  },
+  { top: '8%',  left: '22%' },
+  { top: '2%',  left: '50%' },
+  { top: '8%',  left: '78%' },
+  { top: '50%', left: '94%' },
+  { top: '85%', left: '72%' },
+  { top: '90%', left: '50%' },
+  { top: '85%', left: '28%' },
+  { top: '50%', left: '6%'  },
 ]
 
 function PokerTable({ scenario }) {
@@ -225,34 +215,51 @@ function PokerTable({ scenario }) {
   const stack = scenario.stack || 100
 
   const displayPot = potBB
-    ? `${potBB} bb`
+    ? `${potBB}bb`
     : raiserPos
-      ? `${(stack * 2.5).toFixed(1)} bb`
-      : `${(stack * 1.5).toFixed(1)} bb`
+      ? `${(stack * 2.5).toFixed(1)}bb`
+      : `${(stack * 1.5).toFixed(1)}bb`
 
   const boardCards = scenario.board || null
+
+  // Determine folded/active seats
+  const foldedSeats = new Set()
+  rotated.forEach(pos => {
+    if (pos === heroPos || pos === raiserPos || pos === 'SB' || pos === 'BB') return
+    if (raiserPos) {
+      const raiserIdx = ALL_SEATS_ORDER.indexOf(raiserPos)
+      const posIdx = ALL_SEATS_ORDER.indexOf(pos)
+      // Seats between raiser and hero are folded
+      if (posIdx < raiserIdx || posIdx > ALL_SEATS_ORDER.indexOf(heroPos)) {
+        foldedSeats.add(pos)
+      }
+    }
+  })
 
   return (
     <div style={{
       position: 'relative', width: '100%', paddingBottom: '72%',
       userSelect: 'none', overflow: 'visible',
     }}>
+      {/* Mesa oval */}
       <div style={{
         position: 'absolute',
-        top: '12%', left: '5%', right: '5%', bottom: '14%',
+        top: '15%', left: '8%', right: '8%', bottom: '15%',
         borderRadius: 999,
-        border: '2px solid #2a2a2e',
+        border: '1.5px solid #3a3a42',
         background: '#161618',
       }} />
 
+      {/* Centro: pot + board cards */}
       <div style={{
-        position: 'absolute', top: boardCards ? '42%' : '40%', left: '50%',
+        position: 'absolute', top: boardCards ? '42%' : '42%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center', pointerEvents: 'none',
       }}>
         {boardCards ? (
           <>
-            <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginBottom: 5 }}>
+            <div style={{ fontSize: 11, color: '#676671', marginBottom: 4 }}>{displayPot}</div>
+            <div style={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
               {boardCards.map((c, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
                   <Card card={parseCard(c)} size="sm" />
@@ -260,48 +267,56 @@ function PokerTable({ scenario }) {
                 </div>
               ))}
             </div>
-            <div style={{ color: '#fdfdfd', fontSize: 13, fontWeight: 700 }}>{displayPot}</div>
+            {/* Chip stack icon */}
+            <div style={{ marginTop: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 3 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4fce82', border: '1px solid rgba(0,0,0,0.3)' }} />
+              <span style={{ color: '#676671', fontSize: 10 }}>{displayPot.replace('bb','')}</span>
+            </div>
           </>
         ) : (
           <>
-            <div style={{ color: '#676671', fontSize: 10, fontWeight: 600 }}>{stack}bb</div>
-            <div style={{ color: '#fdfdfd', fontSize: 15, fontWeight: 700 }}>{displayPot}</div>
+            <div style={{ fontSize: 11, color: '#676671', marginBottom: 2 }}>{displayPot}</div>
+            {/* Chip icon */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 3, marginTop: 2 }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4fce82', border: '1.5px solid rgba(0,0,0,0.3)' }} />
+              <span style={{ color: '#676671', fontSize: 10 }}>{displayPot.replace('bb','')}</span>
+            </div>
           </>
         )}
       </div>
 
+      {/* Dealer button */}
       {btnPos && (
         <div style={{
           position: 'absolute',
           top: btnPos.top, left: btnPos.left,
-          transform: 'translate(-36px, 0px)',
-          width: 18, height: 18, borderRadius: '50%',
+          transform: 'translate(-32px, 2px)',
+          width: 16, height: 16, borderRadius: '50%',
           background: '#fdfdfd', color: '#0f0f0f',
-          fontSize: 9, fontWeight: 900,
+          fontSize: 8, fontWeight: 900,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '1px solid #676671', zIndex: 10,
+          zIndex: 10,
         }}>D</div>
       )}
 
+      {/* Seats */}
       {rotated.map((pos, slotIdx) => {
         const p = SLOT_POS[slotIdx]
         const isVillain = pos === raiserPos
         const isSB = pos === 'SB'
         const isBB = pos === 'BB'
+        const isHero = pos === heroPos
+        const isFolded = !isHero && !isVillain && !isSB && !isBB && raiserPos
 
-        let betAmt = null
         let actionLabel = null
-
-        if (isVillain && villainAction === 'bet' && villainBetBB) {
-          betAmt = `${villainBetBB}`
+        if (isFolded) {
+          actionLabel = 'Fold'
+        } else if (isVillain && villainAction === 'bet' && villainBetBB) {
+          actionLabel = `Raise ${villainBetBB}`
         } else if (isVillain && villainAction === 'check') {
-          actionLabel = 'CHECK'
+          actionLabel = 'Check'
         } else if (isVillain && !villainAction) {
-          betAmt = `${(stack * 2).toFixed(0)}`
-        } else if (isSB && !boardCards) {
-          betAmt = `${(stack * 0.5).toFixed(1)}`
-        } else if (isBB && !boardCards) {
-          betAmt = `${stack}`
+          actionLabel = `Raise 100%`
         }
 
         return (
@@ -313,12 +328,10 @@ function PokerTable({ scenario }) {
           }}>
             <Seat
               pos={pos}
-              isHero={pos === heroPos}
-              isRaiser={isVillain && villainAction === 'bet'}
-              isSB={isSB && !boardCards}
-              isBB={isBB && !boardCards}
+              isHero={isHero}
+              isRaiser={isVillain}
+              isFolded={!!isFolded}
               stack={stack}
-              betAmt={betAmt}
               actionLabel={actionLabel}
             />
           </div>
@@ -1054,7 +1067,7 @@ export default function Infinite() {
     || scenario.type === 'board' || scenario.type === 'potodds'
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-20" style={{ background: '#0f0f0f' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-16" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto px-4 pt-6">
 
         {/* Stats */}
@@ -1137,30 +1150,37 @@ export default function Infinite() {
             </div>
           )}
 
-          {/* Action buttons */}
+          {/* Action buttons — estilo GTO Wizard */}
           <div className="px-4 pb-4">
             {!result ? (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {scenario.buttons.map(b => (
-                  <button key={b.id} onClick={() => handleAnswer(b.id)}
-                    style={{
-                      flex: 1, minWidth: 0, padding: '14px 4px', borderRadius: 8, fontWeight: 600,
-                      fontSize: 13, border: 'none', cursor: 'pointer',
-                      color: '#0f0f0f', background: b.bg,
-                    }}>
-                    {b.label}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {scenario.buttons.map(b => {
+                  const borderColor = b.id === 'fold' ? '#676671'
+                    : b.id === 'call' ? '#4fce82'
+                    : b.id === 'raise' ? '#e5484d'
+                    : '#f5a623'
+                  return (
+                    <button key={b.id} onClick={() => handleAnswer(b.id)}
+                      style={{
+                        flex: 1, minWidth: 0, padding: '12px 4px', borderRadius: 8, fontWeight: 600,
+                        fontSize: 13, cursor: 'pointer',
+                        color: '#fdfdfd', background: '#222225',
+                        border: `1.5px solid ${borderColor}`,
+                      }}>
+                      {b.label}
+                    </button>
+                  )
+                })}
               </div>
             ) : (
               <button onClick={handleNext}
                 style={{
                   width: '100%', padding: '14px', borderRadius: 8,
-                  background: '#222225', border: '1px solid #2a2a2e',
-                  color: '#fdfdfd', fontWeight: 600, fontSize: 15,
+                  background: '#4fce82', border: 'none',
+                  color: '#0f0f0f', fontWeight: 600, fontSize: 15,
                   cursor: 'pointer',
                 }}>
-                Proxima Mao →
+                Next Hand \u2192
               </button>
             )}
           </div>
