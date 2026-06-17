@@ -74,34 +74,39 @@ function hasOverpair(hole, board) {
   return pocketIdx < topBoardIdx
 }
 
+const RANK_VAL = { A:14,K:13,Q:12,J:11,T:10,'9':9,'8':8,'7':7,'6':6,'5':5,'4':4,'3':3,'2':2 }
+
 function hasStraightDraw(hole, board) {
-  const holeRankVals = hole.map(c => { const r = c.slice(0, -1); return r === 'A' ? [0, 13] : [RANKS.indexOf(r)] }).flat()
-  const allVals = [...hole, ...board].map(c => { const r = c.slice(0, -1); return r === 'A' ? [0, 13] : [RANKS.indexOf(r)] }).flat()
-  const unique = [...new Set(allVals)].sort((a, b) => a - b)
+  const toVal = c => RANK_VAL[c.slice(0, -1)]
+  const holeVals = hole.map(toVal)
+  const allCards = [...hole, ...board]
+  let vals = [...new Set(allCards.map(toVal))].sort((a, b) => a - b)
+  // Ace plays low too (A-2-3-4-5)
+  if (vals.includes(14)) vals = [1, ...vals]
 
-  // Ja tem straight? Nao e draw
-  for (let i = 0; i <= unique.length - 5; i++) {
-    if (unique[i + 4] - unique[i] === 4) {
-      const straight5 = [unique[i], unique[i]+1, unique[i]+2, unique[i]+3, unique[i]+4]
-      if (straight5.every(v => unique.includes(v))) return false
+  // Check if already have made straight (5 consecutive) — not a draw
+  for (let lo = 1; lo <= 10; lo++) {
+    const run = [lo, lo+1, lo+2, lo+3, lo+4]
+    if (run.every(v => vals.includes(v))) return false
+  }
+
+  // OESD: 4 consecutive values, hole contributes at least one
+  for (let lo = 1; lo <= 11; lo++) {
+    const run = [lo, lo+1, lo+2, lo+3]
+    if (run.every(v => vals.includes(v))) {
+      // Check hole contributes (ace can be 1 or 14)
+      const holeContributes = holeVals.some(hv => run.includes(hv) || (hv === 14 && run.includes(1)))
+      if (holeContributes) return true
     }
   }
 
-  // OESD: 4 consecutivas com hole contribuindo
-  for (let start = 0; start <= 12; start++) {
-    const run = [start, start+1, start+2, start+3]
-    const have = run.filter(v => unique.includes(v))
-    if (have.length >= 4) {
-      if (holeRankVals.some(r => run.includes(r))) return true
-    }
-  }
-
-  // Gutshot: 4 de 5 consecutivas, hole preenche um dos 4
-  for (let start = 0; start <= 8; start++) {
-    const run5 = [start, start+1, start+2, start+3, start+4]
-    const have = run5.filter(v => unique.includes(v))
+  // Gutshot: 4 of 5 consecutive, missing exactly 1, hole contributes
+  for (let lo = 1; lo <= 10; lo++) {
+    const run5 = [lo, lo+1, lo+2, lo+3, lo+4]
+    const have = run5.filter(v => vals.includes(v))
     if (have.length === 4) {
-      if (holeRankVals.some(r => run5.includes(r) && unique.includes(r))) return true
+      const holeContributes = holeVals.some(hv => have.includes(hv) || (hv === 14 && have.includes(1)))
+      if (holeContributes) return true
     }
   }
 
@@ -136,51 +141,49 @@ function wouldCbetFlop(hole, flop) {
   return false
 }
 
-// Turn card types
+// Turn card types (usa RANK_VAL: A=14, K=13, ..., 2=2)
 function isTurnScary(flop, turn) {
-  const turnRank = RANKS.indexOf(turn.slice(0, -1))
+  const toVal = c => RANK_VAL[c.slice(0, -1)]
+  const turnVal = toVal(turn)
   const turnSuit = turn.slice(-1)
   const flopSuits = flop.map(c => c.slice(-1))
-  const flopRanks = flop.map(c => RANKS.indexOf(c.slice(0, -1)))
+  const flopVals = flop.map(toVal)
 
-  // Flush completing card (3 do mesmo naipe no flop+turn)
-  const allSuits = [...flopSuits, turnSuit]
-  const suitCounts = {}
-  allSuits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
-  const flushSuitCount = suitCounts[turnSuit] || 0
-  // Se o turn faz 3+ do mesmo naipe com o flop, flush draw ficou perigoso
+  // Flush completing: turn faz 3 do mesmo naipe com flop
   const flopSuitCount = flopSuits.filter(s => s === turnSuit).length
   if (flopSuitCount >= 2) return { scary: true, type: 'flush', desc: 'Carta do mesmo naipe - possivel flush completado' }
 
-  // Brings flush draw (2 do mesmo naipe no flop, turn faz 3)
-  const bringsFlushDraw = flopSuitCount === 1
-
-  // Straight completing: checa se 4 cartas consecutivas existem no board
-  const allRanks = [...new Set([...flopRanks, turnRank])].sort((a, b) => a - b)
-  let straightComplete = false
-  for (let i = 0; i <= allRanks.length - 4; i++) {
-    if (allRanks[i + 3] - allRanks[i] === 3) { straightComplete = true; break }
+  // Straight scary: 4 cartas no board formam sequencia possivel
+  let allVals = [...new Set([...flopVals, turnVal])].sort((a, b) => a - b)
+  if (allVals.includes(14)) allVals = [1, ...allVals]
+  for (let lo = 1; lo <= 11; lo++) {
+    const run = [lo, lo+1, lo+2, lo+3]
+    if (run.every(v => allVals.includes(v))) {
+      return { scary: true, type: 'straight', desc: 'Board muito conectado - possivel straight completado' }
+    }
   }
-  // A-2-3-4 wheel
-  if (allRanks.includes(0) && [9,10,11,12].filter(r => allRanks.includes(r)).length >= 3) straightComplete = true
-  if (straightComplete) return { scary: true, type: 'straight', desc: 'Board muito conectado - possivel straight completado' }
 
   // Overcard (A ou K acima do flop)
-  if (turnRank <= 1 && turnRank < Math.min(...flopRanks)) return { scary: true, type: 'overcard', desc: 'Overcard alta (A/K) - muda a dinamica' }
+  const maxFlop = Math.max(...flopVals)
+  if (turnVal > maxFlop && turnVal >= 13) return { scary: true, type: 'overcard', desc: 'Overcard alta (A/K) - muda a dinamica' }
 
-  // Low overcard ou mid card: semi-scary
-  if (turnRank < Math.min(...flopRanks) && turnRank <= 4) return { scary: false, type: 'overcard_low', desc: 'Overcard media - ligeiramente perigosa' }
+  // Mid overcard (Q, J, T acima do flop)
+  if (turnVal > maxFlop && turnVal >= 10) return { scary: false, type: 'overcard_low', desc: 'Overcard media - ligeiramente perigosa' }
 
   return { scary: false, type: 'brick', desc: 'Brick - carta inofensiva que nao muda nada' }
 }
 
-// Kicker quality: 0 = A, 1 = K, ..., quem tiver menor idx = melhor kicker
-function getKickerRank(hole, board) {
-  const holeRanks = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const boardRanks = board.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const paired = holeRanks.filter(r => boardRanks.includes(RANKS[r]))
-  const kicker = holeRanks.filter(r => !boardRanks.includes(RANKS[r]))
-  return kicker.length > 0 ? Math.min(...kicker) : Math.min(...holeRanks)
+// Kicker quality usando RANK_VAL (A=14 melhor, 2=2 pior)
+function getKickerVal(hole, board) {
+  const toVal = c => RANK_VAL[c.slice(0, -1)]
+  const holeVals = hole.map(toVal)
+  const boardRanks = board.map(c => c.slice(0, -1))
+  const holeRanks = hole.map(c => c.slice(0, -1))
+  // Kicker = carta da mao que NAO parou com o board
+  const kickers = holeRanks
+    .map((r, i) => ({ rank: r, val: holeVals[i] }))
+    .filter(h => !boardRanks.includes(h.rank))
+  return kickers.length > 0 ? Math.max(...kickers.map(k => k.val)) : Math.max(...holeVals)
 }
 
 // CBet turn IP: voce apostou no flop, adversario chamou. Turn saiu. Double barrel ou check?
@@ -204,8 +207,8 @@ function getCorrectAction(hole, flop, turn) {
   // Top pair
   if (hasTopPair(hole, board)) {
     // Top pair com bom kicker (A-J) aposta na maioria dos turns
-    const kicker = getKickerRank(hole, board)
-    const goodKicker = kicker <= 3 // A, K, Q, J
+    const kickerVal = getKickerVal(hole, board)
+    const goodKicker = kickerVal >= 11 // J=11, Q=12, K=13, A=14
     if (turnInfo.scary && turnInfo.type === 'flush') {
       return { action: 'check', reason: 'Top pair mas turn completou possivel flush. Check pra controlar o pote.' }
     }
@@ -247,17 +250,18 @@ function getCorrectAction(hole, flop, turn) {
   }
 
   // Duas overcards na mao (AK, AQ, KQ sem par): bom blefe no turn
-  const holeRanks = hole.map(c => RANKS.indexOf(c.slice(0, -1)))
-  const boardRanksSorted = board.map(c => RANKS.indexOf(c.slice(0, -1))).sort((a, b) => a - b)
-  const bothOvercards = holeRanks.every(r => r < boardRanksSorted[0])
-  if (bothOvercards && Math.max(...holeRanks) <= 3) {
+  const toVal = c => RANK_VAL[c.slice(0, -1)]
+  const holeVals = hole.map(toVal)
+  const maxBoardVal = Math.max(...board.map(toVal))
+  const bothOvercards = holeVals.every(v => v > maxBoardVal)
+  if (bothOvercards && Math.min(...holeVals) >= 10) {
     if (!turnInfo.scary) {
       return { action: 'bet', sizing: '50%', reason: 'Duas overcards (broadways) sem par - bom double barrel como blefe. Voce tem 6 outs de overcard e fold equity.' }
     }
   }
 
-  // Backdoor equity: carta alta com alguma chance
-  if (holeRanks.some(r => r <= 2) && !turnInfo.scary) {
+  // Carta alta (A, K, Q) sem par: barrel pequeno
+  if (holeVals.some(v => v >= 12) && !turnInfo.scary) {
     return { action: 'bet', sizing: '33%', reason: 'Carta alta sem par - barrel pequeno (33%). Voce ainda pode melhorar no river e tem fold equity.' }
   }
 
