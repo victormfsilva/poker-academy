@@ -228,35 +228,181 @@ function getHeroPreflopFeedback(heroHole, heroAction, heroIsSB) {
   }
 }
 
-// ─── Bot GTO (decisoes heuristicas) ───────────────────────
+// ─── Board texture analysis ─────────────────────────────
+function boardTexture(board) {
+  if (board.length === 0) return { wet: false, paired: false, monotone: false, connected: false, highCards: 0 }
+  const ranks = board.map(c => RANK_VAL[c.slice(0, -1)])
+  const suits = board.map(c => c.slice(-1))
+
+  // Paired board
+  const rc = {}
+  ranks.forEach(r => { rc[r] = (rc[r] || 0) + 1 })
+  const paired = Object.values(rc).some(v => v >= 2)
+
+  // Flush draw / monotone
+  const sc = {}
+  suits.forEach(s => { sc[s] = (sc[s] || 0) + 1 })
+  const maxSuit = Math.max(...Object.values(sc))
+  const monotone = maxSuit >= 3
+  const flushDraw = maxSuit >= 2
+
+  // Connectedness
+  const sorted = [...new Set(ranks)].sort((a, b) => a - b)
+  let connected = false
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (sorted[i + 1] - sorted[i] <= 2) { connected = true; break }
+  }
+
+  // High cards (T+)
+  const highCards = ranks.filter(r => r >= 10).length
+
+  const wet = (flushDraw && connected) || monotone || (connected && highCards >= 2)
+
+  return { wet, paired, monotone, connected, highCards, flushDraw }
+}
+
+// ─── Bot GTO (decisoes heuristicas avancadas) ────────────
+// Retorna { action, sizePct } onde sizePct = fracao do pote (0.33, 0.5, 0.75, 1.0)
 function botDecision(botHole, board, street, pot, lastBet, isIP) {
-  if (board.length === 0) return 'call' // fallback pre-flop (should use botPreflopDecision)
+  if (board.length === 0) return 'call' // fallback pre-flop
 
   const strength = handStrength(botHole, board)
+  const texture = boardTexture(board)
+  const rng = Math.random()
+  const streetIdx = { flop: 0, turn: 1, river: 2 }[street] ?? 0
 
-  // Com bet pra pagar
+  // ─── Facing a bet ───
   if (lastBet > 0) {
     const potOdds = lastBet / (pot + lastBet)
+    const betRelPot = lastBet / Math.max(pot - lastBet, 1) // bet as % of pot before bet
+
     switch (strength) {
-      case 'monster': return Math.random() < 0.6 ? 'raise' : 'call'
-      case 'strong':  return Math.random() < 0.3 ? 'raise' : 'call'
-      case 'good':    return 'call'
-      case 'draw':    return potOdds < 0.33 ? 'call' : (Math.random() < 0.3 ? 'call' : 'fold')
-      case 'marginal': return potOdds < 0.25 ? 'call' : 'fold'
-      case 'weak':    return Math.random() < 0.15 ? 'call' : 'fold'
-      default:        return 'fold'
+      case 'monster':
+        // Slowplay call sometimes on flop, raise more on later streets
+        if (streetIdx === 0) return rng < 0.4 ? 'raise' : 'call'
+        return rng < 0.7 ? 'raise' : 'call'
+
+      case 'strong':
+        // Raise more on wet boards (protect equity), flat on dry
+        if (texture.wet) return rng < 0.45 ? 'raise' : 'call'
+        return rng < 0.2 ? 'raise' : 'call'
+
+      case 'good':
+        // Call most, occasional raise on flop for protection
+        if (streetIdx === 0 && texture.wet) return rng < 0.15 ? 'raise' : 'call'
+        return 'call'
+
+      case 'draw':
+        // Semi-bluff raise sometimes, especially IP on flop
+        if (streetIdx === 0 && isIP && rng < 0.25) return 'raise'
+        // Call if pot odds are good enough
+        if (potOdds < 0.30) return 'call'
+        if (streetIdx === 0 && potOdds < 0.35) return 'call' // flop has more outs ahead
+        return rng < 0.2 ? 'call' : 'fold'
+
+      case 'marginal':
+        // Only call small bets
+        if (betRelPot < 0.4) return rng < 0.6 ? 'call' : 'fold'
+        if (betRelPot < 0.6) return rng < 0.3 ? 'call' : 'fold'
+        return 'fold'
+
+      case 'weak':
+        // Bluff-raise rarely, mostly fold
+        if (streetIdx === 2 && rng < 0.08) return 'raise' // river bluff-raise
+        return rng < 0.1 ? 'call' : 'fold'
+
+      default: // air
+        // Bluff-raise on flop sometimes
+        if (streetIdx === 0 && rng < 0.06) return 'raise'
+        return 'fold'
     }
   }
 
-  // Primeiro a agir ou check disponivel
+  // ─── No bet to face (can check or bet) ───
   switch (strength) {
-    case 'monster': return Math.random() < 0.7 ? 'bet' : 'check' // slowplay sometimes
-    case 'strong':  return Math.random() < 0.8 ? 'bet' : 'check'
-    case 'good':    return Math.random() < 0.6 ? 'bet' : 'check'
-    case 'draw':    return Math.random() < 0.4 ? 'bet' : 'check' // semi-bluff
-    case 'marginal': return 'check'
-    case 'weak':    return Math.random() < 0.2 ? 'bet' : 'check' // occasional bluff
-    default:        return Math.random() < 0.15 ? 'bet' : 'check' // rare bluff
+    case 'monster':
+      // Slowplay more on dry boards, bet wet boards
+      if (texture.wet) return rng < 0.85 ? 'bet' : 'check'
+      if (streetIdx === 0) return rng < 0.4 ? 'bet' : 'check' // trap on dry flop
+      return rng < 0.75 ? 'bet' : 'check'
+
+    case 'strong':
+      // Bet for value, more on wet boards
+      if (texture.wet) return rng < 0.85 ? 'bet' : 'check'
+      return rng < 0.7 ? 'bet' : 'check'
+
+    case 'good':
+      // Bet flop/turn for value+protection, more cautious on river
+      if (streetIdx <= 1) return rng < 0.65 ? 'bet' : 'check'
+      return rng < 0.5 ? 'bet' : 'check'
+
+    case 'draw':
+      // Semi-bluff: more on flop, less on river (no more cards to come)
+      if (streetIdx === 0) return rng < 0.50 ? 'bet' : 'check'
+      if (streetIdx === 1) return rng < 0.35 ? 'bet' : 'check'
+      return rng < 0.10 ? 'bet' : 'check' // river: draw missed, rare bluff
+
+    case 'marginal':
+      // Check most, thin value bet on river sometimes
+      if (streetIdx === 2 && rng < 0.15) return 'bet'
+      return 'check'
+
+    case 'weak':
+      // Bluff: more on dry boards, less on wet
+      if (texture.wet) return rng < 0.08 ? 'bet' : 'check'
+      if (streetIdx === 0) return rng < 0.25 ? 'bet' : 'check' // dry flop cbet bluff
+      if (streetIdx === 1) return rng < 0.15 ? 'bet' : 'check' // barrel
+      return rng < 0.12 ? 'bet' : 'check' // river bluff
+
+    default: // air
+      // Pure bluff: dry boards, IP, earlier streets
+      if (!texture.wet && isIP) {
+        if (streetIdx === 0) return rng < 0.30 ? 'bet' : 'check'
+        if (streetIdx === 1) return rng < 0.18 ? 'bet' : 'check'
+        return rng < 0.10 ? 'bet' : 'check'
+      }
+      if (streetIdx === 0) return rng < 0.15 ? 'bet' : 'check'
+      return rng < 0.08 ? 'bet' : 'check'
+  }
+}
+
+// ─── Bot bet sizing (retorna fracao do pote) ─────────────
+function botBetSizing(botHole, board, street, pot, isIP) {
+  const strength = handStrength(botHole, board)
+  const texture = boardTexture(board)
+  const streetIdx = { flop: 0, turn: 1, river: 2 }[street] ?? 0
+  const rng = Math.random()
+
+  // Polarizado: mãos muito fortes e bluffs usam sizing grande
+  // Mãos medianas usam sizing menor
+  switch (strength) {
+    case 'monster':
+      // Overbet river, big sizing on wet boards
+      if (streetIdx === 2) return rng < 0.3 ? 1.25 : 0.75
+      if (texture.wet) return 0.75
+      return rng < 0.5 ? 0.75 : 0.5
+
+    case 'strong':
+      if (texture.wet) return 0.66
+      return rng < 0.6 ? 0.5 : 0.66
+
+    case 'good':
+      // Smaller sizing for protection/thin value
+      if (streetIdx === 0) return rng < 0.5 ? 0.5 : 0.33
+      return 0.5
+
+    case 'draw':
+      // Semi-bluff: use bigger sizing to maximize fold equity
+      return rng < 0.4 ? 0.66 : 0.5
+
+    case 'marginal':
+      return 0.33 // thin value = small
+
+    default: // weak/air bluffs
+      // Bluffs: mix sizing to stay balanced
+      if (streetIdx === 2) return rng < 0.4 ? 0.75 : 0.5 // river bluffs bigger
+      if (!texture.wet) return 0.33 // dry board cbet bluff = small
+      return 0.5
   }
 }
 
@@ -759,9 +905,13 @@ export default function Arena() {
         gs.pot += newLastBet
         gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${newLastBet.toFixed(0)}` }]
       } else if (botAction === 'raise') {
-        const reRaise = newLastBet * 2.5
+        // Bot raise sizing: 2.5-3x depending on strength
+        const strength = handStrength(gs.villainCards, gs.board)
+        const multiplier = strength === 'monster' || strength === 'air' ? 3 : 2.5
+        const reRaise = Math.round(newLastBet * multiplier)
         gs.pot += newLastBet + reRaise
-        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: `Raise ${reRaise.toFixed(0)}` }]
+        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: `Raise ${reRaise}` }]
+        // Hero auto-calls the re-raise (simplified)
         gs.pot += reRaise
         gs.actions = [...gs.actions, { who: 'hero', action: 'call', label: 'Call' }]
       }
@@ -775,7 +925,8 @@ export default function Arena() {
       if (!gs.villainActed) {
         const botAction = botDecision(gs.villainCards, gs.board, gs.street, gs.pot, 0, !gs.heroIsBtn)
         if (botAction === 'bet') {
-          const bSize = Math.round(gs.pot * 0.66)
+          const sizePct = botBetSizing(gs.villainCards, gs.board, gs.street, gs.pot, !gs.heroIsBtn)
+          const bSize = Math.max(gs.blinds?.bb || 2, Math.round(gs.pot * sizePct))
           gs.pot += bSize
           gs.lastBet = bSize
           gs.villainActed = true
