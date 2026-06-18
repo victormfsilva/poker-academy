@@ -1201,9 +1201,10 @@ export default function Arena() {
 
     // Record feedback
     let fb = null
-    if (gs.street === 'preflop') {
+    const heroAlreadyActed = gs.actions.some(a => a.who === 'hero')
+    if (gs.street === 'preflop' && !heroAlreadyActed) {
       fb = getHeroPreflopFeedback(gs.heroCards, action, gs.heroIsBtn)
-    } else {
+    } else if (gs.street !== 'preflop') {
       fb = getHeroFeedback(gs.heroCards, gs.board, action, currentPot, gs.lastBet)
     }
     if (fb) {
