@@ -1512,6 +1512,34 @@ export default function Arena() {
                   </div>
                 )}
 
+                {/* Feedback da ultima acao (fold, raise que fez villain foldar, etc) */}
+                {feedback && (
+                  <div className="rounded-xl px-4 py-3 mb-3" style={{
+                    background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
+                    border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
+                  }}>
+                    <div className="flex items-center justify-between">
+                      <span style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
+                        {feedback.isCorrect ? 'Boa jogada!' : `Melhor jogada: ${feedback.recommended.toUpperCase()}`}
+                      </span>
+                      {feedback.ratingDelta != null && (
+                        <span style={{
+                          color: feedback.ratingDelta >= 0 ? '#4fce82' : '#e5484d',
+                          fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                        }}>
+                          {feedback.ratingDelta >= 0 ? '+' : ''}{feedback.ratingDelta}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{feedback.reason}</div>
+                    {!feedback.isCorrect && feedback.acceptable?.length > 0 && (
+                      <div style={{ color: '#676671', fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
+                        Tambem aceitavel: {feedback.acceptable.map(a => a.toUpperCase()).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button onClick={startNewHand}
                   style={{
                     width: '100%', padding: '14px', borderRadius: 8,
@@ -1613,7 +1641,7 @@ export default function Arena() {
                 )}
 
                 {/* Feedback */}
-                {feedback && !gameState.result && (
+                {feedback && (
                   <div className="rounded-xl px-4 py-3 mb-3" style={{
                     background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
                     border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
