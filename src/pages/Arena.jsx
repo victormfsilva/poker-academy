@@ -992,6 +992,8 @@ export default function Arena() {
       heroIsBtn,
       heroInvested: heroPosts,
       villainInvested: villainPosts,
+      heroStack: match.heroStack,
+      villainStartStack: match.villainStack,
       lastBet: blinds.bb,
       heroActed: false,
       villainActed: false,
@@ -1059,14 +1061,16 @@ export default function Arena() {
       setGameState(prev => {
         if (!prev || !prev.waitingBotPreflop) return prev
         const gs = { ...prev, waitingBotPreflop: false, villainActed: true }
-        const botAction = botPreflopDecision(gs.villainCards, true)
+        const vStack = gs.villainStartStack || 500
+        const vRemaining = vStack - (gs.villainInvested || 0)
+        const botAction = vRemaining <= 0 ? 'fold' : botPreflopDecision(gs.villainCards, true)
         if (botAction === 'raise') {
-          const raiseSize = Math.round(gs.blinds.bb * 2.5)
-          gs.villainInvested = raiseSize
-          gs.lastBet = raiseSize
-          gs.actions = [{ who: 'villain', action: 'raise', label: `Raise ${raiseSize}` }]
+          const raiseTotal = Math.min(Math.round(gs.blinds.bb * 2.5), vStack)
+          gs.villainInvested = raiseTotal
+          gs.lastBet = raiseTotal
+          gs.actions = [{ who: 'villain', action: 'raise', label: `Raise ${raiseTotal}` }]
         } else if (botAction === 'call') {
-          gs.villainInvested = gs.blinds.bb
+          gs.villainInvested = Math.min(gs.blinds.bb, vStack)
           gs.lastBet = 0
           gs.actions = [{ who: 'villain', action: 'call', label: 'Complete' }]
         } else {
@@ -1138,10 +1142,11 @@ export default function Arena() {
     // Bot age primeiro se eh OOP (BB)
     if (heroIsIP) {
       const currentPot = (gs.heroInvested || 0) + (gs.villainInvested || 0)
-      const botAction = botDecision(gs.villainCards, board, next, currentPot, 0, false)
+      const vRemaining = (gs.villainStartStack || 500) - (gs.villainInvested || 0)
+      const botAction = vRemaining <= 0 ? 'check' : botDecision(gs.villainCards, board, next, currentPot, 0, false)
       if (botAction === 'bet') {
         const sizePct = botBetSizing(gs.villainCards, board, next, currentPot, false)
-        const bSize = Math.max(gs.blinds?.bb || 2, Math.round(currentPot * sizePct))
+        const bSize = Math.min(Math.max(gs.blinds?.bb || 2, Math.round(currentPot * sizePct)), vRemaining)
         nextGs.villainInvested = (gs.villainInvested || 0) + bSize
         nextGs.lastBet = bSize
         nextGs.villainActed = true
@@ -1302,10 +1307,28 @@ export default function Arena() {
         const str = handStrength(gs.villainCards, gs.board)
         const mult = str === 'monster' || str === 'air' ? 3 : 2.5
         const callFirst = Math.min(gs.lastBet, villainRemaining)
-        const raiseAmt = Math.min(Math.round(gs.lastBet * mult), villainRemaining - callFirst)
+        const raiseAmt = Math.min(Math.round(gs.lastBet * mult), Math.max(0, villainRemaining - callFirst))
+        if (raiseAmt <= 0) {
+          // Can't raise — just call
+          gs.villainInvested = (gs.villainInvested || 0) + callFirst
+          gs.lastBet = 0
+          gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${callFirst}` }]
+          gs.villainActed = true
+          if (gs.street === 'river') {
+            gs.showVillain = true
+            gs.heroActed = true
+            gs.waitingBotResponse = { type: 'river-call' }
+            setGameState({ ...gs })
+            return
+          }
+          const nextGs = advanceStreet(gs)
+          setGameState(nextGs)
+          return
+        }
         gs.villainInvested = (gs.villainInvested || 0) + callFirst + raiseAmt
         gs.lastBet = raiseAmt
-        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: `Raise ${raiseAmt}` }]
+        const isAllIn = (callFirst + raiseAmt) >= villainRemaining
+        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: isAllIn ? `All-In ${gs.villainInvested}` : `Raise ${raiseAmt}` }]
         gs.villainActed = true
         gs.heroActed = false // Hero must respond
         setGameState({ ...gs })
@@ -1319,10 +1342,11 @@ export default function Arena() {
       if (!gs.villainActed) {
         // Villain acts after hero check (hero is OOP)
         const cp = (gs.heroInvested || 0) + (gs.villainInvested || 0)
-        const botAction = botDecision(gs.villainCards, gs.board, gs.street, cp, 0, true)
+        const vRemaining = (gs.villainStartStack || 500) - (gs.villainInvested || 0)
+        const botAction = vRemaining <= 0 ? 'check' : botDecision(gs.villainCards, gs.board, gs.street, cp, 0, true)
         if (botAction === 'bet') {
           const sizePct = botBetSizing(gs.villainCards, gs.board, gs.street, cp, true)
-          const bSize = Math.max(gs.blinds?.bb || 2, Math.round(cp * sizePct))
+          const bSize = Math.min(Math.max(gs.blinds?.bb || 2, Math.round(cp * sizePct)), vRemaining)
           gs.villainInvested = (gs.villainInvested || 0) + bSize
           gs.lastBet = bSize
           gs.villainActed = true
