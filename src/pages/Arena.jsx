@@ -706,8 +706,8 @@ function RatingChart({ history, color }) {
 function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, villainLabel, showVillain, boardKey }) {
   return (
     <div style={{
-      position: 'relative', width: '100%', paddingBottom: '55%',
-      userSelect: 'none', overflow: 'hidden',
+      position: 'relative', width: '100%',
+      userSelect: 'none', overflow: 'visible',
     }}>
       {/* CSS animations */}
       <style>{`
@@ -722,100 +722,102 @@ function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, vi
         }
       `}</style>
 
+      {/* Villain (topo — fora da mesa) */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+        marginBottom: 6,
+      }}>
+        <ActionBubble label={villainLabel} isNew />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 2 }}>
+            {showVillain && villainCards
+              ? villainCards.map((c, i) => <Card key={i} card={parseCard(c)} size="sm" />)
+              : [0, 1].map(i => <CardBack key={i} />)
+            }
+          </div>
+          <div style={{
+            padding: '3px 10px', borderRadius: 6,
+            background: '#2a2a2e', border: '1px solid #e5484d',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#e5484d' }}>
+              {heroIsBtn ? 'BB' : 'SB'}
+            </div>
+            <div style={{ fontSize: 8, color: '#676671', fontFamily: 'JetBrains Mono' }}>Bot</div>
+          </div>
+        </div>
+      </div>
+
       {/* Mesa oval */}
       <div style={{
-        position: 'absolute',
-        top: '10%', left: '10%', right: '10%', bottom: '10%',
+        position: 'relative', width: '100%', paddingBottom: '38%',
         borderRadius: 999,
         border: '1.5px solid #3a3a42',
         background: '#161618',
-      }} />
-
-      {/* Villain (topo) */}
-      <div style={{
-        position: 'absolute', top: '2%', left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, zIndex: 5,
+        overflow: 'hidden',
       }}>
-        <ActionBubble label={villainLabel} isNew />
+        {/* Centro: board + pot */}
         <div style={{
-          padding: '4px 12px', borderRadius: 6,
-          background: '#2a2a2e', border: '1px solid #e5484d',
-          textAlign: 'center',
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          textAlign: 'center', pointerEvents: 'none',
         }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#e5484d' }}>
-            {heroIsBtn ? 'BB' : 'SB'}
+          {board.length > 0 && (
+            <div key={boardKey} style={{ display: 'flex', gap: 3, justifyContent: 'center', marginBottom: 6 }}>
+              {board.map((c, i) => (
+                <BoardCard key={`${boardKey}-${i}`} card={c} index={i} totalVisible={board.length} />
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+            <div style={{ position: 'relative', width: 14, height: 16 }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  position: 'absolute', bottom: i * 3, left: 0,
+                  width: 14, height: 6, borderRadius: 3,
+                  background: i === 2 ? '#4fce82' : i === 1 ? '#3ab870' : '#2a9a5a',
+                  border: '1px solid rgba(0,0,0,0.25)',
+                }} />
+              ))}
+            </div>
+            <span style={{ color: '#b3b3b8', fontSize: 12, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
+              {pot.toFixed(1)}bb
+            </span>
           </div>
-          <div style={{ fontSize: 9, color: '#676671', fontFamily: 'JetBrains Mono' }}>Bot GTO</div>
         </div>
-        <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
-          {showVillain && villainCards
-            ? villainCards.map((c, i) => <Card key={i} card={parseCard(c)} size="sm" />)
-            : [0, 1].map(i => <CardBack key={i} />)
-          }
-        </div>
+
+        {/* Dealer button */}
+        <div style={{
+          position: 'absolute',
+          top: heroIsBtn ? '65%' : '15%',
+          right: '22%',
+          width: 16, height: 16, borderRadius: '50%',
+          background: '#fdfdfd', color: '#0f0f0f',
+          fontSize: 8, fontWeight: 900,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 10,
+        }}>D</div>
       </div>
 
-      {/* Centro: board + pot */}
+      {/* Hero (fundo — fora da mesa) */}
       <div style={{
-        position: 'absolute', top: '44%', left: '50%',
-        transform: 'translate(-50%, -50%)',
-        textAlign: 'center', pointerEvents: 'none',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+        marginTop: 6,
       }}>
-        {board.length > 0 && (
-          <div key={boardKey} style={{ display: 'flex', gap: 3, justifyContent: 'center', marginBottom: 6 }}>
-            {board.map((c, i) => (
-              <BoardCard key={`${boardKey}-${i}`} card={c} index={i} totalVisible={board.length} />
-            ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            padding: '3px 10px', borderRadius: 6,
+            background: '#2a2a2e', border: '1px solid #4fce82',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#4fce82' }}>
+              {heroIsBtn ? 'SB' : 'BB'}
+            </div>
+            <div style={{ fontSize: 8, color: '#676671', fontFamily: 'JetBrains Mono' }}>Voce</div>
           </div>
-        )}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-          <div style={{ position: 'relative', width: 14, height: 16 }}>
-            {[0, 1, 2].map(i => (
-              <div key={i} style={{
-                position: 'absolute', bottom: i * 3, left: 0,
-                width: 14, height: 6, borderRadius: 3,
-                background: i === 2 ? '#4fce82' : i === 1 ? '#3ab870' : '#2a9a5a',
-                border: '1px solid rgba(0,0,0,0.25)',
-              }} />
-            ))}
+          <div style={{ display: 'flex', gap: 3 }}>
+            {heroCards.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
           </div>
-          <span style={{ color: '#b3b3b8', fontSize: 12, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
-            {pot.toFixed(1)}bb
-          </span>
-        </div>
-      </div>
-
-      {/* Dealer button */}
-      <div style={{
-        position: 'absolute',
-        top: heroIsBtn ? '68%' : '8%',
-        left: heroIsBtn ? '64%' : '64%',
-        width: 16, height: 16, borderRadius: '50%',
-        background: '#fdfdfd', color: '#0f0f0f',
-        fontSize: 8, fontWeight: 900,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 10,
-      }}>D</div>
-
-      {/* Hero (fundo) */}
-      <div style={{
-        position: 'absolute', bottom: '0%', left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, zIndex: 5,
-      }}>
-        <div style={{ display: 'flex', gap: 3, marginBottom: 2 }}>
-          {heroCards.map((c, i) => <Card key={i} card={parseCard(c)} size="md" />)}
-        </div>
-        <div style={{
-          padding: '4px 12px', borderRadius: 6,
-          background: '#2a2a2e', border: '1px solid #4fce82',
-          textAlign: 'center',
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#4fce82' }}>
-            {heroIsBtn ? 'SB' : 'BB'}
-          </div>
-          <div style={{ fontSize: 9, color: '#676671', fontFamily: 'JetBrains Mono' }}>Voce</div>
         </div>
         <ActionBubble label={heroLabel} isNew />
       </div>
