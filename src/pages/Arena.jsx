@@ -778,6 +778,67 @@ const BLIND_LEVELS = [
 const HANDS_PER_LEVEL = 5
 const STARTING_STACK = 500
 
+// ─── Rating ELO ─────────────────────────────────────────
+const RATING_KEY = 'poker-arena-rating'
+const STARTING_RATING = 1200
+
+// Niveis de rating
+const RATING_TIERS = [
+  { min: 0, max: 999, label: 'Bronze', color: '#cd7f32' },
+  { min: 1000, max: 1299, label: 'Prata', color: '#b3b3b8' },
+  { min: 1300, max: 1599, label: 'Ouro', color: '#f5a623' },
+  { min: 1600, max: 1899, label: 'Platina', color: '#00b4d8' },
+  { min: 1900, max: 2199, label: 'Diamante', color: '#a855f7' },
+  { min: 2200, max: 9999, label: 'Elite', color: '#e5484d' },
+]
+
+function getRatingTier(rating) {
+  return RATING_TIERS.find(t => rating >= t.min && rating <= t.max) || RATING_TIERS[0]
+}
+
+// Dificuldade da situação (afeta quanto ganha/perde)
+function spotDifficulty(strength, lastBet, pot, street) {
+  // Decisões fáceis: monster bet, air fold
+  if (strength === 'monster' && lastBet === 0) return 0.5
+  if (strength === 'air' && lastBet > 0) return 0.5
+  // Decisões difíceis: draws com pot odds borderline, marginal facing bet
+  if (strength === 'draw') return 1.5
+  if (strength === 'marginal' && lastBet > 0) return 1.8
+  // Bluff spots
+  if ((strength === 'weak' || strength === 'air') && lastBet === 0) return 1.4
+  // Thin value
+  if (strength === 'good' && street === 'river') return 1.3
+  return 1.0
+}
+
+// Calcula mudança de rating por decisão
+function calcRatingChange(isCorrect, strength, lastBet, pot, street, currentRating) {
+  const basePoints = 8
+  const difficulty = spotDifficulty(strength, lastBet, pot, street)
+
+  // K-factor diminui conforme rating sobe (mais difícil subir no topo)
+  const kFactor = currentRating < 1400 ? 1.2 : currentRating < 1800 ? 1.0 : 0.8
+
+  if (isCorrect) {
+    return Math.round(basePoints * difficulty * kFactor)
+  } else {
+    // Perde mais por erros fáceis, menos por erros difíceis
+    return -Math.round(basePoints * (2.0 - difficulty * 0.5) * kFactor)
+  }
+}
+
+function loadRating() {
+  try {
+    const raw = localStorage.getItem(RATING_KEY)
+    if (!raw) return { rating: STARTING_RATING, peak: STARTING_RATING, history: [] }
+    return JSON.parse(raw)
+  } catch { return { rating: STARTING_RATING, peak: STARTING_RATING, history: [] } }
+}
+
+function saveRating(data) {
+  try { localStorage.setItem(RATING_KEY, JSON.stringify(data)) } catch {}
+}
+
 // ─── localStorage helpers ─────────────────────────────────
 const STORAGE_KEY = 'poker-arena-match'
 
@@ -803,6 +864,8 @@ export default function Arena() {
   const [gameState, setGameState] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [betSize, setBetSize] = useState(0)
+  const [ratingData, setRatingData] = useState(() => loadRating())
+  const [ratingDelta, setRatingDelta] = useState(null) // +N ou -N pra animar
 
   // Persist match on every change
   const updateMatch = useCallback((updater) => {
@@ -987,6 +1050,18 @@ export default function Arena() {
       fb = getHeroFeedback(gs.heroCards, gs.board, action, gs.pot, gs.lastBet)
     }
     if (fb) {
+      // Update rating
+      const strength = gs.street === 'preflop' ? 'good' : handStrength(gs.heroCards, gs.board)
+      const delta = calcRatingChange(fb.isCorrect, strength, gs.lastBet, gs.pot, gs.street, ratingData.rating)
+      const newRating = Math.max(0, ratingData.rating + delta)
+      const newPeak = Math.max(ratingData.peak, newRating)
+      const newHistory = [...(ratingData.history || []), newRating].slice(-50)
+      const newRatingData = { rating: newRating, peak: newPeak, history: newHistory }
+      setRatingData(newRatingData)
+      saveRating(newRatingData)
+      setRatingDelta(delta)
+      fb.ratingDelta = delta
+
       setFeedback(fb)
       updateMatch(prev => prev && ({
         ...prev,
@@ -1138,22 +1213,49 @@ export default function Arena() {
     <div className="min-h-screen pb-28 md:pb-8 md:pt-16" style={{ background: '#0f0f0f' }}>
       <div className="max-w-lg mx-auto px-4 pt-6">
 
-        {/* Header */}
+        {/* Header + Rating Badge */}
         <div className="text-center mb-4">
           <h1 style={{ color: 'white', fontSize: 22, fontWeight: 700, fontFamily: 'Poppins' }}>
             Arena HU
           </h1>
-          <p style={{ color: '#676671', fontSize: 13 }}>Heads-Up vs Bot GTO</p>
+          <div className="flex items-center justify-center gap-3 mt-1">
+            <p style={{ color: '#676671', fontSize: 13 }}>Heads-Up vs Bot GTO</p>
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full" style={{
+              background: `${getRatingTier(ratingData.rating).color}15`,
+              border: `1px solid ${getRatingTier(ratingData.rating).color}40`,
+            }}>
+              <span style={{ color: getRatingTier(ratingData.rating).color, fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+                {ratingData.rating}
+              </span>
+              <span style={{ color: getRatingTier(ratingData.rating).color, fontSize: 10, fontWeight: 600 }}>
+                {getRatingTier(ratingData.rating).label}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* No match started */}
         {!match ? (
           <div className="text-center" style={{ paddingTop: 40 }}>
             <div style={{ fontSize: 60, marginBottom: 16 }}>♠♥</div>
+            {/* Rating card */}
+            <div className="inline-flex flex-col items-center gap-1 mb-5 px-6 py-3 rounded-xl" style={{
+              background: '#1a1a1d', border: `1px solid ${getRatingTier(ratingData.rating).color}40`,
+            }}>
+              <span style={{ color: getRatingTier(ratingData.rating).color, fontSize: 28, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+                {ratingData.rating}
+              </span>
+              <span style={{ color: getRatingTier(ratingData.rating).color, fontSize: 14, fontWeight: 600 }}>
+                {getRatingTier(ratingData.rating).label}
+              </span>
+              {ratingData.peak > STARTING_RATING && (
+                <span style={{ color: '#676671', fontSize: 11 }}>Pico: {ratingData.peak}</span>
+              )}
+            </div>
             <p style={{ color: '#b3b3b8', fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
               Jogue Heads-Up contra um bot GTO.<br />
               500 vs 500 fichas. Blinds sobem a cada 5 maos.<br />
-              A partida so acaba quando alguem zerar.
+              Cada decisao afeta seu rating.
             </p>
             <button onClick={startMatch}
               className="px-10 py-4 rounded-xl font-bold text-lg"
@@ -1168,6 +1270,20 @@ export default function Arena() {
             <h2 style={{ color: match.winner === 'hero' ? '#4fce82' : '#e5484d', fontSize: 28, fontWeight: 700 }}>
               {match.winner === 'hero' ? 'Voce venceu!' : 'Bot venceu'}
             </h2>
+            <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full" style={{
+              background: `${getRatingTier(ratingData.rating).color}15`,
+              border: `1px solid ${getRatingTier(ratingData.rating).color}40`,
+            }}>
+              <span style={{ color: getRatingTier(ratingData.rating).color, fontSize: 20, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+                {ratingData.rating}
+              </span>
+              <span style={{ color: getRatingTier(ratingData.rating).color, fontSize: 13, fontWeight: 600 }}>
+                {getRatingTier(ratingData.rating).label}
+              </span>
+              {ratingData.peak > ratingData.rating && (
+                <span style={{ color: '#676671', fontSize: 11 }}>(pico: {ratingData.peak})</span>
+              )}
+            </div>
             <div style={{ color: '#b3b3b8', fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
               {match.stats.hands} maos jogadas · Win rate {winRate}% · Acerto GTO {acc}%
             </div>
@@ -1340,8 +1456,18 @@ export default function Arena() {
                     background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
                     border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
                   }}>
-                    <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
-                      {feedback.isCorrect ? 'Boa jogada!' : `Melhor jogada: ${feedback.recommended.toUpperCase()}`}
+                    <div className="flex items-center justify-between">
+                      <span style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
+                        {feedback.isCorrect ? 'Boa jogada!' : `Melhor jogada: ${feedback.recommended.toUpperCase()}`}
+                      </span>
+                      {feedback.ratingDelta != null && (
+                        <span style={{
+                          color: feedback.ratingDelta >= 0 ? '#4fce82' : '#e5484d',
+                          fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                        }}>
+                          {feedback.ratingDelta >= 0 ? '+' : ''}{feedback.ratingDelta}
+                        </span>
+                      )}
                     </div>
                     <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{feedback.reason}</div>
                     {!feedback.isCorrect && feedback.acceptable?.length > 0 && (
