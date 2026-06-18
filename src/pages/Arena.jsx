@@ -1157,8 +1157,35 @@ export default function Arena() {
     return nextGs
   }, [resolveHand])
 
+  // Show bot response (fold/call) for 1.5s before resolving
+  useEffect(() => {
+    if (!gameState || !gameState.waitingBotResponse || gameState.result) return
+    const resp = gameState.waitingBotResponse
+    const timer = setTimeout(() => {
+      if (resp.type === 'fold') {
+        setGameState(prev => {
+          if (!prev || !prev.waitingBotResponse) return prev
+          resolveHand('hero', prev)
+          return {
+            ...prev,
+            result: { winner: 'hero', heroEval: { label: 'Villain Fold' }, villainEval: { label: 'Fold' }, pot: resp.pot },
+            showVillain: true,
+            waitingBotResponse: null,
+          }
+        })
+      } else if (resp.type === 'river-call') {
+        setGameState(prev => {
+          if (!prev || !prev.waitingBotResponse) return prev
+          const nextGs = advanceStreet(prev)
+          return { ...nextGs, waitingBotResponse: null }
+        })
+      }
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [gameState?.waitingBotResponse, gameState?.result, resolveHand, advanceStreet])
+
   const handleHeroAction = useCallback((action, customSize) => {
-    if (!gameState || gameState.result || gameState.heroActed || gameState.botSBFolded || gameState.waitingBotPreflop) return
+    if (!gameState || gameState.result || gameState.heroActed || gameState.botSBFolded || gameState.waitingBotPreflop || gameState.waitingBotResponse) return
 
     const gs = { ...gameState }
     const heroStack = match?.heroStack || STARTING_STACK
@@ -1245,12 +1272,11 @@ export default function Arena() {
         : botDecision(gs.villainCards, gs.board, gs.street, newPot, gs.lastBet, !gs.heroIsBtn)
 
       if (botAction === 'fold') {
-        resolveHand('hero', gs)
-        setGameState({
-          ...gs,
-          result: { winner: 'hero', heroEval: { label: 'Villain Fold' }, villainEval: { label: 'Fold' }, pot: newPot },
-          showVillain: true,
-        })
+        gs.actions = [...gs.actions, { who: 'villain', action: 'fold', label: 'Fold' }]
+        gs.villainActed = true
+        gs.heroActed = true
+        gs.waitingBotResponse = { type: 'fold', pot: newPot }
+        setGameState({ ...gs })
         return
       }
       if (botAction === 'call') {
@@ -1259,6 +1285,14 @@ export default function Arena() {
         gs.lastBet = 0
         gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${callAmt}` }]
         gs.villainActed = true
+        if (gs.street === 'river') {
+          // River call — show cards before going to showdown
+          gs.showVillain = true
+          gs.heroActed = true
+          gs.waitingBotResponse = { type: 'river-call' }
+          setGameState({ ...gs })
+          return
+        }
         const nextGs = advanceStreet(gs)
         setGameState(nextGs)
         return
@@ -1301,11 +1335,25 @@ export default function Arena() {
         // Both checked
         gs.villainActed = true
         gs.actions = [...gs.actions, { who: 'villain', action: 'check', label: 'Check' }]
+        if (gs.street === 'river') {
+          gs.showVillain = true
+          gs.heroActed = true
+          gs.waitingBotResponse = { type: 'river-call' }
+          setGameState({ ...gs })
+          return
+        }
         const nextGs = advanceStreet(gs)
         setGameState(nextGs)
         return
       }
       // Hero checked after villain already acted (both done)
+      if (gs.street === 'river') {
+        gs.showVillain = true
+        gs.heroActed = true
+        gs.waitingBotResponse = { type: 'river-call' }
+        setGameState({ ...gs })
+        return
+      }
       const nextGs = advanceStreet(gs)
       setGameState(nextGs)
       return
@@ -1314,6 +1362,14 @@ export default function Arena() {
     // Hero called a bet
     if (action === 'call') {
       gs.villainActed = true
+      if (gs.street === 'river') {
+        // River call — show villain cards before showdown
+        gs.showVillain = true
+        gs.heroActed = true
+        gs.waitingBotResponse = { type: 'river-call' }
+        setGameState({ ...gs })
+        return
+      }
       const nextGs = advanceStreet(gs)
       setGameState(nextGs)
       return
@@ -1325,7 +1381,7 @@ export default function Arena() {
 
   // Sizing limits for the slider
   const sizingInfo = useMemo(() => {
-    if (!gameState || gameState.result || gameState.botSBFolded || gameState.waitingBotPreflop || !match) return null
+    if (!gameState || gameState.result || gameState.botSBFolded || gameState.waitingBotPreflop || gameState.waitingBotResponse || !match) return null
     const heroRemaining = match.heroStack - (gameState.heroInvested || 0)
     const bb = gameState.blinds?.bb || 2
     const facingBet = gameState.lastBet > 0
@@ -1785,6 +1841,15 @@ export default function Arena() {
                           </>
                         )}
                       </div>
+                    </div>
+                  ) : gameState.waitingBotResponse || gameState.botSBFolded ? (
+                    <div style={{
+                      width: '100%', padding: '14px', borderRadius: 8,
+                      background: '#1a1a1d', border: '1px solid #2a2a2e',
+                      color: '#676671', fontWeight: 600, fontSize: 14,
+                      textAlign: 'center',
+                    }}>
+                      Aguardando...
                     </div>
                   ) : (
                     <button onClick={() => {
