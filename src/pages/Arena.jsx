@@ -1003,22 +1003,8 @@ export default function Arena() {
 
     if (!heroIsBtn) {
       // Hero is BB, villain is SB — bot acts first pre-flop
-      const botAction = botPreflopDecision(villainCards, true)
-      if (botAction === 'raise') {
-        const raiseSize = Math.round(blinds.bb * 2.5)
-        gs.villainInvested = raiseSize
-        gs.lastBet = raiseSize
-        gs.actions = [{ who: 'villain', action: 'raise', label: `Raise ${raiseSize}` }]
-      } else if (botAction === 'call') {
-        gs.villainInvested = blinds.bb // complete to BB
-        gs.lastBet = 0
-        gs.actions = [{ who: 'villain', action: 'call', label: 'Complete' }]
-      } else {
-        // SB folds — show the fold action, resolve after a delay via useEffect
-        gs.actions = [{ who: 'villain', action: 'fold', label: 'Fold' }]
-        gs.botSBFolded = true
-      }
-      gs.villainActed = true
+      // Show cards first, then bot acts after a short delay (via useEffect)
+      gs.waitingBotPreflop = true
     }
 
     setGameState(gs)
@@ -1066,7 +1052,34 @@ export default function Arena() {
     })
   }, [updateMatch])
 
-  // Auto-resolve when bot SB folds (show fold action for 1.2s then resolve)
+  // Bot acts after a short delay when hero is BB (so hero sees cards first)
+  useEffect(() => {
+    if (!gameState || !gameState.waitingBotPreflop) return
+    const timer = setTimeout(() => {
+      setGameState(prev => {
+        if (!prev || !prev.waitingBotPreflop) return prev
+        const gs = { ...prev, waitingBotPreflop: false, villainActed: true }
+        const botAction = botPreflopDecision(gs.villainCards, true)
+        if (botAction === 'raise') {
+          const raiseSize = Math.round(gs.blinds.bb * 2.5)
+          gs.villainInvested = raiseSize
+          gs.lastBet = raiseSize
+          gs.actions = [{ who: 'villain', action: 'raise', label: `Raise ${raiseSize}` }]
+        } else if (botAction === 'call') {
+          gs.villainInvested = gs.blinds.bb
+          gs.lastBet = 0
+          gs.actions = [{ who: 'villain', action: 'call', label: 'Complete' }]
+        } else {
+          gs.actions = [{ who: 'villain', action: 'fold', label: 'Fold' }]
+          gs.botSBFolded = true
+        }
+        return gs
+      })
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [gameState?.waitingBotPreflop])
+
+  // Auto-resolve when bot SB folds (show fold for 1s then resolve)
   useEffect(() => {
     if (!gameState || !gameState.botSBFolded || gameState.result) return
     const timer = setTimeout(() => {
@@ -1081,7 +1094,7 @@ export default function Arena() {
           botSBFolded: false,
         }
       })
-    }, 1200)
+    }, 1000)
     return () => clearTimeout(timer)
   }, [gameState?.botSBFolded, gameState?.result, resolveHand])
 
@@ -1145,7 +1158,7 @@ export default function Arena() {
   }, [resolveHand])
 
   const handleHeroAction = useCallback((action, customSize) => {
-    if (!gameState || gameState.result || gameState.heroActed || gameState.botSBFolded) return
+    if (!gameState || gameState.result || gameState.heroActed || gameState.botSBFolded || gameState.waitingBotPreflop) return
 
     const gs = { ...gameState }
     const heroStack = match?.heroStack || STARTING_STACK
@@ -1312,7 +1325,7 @@ export default function Arena() {
 
   // Sizing limits for the slider
   const sizingInfo = useMemo(() => {
-    if (!gameState || gameState.result || gameState.botSBFolded || !match) return null
+    if (!gameState || gameState.result || gameState.botSBFolded || gameState.waitingBotPreflop || !match) return null
     const heroRemaining = match.heroStack - (gameState.heroInvested || 0)
     const bb = gameState.blinds?.bb || 2
     const facingBet = gameState.lastBet > 0
