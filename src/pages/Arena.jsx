@@ -1014,10 +1014,9 @@ export default function Arena() {
         gs.lastBet = 0
         gs.actions = [{ who: 'villain', action: 'call', label: 'Complete' }]
       } else {
-        // SB folds — hero wins the blinds
-        resolveHand('hero', gs)
-        gs.result = { winner: 'hero', heroEval: { label: 'SB foldou' }, villainEval: { label: 'Fold' }, pot: heroPosts + villainPosts }
-        gs.showVillain = true
+        // SB folds — show the fold action, resolve after a delay via useEffect
+        gs.actions = [{ who: 'villain', action: 'fold', label: 'Fold' }]
+        gs.botSBFolded = true
       }
       gs.villainActed = true
     }
@@ -1066,6 +1065,25 @@ export default function Arena() {
       }
     })
   }, [updateMatch])
+
+  // Auto-resolve when bot SB folds (show fold action for 1.2s then resolve)
+  useEffect(() => {
+    if (!gameState || !gameState.botSBFolded || gameState.result) return
+    const timer = setTimeout(() => {
+      setGameState(prev => {
+        if (!prev || !prev.botSBFolded) return prev
+        const pot = (prev.heroInvested || 0) + (prev.villainInvested || 0)
+        resolveHand('hero', prev)
+        return {
+          ...prev,
+          result: { winner: 'hero', heroEval: { label: 'SB foldou' }, villainEval: { label: 'Fold' }, pot },
+          showVillain: true,
+          botSBFolded: false,
+        }
+      })
+    }, 1200)
+    return () => clearTimeout(timer)
+  }, [gameState?.botSBFolded, gameState?.result, resolveHand])
 
   const advanceStreet = useCallback((gs) => {
     const nextStreets = { preflop: 'flop', flop: 'turn', turn: 'river', river: 'showdown' }
@@ -1127,7 +1145,7 @@ export default function Arena() {
   }, [resolveHand])
 
   const handleHeroAction = useCallback((action, customSize) => {
-    if (!gameState || gameState.result || gameState.heroActed) return
+    if (!gameState || gameState.result || gameState.heroActed || gameState.botSBFolded) return
 
     const gs = { ...gameState }
     const heroStack = match?.heroStack || STARTING_STACK
@@ -1294,7 +1312,7 @@ export default function Arena() {
 
   // Sizing limits for the slider
   const sizingInfo = useMemo(() => {
-    if (!gameState || gameState.result || !match) return null
+    if (!gameState || gameState.result || gameState.botSBFolded || !match) return null
     const heroRemaining = match.heroStack - (gameState.heroInvested || 0)
     const bb = gameState.blinds?.bb || 2
     const facingBet = gameState.lastBet > 0
