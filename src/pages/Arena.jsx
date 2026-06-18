@@ -406,76 +406,222 @@ function botBetSizing(botHole, board, street, pot, isIP) {
   }
 }
 
+// ─── Descricao da mao do hero em linguagem simples ──────
+function describeHeroHand(hole, board) {
+  const e = evalHand(hole, board)
+  const holeR = hole.map(c => c.slice(0, -1))
+  const boardR = board.map(c => c.slice(0, -1))
+  const boardRanks = board.map(c => RANK_VAL[c.slice(0, -1)])
+  const holeRanks = hole.map(c => RANK_VAL[c.slice(0, -1)])
+  const holeSuits = hole.map(c => c.slice(-1))
+  const all = [...hole, ...board]
+  const allSuits = all.map(c => c.slice(-1))
+
+  // Draws
+  const sc = {}
+  allSuits.forEach(s => { sc[s] = (sc[s] || 0) + 1 })
+  const flushDraw = holeSuits.some(hs => (sc[hs] || 0) === 4)
+  const allRanks = all.map(c => RANK_VAL[c.slice(0, -1)])
+  const unique = [...new Set(allRanks)].sort((a, b) => a - b)
+  if (unique.includes(14)) unique.unshift(1)
+  let straightDraw = false
+  for (let i = 0; i < unique.length - 3; i++) {
+    if (unique[i + 3] - unique[i] <= 4 && holeRanks.some(r => unique.slice(i, i + 4).includes(r))) {
+      straightDraw = true; break
+    }
+  }
+
+  const parts = [e.label]
+
+  // Contexto extra
+  if (e.score >= 7) return parts.join('')
+  if (e.score >= 5) return parts.join('')
+
+  // Set
+  if (holeR[0] === holeR[1] && boardR.includes(holeR[0])) {
+    return `Trinca de ${holeR[0]}`
+  }
+
+  // Two pair using both hole cards
+  const pairsWithBoard = [...new Set(holeR)].filter(r => boardR.includes(r))
+  if (pairsWithBoard.length === 2) return `Dois pares (${pairsWithBoard.join(' e ')})`
+
+  // Overpair
+  if (holeR[0] === holeR[1] && boardRanks.every(v => v < RANK_VAL[holeR[0]])) {
+    return `Overpair (${holeR[0]}${holeR[0]})`
+  }
+
+  // Top pair
+  const topBoardVal = Math.max(...boardRanks)
+  const topBoardRank = boardR[boardRanks.indexOf(topBoardVal)]
+  if (holeRanks.some(v => v === topBoardVal)) {
+    const kicker = holeRanks.find(v => v !== topBoardVal) || holeRanks[0]
+    const kickerName = Object.entries(RANK_VAL).find(([, v]) => v === kicker)?.[0]
+    return `Top pair (${topBoardRank}) com kicker ${kickerName}`
+  }
+
+  // Middle/bottom pair
+  if (holeR.some(r => boardR.includes(r))) {
+    const pairR = holeR.find(r => boardR.includes(r))
+    const pairVal = RANK_VAL[pairR]
+    if (pairVal < topBoardVal) return `Par medio/baixo (${pairR})`
+  }
+
+  // Pocket pair below board
+  if (holeR[0] === holeR[1]) return `Par de bolso (${holeR[0]}${holeR[1]}) abaixo do board`
+
+  // Draws
+  if (flushDraw && straightDraw) return 'Combo draw (flush + sequencia)'
+  if (flushDraw) return 'Draw de flush (faltam 1 carta)'
+  if (straightDraw) return 'Draw de sequencia'
+
+  // High card
+  const highCard = Math.max(...holeRanks)
+  const highName = Object.entries(RANK_VAL).find(([, v]) => v === highCard)?.[0]
+  return `${highName} high (sem par)`
+}
+
 // ─── Feedback GTO sobre a acao do hero ────────────────────
 function getHeroFeedback(heroHole, board, heroAction, pot, lastBet) {
-  if (board.length === 0) return null // pre-flop feedback will come from ranges later
+  if (board.length === 0) return null
 
   const strength = handStrength(heroHole, board)
-  const e = evalHand(heroHole, board)
+  const texture = boardTexture(board)
+  const streetName = board.length === 3 ? 'flop' : board.length === 4 ? 'turn' : 'river'
+  const handDesc = describeHeroHand(heroHole, board)
+  const textureDesc = texture.wet ? 'board umido' : 'board seco'
   let recommended = ''
   let reason = ''
+  const acceptable = [] // acoes aceitaveis alem da recomendada
 
   if (lastBet > 0) {
-    // Facing bet
+    const potOdds = lastBet / (pot + lastBet)
+    const oddsPercent = Math.round(potOdds * 100)
+    const betRelPot = Math.round((lastBet / Math.max(pot - lastBet, 1)) * 100)
+
     switch (strength) {
       case 'monster':
         recommended = 'raise'
-        reason = `${e.label} — mao monstruosa. Raise para extrair valor maximo.`
+        acceptable.push('call')
+        reason = `${handDesc} — mao monstruosa no ${streetName}. Raise para extrair o maximo de valor. Call tambem funciona pra disfarcar a forca da sua mao (slowplay).`
         break
       case 'strong':
         recommended = 'call'
-        reason = `${e.label} — mao forte. Call para manter o range do vilao amplo. Raise tambem e aceitavel.`
+        acceptable.push('raise')
+        if (texture.wet) {
+          reason = `${handDesc} no ${textureDesc}. Num board com muitos draws, call protege sua mao sem inflar o pote demais. Raise tambem e ok pra negar equity dos draws do vilao.`
+        } else {
+          reason = `${handDesc} no ${textureDesc}. Call pra manter o vilao na mao com maos piores. Raise pode assustar e fazer ele foldar.`
+        }
         break
       case 'good':
         recommended = 'call'
-        reason = `${e.label} — boa mao. Call com pot odds favoraveis.`
+        reason = `${handDesc} — boa mao. Voce precisa de ${oddsPercent}% de equity pra call ser lucrativo (bet ${betRelPot}% do pote). Sua mao tem equity suficiente.`
         break
       case 'draw':
-        recommended = pot > 0 && lastBet / (pot + lastBet) < 0.33 ? 'call' : 'fold'
-        reason = `Draw — ${lastBet / (pot + lastBet) < 0.33 ? 'pot odds justificam call' : 'pot odds desfavoraveis, fold e mais seguro'}.`
+        if (potOdds < 0.30) {
+          recommended = 'call'
+          acceptable.push('raise')
+          reason = `${handDesc} — pot odds de ${oddsPercent}% justificam o call. ${streetName === 'flop' ? 'Ainda tem turn e river pra completar.' : streetName === 'turn' ? 'Uma carta pra completar no river.' : 'Ultimo street — se nao completou, nao tem mais chances.'}`
+          if (streetName === 'river') {
+            recommended = 'fold'
+            acceptable.length = 0
+            reason = `${handDesc} — draw nao completou no river. Sem mais cartas pra vir, fold e a jogada correta.`
+          }
+        } else {
+          recommended = 'fold'
+          acceptable.push('raise')
+          reason = `${handDesc} — pot odds de ${oddsPercent}% sao ruins pro seu draw. Fold e mais seguro. Raise como semi-bluff pode funcionar se o vilao foldar bastante.`
+        }
         break
       case 'marginal':
+        if (betRelPot <= 40) {
+          recommended = 'call'
+          reason = `${handDesc} — bet pequena (${betRelPot}% do pote). Com esse preco, call e aceitavel pra ver mais uma carta.`
+        } else {
+          recommended = 'fold'
+          reason = `${handDesc} — mao marginal contra bet de ${betRelPot}% do pote. Sem equity suficiente pra continuar.`
+        }
+        break
+      case 'weak':
         recommended = 'fold'
-        reason = `Mao marginal. Sem equity suficiente para continuar.`
+        reason = `${handDesc} — apenas carta alta. Sem mao feita nem draw, fold e a jogada correta.`
         break
       default:
         recommended = 'fold'
-        reason = `Sem mao feita nem draw. Fold e a jogada correta.`
+        reason = `${handDesc} — nada no board. Fold sem pensar duas vezes.`
     }
   } else {
     // Can bet or check
     switch (strength) {
       case 'monster':
-        recommended = 'bet'
-        reason = `${e.label} — mao monstruosa. Bet para construir o pote.`
+        if (texture.wet) {
+          recommended = 'bet'
+          reason = `${handDesc} no ${textureDesc}. Bet por valor — existem muitos draws que podem pagar. Nao de carta gratis num board perigoso.`
+        } else {
+          recommended = 'bet'
+          acceptable.push('check')
+          reason = `${handDesc} no ${textureDesc}. Bet por valor e a jogada padrao. Check (slowplay) tambem funciona num board seco — pouca chance do vilao melhorar de graca.`
+        }
         break
       case 'strong':
         recommended = 'bet'
-        reason = `${e.label} — mao forte. Bet por valor.`
+        acceptable.push('check')
+        reason = `${handDesc} — mao forte. Bet por valor pra cobrar de maos piores. ${texture.wet ? 'Board umido = nao de carta gratis.' : 'Board seco = vilao tem poucas saidas, sizing menor e ok.'}`
         break
       case 'good':
         recommended = 'bet'
-        reason = `${e.label} — boa mao. Bet por valor/protecao.`
+        acceptable.push('check')
+        if (streetName === 'river') {
+          reason = `${handDesc} — boa mao no river. Bet fino por valor, pra cobrar de pares piores ou draws que nao completaram. Check tambem e safe.`
+        } else {
+          reason = `${handDesc} — bet por valor e protecao. ${texture.wet ? 'Board umido — proteja sua mao negando equity.' : 'Board seco — sizing menor funciona, tipo 33-50% do pote.'}`
+        }
         break
       case 'draw':
-        recommended = Math.random() < 0.5 ? 'bet' : 'check'
-        reason = `Draw — semi-bluff e valido, check tambem e aceitavel.`
+        if (streetName === 'flop' || streetName === 'turn') {
+          recommended = 'bet'
+          acceptable.push('check')
+          reason = `${handDesc} — semi-bluff e uma boa opcao. Voce pode ganhar agora se o vilao foldar, e se ele pagar, ainda tem outs pra melhorar. Check pra ver carta gratis tambem funciona.`
+        } else {
+          recommended = 'check'
+          reason = `${handDesc} — draw nao completou no river. Check e a jogada mais segura. Bluff so se voce tiver uma boa leitura do vilao.`
+        }
         break
       case 'marginal':
         recommended = 'check'
-        reason = `Mao marginal. Check para controlar o pote.`
+        if (streetName === 'river') {
+          acceptable.push('bet')
+          reason = `${handDesc} — mao marginal no river. Check pra controlar o pote. Bet fino por valor pode funcionar contra ranges muito fracos.`
+        } else {
+          reason = `${handDesc} — mao marginal. Check pra controlar o pote e ver a proxima carta de graca.`
+        }
+        break
+      case 'weak':
+        if (!texture.wet && streetName === 'flop') {
+          recommended = 'bet'
+          acceptable.push('check')
+          reason = `${handDesc} no ${textureDesc}. Board seco no flop — bet pequeno (33%) como bluff e padrao GTO. Voce nao tem nada, mas o vilao provavelmente tambem nao.`
+        } else {
+          recommended = 'check'
+          reason = `${handDesc} — sem nada feito. Check e de graca, nao invista mais fichas sem mao.`
+        }
         break
       default:
-        recommended = 'check'
-        reason = `Sem mao feita. Check e a melhor opcao.`
+        if (!texture.wet && streetName === 'flop') {
+          recommended = 'bet'
+          acceptable.push('check')
+          reason = `${handDesc}. Board seco no flop — cbet bluff de 33% e lucrativo a longo prazo. Vilao vai foldar muitas maos fracas.`
+        } else {
+          recommended = 'check'
+          reason = `${handDesc} no ${textureDesc}. Sem mao, sem draw. Desista silenciosamente com check.`
+        }
     }
   }
 
-  const isCorrect = heroAction === recommended ||
-    (recommended === 'call' && heroAction === 'raise') && (strength === 'strong' || strength === 'monster') ||
-    (recommended === 'bet' && heroAction === 'check') && (strength === 'draw' || strength === 'marginal')
+  const isCorrect = heroAction === recommended || acceptable.includes(heroAction)
 
-  return { recommended, reason, isCorrect }
+  return { recommended, reason, isCorrect, acceptable }
 }
 
 // ─── Componentes visuais ──────────────────────────────────
@@ -1195,9 +1341,14 @@ export default function Arena() {
                     border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
                   }}>
                     <div style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
-                      {feedback.isCorrect ? 'Boa jogada!' : `GTO recomenda: ${feedback.recommended}`}
+                      {feedback.isCorrect ? 'Boa jogada!' : `Melhor jogada: ${feedback.recommended.toUpperCase()}`}
                     </div>
-                    <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 3 }}>{feedback.reason}</div>
+                    <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{feedback.reason}</div>
+                    {!feedback.isCorrect && feedback.acceptable?.length > 0 && (
+                      <div style={{ color: '#676671', fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
+                        Tambem aceitavel: {feedback.acceptable.map(a => a.toUpperCase()).join(', ')}
+                      </div>
+                    )}
                   </div>
                 )}
 
