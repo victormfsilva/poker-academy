@@ -1121,11 +1121,30 @@ export default function Arena() {
         board,
         result: { winner, heroEval, villainEval, pot: (gs.heroInvested || 0) + (gs.villainInvested || 0) },
         showVillain: true,
+        allInRunout: false,
       }
     }
 
     const boardLen = { flop: 3, turn: 4, river: 5 }[next] || 0
     const board = gs.fullBoard.slice(0, boardLen)
+
+    // Check if both players are all-in
+    const hRemaining = (gs.heroStack || 500) - (gs.heroInvested || 0)
+    const vRemaining = (gs.villainStartStack || 500) - (gs.villainInvested || 0)
+    const bothAllIn = hRemaining <= 0 || vRemaining <= 0
+
+    if (bothAllIn || gs.allInRunout) {
+      return {
+        ...gs,
+        street: next,
+        board,
+        lastBet: 0,
+        heroActed: true,
+        villainActed: true,
+        showVillain: true,
+        allInRunout: true,
+      }
+    }
 
     // Posicao pos-flop: BB (OOP) age primeiro, SB/BTN (IP) age por ultimo
     // heroIsBtn = hero eh SB/BTN = IP pos-flop -> bot (BB) age primeiro
@@ -1142,7 +1161,6 @@ export default function Arena() {
     // Bot age primeiro se eh OOP (BB)
     if (heroIsIP) {
       const currentPot = (gs.heroInvested || 0) + (gs.villainInvested || 0)
-      const vRemaining = (gs.villainStartStack || 500) - (gs.villainInvested || 0)
       const botAction = vRemaining <= 0 ? 'check' : botDecision(gs.villainCards, board, next, currentPot, 0, false)
       if (botAction === 'bet') {
         const sizePct = botBetSizing(gs.villainCards, board, next, currentPot, false)
@@ -1161,6 +1179,18 @@ export default function Arena() {
 
     return nextGs
   }, [resolveHand])
+
+  // All-in runout: auto-advance streets with delay
+  useEffect(() => {
+    if (!gameState || !gameState.allInRunout || gameState.result) return
+    const timer = setTimeout(() => {
+      setGameState(prev => {
+        if (!prev || !prev.allInRunout || prev.result) return prev
+        return advanceStreet(prev)
+      })
+    }, 1200)
+    return () => clearTimeout(timer)
+  }, [gameState?.allInRunout, gameState?.street, gameState?.result, advanceStreet])
 
   // Show bot response (fold/call) for 1.5s before resolving
   useEffect(() => {
@@ -1190,7 +1220,7 @@ export default function Arena() {
   }, [gameState?.waitingBotResponse, gameState?.result, resolveHand, advanceStreet])
 
   const handleHeroAction = useCallback((action, customSize) => {
-    if (!gameState || gameState.result || gameState.heroActed || gameState.botSBFolded || gameState.waitingBotPreflop || gameState.waitingBotResponse) return
+    if (!gameState || gameState.result || gameState.heroActed || gameState.botSBFolded || gameState.waitingBotPreflop || gameState.waitingBotResponse || gameState.allInRunout) return
 
     const gs = { ...gameState }
     const heroStack = match?.heroStack || STARTING_STACK
@@ -1406,7 +1436,7 @@ export default function Arena() {
 
   // Sizing limits for the slider
   const sizingInfo = useMemo(() => {
-    if (!gameState || gameState.result || gameState.botSBFolded || gameState.waitingBotPreflop || gameState.waitingBotResponse || !match) return null
+    if (!gameState || gameState.result || gameState.botSBFolded || gameState.waitingBotPreflop || gameState.waitingBotResponse || gameState.allInRunout || !match) return null
     const heroRemaining = match.heroStack - (gameState.heroInvested || 0)
     const bb = gameState.blinds?.bb || 2
     const facingBet = gameState.lastBet > 0
@@ -1867,14 +1897,16 @@ export default function Arena() {
                         )}
                       </div>
                     </div>
-                  ) : gameState.waitingBotResponse || gameState.botSBFolded ? (
+                  ) : gameState.waitingBotResponse || gameState.botSBFolded || gameState.allInRunout ? (
                     <div style={{
                       width: '100%', padding: '14px', borderRadius: 8,
-                      background: '#1a1a1d', border: '1px solid #2a2a2e',
-                      color: '#676671', fontWeight: 600, fontSize: 14,
+                      background: gameState.allInRunout ? '#ff8f0022' : '#1a1a1d',
+                      border: `1px solid ${gameState.allInRunout ? '#ff8f00' : '#2a2a2e'}`,
+                      color: gameState.allInRunout ? '#ff8f00' : '#676671',
+                      fontWeight: 600, fontSize: 14,
                       textAlign: 'center',
                     }}>
-                      Aguardando...
+                      {gameState.allInRunout ? 'All-In — revelando cartas...' : 'Aguardando...'}
                     </div>
                   ) : (
                     <button onClick={() => {
