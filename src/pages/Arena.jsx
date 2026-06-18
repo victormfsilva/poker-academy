@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import Card, { parseCard, handToCards } from '../components/Card'
 import { BLIND_WARS, BB_VS_RFI } from '../data/ranges'
 
@@ -626,6 +626,40 @@ function getHeroFeedback(heroHole, board, heroAction, pot, lastBet) {
 
 // ─── Componentes visuais ──────────────────────────────────
 
+// Cores por tipo de acao
+const ACTION_COLORS = {
+  fold: '#e5484d', call: '#0a84d7', check: '#676671',
+  raise: '#4fce82', bet: '#f5a623', 'all-in': '#ff8f00',
+}
+
+function getActionColor(label) {
+  const l = (label || '').toLowerCase()
+  if (l.includes('all-in')) return ACTION_COLORS['all-in']
+  if (l.includes('raise')) return ACTION_COLORS.raise
+  if (l.includes('bet')) return ACTION_COLORS.bet
+  if (l.includes('call') || l.includes('complete')) return ACTION_COLORS.call
+  if (l.includes('fold')) return ACTION_COLORS.fold
+  return ACTION_COLORS.check
+}
+
+// Bubble de acao animada
+function ActionBubble({ label, isNew }) {
+  if (!label) return null
+  const color = getActionColor(label)
+  return (
+    <div style={{
+      padding: '3px 10px', borderRadius: 12,
+      background: `${color}20`, border: `1px solid ${color}60`,
+      fontSize: 11, fontWeight: 700, color,
+      fontFamily: 'JetBrains Mono',
+      animation: isNew ? 'bubblePop 0.3s ease-out' : 'none',
+      whiteSpace: 'nowrap',
+    }}>
+      {label}
+    </div>
+  )
+}
+
 function CardBack() {
   return (
     <div style={{
@@ -639,12 +673,55 @@ function CardBack() {
   )
 }
 
-function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, villainLabel, showVillain }) {
+// Carta do board com animacao de entrada
+function BoardCard({ card, index, totalVisible }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      animation: 'cardDeal 0.35s ease-out both',
+      animationDelay: `${index * 0.1}s`,
+    }}>
+      <Card card={parseCard(card)} size="sm" />
+      {index === 2 && totalVisible > 3 && <div style={{ width: 4 }} />}
+    </div>
+  )
+}
+
+// Mini grafico de rating (sparkline)
+function RatingChart({ history, color }) {
+  if (!history || history.length < 2) return null
+  const h = history.slice(-30)
+  const min = Math.min(...h) - 10
+  const max = Math.max(...h) + 10
+  const range = max - min || 1
+  const w = 120, ht = 32
+  const points = h.map((v, i) => `${(i / (h.length - 1)) * w},${ht - ((v - min) / range) * ht}`).join(' ')
+  return (
+    <svg width={w} height={ht} style={{ display: 'block' }}>
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, villainLabel, showVillain, boardKey }) {
   return (
     <div style={{
       position: 'relative', width: '100%', paddingBottom: '55%',
       userSelect: 'none', overflow: 'hidden',
     }}>
+      {/* CSS animations */}
+      <style>{`
+        @keyframes bubblePop {
+          0% { transform: scale(0.6); opacity: 0; }
+          60% { transform: scale(1.1); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes cardDeal {
+          0% { transform: translateY(-8px) scale(0.8); opacity: 0; }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+      `}</style>
+
       {/* Mesa oval */}
       <div style={{
         position: 'absolute',
@@ -660,9 +737,7 @@ function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, vi
         transform: 'translateX(-50%)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, zIndex: 5,
       }}>
-        {villainLabel && (
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#676671' }}>{villainLabel}</div>
-        )}
+        <ActionBubble label={villainLabel} isNew />
         <div style={{
           padding: '4px 12px', borderRadius: 6,
           background: '#2a2a2e', border: '1px solid #e5484d',
@@ -688,12 +763,9 @@ function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, vi
         textAlign: 'center', pointerEvents: 'none',
       }}>
         {board.length > 0 && (
-          <div style={{ display: 'flex', gap: 3, justifyContent: 'center', marginBottom: 6 }}>
+          <div key={boardKey} style={{ display: 'flex', gap: 3, justifyContent: 'center', marginBottom: 6 }}>
             {board.map((c, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                <Card card={parseCard(c)} size="sm" />
-                {i === 2 && board.length > 3 && <div style={{ width: 4 }} />}
-              </div>
+              <BoardCard key={`${boardKey}-${i}`} card={c} index={i} totalVisible={board.length} />
             ))}
           </div>
         )}
@@ -745,9 +817,7 @@ function HUTable({ heroCards, villainCards, board, pot, heroIsBtn, heroLabel, vi
           </div>
           <div style={{ fontSize: 9, color: '#676671', fontFamily: 'JetBrains Mono' }}>Voce</div>
         </div>
-        {heroLabel && (
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#4fce82' }}>{heroLabel}</div>
-        )}
+        <ActionBubble label={heroLabel} isNew />
       </div>
     </div>
   )
@@ -1084,6 +1154,10 @@ export default function Arena() {
       fb.ratingDelta = delta
 
       setFeedback(fb)
+      // Vibrar no celular
+      try {
+        if (navigator.vibrate) navigator.vibrate(fb.isCorrect ? [50] : [50, 30, 50])
+      } catch {}
       updateMatch(prev => prev && ({
         ...prev,
         stats: {
@@ -1290,6 +1364,11 @@ export default function Arena() {
               {ratingData.peak > STARTING_RATING && (
                 <span style={{ color: '#676671', fontSize: 11 }}>Pico: {ratingData.peak}</span>
               )}
+              {ratingData.history?.length >= 2 && (
+                <div style={{ marginTop: 4 }}>
+                  <RatingChart history={ratingData.history} color={getRatingTier(ratingData.rating).color} />
+                </div>
+              )}
             </div>
             <p style={{ color: '#b3b3b8', fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
               Jogue Heads-Up contra um bot GTO.<br />
@@ -1323,6 +1402,11 @@ export default function Arena() {
                 <span style={{ color: '#676671', fontSize: 11 }}>(pico: {ratingData.peak})</span>
               )}
             </div>
+            {ratingData.history?.length >= 2 && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6 }}>
+                <RatingChart history={ratingData.history} color={getRatingTier(ratingData.rating).color} />
+              </div>
+            )}
             <div style={{ color: '#b3b3b8', fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
               {match.stats.hands} maos jogadas · Win rate {winRate}% · Acerto GTO {acc}%
             </div>
@@ -1410,7 +1494,7 @@ export default function Arena() {
                   <div className="rounded-xl p-3 mt-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
                     <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>HISTORICO</div>
                     <div className="space-y-2">
-                      {match.handHistory.slice(0, 5).map((h, i) => (
+                      {match.handHistory.slice(0, 8).map((h, i) => (
                         <div key={i} className="flex items-center gap-2" style={{ fontSize: 12 }}>
                           <span style={{
                             color: h.winner === 'hero' ? '#4fce82' : h.winner === 'tie' ? '#f5a623' : '#e5484d',
@@ -1421,11 +1505,16 @@ export default function Arena() {
                           <div className="flex gap-1">
                             {h.heroCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
                           </div>
-                          <span style={{ color: '#676671' }}>vs</span>
+                          <span style={{ color: '#676671', fontSize: 10 }}>vs</span>
                           <div className="flex gap-1">
                             {h.villainCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
                           </div>
-                          <span style={{ color: '#676671', flex: 1, textAlign: 'right' }}>
+                          <span style={{ color: '#676671', fontSize: 10, flex: 1, textAlign: 'right' }}>
+                            {h.heroHand && h.heroHand !== '-' ? h.heroHand : ''}
+                            {h.heroHand && h.heroHand !== '-' && h.villainHand && h.villainHand !== '-' ? ' vs ' : ''}
+                            {h.villainHand && h.villainHand !== '-' ? h.villainHand : ''}
+                          </span>
+                          <span style={{ color: '#b3b3b8', fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono', minWidth: 28, textAlign: 'right' }}>
                             {h.pot.toFixed(0)}
                           </span>
                         </div>
@@ -1469,6 +1558,7 @@ export default function Arena() {
                     showVillain={gameState.showVillain}
                     heroLabel={gameState.actions.filter(a => a.who === 'hero').slice(-1)[0]?.label}
                     villainLabel={gameState.actions.filter(a => a.who === 'villain').slice(-1)[0]?.label}
+                    boardKey={`${gameState.street}-${gameState.board.length}`}
                   />
                 </div>
 
