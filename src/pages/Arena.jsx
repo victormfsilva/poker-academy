@@ -917,10 +917,9 @@ export default function Arena() {
       fullBoard,
       board: [],
       street: 'preflop',
-      pot: heroPosts + villainPosts,
       heroIsBtn,
-      heroChipsInPot: heroPosts,
-      villainChipsInPot: villainPosts,
+      heroInvested: heroPosts,
+      villainInvested: villainPosts,
       lastBet: blinds.bb,
       heroActed: false,
       villainActed: false,
@@ -931,31 +930,21 @@ export default function Arena() {
     }
 
     if (!heroIsBtn) {
-      // Hero is BB, villain is SB — bot acts first
+      // Hero is BB, villain is SB — bot acts first pre-flop
       const botAction = botPreflopDecision(villainCards, true)
       if (botAction === 'raise') {
-        const raiseSize = blinds.bb * 2.5
-        gs.pot = heroPosts + raiseSize
-        gs.villainChipsInPot = raiseSize
+        const raiseSize = Math.round(blinds.bb * 2.5)
+        gs.villainInvested = raiseSize
         gs.lastBet = raiseSize
         gs.actions = [{ who: 'villain', action: 'raise', label: `Raise ${raiseSize}` }]
       } else if (botAction === 'call') {
-        gs.pot = blinds.bb * 2
-        gs.villainChipsInPot = blinds.bb
+        gs.villainInvested = blinds.bb // complete to BB
         gs.lastBet = 0
         gs.actions = [{ who: 'villain', action: 'call', label: 'Complete' }]
       } else {
-        // SB folds
-        const winAmount = villainPosts
-        updateMatch(prev => ({
-          ...prev,
-          heroStack: prev.heroStack + winAmount,
-          villainStack: prev.villainStack - winAmount,
-          handNum: prev.handNum + 1,
-          stats: { ...prev.stats, hands: prev.stats.hands + 1, won: prev.stats.won + 1 },
-          handHistory: [{ heroCards, villainCards, board: [], winner: 'hero', pot: gs.pot, heroHand: 'BB', villainHand: 'SB Fold' }, ...prev.handHistory].slice(0, 20),
-        }))
-        gs.result = { winner: 'hero', heroEval: { label: 'SB foldou' }, villainEval: { label: 'Fold' }, pot: gs.pot }
+        // SB folds — hero wins the blinds
+        resolveHand('hero', gs)
+        gs.result = { winner: 'hero', heroEval: { label: 'SB foldou' }, villainEval: { label: 'Fold' }, pot: heroPosts + villainPosts }
         gs.showVillain = true
       }
       gs.villainActed = true
@@ -966,23 +955,28 @@ export default function Arena() {
   }, [match, getBlinds, updateMatch])
 
   // Resolve hand result — update stacks
-  const resolveHand = useCallback((winner, pot, heroCards, villainCards, board, heroLabel, villainLabel) => {
+  const resolveHand = useCallback((winner, gs) => {
+    const heroInv = gs.heroInvested || 0
+    const villainInv = gs.villainInvested || 0
+    const pot = heroInv + villainInv
+
     updateMatch(prev => {
       if (!prev) return prev
-      const heroBet = prev.heroStack >= 0 ? 0 : 0 // chips already subtracted from pot tracking
-      // Winner gets the full pot. Loser already posted their chips.
-      // We track net: hero posted heroChipsInPot, villain posted villainChipsInPot
-      // pot = heroChipsInPot + villainChipsInPot
-      // if hero wins: hero net = +villainChipsInPot, villain net = -villainChipsInPot
-      // For simplicity: heroStack and villainStack are adjusted by the pot result
-      let heroNet = 0, villainNet = 0
-      if (winner === 'hero') { heroNet = pot / 2; villainNet = -pot / 2 }
-      else if (winner === 'villain') { heroNet = -pot / 2; villainNet = pot / 2 }
-      // tie: no change
+      let newHeroStack, newVillainStack
+      if (winner === 'hero') {
+        newHeroStack = prev.heroStack - heroInv + pot
+        newVillainStack = prev.villainStack - villainInv
+      } else if (winner === 'villain') {
+        newHeroStack = prev.heroStack - heroInv
+        newVillainStack = prev.villainStack - villainInv + pot
+      } else {
+        newHeroStack = prev.heroStack
+        newVillainStack = prev.villainStack
+      }
 
-      const newHeroStack = prev.heroStack + heroNet
-      const newVillainStack = prev.villainStack + villainNet
       const matchOver = newHeroStack <= 0 || newVillainStack <= 0
+      const heroEval = gs.board.length >= 3 ? evalHand(gs.heroCards, gs.board) : { label: '-' }
+      const villainEval = gs.board.length >= 3 ? evalHand(gs.villainCards, gs.board) : { label: '-' }
 
       return {
         ...prev,
@@ -994,7 +988,7 @@ export default function Arena() {
           hands: prev.stats.hands + 1,
           won: prev.stats.won + (winner === 'hero' ? 1 : winner === 'tie' ? 0.5 : 0),
         },
-        handHistory: [{ heroCards, villainCards, board: board || [], winner, pot, heroHand: heroLabel, villainHand: villainLabel }, ...prev.handHistory].slice(0, 20),
+        handHistory: [{ heroCards: gs.heroCards, villainCards: gs.villainCards, board: gs.board || [], winner, pot, heroHand: heroEval.label, villainHand: villainEval.label }, ...prev.handHistory].slice(0, 20),
         matchOver,
         winner: matchOver ? (newHeroStack <= 0 ? 'villain' : 'hero') : null,
       }
@@ -1012,13 +1006,13 @@ export default function Arena() {
       const villainEval = evalHand(gs.villainCards, board)
       const winner = cmp > 0 ? 'hero' : cmp < 0 ? 'villain' : 'tie'
 
-      resolveHand(winner, gs.pot, gs.heroCards, gs.villainCards, board, heroEval.label, villainEval.label)
+      resolveHand(winner, { ...gs, board })
 
       return {
         ...gs,
         street: 'showdown',
         board,
-        result: { winner, heroEval, villainEval, pot: gs.pot },
+        result: { winner, heroEval, villainEval, pot: (gs.heroInvested || 0) + (gs.villainInvested || 0) },
         showVillain: true,
       }
     }
@@ -1026,7 +1020,10 @@ export default function Arena() {
     const boardLen = { flop: 3, turn: 4, river: 5 }[next] || 0
     const board = gs.fullBoard.slice(0, boardLen)
 
-    return {
+    // Posicao pos-flop: BB (OOP) age primeiro, SB/BTN (IP) age por ultimo
+    // heroIsBtn = hero eh SB/BTN = IP pos-flop -> bot (BB) age primeiro
+    const heroIsIP = gs.heroIsBtn
+    const nextGs = {
       ...gs,
       street: next,
       board,
@@ -1034,6 +1031,27 @@ export default function Arena() {
       heroActed: false,
       villainActed: false,
     }
+
+    // Bot age primeiro se eh OOP (BB)
+    if (heroIsIP) {
+      const currentPot = (gs.heroInvested || 0) + (gs.villainInvested || 0)
+      const botAction = botDecision(gs.villainCards, board, next, currentPot, 0, false)
+      if (botAction === 'bet') {
+        const sizePct = botBetSizing(gs.villainCards, board, next, currentPot, false)
+        const bSize = Math.max(gs.blinds?.bb || 2, Math.round(currentPot * sizePct))
+        nextGs.villainInvested = (gs.villainInvested || 0) + bSize
+        nextGs.lastBet = bSize
+        nextGs.villainActed = true
+        nextGs.heroActed = false
+        nextGs.actions = [...(gs.actions || []), { who: 'villain', action: 'bet', label: `Bet ${bSize}` }]
+      } else {
+        nextGs.villainActed = true
+        nextGs.heroActed = false
+        nextGs.actions = [...(gs.actions || []), { who: 'villain', action: 'check', label: 'Check' }]
+      }
+    }
+
+    return nextGs
   }, [resolveHand])
 
   const handleHeroAction = useCallback((action, customSize) => {
@@ -1041,18 +1059,21 @@ export default function Arena() {
 
     const gs = { ...gameState }
     const heroStack = match?.heroStack || STARTING_STACK
+    const heroRemaining = heroStack - (gs.heroInvested || 0)
+    const villainStack = (match?.villainStack || STARTING_STACK)
+    const villainRemaining = villainStack - (gs.villainInvested || 0)
+    const currentPot = (gs.heroInvested || 0) + (gs.villainInvested || 0)
 
     // Record feedback
     let fb = null
     if (gs.street === 'preflop') {
       fb = getHeroPreflopFeedback(gs.heroCards, action, gs.heroIsBtn)
     } else {
-      fb = getHeroFeedback(gs.heroCards, gs.board, action, gs.pot, gs.lastBet)
+      fb = getHeroFeedback(gs.heroCards, gs.board, action, currentPot, gs.lastBet)
     }
     if (fb) {
-      // Update rating
       const strength = gs.street === 'preflop' ? 'good' : handStrength(gs.heroCards, gs.board)
-      const delta = calcRatingChange(fb.isCorrect, strength, gs.lastBet, gs.pot, gs.street, ratingData.rating)
+      const delta = calcRatingChange(fb.isCorrect, strength, gs.lastBet, currentPot, gs.street, ratingData.rating)
       const newRating = Math.max(0, ratingData.rating + delta)
       const newPeak = Math.max(ratingData.peak, newRating)
       const newHistory = [...(ratingData.history || []), newRating].slice(-50)
@@ -1075,96 +1096,115 @@ export default function Arena() {
 
     // Handle fold
     if (action === 'fold') {
-      resolveHand('villain', gs.pot, gs.heroCards, gs.villainCards, gs.board, 'Fold', '—')
+      resolveHand('villain', gs)
       setGameState({
         ...gs,
-        result: { winner: 'villain', heroEval: { label: 'Fold' }, villainEval: { label: '—' }, pot: gs.pot },
+        result: { winner: 'villain', heroEval: { label: 'Fold' }, villainEval: { label: '-' }, pot: currentPot },
         showVillain: true,
       })
       return
     }
 
     // Hero bets or raises
-    let newPot = gs.pot
-    let newLastBet = 0
+    let addedChips = 0
     let heroLabel = ''
-    const isAllIn = customSize >= heroStack - gs.heroChipsInPot
 
     if (action === 'bet' || action === 'raise') {
-      const size = customSize || (action === 'raise' ? Math.max(gs.lastBet * 2.5, gs.blinds.bb * 2) : gs.pot * 0.66)
-      const actualSize = Math.min(size, heroStack - gs.heroChipsInPot) // cap at remaining stack
-      newPot += actualSize + (gs.lastBet > 0 ? gs.lastBet : 0)
-      newLastBet = actualSize
-      heroLabel = isAllIn ? `All-In ${actualSize.toFixed(0)}` : action === 'raise' ? `Raise ${actualSize.toFixed(0)}` : `Bet ${actualSize.toFixed(0)}`
+      const size = customSize || (action === 'raise' ? Math.max(gs.lastBet * 2.5, gs.blinds.bb * 2) : Math.round(currentPot * 0.66))
+      const callPortion = gs.lastBet > 0 ? Math.min(gs.lastBet, heroRemaining) : 0
+      const raiseAmount = Math.min(size, heroRemaining - callPortion)
+      addedChips = callPortion + raiseAmount
+      gs.heroInvested = (gs.heroInvested || 0) + addedChips
+      gs.lastBet = raiseAmount
+      const isAllIn = addedChips >= heroRemaining
+      heroLabel = isAllIn ? `All-In ${addedChips}` : action === 'raise' ? `Raise ${raiseAmount}` : `Bet ${raiseAmount}`
     } else if (action === 'call') {
-      newPot += gs.lastBet
-      heroLabel = 'Call'
+      addedChips = Math.min(gs.lastBet, heroRemaining)
+      gs.heroInvested = (gs.heroInvested || 0) + addedChips
+      gs.lastBet = 0
+      heroLabel = `Call ${addedChips}`
     } else {
       heroLabel = 'Check'
     }
 
-    gs.pot = newPot
     gs.heroActed = true
-    gs.heroChipsInPot = (gs.heroChipsInPot || 0) + (newLastBet || (action === 'call' ? gs.lastBet : 0))
     gs.actions = [...gs.actions, { who: 'hero', action, label: heroLabel }]
 
-    // Bot response
+    // Bot responds to hero bet/raise
     if (action === 'bet' || action === 'raise') {
+      const newPot = (gs.heroInvested || 0) + (gs.villainInvested || 0)
       const botAction = gs.street === 'preflop'
         ? botPreflopDecision(gs.villainCards, !gs.heroIsBtn)
-        : botDecision(gs.villainCards, gs.board, gs.street, gs.pot, newLastBet, !gs.heroIsBtn)
+        : botDecision(gs.villainCards, gs.board, gs.street, newPot, gs.lastBet, !gs.heroIsBtn)
+
       if (botAction === 'fold') {
-        resolveHand('hero', gs.pot, gs.heroCards, gs.villainCards, gs.board, heroLabel, 'Fold')
+        resolveHand('hero', gs)
         setGameState({
           ...gs,
-          result: { winner: 'hero', heroEval: { label: 'Villain Fold' }, villainEval: { label: 'Fold' }, pot: gs.pot },
+          result: { winner: 'hero', heroEval: { label: 'Villain Fold' }, villainEval: { label: 'Fold' }, pot: newPot },
           showVillain: true,
         })
         return
       }
       if (botAction === 'call') {
-        gs.pot += newLastBet
-        gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${newLastBet.toFixed(0)}` }]
-      } else if (botAction === 'raise') {
-        // Bot raise sizing: 2.5-3x depending on strength
-        const strength = handStrength(gs.villainCards, gs.board)
-        const multiplier = strength === 'monster' || strength === 'air' ? 3 : 2.5
-        const reRaise = Math.round(newLastBet * multiplier)
-        gs.pot += newLastBet + reRaise
-        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: `Raise ${reRaise}` }]
-        // Hero auto-calls the re-raise (simplified)
-        gs.pot += reRaise
-        gs.actions = [...gs.actions, { who: 'hero', action: 'call', label: 'Call' }]
+        const callAmt = Math.min(gs.lastBet, villainRemaining)
+        gs.villainInvested = (gs.villainInvested || 0) + callAmt
+        gs.lastBet = 0
+        gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${callAmt}` }]
+        gs.villainActed = true
+        const nextGs = advanceStreet(gs)
+        setGameState(nextGs)
+        return
       }
-      gs.villainActed = true
-      const nextGs = advanceStreet(gs)
-      setGameState(nextGs)
-      return
+      if (botAction === 'raise') {
+        // Bot re-raises — hero needs to act again (real decision)
+        const str = handStrength(gs.villainCards, gs.board)
+        const mult = str === 'monster' || str === 'air' ? 3 : 2.5
+        const callFirst = Math.min(gs.lastBet, villainRemaining)
+        const raiseAmt = Math.min(Math.round(gs.lastBet * mult), villainRemaining - callFirst)
+        gs.villainInvested = (gs.villainInvested || 0) + callFirst + raiseAmt
+        gs.lastBet = raiseAmt
+        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: `Raise ${raiseAmt}` }]
+        gs.villainActed = true
+        gs.heroActed = false // Hero must respond
+        setGameState({ ...gs })
+        setFeedback(null)
+        return
+      }
     }
 
+    // Hero checked
     if (action === 'check') {
       if (!gs.villainActed) {
-        const botAction = botDecision(gs.villainCards, gs.board, gs.street, gs.pot, 0, !gs.heroIsBtn)
+        // Villain acts after hero check (hero is OOP)
+        const cp = (gs.heroInvested || 0) + (gs.villainInvested || 0)
+        const botAction = botDecision(gs.villainCards, gs.board, gs.street, cp, 0, true)
         if (botAction === 'bet') {
-          const sizePct = botBetSizing(gs.villainCards, gs.board, gs.street, gs.pot, !gs.heroIsBtn)
-          const bSize = Math.max(gs.blinds?.bb || 2, Math.round(gs.pot * sizePct))
-          gs.pot += bSize
+          const sizePct = botBetSizing(gs.villainCards, gs.board, gs.street, cp, true)
+          const bSize = Math.max(gs.blinds?.bb || 2, Math.round(cp * sizePct))
+          gs.villainInvested = (gs.villainInvested || 0) + bSize
           gs.lastBet = bSize
           gs.villainActed = true
-          gs.heroActed = false
+          gs.heroActed = false // Hero can check-raise
           gs.actions = [...gs.actions, { who: 'villain', action: 'bet', label: `Bet ${bSize}` }]
           setGameState({ ...gs })
           setFeedback(null)
           return
         }
+        // Both checked
         gs.villainActed = true
         gs.actions = [...gs.actions, { who: 'villain', action: 'check', label: 'Check' }]
         const nextGs = advanceStreet(gs)
         setGameState(nextGs)
         return
       }
+      // Hero checked after villain already acted (both done)
+      const nextGs = advanceStreet(gs)
+      setGameState(nextGs)
+      return
     }
 
+    // Hero called a bet
     if (action === 'call') {
       gs.villainActed = true
       const nextGs = advanceStreet(gs)
@@ -1174,23 +1214,22 @@ export default function Arena() {
 
     const nextGs = advanceStreet(gs)
     setGameState(nextGs)
-  }, [gameState, match, advanceStreet, resolveHand, updateMatch])
+  }, [gameState, match, advanceStreet, resolveHand, updateMatch, ratingData])
 
   // Sizing limits for the slider
   const sizingInfo = useMemo(() => {
     if (!gameState || gameState.result || !match) return null
-    const heroRemaining = match.heroStack - (gameState.heroChipsInPot || 0)
+    const heroRemaining = match.heroStack - (gameState.heroInvested || 0)
     const bb = gameState.blinds?.bb || 2
     const facingBet = gameState.lastBet > 0
+    const currentPot = (gameState.heroInvested || 0) + (gameState.villainInvested || 0)
 
     if (facingBet) {
-      // Raise: min = 2x last bet, max = all-in
       const minRaise = Math.min(gameState.lastBet * 2, heroRemaining)
-      return { minBet: minRaise, maxBet: heroRemaining, defaultBet: Math.min(gameState.lastBet * 2.5, heroRemaining), canBet: heroRemaining > gameState.lastBet, action: 'raise' }
+      return { minBet: minRaise, maxBet: heroRemaining, defaultBet: Math.min(Math.round(gameState.lastBet * 2.5), heroRemaining), canBet: heroRemaining > gameState.lastBet, action: 'raise' }
     }
-    // Bet: min = 1bb, max = all-in
     const minBet = Math.min(bb, heroRemaining)
-    return { minBet, maxBet: heroRemaining, defaultBet: Math.min(Math.round(gameState.pot * 0.66), heroRemaining), canBet: true, action: 'bet' }
+    return { minBet, maxBet: heroRemaining, defaultBet: Math.min(Math.round(currentPot * 0.66), heroRemaining), canBet: true, action: 'bet' }
   }, [gameState, match])
 
   // Reset betSize when sizing context changes
@@ -1425,7 +1464,7 @@ export default function Arena() {
                     heroCards={gameState.heroCards}
                     villainCards={gameState.villainCards}
                     board={gameState.board}
-                    pot={gameState.pot}
+                    pot={(gameState.heroInvested || 0) + (gameState.villainInvested || 0)}
                     heroIsBtn={gameState.heroIsBtn}
                     showVillain={gameState.showVillain}
                     heroLabel={gameState.actions.filter(a => a.who === 'hero').slice(-1)[0]?.label}
@@ -1518,7 +1557,7 @@ export default function Arena() {
                             <span>Min {sizingInfo.minBet}</span>
                             <div className="flex gap-2">
                               {[0.33, 0.5, 0.66, 1].map(pct => {
-                                const val = Math.min(Math.round(gameState.pot * pct), sizingInfo.maxBet)
+                                const val = Math.min(Math.round(((gameState.heroInvested || 0) + (gameState.villainInvested || 0)) * pct), sizingInfo.maxBet)
                                 return (
                                   <button key={pct} onClick={() => setBetSize(val)}
                                     style={{
