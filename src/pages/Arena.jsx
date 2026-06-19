@@ -277,49 +277,63 @@ function botDecision(botHole, board, street, pot, lastBet, isIP) {
   const rng = Math.random()
   const streetIdx = { flop: 0, turn: 1, river: 2 }[street] ?? 0
 
+  // Ajustes por posicao: IP pode blefar mais, OOP precisa proteger mais
+  const ipBonus = isIP ? 0.08 : 0
+  const oopProtect = !isIP ? 0.10 : 0
+
   // ─── Facing a bet ───
   if (lastBet > 0) {
     const potOdds = lastBet / (pot + lastBet)
-    const betRelPot = lastBet / Math.max(pot - lastBet, 1) // bet as % of pot before bet
+    const betRelPot = lastBet / Math.max(pot - lastBet, 1)
 
     switch (strength) {
       case 'monster':
-        // Slowplay call sometimes on flop, raise more on later streets
-        if (streetIdx === 0) return rng < 0.4 ? 'raise' : 'call'
-        return rng < 0.7 ? 'raise' : 'call'
+        // Slowplay mais no flop seco, raise mais em streets posteriores e boards umidos
+        if (streetIdx === 0 && !texture.wet) return rng < 0.30 ? 'raise' : 'call'
+        if (streetIdx === 0) return rng < 0.50 ? 'raise' : 'call'
+        if (streetIdx === 2) return rng < 0.80 ? 'raise' : 'call' // river: extrair max valor
+        return rng < 0.65 ? 'raise' : 'call'
 
       case 'strong':
-        // Raise more on wet boards (protect equity), flat on dry
-        if (texture.wet) return rng < 0.45 ? 'raise' : 'call'
-        return rng < 0.2 ? 'raise' : 'call'
+        // Raise mais em boards umidos pra proteger, flat em secos
+        if (texture.wet) return rng < (0.45 + oopProtect) ? 'raise' : 'call'
+        if (streetIdx === 2) return rng < 0.35 ? 'raise' : 'call' // river value raise
+        return rng < 0.20 ? 'raise' : 'call'
 
       case 'good':
-        // Call most, occasional raise on flop for protection
-        if (streetIdx === 0 && texture.wet) return rng < 0.15 ? 'raise' : 'call'
+        // Call quase sempre, raise pra proteger em board umido OOP
+        if (streetIdx === 0 && texture.wet && !isIP) return rng < 0.20 ? 'raise' : 'call'
+        if (streetIdx === 0 && texture.wet) return rng < 0.12 ? 'raise' : 'call'
+        if (streetIdx === 2 && betRelPot > 0.8) return rng < 0.15 ? 'fold' : 'call' // river overbet com mao boa = cuidado
         return 'call'
 
       case 'draw':
-        // Semi-bluff raise sometimes, especially IP on flop
-        if (streetIdx === 0 && isIP && rng < 0.25) return 'raise'
-        // Call if pot odds are good enough
-        if (potOdds < 0.30) return 'call'
-        if (streetIdx === 0 && potOdds < 0.35) return 'call' // flop has more outs ahead
-        return rng < 0.2 ? 'call' : 'fold'
+        // Semi-bluff raise IP, call com pot odds boas
+        if (streetIdx === 0 && isIP && rng < 0.28) return 'raise'
+        if (streetIdx === 1 && isIP && rng < 0.15) return 'raise' // turn semi-bluff
+        // Pot odds: flop tem 2 streets, turn tem 1
+        if (streetIdx === 0 && potOdds < 0.35) return 'call'
+        if (streetIdx === 1 && potOdds < 0.28) return 'call'
+        if (streetIdx === 2) return rng < 0.12 ? 'call' : 'fold' // river: draw falhou
+        return rng < 0.20 ? 'call' : 'fold'
 
       case 'marginal':
-        // Only call small bets
-        if (betRelPot < 0.4) return rng < 0.6 ? 'call' : 'fold'
-        if (betRelPot < 0.6) return rng < 0.3 ? 'call' : 'fold'
-        return 'fold'
+        // Pot odds mais precisos
+        if (betRelPot < 0.35) return rng < 0.65 ? 'call' : 'fold'
+        if (betRelPot < 0.55) return rng < 0.35 ? 'call' : 'fold'
+        if (streetIdx === 2) return 'fold' // river com mao marginal contra bet = fold
+        return rng < 0.12 ? 'call' : 'fold'
 
       case 'weak':
-        // Bluff-raise rarely, mostly fold
-        if (streetIdx === 2 && rng < 0.08) return 'raise' // river bluff-raise
-        return rng < 0.1 ? 'call' : 'fold'
+        // Bluff-raise raro no river IP, resto fold
+        if (streetIdx === 2 && isIP && rng < 0.10) return 'raise'
+        if (betRelPot < 0.3 && streetIdx === 0) return rng < 0.15 ? 'call' : 'fold'
+        return 'fold'
 
       default: // air
-        // Bluff-raise on flop sometimes
-        if (streetIdx === 0 && rng < 0.06) return 'raise'
+        // Bluff-raise raro em spots polarizados
+        if (streetIdx === 0 && isIP && rng < 0.08) return 'raise'
+        if (streetIdx === 2 && isIP && !texture.wet && rng < 0.06) return 'raise' // river bluff raise
         return 'fold'
     }
   }
@@ -327,48 +341,57 @@ function botDecision(botHole, board, street, pot, lastBet, isIP) {
   // ─── No bet to face (can check or bet) ───
   switch (strength) {
     case 'monster':
-      // Slowplay more on dry boards, bet wet boards
-      if (texture.wet) return rng < 0.85 ? 'bet' : 'check'
-      if (streetIdx === 0) return rng < 0.4 ? 'bet' : 'check' // trap on dry flop
-      return rng < 0.75 ? 'bet' : 'check'
+      // Slowplay em boards secos (trap), bet em boards umidos (proteger)
+      if (texture.wet) return rng < 0.90 ? 'bet' : 'check'
+      if (streetIdx === 0) return rng < 0.35 ? 'bet' : 'check' // dry flop trap
+      if (streetIdx === 2) return rng < 0.85 ? 'bet' : 'check' // river: extrair valor
+      return rng < 0.70 ? 'bet' : 'check'
 
     case 'strong':
-      // Bet for value, more on wet boards
-      if (texture.wet) return rng < 0.85 ? 'bet' : 'check'
-      return rng < 0.7 ? 'bet' : 'check'
+      // Bet por valor, mais em boards umidos, IP pode bet thin
+      if (texture.wet) return rng < (0.85 + ipBonus) ? 'bet' : 'check'
+      if (streetIdx === 2) return rng < 0.75 ? 'bet' : 'check' // river value
+      return rng < 0.70 ? 'bet' : 'check'
 
     case 'good':
-      // Bet flop/turn for value+protection, more cautious on river
-      if (streetIdx <= 1) return rng < 0.65 ? 'bet' : 'check'
-      return rng < 0.5 ? 'bet' : 'check'
+      // Bet flop/turn por valor e protecao, river mais cauteloso
+      if (streetIdx === 0) return rng < (0.65 + oopProtect) ? 'bet' : 'check'
+      if (streetIdx === 1) return rng < 0.55 ? 'bet' : 'check'
+      return rng < 0.40 ? 'bet' : 'check' // river thin value
 
     case 'draw':
-      // Semi-bluff: more on flop, less on river (no more cards to come)
-      if (streetIdx === 0) return rng < 0.50 ? 'bet' : 'check'
-      if (streetIdx === 1) return rng < 0.35 ? 'bet' : 'check'
-      return rng < 0.10 ? 'bet' : 'check' // river: draw missed, rare bluff
+      // Semi-bluff: IP mais agressivo, menos no river
+      if (streetIdx === 0) return rng < (0.45 + ipBonus) ? 'bet' : 'check'
+      if (streetIdx === 1) return rng < (0.30 + ipBonus) ? 'bet' : 'check'
+      return rng < 0.08 ? 'bet' : 'check' // river: draw falhou, bluff raro
 
     case 'marginal':
-      // Check most, thin value bet on river sometimes
-      if (streetIdx === 2 && rng < 0.15) return 'bet'
+      // Check quase sempre, probe bet OOP raro no flop
+      if (streetIdx === 0 && !isIP && rng < 0.12) return 'bet' // probe bet
+      if (streetIdx === 2 && rng < 0.12) return 'bet' // thin value river
       return 'check'
 
     case 'weak':
-      // Bluff: more on dry boards, less on wet
-      if (texture.wet) return rng < 0.08 ? 'bet' : 'check'
-      if (streetIdx === 0) return rng < 0.25 ? 'bet' : 'check' // dry flop cbet bluff
-      if (streetIdx === 1) return rng < 0.15 ? 'bet' : 'check' // barrel
-      return rng < 0.12 ? 'bet' : 'check' // river bluff
-
-    default: // air
-      // Pure bluff: dry boards, IP, earlier streets
+      // Bluffs com frequencia GTO: mais em dry boards e IP
       if (!texture.wet && isIP) {
         if (streetIdx === 0) return rng < 0.30 ? 'bet' : 'check'
-        if (streetIdx === 1) return rng < 0.18 ? 'bet' : 'check'
-        return rng < 0.10 ? 'bet' : 'check'
+        if (streetIdx === 1) return rng < 0.20 ? 'bet' : 'check' // barrel
+        return rng < 0.15 ? 'bet' : 'check' // river bluff
       }
-      if (streetIdx === 0) return rng < 0.15 ? 'bet' : 'check'
-      return rng < 0.08 ? 'bet' : 'check'
+      if (texture.wet) return rng < 0.06 ? 'bet' : 'check'
+      if (streetIdx === 0) return rng < 0.22 ? 'bet' : 'check'
+      return rng < 0.10 ? 'bet' : 'check'
+
+    default: // air
+      // Bluffs polarizados: IP em dry boards
+      if (!texture.wet && isIP) {
+        if (streetIdx === 0) return rng < 0.28 ? 'bet' : 'check'
+        if (streetIdx === 1) return rng < 0.16 ? 'bet' : 'check'
+        return rng < 0.12 ? 'bet' : 'check' // river bluff
+      }
+      if (!isIP && texture.paired && rng < 0.18) return 'bet' // bluff em board pareado OOP
+      if (streetIdx === 0) return rng < 0.14 ? 'bet' : 'check'
+      return rng < 0.06 ? 'bet' : 'check'
   }
 }
 
@@ -379,35 +402,39 @@ function botBetSizing(botHole, board, street, pot, isIP) {
   const streetIdx = { flop: 0, turn: 1, river: 2 }[street] ?? 0
   const rng = Math.random()
 
-  // Polarizado: mãos muito fortes e bluffs usam sizing grande
-  // Mãos medianas usam sizing menor
+  // Polarizado: maos muito fortes e bluffs usam sizing grande
+  // Maos medianas usam sizing menor (merged range)
   switch (strength) {
     case 'monster':
-      // Overbet river, big sizing on wet boards
-      if (streetIdx === 2) return rng < 0.3 ? 1.25 : 0.75
-      if (texture.wet) return 0.75
-      return rng < 0.5 ? 0.75 : 0.5
+      // Overbet river pra extrair max valor, big sizing em wet boards
+      if (streetIdx === 2) return rng < 0.35 ? 1.5 : rng < 0.7 ? 1.0 : 0.75
+      if (texture.wet) return rng < 0.4 ? 0.75 : 0.66
+      // Dry board: sizing menor pra nao assustar (disfarcar trap)
+      return rng < 0.5 ? 0.5 : 0.66
 
     case 'strong':
+      if (streetIdx === 2) return rng < 0.4 ? 0.75 : 0.66 // river value bigger
       if (texture.wet) return 0.66
-      return rng < 0.6 ? 0.5 : 0.66
+      return rng < 0.5 ? 0.5 : 0.66
 
     case 'good':
-      // Smaller sizing for protection/thin value
-      if (streetIdx === 0) return rng < 0.5 ? 0.5 : 0.33
-      return 0.5
+      // Sizing menor pra protecao, nao inflar pote demais
+      if (streetIdx === 0) return rng < 0.6 ? 0.33 : 0.5
+      if (streetIdx === 1) return 0.5
+      return rng < 0.6 ? 0.33 : 0.5 // river thin value = menor
 
     case 'draw':
-      // Semi-bluff: use bigger sizing to maximize fold equity
-      return rng < 0.4 ? 0.66 : 0.5
+      // Semi-bluff: sizing grande pra fold equity
+      if (streetIdx === 0) return rng < 0.5 ? 0.66 : 0.5
+      return rng < 0.3 ? 0.75 : 0.66 // turn semi-bluff maior
 
     case 'marginal':
-      return 0.33 // thin value = small
+      return 0.33 // thin value / probe = sempre pequeno
 
     default: // weak/air bluffs
-      // Bluffs: mix sizing to stay balanced
-      if (streetIdx === 2) return rng < 0.4 ? 0.75 : 0.5 // river bluffs bigger
-      if (!texture.wet) return 0.33 // dry board cbet bluff = small
+      // Bluffs devem usar sizing que o range de valor tambem usa
+      if (streetIdx === 2) return rng < 0.45 ? 0.75 : 0.66 // river bluff polarizado = grande
+      if (!texture.wet) return 0.33 // dry board cbet bluff = pequeno
       return 0.5
   }
 }
