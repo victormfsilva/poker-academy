@@ -223,11 +223,16 @@ function Trainer() {
   const [streak, setStreak] = useState(0)
   const [sessionDone, setSessionDone] = useState(false)
 
+  const [openSize, setOpenSize] = useState(2.5)
+  const [stackSize, setStackSize] = useState(100)
+
   function newHand() {
     if (sessionTotal >= 10) { setSessionDone(true); return }
     const spot = randomSpot(filterPos)
     setCurrentSpot(spot)
     setCurrentHand(randomHand(spot))
+    setOpenSize([2, 2.5, 3][Math.floor(Math.random() * 3)])
+    setStackSize([100, 75, 50][Math.floor(Math.random() * 3)])
     setFeedback(null)
   }
 
@@ -288,9 +293,9 @@ function Trainer() {
           heroPos={currentSpot.myPos}
           villainPos={currentSpot.raiser}
           heroCards={cards}
-          villainAction="Raise"
-          contextTitle={`Voce esta no ${currentSpot.myPos}`}
-          contextDesc={`${currentSpot.raiser} fez raise. O que fazer?`}
+          villainAction={`Raise ${openSize}x`}
+          contextTitle={`${currentSpot.myPos} vs ${currentSpot.raiser} · ${stackSize}bb efetivo`}
+          contextDesc={`${currentSpot.raiser} abriu ${openSize}x. O que fazer?`}
           textureTags={[currentSpot.myPos === 'BTN' ? 'IP' : 'OOP']}
         />
       )}

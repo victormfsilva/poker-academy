@@ -136,11 +136,16 @@ function Section({ title, children }) {
   )
 }
 
+const OPEN_SIZES = [2, 2.5, 3]
+const STACK_SIZES = [100, 75, 50]
+
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
   const [filterPos, setFilterPos] = useState('Todas')
   const [currentHand, setCurrentHand] = useState(null)
   const [currentRaiser, setCurrentRaiser] = useState(null)
+  const [openSize, setOpenSize] = useState(2.5)
+  const [stackSize, setStackSize] = useState(100)
   const [feedback, setFeedback] = useState(null)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [sessionTotal, setSessionTotal] = useState(0)
@@ -153,6 +158,8 @@ function Trainer() {
     const raiser = positions[Math.floor(Math.random() * positions.length)]
     setCurrentRaiser(raiser)
     setCurrentHand(randomHand(raiser))
+    setOpenSize(OPEN_SIZES[Math.floor(Math.random() * OPEN_SIZES.length)])
+    setStackSize(STACK_SIZES[Math.floor(Math.random() * STACK_SIZES.length)])
     setFeedback(null)
   }
 
@@ -213,9 +220,9 @@ function Trainer() {
           heroPos="BB"
           villainPos={currentRaiser}
           heroCards={cards}
-          villainAction="Raise"
-          contextTitle="Voce esta no BB"
-          contextDesc={`${currentRaiser} fez raise. Todos foldaram. O que fazer?`}
+          villainAction={`Raise ${openSize}x`}
+          contextTitle={`BB vs ${currentRaiser} · ${stackSize}bb efetivo`}
+          contextDesc={`${currentRaiser} abriu ${openSize}x. Todos foldaram. O que fazer?`}
         />
       )}
       {currentHand && <div className="text-center mb-4"><span style={{ color: '#888', fontSize: 14, fontFamily: 'Space Mono' }}>{currentHand}</span></div>}
