@@ -1068,9 +1068,7 @@ export default function Arena() {
         winner: matchOver ? (newHeroStack <= 0 ? 'villain' : 'hero') : null,
       }
     })
-    // Record in global stats (Supabase sync)
-    recordArenaHand(winner === 'hero', 0, 0)
-  }, [updateMatch, recordArenaHand])
+  }, [updateMatch])
 
   // Bot acts after a short delay when hero is BB (so hero sees cards first)
   useEffect(() => {
@@ -1246,6 +1244,9 @@ export default function Arena() {
     const villainStack = (match?.villainStack || STARTING_STACK)
     const villainRemaining = villainStack - (gs.villainInvested || 0)
     const currentPot = (gs.heroInvested || 0) + (gs.villainInvested || 0)
+
+    // Count each hero decision as 1 hand in global stats
+    recordArenaHand(false, 0, 1)
 
     // Record feedback
     let fb = null
