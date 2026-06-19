@@ -107,8 +107,13 @@ function handStrength(hole, board) {
   const boardR = board.map(c => c.slice(0, -1))
   const holeR = hole.map(c => c.slice(0, -1))
 
-  // Set
+  // Set (pocket pair + board match)
   if (holeR[0] === holeR[1] && boardR.includes(holeR[0])) return 'strong'
+
+  // Trips (hole card matches a board pair, e.g. A8 on 8-8-2)
+  const boardRankCount = {}
+  boardR.forEach(r => { boardRankCount[r] = (boardRankCount[r] || 0) + 1 })
+  if (holeR.some(r => boardRankCount[r] >= 2)) return 'strong'
 
   // Two pair
   const pairsWithBoard = [...new Set(holeR)].filter(r => boardR.includes(r))
@@ -438,9 +443,18 @@ function describeHeroHand(hole, board) {
   if (e.score >= 7) return parts.join('')
   if (e.score >= 5) return parts.join('')
 
-  // Set
+  // Set (pocket pair + board match)
   if (holeR[0] === holeR[1] && boardR.includes(holeR[0])) {
     return `Trinca de ${holeR[0]}`
+  }
+
+  // Trips (hole card matches a board pair)
+  const boardRC = {}
+  boardR.forEach(r => { boardRC[r] = (boardRC[r] || 0) + 1 })
+  const tripRank = holeR.find(r => boardRC[r] >= 2)
+  if (tripRank) {
+    const kicker = holeR.find(r => r !== tripRank) || tripRank
+    return `Trinca de ${tripRank} com kicker ${kicker}`
   }
 
   // Two pair using both hole cards
