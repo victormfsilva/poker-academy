@@ -1568,7 +1568,7 @@ export default function Arena() {
             </div>
           </div>
         ) : (
-          /* Active match */
+          /* Active match — mesa sempre visivel */
           <div>
             {/* Stacks + Blinds HUD */}
             <div className="grid grid-cols-3 gap-2 mb-3">
@@ -1595,62 +1595,119 @@ export default function Arena() {
               <span style={{ color: '#676671', fontSize: 11 }}>GTO {acc}%</span>
             </div>
 
-            {/* No hand in progress — deal */}
-            {!gameState || (gameState.result && !matchOver) ? (
-              <div>
-                {/* Show last hand result if exists */}
-                {gameState?.result && (
-                  <div className="rounded-xl p-4 mb-3" style={{
-                    background: gameState.result.winner === 'hero' ? 'rgba(79,206,130,0.1)' : gameState.result.winner === 'tie' ? 'rgba(245,166,35,0.1)' : 'rgba(229,72,77,0.1)',
-                    border: `1px solid ${gameState.result.winner === 'hero' ? '#4fce82' : gameState.result.winner === 'tie' ? '#f5a623' : '#e5484d'}`,
-                  }}>
-                    <div style={{
-                      color: gameState.result.winner === 'hero' ? '#4fce82' : gameState.result.winner === 'tie' ? '#f5a623' : '#e5484d',
-                      fontWeight: 700, fontSize: 16, marginBottom: 4,
+            {/* Street indicator */}
+            {gameState && !gameState.result && (
+              <div className="flex gap-1 mb-3 justify-center">
+                {STREETS.slice(0, -1).map(s => (
+                  <div key={s} className="px-3 py-1 rounded-full text-xs font-semibold"
+                    style={{
+                      background: s === gameState.street ? '#4fce8222' : '#1a1a1d',
+                      color: s === gameState.street ? '#4fce82' : '#676671',
+                      border: `1px solid ${s === gameState.street ? '#4fce82' : '#2a2a2e'}`,
                     }}>
-                      {gameState.result.winner === 'hero' ? 'Voce ganhou!' : gameState.result.winner === 'tie' ? 'Empate' : 'Bot ganhou'}
-                      <span style={{ fontSize: 13, fontWeight: 500, marginLeft: 8 }}>
-                        Pot: {gameState.result.pot.toFixed(0)}
-                      </span>
-                    </div>
-                    {gameState.showVillain && (
-                      <div style={{ color: '#b3b3b8', fontSize: 12 }}>
-                        Voce: <strong style={{ color: '#4fce82' }}>{gameState.result.heroEval.label}</strong>
-                        {' · '}
-                        Bot: <strong style={{ color: '#e5484d' }}>{gameState.result.villainEval.label}</strong>
-                      </div>
-                    )}
+                    {streetName(s)}
                   </div>
-                )}
+                ))}
+              </div>
+            )}
 
-                {/* Feedback da ultima acao (fold, raise que fez villain foldar, etc) */}
-                {feedback && (
-                  <div className="rounded-xl px-4 py-3 mb-3" style={{
-                    background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
-                    border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
+            {/* Mesa — sempre visivel */}
+            <div className="rounded-2xl mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e', padding: '8px 4px' }}>
+              {gameState ? (
+                <HUTable
+                  heroCards={gameState.heroCards}
+                  villainCards={gameState.villainCards}
+                  board={gameState.board}
+                  pot={(gameState.heroInvested || 0) + (gameState.villainInvested || 0)}
+                  heroIsBtn={gameState.heroIsBtn}
+                  showVillain={gameState.showVillain}
+                  heroLabel={gameState.actions.filter(a => a.who === 'hero').slice(-1)[0]?.label}
+                  villainLabel={gameState.actions.filter(a => a.who === 'villain').slice(-1)[0]?.label}
+                  boardKey={`${gameState.street}-${gameState.board.length}`}
+                />
+              ) : (
+                <div style={{ textAlign: 'center', padding: '30px 0', color: '#676671', fontSize: 13 }}>
+                  Clique para comecar
+                </div>
+              )}
+            </div>
+
+            {/* Resultado da mao */}
+            {gameState?.result && !matchOver && (
+              <div className="rounded-xl p-3 mb-3" style={{
+                background: gameState.result.winner === 'hero' ? 'rgba(79,206,130,0.1)' : gameState.result.winner === 'tie' ? 'rgba(245,166,35,0.1)' : 'rgba(229,72,77,0.1)',
+                border: `1px solid ${gameState.result.winner === 'hero' ? '#4fce82' : gameState.result.winner === 'tie' ? '#f5a623' : '#e5484d'}`,
+              }}>
+                <div className="flex items-center justify-between">
+                  <span style={{
+                    color: gameState.result.winner === 'hero' ? '#4fce82' : gameState.result.winner === 'tie' ? '#f5a623' : '#e5484d',
+                    fontWeight: 700, fontSize: 15,
                   }}>
-                    <div className="flex items-center justify-between">
-                      <span style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
-                        {feedback.isCorrect ? 'Boa jogada!' : `Melhor jogada: ${feedback.recommended.toUpperCase()}`}
-                      </span>
-                      {feedback.ratingDelta != null && (
-                        <span style={{
-                          color: feedback.ratingDelta >= 0 ? '#4fce82' : '#e5484d',
-                          fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono',
-                        }}>
-                          {feedback.ratingDelta >= 0 ? '+' : ''}{feedback.ratingDelta}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{feedback.reason}</div>
-                    {!feedback.isCorrect && feedback.acceptable?.length > 0 && (
-                      <div style={{ color: '#676671', fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
-                        Tambem aceitavel: {feedback.acceptable.map(a => a.toUpperCase()).join(', ')}
-                      </div>
-                    )}
+                    {gameState.result.winner === 'hero' ? 'Voce ganhou!' : gameState.result.winner === 'tie' ? 'Empate' : 'Bot ganhou'}
+                  </span>
+                  <span style={{ color: '#b3b3b8', fontSize: 13, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
+                    Pot {gameState.result.pot.toFixed(0)}
+                  </span>
+                </div>
+                {gameState.showVillain && (
+                  <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4 }}>
+                    Voce: <strong style={{ color: '#4fce82' }}>{gameState.result.heroEval.label}</strong>
+                    {' · '}
+                    Bot: <strong style={{ color: '#e5484d' }}>{gameState.result.villainEval.label}</strong>
                   </div>
                 )}
+              </div>
+            )}
 
+            {/* Feedback GTO */}
+            {feedback && (
+              <div className="rounded-xl px-4 py-3 mb-3" style={{
+                background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
+                border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
+              }}>
+                <div className="flex items-center justify-between">
+                  <span style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
+                    {feedback.isCorrect ? 'Boa jogada!' : `Melhor jogada: ${feedback.recommended.toUpperCase()}`}
+                  </span>
+                  {feedback.ratingDelta != null && (
+                    <span style={{
+                      color: feedback.ratingDelta >= 0 ? '#4fce82' : '#e5484d',
+                      fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                    }}>
+                      {feedback.ratingDelta >= 0 ? '+' : ''}{feedback.ratingDelta}
+                    </span>
+                  )}
+                </div>
+                <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{feedback.reason}</div>
+                {!feedback.isCorrect && feedback.acceptable?.length > 0 && (
+                  <div style={{ color: '#676671', fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
+                    Tambem aceitavel: {feedback.acceptable.map(a => a.toUpperCase()).join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action log */}
+            {gameState?.actions?.length > 0 && !gameState.result && (
+              <div className="rounded-xl px-3 py-2 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                <div className="flex flex-wrap gap-2">
+                  {gameState.actions.map((a, i) => (
+                    <span key={i} style={{
+                      fontSize: 11, fontWeight: 600,
+                      color: a.who === 'hero' ? '#4fce82' : '#e5484d',
+                    }}>
+                      {a.who === 'hero' ? 'Voce' : 'Bot'}: {a.label}
+                      {i < gameState.actions.length - 1 ? ' \u2192' : ''}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Acoes / Proxima Mao / Comecar */}
+            <div className="mb-3">
+              {!gameState || (gameState.result && !matchOver) ? (
+                /* Proxima mao */
                 <button onClick={startNewHand}
                   style={{
                     width: '100%', padding: '14px', borderRadius: 8,
@@ -1658,274 +1715,199 @@ export default function Arena() {
                     color: '#0f0f0f', fontWeight: 600, fontSize: 15,
                     cursor: 'pointer',
                   }}>
-                  {gameState ? 'Proxima Mao >' : 'Comecar Mao #1'}
+                  {gameState ? 'Proxima Mao \u203A' : 'Comecar Mao #1'}
                 </button>
-
-                {/* Hand history */}
-                {match.handHistory.length > 0 && (
-                  <div className="rounded-xl p-3 mt-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-                    <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>HISTORICO</div>
-                    <div className="space-y-2">
-                      {match.handHistory.slice(0, 8).map((h, i) => (
-                        <div key={i} className="flex items-center gap-2" style={{ fontSize: 12 }}>
-                          <span style={{
-                            color: h.winner === 'hero' ? '#4fce82' : h.winner === 'tie' ? '#f5a623' : '#e5484d',
-                            fontWeight: 700, width: 14,
-                          }}>
-                            {h.winner === 'hero' ? 'W' : h.winner === 'tie' ? 'T' : 'L'}
-                          </span>
-                          <div className="flex gap-1">
-                            {h.heroCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
-                          </div>
-                          <span style={{ color: '#676671', fontSize: 10 }}>vs</span>
-                          <div className="flex gap-1">
-                            {h.villainCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
-                          </div>
-                          <span style={{ color: '#676671', fontSize: 10, flex: 1, textAlign: 'right' }}>
-                            {h.heroHand && h.heroHand !== '-' ? h.heroHand : ''}
-                            {h.heroHand && h.heroHand !== '-' && h.villainHand && h.villainHand !== '-' ? ' vs ' : ''}
-                            {h.villainHand && h.villainHand !== '-' ? h.villainHand : ''}
-                          </span>
-                          <span style={{ color: '#b3b3b8', fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono', minWidth: 28, textAlign: 'right' }}>
-                            {h.pot.toFixed(0)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Abandon match */}
-                <button onClick={() => { clearMatch(); setMatch(null); setGameState(null) }}
-                  className="w-full mt-3 py-2 rounded-lg text-sm"
-                  style={{ background: 'transparent', color: '#676671', border: '1px solid #2a2a2e', cursor: 'pointer' }}>
-                  Abandonar partida
-                </button>
-              </div>
-            ) : (
-              /* Hand in progress */
-              <div>
-                {/* Street indicator */}
-                <div className="flex gap-1 mb-3 justify-center">
-                  {STREETS.slice(0, -1).map(s => (
-                    <div key={s} className="px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{
-                        background: s === gameState.street ? '#4fce8222' : '#1a1a1d',
-                        color: s === gameState.street ? '#4fce82' : '#676671',
-                        border: `1px solid ${s === gameState.street ? '#4fce82' : '#2a2a2e'}`,
-                      }}>
-                      {streetName(s)}
-                    </div>
-                  ))}
+              ) : gameState.waitingBotPreflop ? (
+                <div style={{
+                  width: '100%', padding: '14px', borderRadius: 8,
+                  background: '#1a1a1d', border: '1px solid #2a2a2e',
+                  color: '#676671', fontWeight: 600, fontSize: 14, textAlign: 'center',
+                }}>
+                  Aguardando bot...
                 </div>
-
-                {/* Mesa */}
-                <div className="rounded-2xl mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e', padding: '8px 4px' }}>
-                  <HUTable
-                    heroCards={gameState.heroCards}
-                    villainCards={gameState.villainCards}
-                    board={gameState.board}
-                    pot={(gameState.heroInvested || 0) + (gameState.villainInvested || 0)}
-                    heroIsBtn={gameState.heroIsBtn}
-                    showVillain={gameState.showVillain}
-                    heroLabel={gameState.actions.filter(a => a.who === 'hero').slice(-1)[0]?.label}
-                    villainLabel={gameState.actions.filter(a => a.who === 'villain').slice(-1)[0]?.label}
-                    boardKey={`${gameState.street}-${gameState.board.length}`}
-                  />
+              ) : gameState.waitingBotResponse || gameState.botSBFolded || gameState.allInRunout ? (
+                <div style={{
+                  width: '100%', padding: '14px', borderRadius: 8,
+                  background: gameState.allInRunout ? '#ff8f0022' : '#1a1a1d',
+                  border: `1px solid ${gameState.allInRunout ? '#ff8f00' : '#2a2a2e'}`,
+                  color: gameState.allInRunout ? '#ff8f00' : '#676671',
+                  fontWeight: 600, fontSize: 14, textAlign: 'center',
+                }}>
+                  {gameState.allInRunout ? 'All-In \u2014 revelando cartas...' : 'Aguardando...'}
                 </div>
-
-                {/* Action log */}
-                {gameState.actions.length > 0 && (
-                  <div className="rounded-xl px-3 py-2 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-                    <div className="flex flex-wrap gap-2">
-                      {gameState.actions.map((a, i) => (
-                        <span key={i} style={{
-                          fontSize: 11, fontWeight: 600,
-                          color: a.who === 'hero' ? '#4fce82' : '#e5484d',
-                        }}>
-                          {a.who === 'hero' ? 'Voce' : 'Bot'}: {a.label}
-                          {i < gameState.actions.length - 1 ? ' →' : ''}
+              ) : !gameState.heroActed ? (
+                <div>
+                  {/* Slider de sizing */}
+                  {sizingInfo && sizingInfo.canBet && (
+                    <div className="rounded-xl px-4 py-3 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span style={{ color: '#676671', fontSize: 11, fontWeight: 600 }}>
+                          {gameState.lastBet > 0 ? 'RAISE' : 'BET'}
                         </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Feedback */}
-                {feedback && (
-                  <div className="rounded-xl px-4 py-3 mb-3" style={{
-                    background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
-                    border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
-                  }}>
-                    <div className="flex items-center justify-between">
-                      <span style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
-                        {feedback.isCorrect ? 'Boa jogada!' : `Melhor jogada: ${feedback.recommended.toUpperCase()}`}
-                      </span>
-                      {feedback.ratingDelta != null && (
-                        <span style={{
-                          color: feedback.ratingDelta >= 0 ? '#4fce82' : '#e5484d',
-                          fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono',
-                        }}>
-                          {feedback.ratingDelta >= 0 ? '+' : ''}{feedback.ratingDelta}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{feedback.reason}</div>
-                    {!feedback.isCorrect && feedback.acceptable?.length > 0 && (
-                      <div style={{ color: '#676671', fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
-                        Tambem aceitavel: {feedback.acceptable.map(a => a.toUpperCase()).join(', ')}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Action buttons */}
-                <div className="mb-4">
-                  {!gameState.heroActed ? (
-                    <div>
-                      {/* Slider de sizing */}
-                      {sizingInfo && sizingInfo.canBet && (
-                        <div className="rounded-xl px-4 py-3 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
-                          <div className="flex items-center justify-between mb-2">
-                            <span style={{ color: '#676671', fontSize: 11, fontWeight: 600 }}>
-                              {gameState.lastBet > 0 ? 'RAISE' : 'BET'}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                value={betSize}
-                                onChange={e => {
-                                  const v = Math.max(sizingInfo.minBet, Math.min(sizingInfo.maxBet, Number(e.target.value) || 0))
-                                  setBetSize(v)
-                                }}
-                                style={{
-                                  width: 60, background: '#2a2a2e', border: '1px solid #3a3a42', borderRadius: 6,
-                                  color: '#fdfdfd', fontSize: 14, fontWeight: 700, fontFamily: 'JetBrains Mono',
-                                  textAlign: 'center', padding: '4px 6px', outline: 'none',
-                                }}
-                              />
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-2">
                           <input
-                            type="range"
-                            min={sizingInfo.minBet}
-                            max={sizingInfo.maxBet}
-                            step={1}
+                            type="number"
                             value={betSize}
-                            onChange={e => setBetSize(Number(e.target.value))}
-                            style={{ width: '100%', accentColor: '#4fce82', cursor: 'pointer' }}
+                            onChange={e => {
+                              const v = Math.max(sizingInfo.minBet, Math.min(sizingInfo.maxBet, Number(e.target.value) || 0))
+                              setBetSize(v)
+                            }}
+                            style={{
+                              width: 60, background: '#2a2a2e', border: '1px solid #3a3a42', borderRadius: 6,
+                              color: '#fdfdfd', fontSize: 14, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                              textAlign: 'center', padding: '4px 6px', outline: 'none',
+                            }}
                           />
-                          <div className="flex justify-between mt-1" style={{ fontSize: 10, color: '#676671' }}>
-                            <span>Min {sizingInfo.minBet}</span>
-                            <div className="flex gap-2">
-                              {[0.33, 0.5, 0.66, 1].map(pct => {
-                                const val = Math.min(Math.round(((gameState.heroInvested || 0) + (gameState.villainInvested || 0)) * pct), sizingInfo.maxBet)
-                                return (
-                                  <button key={pct} onClick={() => setBetSize(val)}
-                                    style={{
-                                      padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600,
-                                      background: '#2a2a2e', color: '#b3b3b8', border: 'none', cursor: 'pointer',
-                                    }}>
-                                    {pct === 1 ? 'Pot' : `${Math.round(pct * 100)}%`}
-                                  </button>
-                                )
-                              })}
-                              <button onClick={() => setBetSize(sizingInfo.maxBet)}
+                        </div>
+                      </div>
+                      <input
+                        type="range"
+                        min={sizingInfo.minBet}
+                        max={sizingInfo.maxBet}
+                        step={1}
+                        value={betSize}
+                        onChange={e => setBetSize(Number(e.target.value))}
+                        style={{ width: '100%', accentColor: '#4fce82', cursor: 'pointer' }}
+                      />
+                      <div className="flex justify-between mt-1" style={{ fontSize: 10, color: '#676671' }}>
+                        <span>Min {sizingInfo.minBet}</span>
+                        <div className="flex gap-2">
+                          {[0.33, 0.5, 0.66, 1].map(pct => {
+                            const val = Math.min(Math.round(((gameState.heroInvested || 0) + (gameState.villainInvested || 0)) * pct), sizingInfo.maxBet)
+                            return (
+                              <button key={pct} onClick={() => setBetSize(val)}
                                 style={{
                                   padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600,
-                                  background: '#ff8f00', color: '#0f0f0f', border: 'none', cursor: 'pointer',
+                                  background: '#2a2a2e', color: '#b3b3b8', border: 'none', cursor: 'pointer',
                                 }}>
-                                All-In
+                                {pct === 1 ? 'Pot' : `${Math.round(pct * 100)}%`}
                               </button>
-                            </div>
-                          </div>
+                            )
+                          })}
+                          <button onClick={() => setBetSize(sizingInfo.maxBet)}
+                            style={{
+                              padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+                              background: '#ff8f00', color: '#0f0f0f', border: 'none', cursor: 'pointer',
+                            }}>
+                            All-In
+                          </button>
                         </div>
-                      )}
+                      </div>
+                    </div>
+                  )}
 
-                      {/* Botoes de acao */}
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => handleHeroAction('fold')}
+                  {/* Botoes de acao */}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleHeroAction('fold')}
+                      style={{
+                        flex: 1, padding: '14px 4px', borderRadius: 8,
+                        fontWeight: 600, fontSize: 13, border: 'none',
+                        cursor: 'pointer', color: '#0f0f0f', background: '#e5484d',
+                      }}>
+                      Fold
+                    </button>
+                    {gameState.lastBet > 0 ? (
+                      <>
+                        <button onClick={() => handleHeroAction('call')}
                           style={{
                             flex: 1, padding: '14px 4px', borderRadius: 8,
                             fontWeight: 600, fontSize: 13, border: 'none',
-                            cursor: 'pointer', color: '#0f0f0f', background: '#e5484d',
+                            cursor: 'pointer', color: '#0f0f0f', background: '#0a84d7',
                           }}>
-                          Fold
+                          Call {gameState.lastBet.toFixed(0)}
                         </button>
-                        {gameState.lastBet > 0 ? (
-                          <>
-                            <button onClick={() => handleHeroAction('call')}
-                              style={{
-                                flex: 1, padding: '14px 4px', borderRadius: 8,
-                                fontWeight: 600, fontSize: 13, border: 'none',
-                                cursor: 'pointer', color: '#0f0f0f', background: '#0a84d7',
-                              }}>
-                              Call {gameState.lastBet.toFixed(0)}
-                            </button>
-                            {sizingInfo?.canBet && (
-                              <button onClick={() => handleHeroAction('raise', betSize)}
-                                style={{
-                                  flex: 1, padding: '14px 4px', borderRadius: 8,
-                                  fontWeight: 600, fontSize: 13, border: 'none',
-                                  cursor: 'pointer', color: '#0f0f0f',
-                                  background: betSize >= sizingInfo.maxBet ? '#ff8f00' : '#4fce82',
-                                }}>
-                                {betSize >= sizingInfo.maxBet ? `All-In` : `Raise ${betSize}`}
-                              </button>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <button onClick={() => handleHeroAction('check')}
-                              style={{
-                                flex: 1, padding: '14px 4px', borderRadius: 8,
-                                fontWeight: 600, fontSize: 13, border: 'none',
-                                cursor: 'pointer', color: '#0f0f0f', background: '#0a84d7',
-                              }}>
-                              Check
-                            </button>
-                            <button onClick={() => handleHeroAction('bet', betSize)}
-                              style={{
-                                flex: 1, padding: '14px 4px', borderRadius: 8,
-                                fontWeight: 600, fontSize: 13, border: 'none',
-                                cursor: 'pointer', color: '#0f0f0f',
-                                background: betSize >= sizingInfo?.maxBet ? '#ff8f00' : '#4fce82',
-                              }}>
-                              {betSize >= sizingInfo?.maxBet ? `All-In` : `Bet ${betSize}`}
-                            </button>
-                          </>
+                        {sizingInfo?.canBet && (
+                          <button onClick={() => handleHeroAction('raise', betSize)}
+                            style={{
+                              flex: 1, padding: '14px 4px', borderRadius: 8,
+                              fontWeight: 600, fontSize: 13, border: 'none',
+                              cursor: 'pointer', color: '#0f0f0f',
+                              background: betSize >= sizingInfo.maxBet ? '#ff8f00' : '#4fce82',
+                            }}>
+                            {betSize >= sizingInfo.maxBet ? `All-In` : `Raise ${betSize}`}
+                          </button>
                         )}
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => handleHeroAction('check')}
+                          style={{
+                            flex: 1, padding: '14px 4px', borderRadius: 8,
+                            fontWeight: 600, fontSize: 13, border: 'none',
+                            cursor: 'pointer', color: '#0f0f0f', background: '#0a84d7',
+                          }}>
+                          Check
+                        </button>
+                        <button onClick={() => handleHeroAction('bet', betSize)}
+                          style={{
+                            flex: 1, padding: '14px 4px', borderRadius: 8,
+                            fontWeight: 600, fontSize: 13, border: 'none',
+                            cursor: 'pointer', color: '#0f0f0f',
+                            background: betSize >= sizingInfo?.maxBet ? '#ff8f00' : '#4fce82',
+                          }}>
+                          {betSize >= sizingInfo?.maxBet ? `All-In` : `Bet ${betSize}`}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <button onClick={() => {
+                  const nextGs = advanceStreet(gameState)
+                  setGameState(nextGs)
+                  setFeedback(null)
+                }}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 8,
+                  background: '#f5a623', border: 'none',
+                  color: '#0f0f0f', fontWeight: 600, fontSize: 15,
+                  cursor: 'pointer',
+                }}>
+                  Proximo Street \u203A
+                </button>
+              )}
+            </div>
+
+            {/* Historico de maos */}
+            {match.handHistory.length > 0 && (
+              <div className="rounded-xl p-3 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>HISTORICO</div>
+                <div className="space-y-2">
+                  {match.handHistory.slice(0, 8).map((h, i) => (
+                    <div key={i} className="flex items-center gap-2" style={{ fontSize: 12 }}>
+                      <span style={{
+                        color: h.winner === 'hero' ? '#4fce82' : h.winner === 'tie' ? '#f5a623' : '#e5484d',
+                        fontWeight: 700, width: 14,
+                      }}>
+                        {h.winner === 'hero' ? 'W' : h.winner === 'tie' ? 'T' : 'L'}
+                      </span>
+                      <div className="flex gap-1">
+                        {h.heroCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
                       </div>
+                      <span style={{ color: '#676671', fontSize: 10 }}>vs</span>
+                      <div className="flex gap-1">
+                        {h.villainCards.map((c, j) => <Card key={j} card={parseCard(c)} size="xs" />)}
+                      </div>
+                      <span style={{ color: '#676671', fontSize: 10, flex: 1, textAlign: 'right' }}>
+                        {h.heroHand && h.heroHand !== '-' ? h.heroHand : ''}
+                        {h.heroHand && h.heroHand !== '-' && h.villainHand && h.villainHand !== '-' ? ' vs ' : ''}
+                        {h.villainHand && h.villainHand !== '-' ? h.villainHand : ''}
+                      </span>
+                      <span style={{ color: '#b3b3b8', fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono', minWidth: 28, textAlign: 'right' }}>
+                        {h.pot.toFixed(0)}
+                      </span>
                     </div>
-                  ) : gameState.waitingBotResponse || gameState.botSBFolded || gameState.allInRunout ? (
-                    <div style={{
-                      width: '100%', padding: '14px', borderRadius: 8,
-                      background: gameState.allInRunout ? '#ff8f0022' : '#1a1a1d',
-                      border: `1px solid ${gameState.allInRunout ? '#ff8f00' : '#2a2a2e'}`,
-                      color: gameState.allInRunout ? '#ff8f00' : '#676671',
-                      fontWeight: 600, fontSize: 14,
-                      textAlign: 'center',
-                    }}>
-                      {gameState.allInRunout ? 'All-In — revelando cartas...' : 'Aguardando...'}
-                    </div>
-                  ) : (
-                    <button onClick={() => {
-                      const nextGs = advanceStreet(gameState)
-                      setGameState(nextGs)
-                      setFeedback(null)
-                    }}
-                    style={{
-                      width: '100%', padding: '14px', borderRadius: 8,
-                      background: '#f5a623', border: 'none',
-                      color: '#0f0f0f', fontWeight: 600, fontSize: 15,
-                      cursor: 'pointer',
-                    }}>
-                      Proximo Street &gt;
-                    </button>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
+
+            {/* Abandonar partida */}
+            <button onClick={() => { clearMatch(); setMatch(null); setGameState(null) }}
+              className="w-full py-2 rounded-lg text-sm"
+              style={{ background: 'transparent', color: '#676671', border: '1px solid #2a2a2e', cursor: 'pointer' }}>
+              Abandonar partida
+            </button>
           </div>
         )}
       </div>
