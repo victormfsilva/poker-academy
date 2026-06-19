@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import { useProgress } from '../context/ProgressContext'
 
 const MODULES = [
@@ -29,8 +30,36 @@ const CATEGORIES = {
   advanced: 'Avancado',
 }
 
+function getLast7Days() {
+  const days = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    days.push(d.toISOString().slice(0, 10))
+  }
+  return days
+}
+
+function getDayStreak(dailyHistory) {
+  let streak = 0
+  const d = new Date()
+  while (true) {
+    const key = d.toISOString().slice(0, 10)
+    if (dailyHistory?.[key]?.hands > 0) {
+      streak++
+      d.setDate(d.getDate() - 1)
+    } else {
+      break
+    }
+  }
+  return streak
+}
+
+const DAY_NAMES = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
+
 export default function Dashboard() {
-  const { progress, getModuleProgress } = useProgress()
+  const { progress, getModuleProgress, setDailyGoal } = useProgress()
+  const [editingGoal, setEditingGoal] = useState(false)
 
   const globalAcc = progress.globalStats.totalHands > 0
     ? Math.round((progress.globalStats.totalCorrect / progress.globalStats.totalHands) * 100)
@@ -103,21 +132,99 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Daily progress bar */}
-          {dayData.hands > 0 && (
-            <div className="mt-6 pt-5" style={{ borderTop: '1px solid #2a2a2e' }}>
-              <div className="flex items-center justify-between mb-2">
-                <span style={{ color: '#b3b3b8', fontSize: 12, fontFamily: 'JetBrains Mono' }}>Meta diaria</span>
-                <span style={{ color: '#b3b3b8', fontSize: 12, fontFamily: 'JetBrains Mono' }}>{dayData.hands}/{goal}</span>
+          {/* Metas de treino */}
+          <div className="mt-6 pt-5" style={{ borderTop: '1px solid #2a2a2e' }}>
+            {/* Meta diaria + streak */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <span style={{ color: '#b3b3b8', fontSize: 12, fontWeight: 600 }}>META DIARIA</span>
+                {editingGoal ? (
+                  <select
+                    value={goal}
+                    onChange={e => { setDailyGoal(Number(e.target.value)); setEditingGoal(false) }}
+                    onBlur={() => setEditingGoal(false)}
+                    autoFocus
+                    style={{ background: '#2a2a2e', color: '#fdfdfd', border: '1px solid #3a3a42', borderRadius: 6, padding: '2px 6px', fontSize: 12, fontFamily: 'JetBrains Mono' }}
+                  >
+                    {[20, 30, 50, 75, 100, 150, 200].map(v => (
+                      <option key={v} value={v}>{v} maos</option>
+                    ))}
+                  </select>
+                ) : (
+                  <button onClick={() => setEditingGoal(true)}
+                    style={{ color: '#676671', fontSize: 11, background: 'none', border: '1px solid #2a2a2e', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>
+                    {goal} maos
+                  </button>
+                )}
               </div>
-              <div className="rounded-full h-1.5" style={{ background: '#2a2a2e' }}>
-                <div className="rounded-full h-1.5" style={{
-                  width: `${Math.min(Math.round((dayData.hands / goal) * 100), 100)}%`,
-                  background: dayData.hands >= goal ? '#4fce82' : '#0a84d7',
-                }} />
+              <div className="flex items-center gap-2">
+                {getDayStreak(progress.dailyHistory) > 0 && (
+                  <span style={{
+                    color: '#f5a623', fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                    background: 'rgba(245,166,35,0.1)', padding: '2px 8px', borderRadius: 4,
+                  }}>
+                    {getDayStreak(progress.dailyHistory)} dias seguidos
+                  </span>
+                )}
+                <span style={{ color: '#b3b3b8', fontSize: 12, fontFamily: 'JetBrains Mono' }}>
+                  {dayData.hands}/{goal}
+                </span>
               </div>
             </div>
-          )}
+
+            {/* Barra de progresso */}
+            <div className="rounded-full h-2 mb-4" style={{ background: '#2a2a2e' }}>
+              <div className="rounded-full h-2 transition-all" style={{
+                width: `${Math.min(Math.round((dayData.hands / goal) * 100), 100)}%`,
+                background: dayData.hands >= goal ? '#4fce82' : '#0a84d7',
+              }} />
+            </div>
+
+            {/* Calendario semanal */}
+            <div className="flex gap-1.5">
+              {getLast7Days().map(day => {
+                const d = progress.dailyHistory?.[day] || { hands: 0 }
+                const pct = Math.min(d.hands / goal, 1)
+                const isToday = day === today
+                const dayOfWeek = DAY_NAMES[new Date(day + 'T12:00:00').getDay()]
+                return (
+                  <div key={day} className="flex-1 text-center">
+                    <div style={{ color: isToday ? '#fdfdfd' : '#676671', fontSize: 9, fontWeight: isToday ? 700 : 400, marginBottom: 4 }}>
+                      {dayOfWeek}
+                    </div>
+                    <div className="rounded-md mx-auto" style={{
+                      height: 28,
+                      background: d.hands === 0 ? '#222225'
+                        : pct >= 1 ? '#4fce82'
+                        : pct >= 0.5 ? 'rgba(79,206,130,0.4)'
+                        : 'rgba(79,206,130,0.15)',
+                      border: isToday ? '2px solid #4fce82' : '1px solid #2a2a2e',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <span style={{
+                        color: d.hands === 0 ? '#444' : pct >= 1 ? '#0f0f0f' : '#b3b3b8',
+                        fontSize: 10, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                      }}>
+                        {d.hands || '-'}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Total semanal */}
+            {(() => {
+              const weekHands = getLast7Days().reduce((sum, day) => sum + (progress.dailyHistory?.[day]?.hands || 0), 0)
+              const weekGoal = goal * 7
+              return weekHands > 0 ? (
+                <div className="flex items-center justify-between mt-3">
+                  <span style={{ color: '#676671', fontSize: 11 }}>Semana: {weekHands} maos</span>
+                  <span style={{ color: '#676671', fontSize: 11 }}>{Math.round((weekHands / weekGoal) * 100)}% da meta semanal</span>
+                </div>
+              ) : null
+            })()}
+          </div>
         </div>
 
         {/* Progress overview bar */}
