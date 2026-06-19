@@ -1146,12 +1146,12 @@ export default function Arena() {
     const boardLen = { flop: 3, turn: 4, river: 5 }[next] || 0
     const board = gs.fullBoard.slice(0, boardLen)
 
-    // Check if both players are all-in
+    // Check if someone is all-in AND action is closed (lastBet=0 means no pending bet)
     const hRemaining = (gs.heroStack || 500) - (gs.heroInvested || 0)
     const vRemaining = (gs.villainStartStack || 500) - (gs.villainInvested || 0)
-    const bothAllIn = hRemaining <= 0 || vRemaining <= 0
+    const someoneAllIn = (hRemaining <= 0 || vRemaining <= 0) && (gs.lastBet || 0) === 0
 
-    if (bothAllIn || gs.allInRunout) {
+    if (someoneAllIn || gs.allInRunout) {
       return {
         ...gs,
         street: next,
