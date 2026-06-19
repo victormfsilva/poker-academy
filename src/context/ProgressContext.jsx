@@ -35,6 +35,15 @@ const defaultProgress = {
   },
   dailyGoal: 50,
   dailyHistory: {},
+  arena: {
+    rating: 1200,
+    peak: 1200,
+    history: [],
+    totalHands: 0,
+    totalWins: 0,
+    totalCorrectActions: 0,
+    totalActions: 0,
+  },
 }
 
 function migrateModules(modules) {
@@ -236,8 +245,42 @@ export function ProgressProvider({ children, userId }) {
     setProgress(prev => ({ ...prev, dailyGoal: goal }))
   }
 
+  function updateArenaData(arenaUpdate) {
+    setProgress(prev => ({
+      ...prev,
+      arena: { ...defaultProgress.arena, ...prev.arena, ...arenaUpdate },
+    }))
+  }
+
+  function recordArenaHand(won, correctActions, totalActions) {
+    setProgress(prev => {
+      const arena = { ...defaultProgress.arena, ...prev.arena }
+      const globalStats = {
+        ...prev.globalStats,
+        totalHands: prev.globalStats.totalHands + 1,
+        totalCorrect: prev.globalStats.totalCorrect + (correctActions > 0 ? 1 : 0),
+      }
+      const today = new Date().toISOString().slice(0, 10)
+      const dailyHistory = { ...prev.dailyHistory }
+      const dayData = dailyHistory[today] || { hands: 0, correct: 0 }
+      dailyHistory[today] = { hands: dayData.hands + 1, correct: dayData.correct + correctActions }
+      return {
+        ...prev,
+        globalStats,
+        dailyHistory,
+        arena: {
+          ...arena,
+          totalHands: arena.totalHands + 1,
+          totalWins: arena.totalWins + (won ? 1 : 0),
+          totalCorrectActions: arena.totalCorrectActions + correctActions,
+          totalActions: arena.totalActions + totalActions,
+        },
+      }
+    })
+  }
+
   return (
-    <ProgressContext.Provider value={{ progress, markLessonRead, recordAnswer, recordSession, getModuleProgress, setDailyGoal }}>
+    <ProgressContext.Provider value={{ progress, markLessonRead, recordAnswer, recordSession, getModuleProgress, setDailyGoal, updateArenaData, recordArenaHand }}>
       {children}
     </ProgressContext.Provider>
   )

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import Card, { parseCard, handToCards } from '../components/Card'
 import { BLIND_WARS, BB_VS_RFI } from '../data/ranges'
+import { useProgress } from '../context/ProgressContext'
 
 // ─── Constantes ────────────────────────────────────────────
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
@@ -931,13 +932,28 @@ function clearMatch() {
 
 // ─── Componente principal ─────────────────────────────────
 export default function Arena() {
+  const { progress, updateArenaData, recordArenaHand } = useProgress()
+
   // Match = partida longa (muitas maos ate alguem zerar)
   const [match, setMatch] = useState(() => loadMatch())
   const [gameState, setGameState] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [betSize, setBetSize] = useState(0)
-  const [ratingData, setRatingData] = useState(() => loadRating())
-  const [ratingDelta, setRatingDelta] = useState(null) // +N ou -N pra animar
+
+  // Rating: carrega do progress (Supabase) com fallback pra localStorage
+  const [ratingData, setRatingData] = useState(() => {
+    const cloud = progress?.arena
+    if (cloud && cloud.rating !== undefined && cloud.rating !== STARTING_RATING) {
+      return { rating: cloud.rating, peak: cloud.peak || cloud.rating, history: cloud.history || [] }
+    }
+    // Fallback: migrar de localStorage se existir
+    const local = loadRating()
+    if (local.rating !== STARTING_RATING) {
+      return local
+    }
+    return { rating: STARTING_RATING, peak: STARTING_RATING, history: [] }
+  })
+  const [ratingDelta, setRatingDelta] = useState(null)
 
   // Persist match on every change
   const updateMatch = useCallback((updater) => {
@@ -1052,7 +1068,9 @@ export default function Arena() {
         winner: matchOver ? (newHeroStack <= 0 ? 'villain' : 'hero') : null,
       }
     })
-  }, [updateMatch])
+    // Record in global stats (Supabase sync)
+    recordArenaHand(winner === 'hero', 0, 0)
+  }, [updateMatch, recordArenaHand])
 
   // Bot acts after a short delay when hero is BB (so hero sees cards first)
   useEffect(() => {
@@ -1246,6 +1264,7 @@ export default function Arena() {
       const newRatingData = { rating: newRating, peak: newPeak, history: newHistory }
       setRatingData(newRatingData)
       saveRating(newRatingData)
+      updateArenaData({ rating: newRating, peak: newPeak, history: newHistory })
       setRatingDelta(delta)
       fb.ratingDelta = delta
 
