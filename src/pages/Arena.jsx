@@ -937,7 +937,7 @@ export default function Arena() {
   // Match = partida longa (muitas maos ate alguem zerar)
   const [match, setMatch] = useState(() => loadMatch())
   const [gameState, setGameState] = useState(null)
-  const [feedback, setFeedback] = useState(null)
+  const [feedbacks, setFeedbacks] = useState([])
   const [betSize, setBetSize] = useState(0)
 
   // Rating: carrega do progress (Supabase) com fallback pra localStorage
@@ -981,7 +981,7 @@ export default function Arena() {
     }
     updateMatch(m)
     setGameState(null)
-    setFeedback(null)
+    setFeedbacks([])
   }, [updateMatch])
 
   const startNewHand = useCallback(() => {
@@ -1026,7 +1026,7 @@ export default function Arena() {
     }
 
     setGameState(gs)
-    setFeedback(null)
+    setFeedbacks([])
   }, [match, getBlinds, updateMatch])
 
   // Resolve hand result — update stacks
@@ -1269,7 +1269,8 @@ export default function Arena() {
       setRatingDelta(delta)
       fb.ratingDelta = delta
 
-      setFeedback(fb)
+      fb.street = gs.street
+      setFeedbacks(prev => [...prev, fb])
       // Vibrar no celular
       try {
         if (navigator.vibrate) navigator.vibrate(fb.isCorrect ? [50] : [50, 30, 50])
@@ -1383,7 +1384,7 @@ export default function Arena() {
         gs.villainActed = true
         gs.heroActed = false // Hero must respond
         setGameState({ ...gs })
-        setFeedback(null)
+        setFeedbacks([])
         return
       }
     }
@@ -1404,7 +1405,7 @@ export default function Arena() {
           gs.heroActed = false // Hero can check-raise
           gs.actions = [...gs.actions, { who: 'villain', action: 'bet', label: `Bet ${bSize}` }]
           setGameState({ ...gs })
-          setFeedback(null)
+          setFeedbacks([])
           return
         }
         // Both checked
@@ -1679,31 +1680,44 @@ export default function Arena() {
               </div>
             )}
 
-            {/* Feedback GTO */}
-            {feedback && (
-              <div className="rounded-xl px-4 py-3 mb-3" style={{
-                background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
-                border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
-              }}>
-                <div className="flex items-center justify-between">
-                  <span style={{ color: feedback.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
-                    {feedback.isCorrect ? 'Boa jogada!' : `Melhor jogada: ${feedback.recommended.toUpperCase()}`}
-                  </span>
-                  {feedback.ratingDelta != null && (
-                    <span style={{
-                      color: feedback.ratingDelta >= 0 ? '#4fce82' : '#e5484d',
-                      fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono',
-                    }}>
-                      {feedback.ratingDelta >= 0 ? '+' : ''}{feedback.ratingDelta}
-                    </span>
-                  )}
-                </div>
-                <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{feedback.reason}</div>
-                {!feedback.isCorrect && feedback.acceptable?.length > 0 && (
-                  <div style={{ color: '#676671', fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
-                    Tambem aceitavel: {feedback.acceptable.map(a => a.toUpperCase()).join(', ')}
+            {/* Feedback GTO — acumulado por street */}
+            {feedbacks.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {feedbacks.map((fb, idx) => (
+                  <div key={idx} className="rounded-xl px-4 py-3" style={{
+                    background: fb.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
+                    border: `1px solid ${fb.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`,
+                  }}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span style={{
+                          color: '#676671', fontSize: 10, fontWeight: 700,
+                          background: '#2a2a2e', padding: '2px 6px', borderRadius: 4,
+                          textTransform: 'uppercase',
+                        }}>
+                          {fb.street}
+                        </span>
+                        <span style={{ color: fb.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
+                          {fb.isCorrect ? 'Boa jogada!' : `Melhor: ${fb.recommended.toUpperCase()}`}
+                        </span>
+                      </div>
+                      {fb.ratingDelta != null && (
+                        <span style={{
+                          color: fb.ratingDelta >= 0 ? '#4fce82' : '#e5484d',
+                          fontSize: 13, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                        }}>
+                          {fb.ratingDelta >= 0 ? '+' : ''}{fb.ratingDelta}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{fb.reason}</div>
+                    {!fb.isCorrect && fb.acceptable?.length > 0 && (
+                      <div style={{ color: '#676671', fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
+                        Tambem aceitavel: {fb.acceptable.map(a => a.toUpperCase()).join(', ')}
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
             )}
 
@@ -1875,7 +1889,7 @@ export default function Arena() {
                 <button onClick={() => {
                   const nextGs = advanceStreet(gameState)
                   setGameState(nextGs)
-                  setFeedback(null)
+                  setFeedbacks([])
                 }}
                 style={{
                   width: '100%', padding: '14px', borderRadius: 8,
