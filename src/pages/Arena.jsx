@@ -1091,8 +1091,18 @@ export default function Arena() {
       }
 
       const matchOver = newHeroStack <= 0 || newVillainStack <= 0
+      const matchWinner = matchOver ? (newHeroStack <= 0 ? 'villain' : 'hero') : null
       const heroEval = gs.board.length >= 3 ? evalHand(gs.heroCards, gs.board) : { label: '-' }
       const villainEval = gs.board.length >= 3 ? evalHand(gs.villainCards, gs.board) : { label: '-' }
+
+      // Atualizar placar de partidas quando alguem zerar
+      if (matchOver) {
+        const arena = progress?.arena || {}
+        updateArenaData({
+          matchWins: (arena.matchWins || 0) + (matchWinner === 'hero' ? 1 : 0),
+          matchLosses: (arena.matchLosses || 0) + (matchWinner === 'villain' ? 1 : 0),
+        })
+      }
 
       return {
         ...prev,
@@ -1106,10 +1116,10 @@ export default function Arena() {
         },
         handHistory: [{ heroCards: gs.heroCards, villainCards: gs.villainCards, board: gs.board || [], winner, pot, heroHand: heroEval.label, villainHand: villainEval.label }, ...prev.handHistory].slice(0, 20),
         matchOver,
-        winner: matchOver ? (newHeroStack <= 0 ? 'villain' : 'hero') : null,
+        winner: matchWinner,
       }
     })
-  }, [updateMatch])
+  }, [updateMatch, progress?.arena, updateArenaData])
 
   // Bot acts after a short delay when hero is BB (so hero sees cards first)
   useEffect(() => {
@@ -1550,6 +1560,19 @@ export default function Arena() {
                 {getRatingTier(ratingData.rating).label}
               </span>
             </div>
+            {((progress.arena?.matchWins || 0) + (progress.arena?.matchLosses || 0)) > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full" style={{
+                background: '#1a1a1d', border: '1px solid #2a2a2e',
+              }}>
+                <span style={{ color: '#4fce82', fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+                  {progress.arena?.matchWins || 0}
+                </span>
+                <span style={{ color: '#676671', fontSize: 10 }}>-</span>
+                <span style={{ color: '#e5484d', fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+                  {progress.arena?.matchLosses || 0}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1613,6 +1636,18 @@ export default function Arena() {
                 <RatingChart history={ratingData.history} color={getRatingTier(ratingData.rating).color} />
               </div>
             )}
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                <span style={{ color: '#676671', fontSize: 12 }}>Placar</span>
+                <span style={{ color: '#4fce82', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+                  {progress.arena?.matchWins || 0}
+                </span>
+                <span style={{ color: '#676671', fontSize: 14 }}>-</span>
+                <span style={{ color: '#e5484d', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+                  {progress.arena?.matchLosses || 0}
+                </span>
+              </div>
+            </div>
             <div style={{ color: '#b3b3b8', fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
               {match.stats.hands} maos jogadas · Win rate {winRate}% · Acerto GTO {acc}%
             </div>
