@@ -22,6 +22,7 @@ const MODULES = [
   { id: 20, name: 'HUD e Solvers', desc: 'Estatisticas e estudo com solver', icon: 'H', cat: 'advanced' },
   { id: 21, name: 'Late Game MTT', desc: 'Dominando os momentos decisivos do torneio', icon: 'F', cat: 'advanced' },
   { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio e estrategia pos-flop', icon: 'S', cat: 'advanced' },
+  { id: 23, name: 'Range vs Nut Advantage', desc: 'Como solvers decidem frequencia e sizing', icon: 'N', cat: 'advanced' },
 ]
 
 const CATEGORIES = {

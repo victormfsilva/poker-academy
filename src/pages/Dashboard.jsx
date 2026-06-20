@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useProgress } from '../context/ProgressContext'
+import { analyzeLeaks } from '../utils/leaks'
 
 const MODULES = [
   { id: 1, name: 'RFI ChipEV', desc: 'Raise First In', icon: 'R', cat: 'fundamentals' },
@@ -23,6 +24,7 @@ const MODULES = [
   { id: 20, name: 'HUD & Solvers', desc: 'Estatisticas e solver', icon: 'H', cat: 'advanced' },
   { id: 21, name: 'Late Game MTT', desc: 'Momentos decisivos', icon: 'F', cat: 'advanced' },
   { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio', icon: 'S', cat: 'advanced' },
+  { id: 23, name: 'Range vs Nut', desc: 'Frequencia e sizing', icon: 'N', cat: 'advanced' },
 ]
 
 const CATEGORIES = {
@@ -58,68 +60,8 @@ function getDayStreak(dailyHistory) {
 
 const DAY_NAMES = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 
-const MOD_NAMES = {
-  1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet Flop',
-  6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def vs CBet',
-  13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play', 16: 'GTO vs Exploit',
-  17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD & Solvers', 21: 'Late Game',
-}
-
-function analyzeLeaks(history) {
-  if (!history || history.length < 20) return []
-
-  const buckets = {}
-
-  history.forEach(entry => {
-    // Leak por modulo
-    const modKey = `mod_${entry.m}`
-    if (!buckets[modKey]) buckets[modKey] = { total: 0, errors: 0, label: MOD_NAMES[entry.m] || `Modulo ${entry.m}`, type: 'modulo' }
-    buckets[modKey].total++
-    if (!entry.ok) buckets[modKey].errors++
-
-    // Leak por posicao (se tem posicao)
-    if (entry.p) {
-      const posKey = `pos_${entry.p}`
-      if (!buckets[posKey]) buckets[posKey] = { total: 0, errors: 0, label: `Posicao ${entry.p}`, type: 'posicao' }
-      buckets[posKey].total++
-      if (!entry.ok) buckets[posKey].errors++
-    }
-
-    // Leak por tipo de mao (suited connectors, broadways, etc)
-    if (entry.h) {
-      const hand = entry.h
-      const r1 = hand[0], r2 = hand.length >= 2 ? hand[1] : null
-      let handType = null
-      if (r1 === r2) handType = 'Pocket Pairs'
-      else if (hand.endsWith('s')) {
-        const highs = 'AKQJT'
-        if (highs.includes(r1) && highs.includes(r2)) handType = 'Broadways suited'
-        else if (Math.abs('AKQJT98765432'.indexOf(r1) - 'AKQJT98765432'.indexOf(r2)) <= 2) handType = 'Suited Connectors'
-        else handType = 'Suited Gappers'
-      } else if (hand.endsWith('o')) {
-        const highs = 'AKQJT'
-        if (highs.includes(r1) && highs.includes(r2)) handType = 'Broadways offsuit'
-        else handType = 'Offsuit fracos'
-      }
-      if (handType) {
-        const htKey = `ht_${handType}`
-        if (!buckets[htKey]) buckets[htKey] = { total: 0, errors: 0, label: handType, type: 'mao' }
-        buckets[htKey].total++
-        if (!entry.ok) buckets[htKey].errors++
-      }
-    }
-  })
-
-  // Filtrar buckets com pelo menos 5 respostas e calcular taxa de erro
-  return Object.values(buckets)
-    .filter(b => b.total >= 5 && b.errors > 0)
-    .map(b => ({ ...b, errorRate: Math.round((b.errors / b.total) * 100) }))
-    .sort((a, b) => b.errorRate - a.errorRate)
-    .slice(0, 3)
-}
-
 export default function Dashboard() {
-  const { progress, getModuleProgress, setDailyGoal } = useProgress()
+  const { progress, getModuleProgress, setDailyGoal, getPendingReviews } = useProgress()
   const [editingGoal, setEditingGoal] = useState(false)
 
   const globalAcc = progress.globalStats.totalHands > 0
@@ -287,6 +229,44 @@ export default function Dashboard() {
             })()}
           </div>
         </div>
+
+        {/* Revisoes Pendentes (Spaced Repetition) */}
+        {(() => {
+          const reviews = getPendingReviews()
+          if (!reviews.length) return null
+          return (
+            <div className="rounded-xl p-5 mb-5" style={{
+              background: '#1a1a1d',
+              border: '1px solid rgba(245,166,35,0.3)',
+            }}>
+              <div className="flex items-center gap-2 mb-3">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f5a623" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span style={{ color: '#fdfdfd', fontSize: 14, fontWeight: 600 }}>
+                  {reviews.length} revisao{reviews.length > 1 ? 'es' : ''} pendente{reviews.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {reviews.map(r => {
+                  const modInfo = MODULES.find(m => m.id === r.moduleId)
+                  return modInfo ? (
+                    <Link key={r.moduleId} to={`/modulos/${r.moduleId}`}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2"
+                      style={{ background: '#222225', border: '1px solid #2a2a2e' }}>
+                      <span style={{ color: '#f5a623', fontSize: 12, fontWeight: 700 }}>{modInfo.icon}</span>
+                      <span style={{ color: '#fdfdfd', fontSize: 12 }}>{modInfo.name}</span>
+                      <span style={{ color: '#676671', fontSize: 10 }}>({r.interval}d)</span>
+                    </Link>
+                  ) : null
+                })}
+              </div>
+              <div style={{ color: '#676671', fontSize: 11, marginTop: 8 }}>
+                Revise para fixar o conteudo na memoria de longo prazo
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Leaks - Weak Spot Report */}
         {(() => {

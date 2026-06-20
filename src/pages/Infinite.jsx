@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useProgress } from '../context/ProgressContext'
+import { analyzeLeaks } from '../utils/leaks'
 import { RFI_RANGES, PUSH_FOLD_RANGES, BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI, BLIND_WARS } from '../data/ranges'
 import Card, { handToCards, parseCard } from '../components/Card'
 import RangeViewer from '../components/RangeViewer'
@@ -900,6 +901,16 @@ function dynamicScenarioQuestion(moduleId) {
       () => { const spr = pick([9, 11, 13]); return { q: `SPR ${spr}. Flop 9-8-6 com flush draw. Voce tem Ah5h (nut flush draw). Vilao betta 75%.`, a: 'Call (implied odds altas com SPR alto)', b: 'Fold', aCorrect: true } },
       () => { const spr = pick([12, 15, 18]); return { q: `SPR ${spr}. Flop 5-8-T com flush draw + gutshot (12+ outs).`, a: 'Semi-bluff (combo draw + implied odds)', b: 'Check/fold', aCorrect: true } },
     ],
+    23: [
+      () => { const board = pick(['A-K-5','A-Q-8','K-J-4']); return { q: `Flop ${board} rainbow. BTN (raiser) vs BB (caller). Quem tem range advantage?`, a: 'BTN (mais Ax, Kx, broadways)', b: 'BB', aCorrect: true } },
+      () => { const board = pick(['7-6-3','8-5-2','6-4-3']); return { q: `Flop ${board} rainbow. BTN (raiser) vs BB (caller). Quem tem range advantage?`, a: 'BB (mais suited connectors baixos e sets)', b: 'BTN', aCorrect: true } },
+      () => { return { q: `BTN tem range advantage no flop. Qual a estrategia de c-bet?`, a: 'Bet frequente (70%+) com sizing PEQUENO (25-33%)', b: 'Bet seletiva com sizing grande (66-75%)', aCorrect: true } },
+      () => { const board = pick(['Q-J-T','K-Q-J','A-K-Q']); return { q: `Flop ${board} conectado. CO (raiser) vs BB. Quem tem nut advantage?`, a: 'CO (mais combos de nuts: AK, sets, premium)', b: 'BB', aCorrect: true } },
+      () => { return { q: `Voce tem nut advantage mas NAO range advantage. Qual a estrategia?`, a: 'Bet MENOS frequente com sizing GRANDE (66-100%)', b: 'Bet frequente com sizing pequeno', aCorrect: true } },
+      () => { const board = pick(['K-8-3','A-7-2','Q-5-2']); return { q: `Flop ${board} rainbow. UTG (raiser) vs BTN (caller). Quem tem range + nut advantage?`, a: 'UTG (range mais forte de EP)', b: 'BTN', aCorrect: true } },
+      () => { return { q: `Board 9-8-7 com flush draw. BTN raiser vs BB caller. Quem tem nut advantage?`, a: 'Equilibrado (ambos tem straights e flush draws)', b: 'BTN claramente', aCorrect: true } },
+      () => { return { q: `Voce tem range advantage E nut advantage. Qual a estrategia?`, a: 'Bet frequente com sizing variado (mix small/big)', b: 'Check range inteiro', aCorrect: true } },
+    ],
   }
 
   const templates = TEMPLATES[moduleId]
@@ -946,6 +957,7 @@ const GENERATORS = {
   20: () => dynamicScenarioQuestion(20),
   21: () => dynamicScenarioQuestion(21),
   22: () => dynamicScenarioQuestion(22),
+  23: () => dynamicScenarioQuestion(23),
 }
 
 function newScenario(unlockedIds) {
@@ -963,7 +975,7 @@ const MOD_COLORS = {
   6: '#e5484d', 7: '#4fce82', 8: '#e5484d', 9: '#f5a623', 10: '#0a84d7',
   11: '#f5a623', 12: '#4fce82', 13: '#e5484d', 14: '#f5a623', 15: '#0a84d7',
   16: '#4fce82', 17: '#f5a623', 18: '#0a84d7', 19: '#e5484d', 20: '#4fce82', 21: '#e5484d',
-  22: '#0a84d7',
+  22: '#0a84d7', 23: '#f5a623',
 }
 
 const MOD_NAMES_SHORT = {
@@ -971,23 +983,40 @@ const MOD_NAMES_SHORT = {
   6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def+CR',
   11: 'Def+CR', 12: 'CBet+Size', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
   16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers', 21: 'Late Game',
-  22: 'SPR',
+  22: 'SPR', 23: 'Range/Nut',
 }
 
 // ================================================================
 // COMPONENTE PRINCIPAL
 // ================================================================
-export default function Infinite() {
-  const { recordAnswer, getModuleProgress } = useProgress()
+function newAdaptiveScenario(idsForPlay, leakModuleIds) {
+  if (!leakModuleIds.length) return newScenario(idsForPlay)
+  // 70% do tempo: escolhe dos modulos com leak, 30% aleatorio
+  const validLeaks = leakModuleIds.filter(id => idsForPlay.includes(id) && GENERATORS[id])
+  if (validLeaks.length === 0) return newScenario(idsForPlay)
+  if (Math.random() < 0.7) {
+    const id = validLeaks[Math.floor(Math.random() * validLeaks.length)]
+    return GENERATORS[id]()
+  }
+  return newScenario(idsForPlay)
+}
 
-  const unlockedIds = Array.from({ length: 22 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
+export default function Infinite() {
+  const { progress, recordAnswer, getModuleProgress } = useProgress()
+
+  const unlockedIds = Array.from({ length: 23 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
 
   const [selectedModules, setSelectedModules] = useState(() => new Set(unlockedIds))
   const [showFilter, setShowFilter] = useState(false)
   const [showModuleStats, setShowModuleStats] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
 
   const activeIds = unlockedIds.filter(id => selectedModules.has(id))
   const idsForPlay = activeIds.length > 0 ? activeIds : unlockedIds
+
+  // Leaks para modo adaptativo
+  const leaks = analyzeLeaks(progress.answerHistory)
+  const leakModuleIds = leaks.filter(l => l.moduleId).map(l => l.moduleId)
 
   const [scenario, setScenario] = useState(() => newScenario(idsForPlay))
   const [result, setResult] = useState(null)
@@ -1024,8 +1053,8 @@ export default function Infinite() {
   const handleNext = useCallback(() => {
     setResult(null)
     setTimeLeft(PRESSURE_TIME)
-    setScenario(newScenario(idsForPlay))
-  }, [idsForPlay])
+    setScenario(focusMode ? newAdaptiveScenario(idsForPlay, leakModuleIds) : newScenario(idsForPlay))
+  }, [idsForPlay, focusMode, leakModuleIds])
 
   // Manter ref atualizada do handleAnswer para o timer
   handleAnswerRef.current = handleAnswer
@@ -1154,23 +1183,40 @@ export default function Infinite() {
           ))}
         </div>
 
-        {/* Toggle Modo Pressao */}
+        {/* Toggles: Pressao + Foco */}
         <div className="flex items-center justify-between mb-4 px-1">
-          <button
-            onClick={() => { setPressureMode(!pressureMode); setTimeLeft(PRESSURE_TIME) }}
-            className="flex items-center gap-2 rounded-lg px-3 py-1.5"
-            style={{
-              background: pressureMode ? 'rgba(229,72,77,0.12)' : '#1a1a1d',
-              border: `1px solid ${pressureMode ? '#e5484d' : '#2a2a2e'}`,
-              color: pressureMode ? '#e5484d' : '#676671',
-              fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            Modo Pressao {pressureMode ? 'ON' : 'OFF'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setPressureMode(!pressureMode); setTimeLeft(PRESSURE_TIME) }}
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
+              style={{
+                background: pressureMode ? 'rgba(229,72,77,0.12)' : '#1a1a1d',
+                border: `1px solid ${pressureMode ? '#e5484d' : '#2a2a2e'}`,
+                color: pressureMode ? '#e5484d' : '#676671',
+                fontSize: 11, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Pressao {pressureMode ? 'ON' : 'OFF'}
+            </button>
+            <button
+              onClick={() => setFocusMode(!focusMode)}
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
+              style={{
+                background: focusMode ? 'rgba(10,132,215,0.12)' : '#1a1a1d',
+                border: `1px solid ${focusMode ? '#0a84d7' : '#2a2a2e'}`,
+                color: focusMode ? '#0a84d7' : '#676671',
+                fontSize: 11, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+              </svg>
+              Foco {focusMode ? 'ON' : 'OFF'}
+            </button>
+          </div>
           {pressureMode && !result && (
             <div style={{ position: 'relative', width: 36, height: 36 }}>
               <svg width="36" height="36" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>

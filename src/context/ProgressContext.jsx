@@ -27,6 +27,7 @@ const defaultProgress = {
     20: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     21: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     22: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    23: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
   },
   globalStats: {
     totalHands: 0,
@@ -46,6 +47,7 @@ const defaultProgress = {
     totalActions: 0,
   },
   answerHistory: [],
+  reviewSchedule: {},
 }
 
 function migrateModules(modules) {
@@ -224,12 +226,31 @@ export function ProgressProvider({ children, userId }) {
       const moduleCompleted = mod.completed || justCompleted
 
       const nextModules = { ...prev.modules }
-      if (justCompleted && moduleId < 22) {
+      if (justCompleted && moduleId < 23) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
+      }
+
+      // Spaced Repetition: agendar revisao quando completa ou apos cada sessao de revisao
+      const reviewSchedule = { ...prev.reviewSchedule }
+      const now = Date.now()
+      const DAY = 86400000
+      if (justCompleted && !reviewSchedule[moduleId]) {
+        // Primeira vez completando: agendar dia 1, 3, 7, 14, 30
+        reviewSchedule[moduleId] = { next: now + 1 * DAY, interval: 1 }
+      } else if (reviewSchedule[moduleId] && accuracy >= 70) {
+        // Revisao feita com sucesso: agendar proxima com intervalo maior
+        const curr = reviewSchedule[moduleId]
+        const intervals = [1, 3, 7, 14, 30, 60]
+        const nextIdx = Math.min(intervals.indexOf(curr.interval) + 1, intervals.length - 1)
+        reviewSchedule[moduleId] = { next: now + intervals[nextIdx] * DAY, interval: intervals[nextIdx] }
+      } else if (reviewSchedule[moduleId] && accuracy < 70) {
+        // Revisao ruim: resetar intervalo
+        reviewSchedule[moduleId] = { next: now + 1 * DAY, interval: 1 }
       }
 
       return {
         ...prev,
+        reviewSchedule,
         modules: {
           ...nextModules,
           [moduleId]: { ...mod, trainerSessions: sessions, completed: moduleCompleted }
@@ -247,6 +268,14 @@ export function ProgressProvider({ children, userId }) {
     const lastTwo = sessions.slice(-2)
     const sessionsToComplete = lastTwo.filter(s => s.accuracy >= 90).length
     return { ...mod, accuracy, sessionsToComplete }
+  }
+
+  function getPendingReviews() {
+    const now = Date.now()
+    const schedule = progress.reviewSchedule || {}
+    return Object.entries(schedule)
+      .filter(([, v]) => v.next <= now)
+      .map(([id, v]) => ({ moduleId: Number(id), interval: v.interval }))
   }
 
   function setDailyGoal(goal) {
@@ -288,7 +317,7 @@ export function ProgressProvider({ children, userId }) {
   }
 
   return (
-    <ProgressContext.Provider value={{ progress, markLessonRead, recordAnswer, recordSession, getModuleProgress, setDailyGoal, updateArenaData, recordArenaHand }}>
+    <ProgressContext.Provider value={{ progress, markLessonRead, recordAnswer, recordSession, getModuleProgress, getPendingReviews, setDailyGoal, updateArenaData, recordArenaHand }}>
       {children}
     </ProgressContext.Provider>
   )
