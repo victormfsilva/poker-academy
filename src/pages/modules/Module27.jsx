@@ -144,6 +144,110 @@ const SCENARIOS = [
     explanation: 'Resumo: BLEFAR = bloqueie nuts/valor (vilao folda mais). CALL = bloqueie valor do vilao E nao bloqueie bluffs (proporcao de bluffs aumenta). Os dois lados sao complementares mas funcionam diferente.',
     boardCards: makeRainbowBoard(['K','J','7','4','2']), heroCards: makeHeroCards('A','9',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Bet 75%', potLabel: '22bb',
   }),
+  // --- Cenarios incorporados do antigo Modulo 19 ---
+  // Blocker pre-flop: KQs bloqueia folds
+  () => {
+    const heroPos = ['BTN','CO','HJ'][Math.floor(Math.random()*3)]
+    const villainPos = ['UTG','UTG+1','LJ'][Math.floor(Math.random()*3)]
+    const hand = ['KQs','KJs','QJs'][Math.floor(Math.random()*3)]
+    return {
+      q: `${villainPos} fez raise. Voce esta no ${heroPos} com ${hand}. ${hand} e um bom 3-bet blefe?`,
+      a: `Nao — ${hand} bloqueia maos que FOLDAM (KJs, QTs), nao maos que continuam`,
+      b: `Sim — ${hand} e forte o suficiente`,
+      aCorrect: true,
+      explanation: `${hand} bloqueia maos que voce QUER que ele folde (KJs, QTs, etc). Para 3-bet blefe, bloqueie maos que CONTINUAM (AA, KK, AK) — nao maos que foldam. Use A5s/A4s como 3-bet blefe.`,
+      boardCards: [], heroCards: hand === 'KQs' ? makeHeroCards('K','Q',true) : hand === 'KJs' ? makeHeroCards('K','J',true) : makeHeroCards('Q','J',true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
+    }
+  },
+  // Blocker pre-flop: A5s/A4s bom 3-bet blefe
+  () => {
+    const hand = ['A5s','A4s','A3s','A2s'][Math.floor(Math.random()*4)]
+    const heroPos = ['BB','SB','BTN'][Math.floor(Math.random()*3)]
+    const villainPos = ['BTN','CO','HJ'][Math.floor(Math.random()*3)]
+    return {
+      q: `${villainPos} fez raise. Voce esta no ${heroPos} com ${hand}. Bom 3-bet blefe?`,
+      a: 'Sim — Ace bloqueia AA (de 6 pra 3 combos) e AK/AQ',
+      b: 'Nao — mao muito fraca pra 3-bet',
+      aCorrect: true,
+      explanation: `${hand} e excelente para 3-bet blefe! O Ace bloqueia AA (de 6 combos para 3) e AK/AQ. Alem disso, tem equity de backup (wheel potential, suited).`,
+      boardCards: [], heroCards: makeHeroCards('A', hand[1], true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
+    }
+  },
+  // Straight blocker afeta sizing do value bet
+  () => {
+    const spots = [
+      { board: ['Q','J','T','4','2'], hand: 'AK', block: 'AK' },
+      { board: ['J','T','9','3','7'], hand: 'KQ', block: 'KQ' },
+      { board: ['T','9','8','2','K'], hand: 'QJ', block: 'QJ' },
+    ]
+    const spot = spots[Math.floor(Math.random()*spots.length)]
+    return {
+      q: `River: board ${spot.board.join('-')}. Voce tem ${spot.hand} (straight). Vilao checou. Qual sizing?`,
+      a: 'Aposta media (33-50%) — voce bloqueia combos que pagariam grande',
+      b: 'Aposta grande (75%+) — straight e forte',
+      aCorrect: true,
+      explanation: `Voce BLOQUEIA ${spot.block} do vilao — uma das maos que pagaria grande. Com board conectado, aposte menor para extrair de pares e dois pares que nao foldam a bet pequena.`,
+      boardCards: makeRainbowBoard(spot.board), heroCards: makeHeroCards(spot.hand[0], spot.hand[1], false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '20bb',
+    }
+  },
+  // AA bloqueia range de 3-bet — 4-bet sizing
+  () => {
+    const heroPos = ['UTG','LJ','CO','BTN'][Math.floor(Math.random()*4)]
+    const villainPos = ['BB','SB','BTN'][Math.floor(Math.random()*3)]
+    return {
+      q: `Voce abriu do ${heroPos} com AA. ${villainPos} fez 3-bet. Como blockers afetam seu 4-bet?`,
+      a: '4-bet menor — voce bloqueia AA/AK dele, range de 3-bet e mais leve',
+      b: '4-bet grande — AA e nuts, maximize valor',
+      aCorrect: true,
+      explanation: 'Com AA, voce bloqueia AA (0 combos) e AK (de 16 para 8). O range de 3-bet dele e mais leve. 4-bet menor induz calls de QQ, JJ, AQs que sizing grande assustaria.',
+      boardCards: [], heroCards: makeHeroCards('A','A',false), heroPos, villainPos, villainAction: '3-Bet', potLabel: 'Pre-flop',
+    }
+  },
+  // Suit blocker em semi-blefe no flop
+  () => {
+    const suit = ['ouros','copas','espadas'][Math.floor(Math.random()*3)]
+    const sc = suit === 'ouros' ? 'd' : suit === 'copas' ? 'h' : 's'
+    const r1 = ['7','8','6','5'][Math.floor(Math.random()*4)]
+    const r2 = ['4','3','2'][Math.floor(Math.random()*3)]
+    const high = ['A','K','Q'][Math.floor(Math.random()*3)]
+    return {
+      q: `Flop: ${high}${sc}-8${sc}-3${sc}. SB apostou 33%. Voce esta no BB com ${r1}${sc}${r2}${sc} (flush draw + 2 blockers). Check-raise?`,
+      a: 'Sim — flush draw + blockers de naipe reduzem flush draws do vilao',
+      b: 'Nao — apenas call com flush draw',
+      aCorrect: true,
+      explanation: `Duas cartas de ${suit} reduzem os combos de flush draw do vilao. Ele provavelmente nao tem flush draw — esta apostando com top pair ou air. Check-raise com fold equity + equity do draw.`,
+      boardCards: [high+sc, '8'+sc, '3'+sc], heroCards: [r1+sc, r2+sc], heroPos: 'BB', villainPos: 'SB', villainAction: 'Bet 33%', potLabel: '6bb',
+    }
+  },
+  // Blocker de continue vs blocker de fold
+  () => {
+    const hand1 = ['A5s','A4s','A3s'][Math.floor(Math.random()*3)]
+    const hand2 = ['KQs','KJs','QJs'][Math.floor(Math.random()*3)]
+    const heroPos = ['BTN','SB','BB'][Math.floor(Math.random()*3)]
+    const villainPos = ['UTG','LJ','HJ','CO'][Math.floor(Math.random()*4)]
+    return {
+      q: `${villainPos} fez raise. Voce esta no ${heroPos}. Qual e MELHOR pra 3-bet blefe: ${hand1} ou ${hand2}?`,
+      a: `${hand1} — bloqueia continues (AA, AK)`,
+      b: `${hand2} — cartas altas sao melhores`,
+      aCorrect: true,
+      explanation: `${hand1} bloqueia AA e AK (maos que 4-bet ou call). ${hand2} bloqueia KJ, QJ — maos que FOLDAM. Para 3-bet blefe, bloqueie continues, nao folds.`,
+      boardCards: [], heroCards: makeHeroCards('A', hand1[1], true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
+    }
+  },
+  // Playability vs blockers — JTs melhor call que 3-bet
+  () => {
+    const hand = ['JTs','T9s','98s','QJs'][Math.floor(Math.random()*4)]
+    const heroPos = ['BTN','CO'][Math.floor(Math.random()*2)]
+    const villainPos = ['UTG','LJ','HJ','CO'][Math.floor(Math.random()*4)]
+    return {
+      q: `${villainPos} fez raise. Voce esta no ${heroPos} com ${hand}. 3-bet blefe ou call?`,
+      a: 'Call — mao com muita equity pos-flop, nao bloqueia continues',
+      b: '3-bet blefe — suited connector e bom pra blefar',
+      aCorrect: true,
+      explanation: `${hand} tem muita equity pos-flop (faz straights, flushes) e nao bloqueia as maos de continue (AA, KK, AK). Melhor como call. Reserve 3-bet blefe para A5s/A4s que tem Ace blocker.`,
+      boardCards: [], heroCards: makeHeroCards(hand[0], hand[1], true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
+    }
+  },
 ]
 
 function generateScenario() {
@@ -237,6 +341,61 @@ function Lesson({ onComplete }) {
           <div className="rounded-lg p-4" style={{ background: 'rgba(79,206,130,0.08)', border: '1px solid rgba(79,206,130,0.2)' }}>
             <div style={{ color: '#4fce82', fontSize: 13, fontWeight: 600 }}>
               CALL = bloqueie valor + unblock bluffs. Se seus blockers fazem o range do vilao ter mais bluffs, call e melhor.
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Matematica dos Blockers',
+      content: (
+        <div>
+          <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8, marginBottom: 16 }}>
+            Saber <strong style={{ color: '#fdfdfd' }}>quantos combos voce remove</strong> e essencial pra avaliar blockers.
+          </p>
+          <div className="space-y-2 mb-4">
+            {[
+              { type: 'Pocket Pairs', normal: '6 combos', blocked: '1 blocker = 3 combos. 2 blockers = 1 combo', color: '#e5484d' },
+              { type: 'Offsuit', normal: '12 combos', blocked: 'Cada blocker remove 3 combos', color: '#f5a623' },
+              { type: 'Suited', normal: '4 combos', blocked: 'Blocker do mesmo naipe remove 1 combo', color: '#4a90e2' },
+            ].map((item, i) => (
+              <div key={i} className="rounded-lg px-3 py-2.5" style={{ background: '#222225' }}>
+                <div style={{ color: item.color, fontSize: 13, fontWeight: 600 }}>{item.type}: {item.normal}</div>
+                <div style={{ color: '#676671', fontSize: 12 }}>{item.blocked}</div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg p-4" style={{ background: 'rgba(245,166,35,0.08)', border: '1px solid rgba(245,166,35,0.2)' }}>
+            <div style={{ color: '#f5a623', fontSize: 13, fontWeight: 600 }}>
+              Exemplo: voce tem As. AA passa de 6 pra 3 combos. AKo passa de 12 pra 9. Isso muda drasticamente a probabilidade do vilao ter essas maos.
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Blockers Pre-Flop',
+      content: (
+        <div>
+          <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8, marginBottom: 16 }}>
+            Blockers nao sao so pra pos-flop. <strong style={{ color: '#fdfdfd' }}>No pre-flop, eles definem seus 3-bet blefes</strong>.
+          </p>
+          <div className="space-y-2 mb-4">
+            {[
+              { card: 'A5s/A4s/A3s', why: 'Ace bloqueia AA (6→3) e AK/AQ — otimos 3-bet blefes', color: '#4fce82' },
+              { card: 'KQs/KJs/QJs', why: 'Bloqueiam maos que FOLDAM — ruins pra 3-bet blefe', color: '#e5484d' },
+              { card: 'JTs/T9s/98s', why: 'Muita equity pos-flop — melhor call que 3-bet', color: '#f5a623' },
+              { card: 'AA fazendo 4-bet', why: 'Bloqueia AA/AK — 4-bet MENOR induz calls de QQ/JJ', color: '#4a90e2' },
+            ].map((item, i) => (
+              <div key={i} className="rounded-lg px-3 py-2.5" style={{ background: '#222225' }}>
+                <div style={{ color: item.color, fontSize: 13, fontWeight: 600 }}>{item.card}</div>
+                <div style={{ color: '#676671', fontSize: 12 }}>{item.why}</div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg p-4" style={{ background: 'rgba(79,206,130,0.08)', border: '1px solid rgba(79,206,130,0.2)' }}>
+            <div style={{ color: '#4fce82', fontSize: 13, fontWeight: 600 }}>
+              Regra: pra 3-bet blefe, bloqueie maos que CONTINUAM (Ace blockers). Nao maos que ja foldariam.
             </div>
           </div>
         </div>

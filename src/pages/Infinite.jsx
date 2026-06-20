@@ -1028,7 +1028,7 @@ const MOD_NAMES_SHORT = {
   1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet+Size',
   6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def+CR',
   11: 'Def+CR', 12: 'CBet+Size', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
-  16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers', 21: 'Late Game',
+  16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers (antigo)', 20: 'HUD/Solvers', 21: 'Late Game',
   22: 'SPR', 23: 'Range/Nut', 24: 'Polar/Merge', 25: 'Multistreet', 26: 'Sizing',
   27: 'Blockers',
 }

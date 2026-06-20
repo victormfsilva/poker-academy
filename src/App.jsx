@@ -39,6 +39,7 @@ import MentalGame from './pages/MentalGame'
 import Infinite from './pages/Infinite'
 import Arena from './pages/Arena'
 import Stats from './pages/Stats'
+import StudyGuide from './pages/StudyGuide'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -100,7 +101,7 @@ function App() {
           <Route path="/modulos/16" element={<Module16 />} />
           <Route path="/modulos/17" element={<Module17 />} />
           <Route path="/modulos/18" element={<Module18 />} />
-          <Route path="/modulos/19" element={<Module19 />} />
+          <Route path="/modulos/19" element={<Module27 />} />
           <Route path="/modulos/20" element={<Module20 />} />
           <Route path="/modulos/21" element={<Module21 />} />
           <Route path="/modulos/22" element={<Module22 />} />
@@ -109,6 +110,7 @@ function App() {
           <Route path="/modulos/25" element={<Module25 />} />
           <Route path="/modulos/26" element={<Module26 />} />
           <Route path="/modulos/27" element={<Module27 />} />
+          <Route path="/guia" element={<StudyGuide />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/ferramentas" element={<Tools />} />
           <Route path="/mental" element={<MentalGame />} />
