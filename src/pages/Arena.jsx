@@ -666,6 +666,67 @@ function getHeroFeedback(heroHole, board, heroAction, pot, lastBet) {
   return { recommended, reason, isCorrect, acceptable }
 }
 
+// ─── Feedback de sizing do hero ─────────────────────────────
+function getSizingFeedback(heroHole, board, action, customSize, pot, lastBet, street) {
+  if (action !== 'bet' && action !== 'raise') return null
+  if (!customSize || pot <= 0) return null
+
+  const strength = handStrength(heroHole, board)
+  const texture = boardTexture(board)
+  const streetIdx = { flop: 0, turn: 1, river: 2 }[street] ?? 0
+
+  // Calcular sizing como % do pote
+  const effectivePot = lastBet > 0 ? pot : pot
+  const sizePct = Math.round((customSize / Math.max(effectivePot, 1)) * 100)
+
+  // Determinar sizing ideal baseado na forca + textura + street
+  let idealMin, idealMax, idealDesc
+
+  switch (strength) {
+    case 'monster':
+      if (streetIdx === 2) { idealMin = 75; idealMax = 150; idealDesc = '75-150% do pote (value max no river)' }
+      else if (texture.wet) { idealMin = 66; idealMax = 80; idealDesc = '66-80% (proteger em board umido)' }
+      else { idealMin = 50; idealMax = 66; idealDesc = '50-66% (disfarcar a forca em board seco)' }
+      break
+    case 'strong':
+      if (streetIdx === 2) { idealMin = 66; idealMax = 80; idealDesc = '66-80% (value no river)' }
+      else if (texture.wet) { idealMin = 60; idealMax = 75; idealDesc = '60-75% (proteger + valor)' }
+      else { idealMin = 50; idealMax = 66; idealDesc = '50-66% (valor em board seco)' }
+      break
+    case 'good':
+      if (streetIdx === 0) { idealMin = 25; idealMax = 50; idealDesc = '25-50% (protecao leve)' }
+      else if (streetIdx === 2) { idealMin = 25; idealMax = 50; idealDesc = '25-50% (thin value)' }
+      else { idealMin = 40; idealMax = 60; idealDesc = '40-60% (bet de protecao)' }
+      break
+    case 'draw':
+      if (streetIdx === 0) { idealMin = 50; idealMax = 75; idealDesc = '50-75% (semi-bluff com fold equity)' }
+      else { idealMin = 60; idealMax = 80; idealDesc = '60-80% (semi-bluff forte)' }
+      break
+    case 'marginal':
+      idealMin = 25; idealMax = 40; idealDesc = '25-40% (probe/thin value pequeno)'
+      break
+    default: // weak/air
+      if (!texture.wet && streetIdx === 0) { idealMin = 25; idealMax = 40; idealDesc = '25-40% (cbet bluff pequeno)' }
+      else if (streetIdx === 2) { idealMin = 66; idealMax = 100; idealDesc = '66-100% (bluff polarizado no river)' }
+      else { idealMin = 40; idealMax = 60; idealDesc = '40-60% (bluff com sizing medio)' }
+  }
+
+  const tooSmall = sizePct < idealMin - 10
+  const tooBig = sizePct > idealMax + 15
+  const isGood = sizePct >= idealMin - 10 && sizePct <= idealMax + 15
+
+  let sizingComment
+  if (isGood) {
+    sizingComment = `Sizing de ${sizePct}% do pote — bom tamanho.`
+  } else if (tooSmall) {
+    sizingComment = `Sizing de ${sizePct}% do pote — muito pequeno. Ideal: ${idealDesc}.`
+  } else {
+    sizingComment = `Sizing de ${sizePct}% do pote — muito grande. Ideal: ${idealDesc}.`
+  }
+
+  return { sizingComment, isGoodSizing: isGood, sizePct, idealRange: `${idealMin}-${idealMax}%` }
+}
+
 // ─── Componentes visuais ──────────────────────────────────
 
 // Cores por tipo de acao
@@ -1142,13 +1203,13 @@ export default function Arena() {
           const raiseTotal = Math.min(Math.round(gs.blinds.bb * 2.5), vStack)
           gs.villainInvested = raiseTotal
           gs.lastBet = raiseTotal
-          gs.actions = [{ who: 'villain', action: 'raise', label: `Raise ${raiseTotal}` }]
+          gs.actions = [{ who: 'villain', action: 'raise', label: `Raise ${raiseTotal}`, street: 'preflop' }]
         } else if (botAction === 'call') {
           gs.villainInvested = Math.min(gs.blinds.bb, vStack)
           gs.lastBet = 0
-          gs.actions = [{ who: 'villain', action: 'call', label: 'Complete' }]
+          gs.actions = [{ who: 'villain', action: 'call', label: 'Complete', street: 'preflop' }]
         } else {
-          gs.actions = [{ who: 'villain', action: 'fold', label: 'Fold' }]
+          gs.actions = [{ who: 'villain', action: 'fold', label: 'Fold', street: 'preflop' }]
           gs.botSBFolded = true
         }
         return gs
@@ -1315,6 +1376,15 @@ export default function Arena() {
       fb = getHeroFeedback(gs.heroCards, gs.board, action, currentPot, gs.lastBet)
     }
     if (fb) {
+      // Adicionar feedback de sizing se hero fez bet/raise
+      if ((action === 'bet' || action === 'raise') && gs.street !== 'preflop') {
+        const sizeFb = getSizingFeedback(gs.heroCards, gs.board, action, customSize || (action === 'raise' ? Math.max(gs.lastBet * 2.5, gs.blinds.bb * 2) : Math.round(currentPot * 0.66)), currentPot, gs.lastBet, gs.street)
+        if (sizeFb) {
+          fb.sizingFeedback = sizeFb
+          fb.reason = fb.reason + ' ' + sizeFb.sizingComment
+        }
+      }
+
       const strength = gs.street === 'preflop' ? 'good' : handStrength(gs.heroCards, gs.board)
       const delta = calcRatingChange(fb.isCorrect, strength, gs.lastBet, currentPot, gs.street, ratingData.rating)
       const newRating = Math.max(0, ratingData.rating + delta)
@@ -1377,7 +1447,7 @@ export default function Arena() {
     }
 
     gs.heroActed = true
-    gs.actions = [...gs.actions, { who: 'hero', action, label: heroLabel }]
+    gs.actions = [...gs.actions, { who: 'hero', action, label: heroLabel, street: gs.street }]
 
     // Bot responds to hero bet/raise
     if (action === 'bet' || action === 'raise') {
@@ -1387,7 +1457,7 @@ export default function Arena() {
         : botDecision(gs.villainCards, gs.board, gs.street, newPot, gs.lastBet, !gs.heroIsBtn)
 
       if (botAction === 'fold') {
-        gs.actions = [...gs.actions, { who: 'villain', action: 'fold', label: 'Fold' }]
+        gs.actions = [...gs.actions, { who: 'villain', action: 'fold', label: 'Fold', street: gs.street }]
         gs.villainActed = true
         gs.heroActed = true
         gs.waitingBotResponse = { type: 'fold', pot: newPot }
@@ -1398,7 +1468,7 @@ export default function Arena() {
         const callAmt = Math.min(gs.lastBet, villainRemaining)
         gs.villainInvested = (gs.villainInvested || 0) + callAmt
         gs.lastBet = 0
-        gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${callAmt}` }]
+        gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${callAmt}`, street: gs.street }]
         gs.villainActed = true
         if (gs.street === 'river') {
           // River call — show cards before going to showdown
@@ -1422,7 +1492,7 @@ export default function Arena() {
           // Can't raise — just call
           gs.villainInvested = (gs.villainInvested || 0) + callFirst
           gs.lastBet = 0
-          gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${callFirst}` }]
+          gs.actions = [...gs.actions, { who: 'villain', action: 'call', label: `Call ${callFirst}`, street: gs.street }]
           gs.villainActed = true
           if (gs.street === 'river') {
             gs.showVillain = true
@@ -1438,7 +1508,7 @@ export default function Arena() {
         gs.villainInvested = (gs.villainInvested || 0) + callFirst + raiseAmt
         gs.lastBet = raiseAmt
         const isAllIn = (callFirst + raiseAmt) >= villainRemaining
-        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: isAllIn ? `All-In ${gs.villainInvested}` : `Raise ${raiseAmt}` }]
+        gs.actions = [...gs.actions, { who: 'villain', action: 'raise', label: isAllIn ? `All-In ${gs.villainInvested}` : `Raise ${raiseAmt}`, street: gs.street }]
         gs.villainActed = true
         gs.heroActed = false // Hero must respond
         setGameState({ ...gs })
@@ -1461,14 +1531,14 @@ export default function Arena() {
           gs.lastBet = bSize
           gs.villainActed = true
           gs.heroActed = false // Hero can check-raise
-          gs.actions = [...gs.actions, { who: 'villain', action: 'bet', label: `Bet ${bSize}` }]
+          gs.actions = [...gs.actions, { who: 'villain', action: 'bet', label: `Bet ${bSize}`, street: gs.street }]
           setGameState({ ...gs })
           setFeedbacks([])
           return
         }
         // Both checked
         gs.villainActed = true
-        gs.actions = [...gs.actions, { who: 'villain', action: 'check', label: 'Check' }]
+        gs.actions = [...gs.actions, { who: 'villain', action: 'check', label: 'Check', street: gs.street }]
         if (gs.street === 'river') {
           gs.showVillain = true
           gs.heroActed = true
@@ -1826,6 +1896,52 @@ export default function Arena() {
               </div>
             )}
 
+            {/* Hand History — resumo da mao por street */}
+            {gameState?.result && gameState.actions?.length > 0 && !matchOver && (() => {
+              const streets = ['preflop', 'flop', 'turn', 'river']
+              const grouped = {}
+              gameState.actions.forEach(a => {
+                const s = a.street || 'preflop'
+                if (!grouped[s]) grouped[s] = []
+                grouped[s].push(a)
+              })
+              const activeStreets = streets.filter(s => grouped[s]?.length > 0)
+              if (activeStreets.length <= 1) return null
+              return (
+                <div className="rounded-xl p-3 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                  <div style={{ color: '#676671', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>
+                    Hand History
+                  </div>
+                  <div className="space-y-2">
+                    {activeStreets.map(street => (
+                      <div key={street} className="flex items-start gap-2">
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                          color: '#676671', background: '#2a2a2e', padding: '2px 6px',
+                          borderRadius: 4, textTransform: 'uppercase', minWidth: 52, textAlign: 'center',
+                          flexShrink: 0, marginTop: 1,
+                        }}>
+                          {street}
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {grouped[street].map((a, i) => (
+                            <span key={i} style={{
+                              fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono',
+                              color: getActionColor(a.label),
+                              background: `${getActionColor(a.label)}15`,
+                              padding: '1px 6px', borderRadius: 4,
+                            }}>
+                              {a.who === 'hero' ? 'H' : 'V'}: {a.label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Feedback GTO — acumulado por street */}
             {feedbacks.length > 0 && (
               <div className="space-y-2 mb-3">
@@ -1857,6 +1973,21 @@ export default function Arena() {
                       )}
                     </div>
                     <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 4, lineHeight: 1.5 }}>{fb.reason}</div>
+                    {fb.sizingFeedback && (
+                      <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                          color: fb.sizingFeedback.isGoodSizing ? '#4fce82' : '#f5a623',
+                          background: fb.sizingFeedback.isGoodSizing ? 'rgba(79,206,130,0.15)' : 'rgba(245,166,35,0.15)',
+                          padding: '2px 8px', borderRadius: 4,
+                        }}>
+                          {fb.sizingFeedback.sizePct}% pot
+                        </span>
+                        <span style={{ fontSize: 10, color: '#676671' }}>
+                          ideal: {fb.sizingFeedback.idealRange}
+                        </span>
+                      </div>
+                    )}
                     {!fb.isCorrect && fb.acceptable?.length > 0 && (
                       <div style={{ color: '#676671', fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
                         Tambem aceitavel: {fb.acceptable.map(a => a.toUpperCase()).join(', ')}
