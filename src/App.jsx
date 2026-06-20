@@ -28,6 +28,7 @@ import Module18 from './pages/modules/Module18'
 import Module19 from './pages/modules/Module19'
 import Module20 from './pages/modules/Module20'
 import Module21 from './pages/modules/Module21'
+import Module22 from './pages/modules/Module22'
 import Tools from './pages/Tools'
 import MentalGame from './pages/MentalGame'
 import Infinite from './pages/Infinite'
@@ -97,6 +98,7 @@ function App() {
           <Route path="/modulos/19" element={<Module19 />} />
           <Route path="/modulos/20" element={<Module20 />} />
           <Route path="/modulos/21" element={<Module21 />} />
+          <Route path="/modulos/22" element={<Module22 />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/ferramentas" element={<Tools />} />
           <Route path="/mental" element={<MentalGame />} />

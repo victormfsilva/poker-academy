@@ -26,6 +26,7 @@ const defaultProgress = {
     19: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     20: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     21: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    22: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
   },
   globalStats: {
     totalHands: 0,
@@ -44,6 +45,7 @@ const defaultProgress = {
     totalCorrectActions: 0,
     totalActions: 0,
   },
+  answerHistory: [],
 }
 
 function migrateModules(modules) {
@@ -176,7 +178,7 @@ export function ProgressProvider({ children, userId }) {
     }))
   }
 
-  function recordAnswer(moduleId, correct, streak) {
+  function recordAnswer(moduleId, correct, streak, details) {
     setProgress(prev => {
       const mod = prev.modules[moduleId]
       const globalStats = {
@@ -190,10 +192,16 @@ export function ProgressProvider({ children, userId }) {
       const dailyHistory = { ...prev.dailyHistory }
       const dayData = dailyHistory[today] || { hands: 0, correct: 0 }
       dailyHistory[today] = { hands: dayData.hands + 1, correct: dayData.correct + (correct ? 1 : 0) }
+
+      // Historico detalhado para deteccao de leaks (ultimas 200)
+      const entry = { m: moduleId, ok: correct, t: Date.now(), ...details }
+      const history = [...(prev.answerHistory || []), entry].slice(-200)
+
       return {
         ...prev,
         globalStats,
         dailyHistory,
+        answerHistory: history,
         modules: {
           ...prev.modules,
           [moduleId]: {
@@ -216,7 +224,7 @@ export function ProgressProvider({ children, userId }) {
       const moduleCompleted = mod.completed || justCompleted
 
       const nextModules = { ...prev.modules }
-      if (justCompleted && moduleId < 21) {
+      if (justCompleted && moduleId < 22) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
       }
 

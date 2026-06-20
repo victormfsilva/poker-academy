@@ -21,6 +21,7 @@ const MODULES = [
   { id: 19, name: 'Blockers', desc: 'Card removal e decisoes avancadas', icon: 'L', cat: 'advanced' },
   { id: 20, name: 'HUD e Solvers', desc: 'Estatisticas e estudo com solver', icon: 'H', cat: 'advanced' },
   { id: 21, name: 'Late Game MTT', desc: 'Dominando os momentos decisivos do torneio', icon: 'F', cat: 'advanced' },
+  { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio e estrategia pos-flop', icon: 'S', cat: 'advanced' },
 ]
 
 const CATEGORIES = {

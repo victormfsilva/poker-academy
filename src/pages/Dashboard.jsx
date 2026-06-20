@@ -22,6 +22,7 @@ const MODULES = [
   { id: 19, name: 'Blockers', desc: 'Card removal avancado', icon: 'L', cat: 'advanced' },
   { id: 20, name: 'HUD & Solvers', desc: 'Estatisticas e solver', icon: 'H', cat: 'advanced' },
   { id: 21, name: 'Late Game MTT', desc: 'Momentos decisivos', icon: 'F', cat: 'advanced' },
+  { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio', icon: 'S', cat: 'advanced' },
 ]
 
 const CATEGORIES = {
@@ -56,6 +57,66 @@ function getDayStreak(dailyHistory) {
 }
 
 const DAY_NAMES = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
+
+const MOD_NAMES = {
+  1: 'RFI', 2: 'Push/Fold', 3: 'Pot Odds', 4: 'BB vs RFI', 5: 'CBet Flop',
+  6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def vs CBet',
+  13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play', 16: 'GTO vs Exploit',
+  17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD & Solvers', 21: 'Late Game',
+}
+
+function analyzeLeaks(history) {
+  if (!history || history.length < 20) return []
+
+  const buckets = {}
+
+  history.forEach(entry => {
+    // Leak por modulo
+    const modKey = `mod_${entry.m}`
+    if (!buckets[modKey]) buckets[modKey] = { total: 0, errors: 0, label: MOD_NAMES[entry.m] || `Modulo ${entry.m}`, type: 'modulo' }
+    buckets[modKey].total++
+    if (!entry.ok) buckets[modKey].errors++
+
+    // Leak por posicao (se tem posicao)
+    if (entry.p) {
+      const posKey = `pos_${entry.p}`
+      if (!buckets[posKey]) buckets[posKey] = { total: 0, errors: 0, label: `Posicao ${entry.p}`, type: 'posicao' }
+      buckets[posKey].total++
+      if (!entry.ok) buckets[posKey].errors++
+    }
+
+    // Leak por tipo de mao (suited connectors, broadways, etc)
+    if (entry.h) {
+      const hand = entry.h
+      const r1 = hand[0], r2 = hand.length >= 2 ? hand[1] : null
+      let handType = null
+      if (r1 === r2) handType = 'Pocket Pairs'
+      else if (hand.endsWith('s')) {
+        const highs = 'AKQJT'
+        if (highs.includes(r1) && highs.includes(r2)) handType = 'Broadways suited'
+        else if (Math.abs('AKQJT98765432'.indexOf(r1) - 'AKQJT98765432'.indexOf(r2)) <= 2) handType = 'Suited Connectors'
+        else handType = 'Suited Gappers'
+      } else if (hand.endsWith('o')) {
+        const highs = 'AKQJT'
+        if (highs.includes(r1) && highs.includes(r2)) handType = 'Broadways offsuit'
+        else handType = 'Offsuit fracos'
+      }
+      if (handType) {
+        const htKey = `ht_${handType}`
+        if (!buckets[htKey]) buckets[htKey] = { total: 0, errors: 0, label: handType, type: 'mao' }
+        buckets[htKey].total++
+        if (!entry.ok) buckets[htKey].errors++
+      }
+    }
+  })
+
+  // Filtrar buckets com pelo menos 5 respostas e calcular taxa de erro
+  return Object.values(buckets)
+    .filter(b => b.total >= 5 && b.errors > 0)
+    .map(b => ({ ...b, errorRate: Math.round((b.errors / b.total) * 100) }))
+    .sort((a, b) => b.errorRate - a.errorRate)
+    .slice(0, 3)
+}
 
 export default function Dashboard() {
   const { progress, getModuleProgress, setDailyGoal } = useProgress()
@@ -226,6 +287,48 @@ export default function Dashboard() {
             })()}
           </div>
         </div>
+
+        {/* Leaks - Weak Spot Report */}
+        {(() => {
+          const leaks = analyzeLeaks(progress.answerHistory)
+          if (!leaks.length) return null
+          const typeIcon = { modulo: 'M', posicao: 'P', mao: 'H' }
+          const typeColor = { modulo: '#0a84d7', posicao: '#f5a623', mao: '#e5484d' }
+          return (
+            <div className="rounded-xl p-5 mb-8" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e5484d" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span style={{ color: '#fdfdfd', fontSize: 14, fontWeight: 600 }}>Seus 3 maiores leaks</span>
+                <span style={{ color: '#676671', fontSize: 11, marginLeft: 'auto' }}>
+                  Ultimas {(progress.answerHistory || []).length} maos
+                </span>
+              </div>
+              <div className="flex flex-col gap-2">
+                {leaks.map((leak, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5" style={{ background: '#222225' }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                      background: `${typeColor[leak.type]}15`,
+                      color: typeColor[leak.type],
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                    }}>{typeIcon[leak.type]}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ color: '#fdfdfd', fontSize: 13, fontWeight: 500 }}>{leak.label}</div>
+                      <div style={{ color: '#676671', fontSize: 11 }}>
+                        {leak.errors} erros em {leak.total} ({leak.errorRate}% de erro)
+                      </div>
+                    </div>
+                    <div style={{
+                      color: leak.errorRate >= 50 ? '#e5484d' : leak.errorRate >= 30 ? '#f5a623' : '#b3b3b8',
+                      fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                    }}>{leak.errorRate}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Progress overview bar */}
         <div className="flex items-center gap-4 mb-8">

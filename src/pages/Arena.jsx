@@ -981,6 +981,13 @@ export default function Arena() {
   const [feedbacks, setFeedbacks] = useState([])
   const [betSize, setBetSize] = useState(0)
 
+  // Modo Pressao
+  const [pressureMode, setPressureMode] = useState(false)
+  const PRESSURE_TIME = 20
+  const [timeLeft, setTimeLeft] = useState(PRESSURE_TIME)
+  const timerRef = useRef(null)
+  const handleHeroActionRef = useRef(null)
+
   // Rating: carrega do progress (Supabase) com fallback pra localStorage
   const [ratingData, setRatingData] = useState(() => {
     const cloud = progress?.arena
@@ -1531,6 +1538,30 @@ export default function Arena() {
     prevSizingRef.current = sizingInfo
   }
 
+  // Manter ref atualizada do handleHeroAction para o timer
+  handleHeroActionRef.current = handleHeroAction
+
+  // Timer de pressao na Arena
+  const heroCanAct = gameState && !gameState.result && !gameState.heroActed &&
+    !gameState.waitingBotPreflop && !gameState.waitingBotResponse && !gameState.allInRunout && !gameState.botSBFolded
+  useEffect(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (!pressureMode || !heroCanAct) return
+    setTimeLeft(PRESSURE_TIME)
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current)
+          // Timeout = fold automatico
+          handleHeroActionRef.current?.('fold')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timerRef.current)
+  }, [pressureMode, heroCanAct, gameState?.street, gameState?.lastBet])
+
   // Check match over
   const matchOver = match?.matchOver
   const blinds = match ? getBlinds(match.handNum) : BLIND_LEVELS[0]
@@ -1574,6 +1605,45 @@ export default function Arena() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Toggle Modo Pressao */}
+        <div className="flex items-center justify-between mb-4 px-1">
+          <button
+            onClick={() => { setPressureMode(!pressureMode); setTimeLeft(PRESSURE_TIME) }}
+            className="flex items-center gap-2 rounded-lg px-3 py-1.5"
+            style={{
+              background: pressureMode ? 'rgba(229,72,77,0.12)' : '#1a1a1d',
+              border: `1px solid ${pressureMode ? '#e5484d' : '#2a2a2e'}`,
+              color: pressureMode ? '#e5484d' : '#676671',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Modo Pressao {pressureMode ? 'ON' : 'OFF'}
+          </button>
+          {pressureMode && heroCanAct && (
+            <div style={{ position: 'relative', width: 36, height: 36 }}>
+              <svg width="36" height="36" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="#2a2a2e" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15" fill="none"
+                  stroke={timeLeft <= 5 ? '#e5484d' : '#4fce82'}
+                  strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray={`${(timeLeft / PRESSURE_TIME) * 94.25} 94.25`}
+                  style={{ transition: 'stroke-dasharray 0.3s' }}
+                />
+              </svg>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, width: 36, height: 36,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: timeLeft <= 5 ? '#e5484d' : '#fdfdfd',
+                fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                animation: timeLeft <= 5 ? 'pulse 0.5s infinite alternate' : 'none',
+              }}>{timeLeft}</div>
+            </div>
+          )}
         </div>
 
         {/* No match started */}

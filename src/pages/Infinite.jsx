@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useProgress } from '../context/ProgressContext'
 import { RFI_RANGES, PUSH_FOLD_RANGES, BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI, BLIND_WARS } from '../data/ranges'
 import Card, { handToCards, parseCard } from '../components/Card'
@@ -890,6 +890,16 @@ function dynamicScenarioQuestion(moduleId) {
       () => { const bb = randInt(6, 10); const hand = pick(['ATo','KJs','QTs','A8s']); return { q: `Late game. ${bb}bb no BB. CO raisa 2.2x. Pot odds pra call. ${hand}.`, a: 'Stop and go (call pre, shove flop)', b: 'Shove pre', aCorrect: true } },
       () => { const bb = randInt(20, 35); const hand = pick(['K8o','Q9o','J9o','T9o','A5o']); return { q: `Mesa tight esperando ITM. ${bb}bb no ${pick(['CO','BTN'])}. Ninguem abriu em 3 orbitas. ${hand}.`, a: 'Raise (explorar passividade)', b: 'Fold', aCorrect: true } },
     ],
+    22: [
+      () => { const spr = pick([2, 2.5, 3, 3.5]); return { q: `SPR ${spr}. Flop A-7-2 rainbow. Voce tem ATo (top pair). Vilao betta 50%.`, a: 'All-in (commit com top pair em SPR baixo)', b: 'Call e avaliar turn', aCorrect: true } },
+      () => { const spr = pick([5, 6, 7]); return { q: `SPR ${spr}. Flop Q-9-4 com flush draw. Voce tem QJs (top pair + draw). Vilao checka.`, a: 'Bet 66-75% (proteger + valor)', b: 'Bet 33% (sizing pequeno)', aCorrect: true } },
+      () => { const spr = pick([10, 12, 15]); return { q: `SPR ${spr}. Flop K-8-3 rainbow. Voce tem AKo (TPTK). Vilao betta 66%.`, a: 'Call (pot control, SPR alto)', b: 'Raise', aCorrect: true } },
+      () => { const spr = pick([10, 12, 14]); return { q: `SPR ${spr}. Pre-flop single raise pot. Voce tem 55 no BTN. UTG raisa.`, a: 'Call (set mine — implied odds com SPR alto)', b: 'Fold', aCorrect: true } },
+      () => { const spr = pick([2, 3]); return { q: `4-bet pot. SPR ${spr}. Flop 9-5-2 rainbow. Voce tem AA. Vilao checka.`, a: 'Shove (SPR baixo, AA = commit total)', b: 'Check (trap)', aCorrect: true } },
+      () => { const spr = pick([4.5, 5, 6]); return { q: `SPR ${spr}. Flop A-K-2 rainbow. Voce tem TT. Vilao betta 50%.`, a: 'Fold (underpair em AK board, SPR medio)', b: 'Call', aCorrect: true } },
+      () => { const spr = pick([9, 11, 13]); return { q: `SPR ${spr}. Flop 9-8-6 com flush draw. Voce tem Ah5h (nut flush draw). Vilao betta 75%.`, a: 'Call (implied odds altas com SPR alto)', b: 'Fold', aCorrect: true } },
+      () => { const spr = pick([12, 15, 18]); return { q: `SPR ${spr}. Flop 5-8-T com flush draw + gutshot (12+ outs).`, a: 'Semi-bluff (combo draw + implied odds)', b: 'Check/fold', aCorrect: true } },
+    ],
   }
 
   const templates = TEMPLATES[moduleId]
@@ -935,6 +945,7 @@ const GENERATORS = {
   19: () => dynamicScenarioQuestion(19),
   20: () => dynamicScenarioQuestion(20),
   21: () => dynamicScenarioQuestion(21),
+  22: () => dynamicScenarioQuestion(22),
 }
 
 function newScenario(unlockedIds) {
@@ -952,6 +963,7 @@ const MOD_COLORS = {
   6: '#e5484d', 7: '#4fce82', 8: '#e5484d', 9: '#f5a623', 10: '#0a84d7',
   11: '#f5a623', 12: '#4fce82', 13: '#e5484d', 14: '#f5a623', 15: '#0a84d7',
   16: '#4fce82', 17: '#f5a623', 18: '#0a84d7', 19: '#e5484d', 20: '#4fce82', 21: '#e5484d',
+  22: '#0a84d7',
 }
 
 const MOD_NAMES_SHORT = {
@@ -959,6 +971,7 @@ const MOD_NAMES_SHORT = {
   6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def+CR',
   11: 'Def+CR', 12: 'CBet+Size', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
   16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers', 21: 'Late Game',
+  22: 'SPR',
 }
 
 // ================================================================
@@ -967,7 +980,7 @@ const MOD_NAMES_SHORT = {
 export default function Infinite() {
   const { recordAnswer, getModuleProgress } = useProgress()
 
-  const unlockedIds = Array.from({ length: 21 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
+  const unlockedIds = Array.from({ length: 22 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
 
   const [selectedModules, setSelectedModules] = useState(() => new Set(unlockedIds))
   const [showFilter, setShowFilter] = useState(false)
@@ -982,6 +995,13 @@ export default function Infinite() {
   const [stats, setStats] = useState({ total: 0, correct: 0 })
   const [moduleStats, setModuleStats] = useState({})
 
+  // Modo Pressao
+  const [pressureMode, setPressureMode] = useState(false)
+  const PRESSURE_TIME = 20
+  const [timeLeft, setTimeLeft] = useState(PRESSURE_TIME)
+  const timerRef = useRef(null)
+  const handleAnswerRef = useRef(null)
+
   const handleAnswer = useCallback((action) => {
     if (result) return
     const { isCorrect, correctLabel, isMix } = scenario.evaluate(action)
@@ -992,14 +1012,41 @@ export default function Infinite() {
       const m = prev[scenario.moduleId] || { total: 0, correct: 0 }
       return { ...prev, [scenario.moduleId]: { total: m.total + 1, correct: m.correct + (isCorrect ? 1 : 0) } }
     })
-    recordAnswer(scenario.moduleId, isCorrect, newStreak)
-    setResult({ isCorrect, correctLabel, isMix, action })
+    const isTimeout = action === '__timeout__'
+    recordAnswer(scenario.moduleId, isCorrect, newStreak, {
+      h: scenario.hand || undefined,
+      p: scenario.pos || scenario.tableContext?.heroPos || undefined,
+      tp: scenario.type || undefined,
+    })
+    setResult({ isCorrect, correctLabel, isMix, action, isTimeout })
   }, [result, scenario, streak, recordAnswer])
 
   const handleNext = useCallback(() => {
     setResult(null)
+    setTimeLeft(PRESSURE_TIME)
     setScenario(newScenario(idsForPlay))
   }, [idsForPlay])
+
+  // Manter ref atualizada do handleAnswer para o timer
+  handleAnswerRef.current = handleAnswer
+
+  // Timer de pressao
+  useEffect(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (!pressureMode || result) return
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current)
+          // Tempo esgotado = erro
+          handleAnswerRef.current?.('__timeout__')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timerRef.current)
+  }, [pressureMode, result, scenario])
 
   const toggleModule = (id) => {
     setSelectedModules(prev => {
@@ -1107,6 +1154,45 @@ export default function Infinite() {
           ))}
         </div>
 
+        {/* Toggle Modo Pressao */}
+        <div className="flex items-center justify-between mb-4 px-1">
+          <button
+            onClick={() => { setPressureMode(!pressureMode); setTimeLeft(PRESSURE_TIME) }}
+            className="flex items-center gap-2 rounded-lg px-3 py-1.5"
+            style={{
+              background: pressureMode ? 'rgba(229,72,77,0.12)' : '#1a1a1d',
+              border: `1px solid ${pressureMode ? '#e5484d' : '#2a2a2e'}`,
+              color: pressureMode ? '#e5484d' : '#676671',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Modo Pressao {pressureMode ? 'ON' : 'OFF'}
+          </button>
+          {pressureMode && !result && (
+            <div style={{ position: 'relative', width: 36, height: 36 }}>
+              <svg width="36" height="36" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="#2a2a2e" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15" fill="none"
+                  stroke={timeLeft <= 5 ? '#e5484d' : '#4fce82'}
+                  strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray={`${(timeLeft / PRESSURE_TIME) * 94.25} 94.25`}
+                  style={{ transition: 'stroke-dasharray 0.3s' }}
+                />
+              </svg>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, width: 36, height: 36,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: timeLeft <= 5 ? '#e5484d' : '#fdfdfd',
+                fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                animation: timeLeft <= 5 ? 'pulse 0.5s infinite alternate' : 'none',
+              }}>{timeLeft}</div>
+            </div>
+          )}
+        </div>
+
         {/* Card principal */}
         <div className="rounded-2xl mb-4"
           style={{ background: '#1a1a1d', border: `1px solid ${result ? (result.isCorrect ? '#4fce8255' : '#e5484d55') : '#2a2a2e'}` }}>
@@ -1148,7 +1234,7 @@ export default function Infinite() {
               border: `1px solid ${result.isCorrect ? 'rgba(79,206,130,0.25)' : 'rgba(229,72,77,0.25)'}`
             }}>
               <div style={{ color: result.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 16 }}>
-                {result.isCorrect ? 'Correto!' : `Errou - era ${result.correctLabel}`}
+                {result.isCorrect ? 'Correto!' : result.isTimeout ? `Tempo esgotado! Era ${result.correctLabel}` : `Errou - era ${result.correctLabel}`}
               </div>
               {result.isMix && (
                 <div style={{ color: '#f5a623', fontSize: 12, marginTop: 3 }}>Mao de transicao - ambas as acoes sao aceitaveis.</div>

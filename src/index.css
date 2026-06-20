@@ -33,3 +33,9 @@ textarea:focus { border-color: #4fce82 !important; outline: none; }
 
 /* Smooth transitions */
 button, a { transition: opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s; }
+
+/* Timer pulse */
+@keyframes pulse {
+  from { opacity: 1; }
+  to { opacity: 0.4; }
+}
