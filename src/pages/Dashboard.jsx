@@ -28,6 +28,7 @@ const MODULES = [
   { id: 24, name: 'Polar vs Merge', desc: 'Tipos de range de bet', icon: 'P', cat: 'advanced' },
   { id: 25, name: 'Multistreet', desc: 'Planejar 3 streets', icon: 'U', cat: 'advanced' },
   { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta historia', icon: 'Z', cat: 'advanced' },
+  { id: 27, name: 'Blocker Effects', desc: 'Cartas que mudam range', icon: 'B', cat: 'advanced' },
 ]
 
 const CATEGORIES = {

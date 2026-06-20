@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
+import SessionReview from '../../components/SessionReview'
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)]
 const randBB = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
@@ -452,15 +453,7 @@ function Trainer() {
   if (!scenario && !sessionDone) newScenario()
 
   if (sessionDone) {
-    const acc = Math.round((sessionCorrect / sessionTotal) * 100)
-    return (
-      <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
-        <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessao Completa!</h2>
-        <div style={{ color: acc >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700 }}>{acc}%</div>
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>Nova Sessao</button>
-      </div>
-    )
+    return <SessionReview moduleId={21} sessionCorrect={sessionCorrect} sessionTotal={sessionTotal} onContinue={restart} />
   }
 
   return (

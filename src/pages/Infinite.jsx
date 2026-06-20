@@ -942,6 +942,16 @@ function dynamicScenarioQuestion(moduleId) {
       () => { return { q: `Vilao min-betta (2x) no river. O que isso indica?`, a: 'Provavelmente valor fino (thin value) com mao mediana', b: 'Bluff claro', aCorrect: true } },
       () => { return { q: `Por que sizing 33% no flop e mais eficiente que 75% em boards secos?`, a: 'Precisa funcionar menos vezes (25% vs 43%) e aposta com mais maos', b: 'Porque maos fortes preferem sizing pequeno', aCorrect: true } },
     ],
+    27: [
+      () => { const suit = pick(['copas','espadas','ouros','paus']); return { q: `River com 3 ${suit} no board. Voce tem o A desse naipe sem par. Blefar?`, a: `Sim — bloqueia nut flush, vilao folda mais`, b: 'Nao — voce nao tem nada', aCorrect: true } },
+      () => { return { q: `Board A-K-8-5-3. Voce tem KK. Vilao betta grande. Seus blockers ajudam?`, a: 'Nao — nao bloqueia AA, AK, sets. Call e ruim.', b: 'Sim — KK e forte, sempre call', aCorrect: true } },
+      () => { return { q: `Pra BLEFAR, voce quer bloquear o que do vilao?`, a: 'Maos de VALOR (nuts, sets, straights)', b: 'Bluffs (draws perdidos)', aCorrect: true } },
+      () => { return { q: `Pra CALL, voce quer bloquear o que?`, a: 'Valor do vilao + NAO bloquear bluffs', b: 'Bloquear os bluffs dele', aCorrect: true } },
+      () => { return { q: `Voce tem 77 em board 9-8-5-4-2. Vilao shova. Seus 77 bloqueiam 76 (straight). Call?`, a: 'Sim — blocker favoravel, reduz combos de valor', b: 'Fold — 77 e muito fraco', aCorrect: true } },
+      () => { return { q: `Board pareado 8-8-K. Voce tem um 8 (trips). Vilao overbetta. Blocker effect?`, a: 'Voce bloqueia quads e trips — call forte', b: 'Overbet = sempre fold', aCorrect: true } },
+      () => { return { q: `Regra geral de blockers no river:`, a: 'Blefar = bloqueie valor. Call = bloqueie valor + unblock bluffs.', b: 'Blockers nao importam no river', aCorrect: true } },
+      () => { return { q: `"Unblocker" significa que voce NAO tem cartas de bluff do vilao. Isso e bom pra call?`, a: 'Sim — vilao pode ter mais bluffs = seu call e melhor', b: 'Nao — nao importa o que voce nao tem', aCorrect: true } },
+    ],
   }
 
   const templates = TEMPLATES[moduleId]
@@ -992,6 +1002,7 @@ const GENERATORS = {
   24: () => dynamicScenarioQuestion(24),
   25: () => dynamicScenarioQuestion(25),
   26: () => dynamicScenarioQuestion(26),
+  27: () => dynamicScenarioQuestion(27),
 }
 
 function newScenario(unlockedIds) {
@@ -1010,6 +1021,7 @@ const MOD_COLORS = {
   11: '#f5a623', 12: '#4fce82', 13: '#e5484d', 14: '#f5a623', 15: '#0a84d7',
   16: '#4fce82', 17: '#f5a623', 18: '#0a84d7', 19: '#e5484d', 20: '#4fce82', 21: '#e5484d',
   22: '#0a84d7', 23: '#f5a623', 24: '#e5484d', 25: '#0a84d7', 26: '#f5a623',
+  27: '#4fce82',
 }
 
 const MOD_NAMES_SHORT = {
@@ -1018,6 +1030,7 @@ const MOD_NAMES_SHORT = {
   11: 'Def+CR', 12: 'CBet+Size', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
   16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers', 21: 'Late Game',
   22: 'SPR', 23: 'Range/Nut', 24: 'Polar/Merge', 25: 'Multistreet', 26: 'Sizing',
+  27: 'Blockers',
 }
 
 // ================================================================
@@ -1038,7 +1051,7 @@ function newAdaptiveScenario(idsForPlay, leakModuleIds) {
 export default function Infinite() {
   const { progress, recordAnswer, getModuleProgress } = useProgress()
 
-  const unlockedIds = Array.from({ length: 26 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
+  const unlockedIds = Array.from({ length: 27 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
 
   const [selectedModules, setSelectedModules] = useState(() => new Set(unlockedIds))
   const [showFilter, setShowFilter] = useState(false)

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
+import SessionReview from '../../components/SessionReview'
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)]
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
@@ -390,21 +391,7 @@ function Trainer() {
   }
 
   if (finished) {
-    const accuracy = Math.round(score / 10 * 100)
-    return (
-      <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4 flex items-center justify-center" style={{ background: '#0f0f0f' }}>
-        <div className="text-center">
-          <div style={{ fontSize: 48, marginBottom: 16 }}>{accuracy >= 90 ? '🏆' : accuracy >= 70 ? '💪' : '📚'}</div>
-          <div style={{ color: 'white', fontSize: 28, fontWeight: 700 }}>{accuracy}% de acerto</div>
-          <div style={{ color: '#888', marginTop: 8 }}>{score}/10 decisões corretas</div>
-          <div style={{ color: '#666', marginTop: 4, fontSize: 14 }}>Meta: 90%+ em 2 sessões seguidas</div>
-          <button onClick={() => window.location.reload()}
-            className="mt-6 px-6 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>
-            Tentar Novamente
-          </button>
-        </div>
-      </div>
-    )
+    return <SessionReview moduleId={20} sessionCorrect={score} sessionTotal={10} onContinue={() => window.location.reload()} />
   }
 
   return (

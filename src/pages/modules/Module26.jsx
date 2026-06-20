@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import SessionReview from '../../components/SessionReview'
 import { useProgress } from '../../context/ProgressContext'
 import DecisionTree from '../../components/DecisionTree'
 import ModulePokerTable from '../../components/ModulePokerTable'
@@ -323,6 +324,7 @@ function Trainer() {
   const [handNum, setHandNum] = useState(0)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [streak, setStreak] = useState(0)
+  const [showReview, setShowReview] = useState(false)
 
   const handleAnswer = useCallback((optionId) => {
     if (result) return
@@ -340,8 +342,7 @@ function Trainer() {
     if (nextHand >= 10) {
       const accuracy = Math.round((sessionCorrect / 10) * 100)
       recordSession(26, accuracy)
-      setHandNum(0)
-      setSessionCorrect(0)
+      setShowReview(true)
     } else {
       setHandNum(nextHand)
     }
@@ -350,6 +351,10 @@ function Trainer() {
   }, [handNum, sessionCorrect, recordSession])
 
   const acc = progress.totalAnswered > 0 ? progress.accuracy : 0
+
+  if (showReview) {
+    return <SessionReview moduleId={26} sessionCorrect={sessionCorrect} sessionTotal={10} onContinue={() => { setHandNum(0); setSessionCorrect(0); setShowReview(false); setStreak(0) }} />
+  }
 
   return (
     <div className="min-h-screen pb-28 md:pb-8 md:pt-16" style={{ background: '#0f0f0f' }}>

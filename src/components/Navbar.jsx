@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useProgress } from '../context/ProgressContext'
 
 const links = [
   {
@@ -63,6 +64,8 @@ const links = [
 
 export default function Navbar({ user }) {
   const location = useLocation()
+  const { getPendingReviews } = useProgress()
+  const pendingReviews = getPendingReviews()
 
   function handleLogout() {
     supabase.auth.signOut()
@@ -97,10 +100,20 @@ export default function Navbar({ user }) {
                   background: active ? '#222225' : 'transparent',
                   fontWeight: 500,
                   fontSize: 13,
+                  position: 'relative',
                 }}
               >
                 {l.icon}
                 <span>{l.label}</span>
+                {l.to === '/' && pendingReviews.length > 0 && (
+                  <span style={{
+                    position: 'absolute', top: -2, right: -2,
+                    width: 16, height: 16, borderRadius: '50%',
+                    background: '#f5a623', color: '#0f0f0f',
+                    fontSize: 9, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{pendingReviews.length}</span>
+                )}
               </Link>
             )
           })}
@@ -127,10 +140,19 @@ export default function Navbar({ user }) {
               key={l.to}
               to={l.to}
               className="flex-1 flex flex-col items-center py-2.5 gap-1"
-              style={{ color: active ? '#4fce82' : '#676671' }}
+              style={{ color: active ? '#4fce82' : '#676671', position: 'relative' }}
             >
               {l.icon}
               <span style={{ fontSize: 9, fontWeight: active ? 600 : 400 }}>{l.label}</span>
+              {l.to === '/' && pendingReviews.length > 0 && (
+                <span style={{
+                  position: 'absolute', top: 2, right: '25%',
+                  width: 14, height: 14, borderRadius: '50%',
+                  background: '#f5a623', color: '#0f0f0f',
+                  fontSize: 8, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{pendingReviews.length}</span>
+              )}
             </Link>
           )
         })}

@@ -26,6 +26,7 @@ const MODULES = [
   { id: 24, name: 'Polarizacao vs Merge', desc: 'Quando usar cada tipo de range de aposta', icon: 'P', cat: 'advanced' },
   { id: 25, name: 'Multistreet Planning', desc: 'Planeje flop + turn + river antes de agir', icon: 'U', cat: 'advanced' },
   { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta uma historia diferente', icon: 'Z', cat: 'advanced' },
+  { id: 27, name: 'Blocker Effects', desc: 'Como suas cartas afetam o range do vilao', icon: 'B', cat: 'advanced' },
 ]
 
 const CATEGORIES = {

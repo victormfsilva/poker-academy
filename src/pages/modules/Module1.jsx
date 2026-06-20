@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
+import SessionReview from '../../components/SessionReview'
 import { RFI_RANGES, POSITION_INFO } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
@@ -379,28 +380,7 @@ function Trainer() {
   }
 
   if (sessionDone) {
-    const accuracy = Math.round((sessionCorrect / sessionTotal) * 100)
-    return (
-      <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
-        <div style={{ fontSize: 60 }}>{accuracy >= 90 ? '🎉' : accuracy >= 70 ? '👍' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
-        <div style={{ color: '#888', marginTop: 8 }}>{sessionCorrect}/{sessionTotal} acertos</div>
-        <div style={{ color: accuracy >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700, marginTop: 8 }}>
-          {accuracy}%
-        </div>
-        {accuracy >= 90
-          ? <p style={{ color: '#4fce82', marginTop: 8 }}>Excelente! Sessão conta para desbloquear o próximo módulo.</p>
-          : <p style={{ color: '#888', marginTop: 8 }}>Treine mais para chegar a 90% e desbloquear o próximo módulo.</p>
-        }
-        <button
-          onClick={restart}
-          className="mt-6 px-8 py-3 rounded-xl font-bold"
-          style={{ background: '#e5484d', color: 'white' }}
-        >
-          Nova Sessão
-        </button>
-      </div>
-    )
+    return <SessionReview moduleId={1} sessionCorrect={sessionCorrect} sessionTotal={sessionTotal} onContinue={restart} />
   }
 
   const cards = currentHand ? handToCards(currentHand) : []

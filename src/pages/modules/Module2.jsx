@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useProgress } from '../../context/ProgressContext'
+import SessionReview from '../../components/SessionReview'
 import { PUSH_FOLD_RANGES, POSITION_INFO } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
@@ -203,20 +204,7 @@ function Trainer() {
   if (!currentHand && !sessionDone) newHand()
 
   if (sessionDone) {
-    const acc = Math.round((sessionCorrect / sessionTotal) * 100)
-    return (
-      <div className="text-center" style={{ maxWidth: 400, margin: '0 auto', paddingTop: 40 }}>
-        <div style={{ fontSize: 60 }}>{acc >= 90 ? '🎉' : '💪'}</div>
-        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginTop: 16 }}>Sessão Completa!</h2>
-        <div style={{ color: acc >= 90 ? '#4fce82' : '#f5a623', fontSize: 36, fontWeight: 700, marginTop: 8 }}>{acc}%</div>
-        {acc >= 90
-          ? <p style={{ color: '#4fce82', marginTop: 8 }}>Sessão conta para o próximo módulo!</p>
-          : <p style={{ color: '#888', marginTop: 8 }}>Precisa de 90%+ para desbloquear o próximo módulo.</p>}
-        <button onClick={restart} className="mt-6 px-8 py-3 rounded-xl font-bold" style={{ background: '#e5484d', color: 'white' }}>
-          Nova Sessão
-        </button>
-      </div>
-    )
+    return <SessionReview moduleId={2} sessionCorrect={sessionCorrect} sessionTotal={sessionTotal} onContinue={restart} />
   }
 
   const cards = currentHand ? handToCards(currentHand) : []
