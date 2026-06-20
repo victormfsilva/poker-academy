@@ -25,6 +25,9 @@ const MODULES = [
   { id: 21, name: 'Late Game MTT', desc: 'Momentos decisivos', icon: 'F', cat: 'advanced' },
   { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio', icon: 'S', cat: 'advanced' },
   { id: 23, name: 'Range vs Nut', desc: 'Frequencia e sizing', icon: 'N', cat: 'advanced' },
+  { id: 24, name: 'Polar vs Merge', desc: 'Tipos de range de bet', icon: 'P', cat: 'advanced' },
+  { id: 25, name: 'Multistreet', desc: 'Planejar 3 streets', icon: 'U', cat: 'advanced' },
+  { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta historia', icon: 'Z', cat: 'advanced' },
 ]
 
 const CATEGORIES = {

@@ -23,6 +23,9 @@ const MODULES = [
   { id: 21, name: 'Late Game MTT', desc: 'Dominando os momentos decisivos do torneio', icon: 'F', cat: 'advanced' },
   { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio e estrategia pos-flop', icon: 'S', cat: 'advanced' },
   { id: 23, name: 'Range vs Nut Advantage', desc: 'Como solvers decidem frequencia e sizing', icon: 'N', cat: 'advanced' },
+  { id: 24, name: 'Polarizacao vs Merge', desc: 'Quando usar cada tipo de range de aposta', icon: 'P', cat: 'advanced' },
+  { id: 25, name: 'Multistreet Planning', desc: 'Planeje flop + turn + river antes de agir', icon: 'U', cat: 'advanced' },
+  { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta uma historia diferente', icon: 'Z', cat: 'advanced' },
 ]
 
 const CATEGORIES = {

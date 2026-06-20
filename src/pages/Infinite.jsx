@@ -911,6 +911,36 @@ function dynamicScenarioQuestion(moduleId) {
       () => { return { q: `Board 9-8-7 com flush draw. BTN raiser vs BB caller. Quem tem nut advantage?`, a: 'Equilibrado (ambos tem straights e flush draws)', b: 'BTN claramente', aCorrect: true } },
       () => { return { q: `Voce tem range advantage E nut advantage. Qual a estrategia?`, a: 'Bet frequente com sizing variado (mix small/big)', b: 'Check range inteiro', aCorrect: true } },
     ],
+    24: [
+      () => { const board = pick(['A-K-8-4-2','K-Q-7-3-9','Q-J-5-8-3']); return { q: `River ${board}. IP quer apostar. Qual tipo de range?`, a: 'Polarizado (nuts + bluffs, check o meio)', b: 'Merged (tudo que e bom)', aCorrect: true } },
+      () => { const board = pick(['9-5-2','T-6-3','8-4-2']); return { q: `Flop ${board} rainbow. OOP como raiser. Qual tipo de c-bet range?`, a: 'Merged (overpairs, top/middle pairs)', b: 'Polarizado (so nuts e air)', aCorrect: true } },
+      () => { const board = pick(['J-T-8','Q-J-9','T-9-7']); return { q: `Board umido ${board} com flush draw. Raiser IP. Estrategia?`, a: 'Polarizado (maos fortes + semi-bluffs, check medianas)', b: 'Merge com tudo', aCorrect: true } },
+      () => { return { q: `Sizing ideal para range merged vs polarizado?`, a: 'Merged = 33-50%. Polarizado = 66-100%+', b: 'Merged = grande. Polarizado = pequeno', aCorrect: true } },
+      () => { const board = pick(['K-7-2','A-8-3','Q-5-2']); return { q: `Board seco ${board}. Raiser IP vs BB. Qual estrategia de c-bet?`, a: 'Merge: bet frequente com maos boas, sizing pequeno', b: 'Polarizado: so nuts e bluffs', aCorrect: true } },
+      () => { return { q: `Quando voce mais tende a polarizar?`, a: 'IP, streets tardias (turn/river), boards umidos', b: 'OOP, flop, boards secos', aCorrect: true } },
+      () => { return { q: `Qual a fraqueza de polarizar OOP?`, a: 'Range de check fica vulneravel (cheio de maos medianas)', b: 'Nao tem maos fortes suficientes', aCorrect: true } },
+      () => { return { q: `Board A-A-5. BTN c-bet 100% sizing 25%. Conceito?`, a: 'Merge extremo (range advantage enorme, bet tudo barato)', b: 'Polarizado (proteger trips)', aCorrect: true } },
+    ],
+    25: [
+      () => { const turn = pick(['2h','3d','4c']); return { q: `Flop K-9-4 rainbow. IP com AKo. C-bet 50%, vilao call. Turn: ${turn} (blank). Plano?`, a: 'Bet turn (double barrel — AK muito forte aqui)', b: 'Check (pot control)', aCorrect: true } },
+      () => { return { q: `Flop A-7-3 com QQ. Bettou flop, vilao call. Turn: A. O que fazer?`, a: 'Check (A faz vilao ter mais trips, QQ piorou)', b: 'Bet (representar o A)', aCorrect: true } },
+      () => { return { q: `Conceito: por que planejar 3 streets ANTES de apostar no flop?`, a: 'Pra saber se a mao aguenta 3 streets de valor', b: 'Pra intimidar o vilao', aCorrect: true } },
+      () => { return { q: `AA em board J-7-2 rainbow (SPR ~10). Plano de valor?`, a: 'Bet flop medio, bet turn medio, bet river — 3 streets de valor', b: 'Bet flop grande, check turn (trap), bet river', aCorrect: true } },
+      () => { return { q: `Draw perdido no river apos bet flop + turn. O que fazer?`, a: 'Avaliar triple barrel bluff (historia consistente)', b: 'Sempre give up', aCorrect: true } },
+      () => { return { q: `KK em board 8-5-2, bettou flop e turn. River: A. Plano?`, a: 'Check (A terrivel — vilao pode ter Ax)', b: 'Bet (KK ainda forte)', aCorrect: true } },
+      () => { return { q: `Set de 7 em board 7-6-5 com flush draw. Plano multistreet?`, a: 'Bet/raise GRANDE flop + bet grande turn (proteger urgente)', b: 'Slowplay (check flop, trap turn)', aCorrect: true } },
+      () => { return { q: `Regra de ouro pra decidir quantas streets apostar por valor?`, a: '"Quais maos piores me pagam?" — poucas = menos streets', b: 'Sempre aposte 3 streets com top pair+', aCorrect: true } },
+    ],
+    26: [
+      () => { const board = pick(['A-K-5','A-Q-8','K-J-2']); return { q: `Flop ${board} rainbow. BTN range advantage vs BB. Sizing de c-bet?`, a: '25-33% pot (range advantage = frequente e barato)', b: '75% pot', aCorrect: true } },
+      () => { const board = pick(['J-T-8','Q-J-9','T-9-7']); return { q: `Flop ${board} com flush draw. IP com set. Sizing?`, a: '66-75% pot (proteger contra draws)', b: '25-33% pot', aCorrect: true } },
+      () => { return { q: `Quando usar overbet (100%+ pot)?`, a: 'Range polarizado: voce pode ter nuts, vilao tem range capped', b: 'Sempre que tem mao forte', aCorrect: true } },
+      () => { const board = pick(['9-5-2','T-6-3','8-4-2']); return { q: `Flop ${board} rainbow com AA. Range advantage claro. Sizing?`, a: '25-33% (consistente com range — mesmo sizing que o resto)', b: '75% (AA merece bet grande)', aCorrect: true } },
+      () => { return { q: `50% pot sizing e ideal para:`, a: 'Protecao moderada (top pair bom kicker)', b: 'Sempre que voce tem par', aCorrect: true } },
+      () => { return { q: `Regra de sizing por street?`, a: 'Flop 25-50% | Turn 50-75% | River 66-100%+', b: 'Mesmo sizing em todas as streets', aCorrect: true } },
+      () => { return { q: `Vilao min-betta (2x) no river. O que isso indica?`, a: 'Provavelmente valor fino (thin value) com mao mediana', b: 'Bluff claro', aCorrect: true } },
+      () => { return { q: `Por que sizing 33% no flop e mais eficiente que 75% em boards secos?`, a: 'Precisa funcionar menos vezes (25% vs 43%) e aposta com mais maos', b: 'Porque maos fortes preferem sizing pequeno', aCorrect: true } },
+    ],
   }
 
   const templates = TEMPLATES[moduleId]
@@ -958,6 +988,9 @@ const GENERATORS = {
   21: () => dynamicScenarioQuestion(21),
   22: () => dynamicScenarioQuestion(22),
   23: () => dynamicScenarioQuestion(23),
+  24: () => dynamicScenarioQuestion(24),
+  25: () => dynamicScenarioQuestion(25),
+  26: () => dynamicScenarioQuestion(26),
 }
 
 function newScenario(unlockedIds) {
@@ -975,7 +1008,7 @@ const MOD_COLORS = {
   6: '#e5484d', 7: '#4fce82', 8: '#e5484d', 9: '#f5a623', 10: '#0a84d7',
   11: '#f5a623', 12: '#4fce82', 13: '#e5484d', 14: '#f5a623', 15: '#0a84d7',
   16: '#4fce82', 17: '#f5a623', 18: '#0a84d7', 19: '#e5484d', 20: '#4fce82', 21: '#e5484d',
-  22: '#0a84d7', 23: '#f5a623',
+  22: '#0a84d7', 23: '#f5a623', 24: '#e5484d', 25: '#0a84d7', 26: '#f5a623',
 }
 
 const MOD_NAMES_SHORT = {
@@ -983,7 +1016,7 @@ const MOD_NAMES_SHORT = {
   6: 'Blind Wars', 7: 'SB vs RFI', 8: 'BTN vs RFI', 9: '3-Bet', 10: 'Def+CR',
   11: 'Def+CR', 12: 'CBet+Size', 13: 'Donk Bet', 14: 'CBet Turn', 15: 'River Play',
   16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers', 20: 'HUD/Solvers', 21: 'Late Game',
-  22: 'SPR', 23: 'Range/Nut',
+  22: 'SPR', 23: 'Range/Nut', 24: 'Polar/Merge', 25: 'Multistreet', 26: 'Sizing',
 }
 
 // ================================================================
@@ -1004,7 +1037,7 @@ function newAdaptiveScenario(idsForPlay, leakModuleIds) {
 export default function Infinite() {
   const { progress, recordAnswer, getModuleProgress } = useProgress()
 
-  const unlockedIds = Array.from({ length: 23 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
+  const unlockedIds = Array.from({ length: 26 }, (_, i) => i + 1).filter(id => getModuleProgress(id).unlocked)
 
   const [selectedModules, setSelectedModules] = useState(() => new Set(unlockedIds))
   const [showFilter, setShowFilter] = useState(false)

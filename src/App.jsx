@@ -30,6 +30,9 @@ import Module20 from './pages/modules/Module20'
 import Module21 from './pages/modules/Module21'
 import Module22 from './pages/modules/Module22'
 import Module23 from './pages/modules/Module23'
+import Module24 from './pages/modules/Module24'
+import Module25 from './pages/modules/Module25'
+import Module26 from './pages/modules/Module26'
 import Tools from './pages/Tools'
 import MentalGame from './pages/MentalGame'
 import Infinite from './pages/Infinite'
@@ -72,7 +75,7 @@ function App() {
   }
 
   return (
-    <ProgressProvider userId={user.id}>
+    <ProgressProvider userId={user.id} userEmail={user.email}>
       <BrowserRouter>
         <Navbar user={user} />
         <Routes>
@@ -101,6 +104,9 @@ function App() {
           <Route path="/modulos/21" element={<Module21 />} />
           <Route path="/modulos/22" element={<Module22 />} />
           <Route path="/modulos/23" element={<Module23 />} />
+          <Route path="/modulos/24" element={<Module24 />} />
+          <Route path="/modulos/25" element={<Module25 />} />
+          <Route path="/modulos/26" element={<Module26 />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/ferramentas" element={<Tools />} />
           <Route path="/mental" element={<MentalGame />} />

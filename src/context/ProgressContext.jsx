@@ -28,6 +28,9 @@ const defaultProgress = {
     21: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     22: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
     23: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    24: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    25: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
+    26: { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false },
   },
   globalStats: {
     totalHands: 0,
@@ -123,7 +126,10 @@ function mergeProgress(saved) {
 
 const ProgressContext = createContext(null)
 
-export function ProgressProvider({ children, userId }) {
+const ADMIN_EMAIL = 'victormenezes722@gmail.com'
+
+export function ProgressProvider({ children, userId, userEmail }) {
+  const isAdmin = userEmail === ADMIN_EMAIL
   const syncTimer = useRef(null)
 
   const [progress, setProgress] = useState(() => {
@@ -226,7 +232,7 @@ export function ProgressProvider({ children, userId }) {
       const moduleCompleted = mod.completed || justCompleted
 
       const nextModules = { ...prev.modules }
-      if (justCompleted && moduleId < 23) {
+      if (justCompleted && moduleId < 26) {
         nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
       }
 
@@ -267,7 +273,7 @@ export function ProgressProvider({ children, userId }) {
     const sessions = mod.trainerSessions || []
     const lastTwo = sessions.slice(-2)
     const sessionsToComplete = lastTwo.filter(s => s.accuracy >= 90).length
-    return { ...mod, accuracy, sessionsToComplete }
+    return { ...mod, accuracy, sessionsToComplete, unlocked: isAdmin ? true : mod.unlocked }
   }
 
   function getPendingReviews() {
