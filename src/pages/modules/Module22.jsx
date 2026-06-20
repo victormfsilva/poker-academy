@@ -573,14 +573,22 @@ function Trainer() {
 export default function Module22() {
   const { progress, markLessonRead } = useProgress()
   const mod = progress.modules[22]
-  const [showTrainer, setShowTrainer] = useState(mod?.lessonRead || false)
+  const [view, setView] = useState(mod?.lessonRead ? 'trainer' : 'lesson')
 
-  if (!showTrainer) {
-    return <Lesson onComplete={() => {
-      markLessonRead(22)
-      setShowTrainer(true)
-    }} />
-  }
-
-  return <Trainer />
+  if (!mod?.unlocked) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o modulo anterior para desbloquear.</p></div>
+    </div>
+  )
+  return (
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
+      <div className="max-w-2xl mx-auto pt-6">
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>Aula</button>
+          <button onClick={() => mod?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (mod?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: mod?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!mod?.lessonRead && '🔒'}</button>
+        </div>
+        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(22); setView('trainer') }} /> : <Trainer />}
+      </div>
+    </div>
+  )
 }

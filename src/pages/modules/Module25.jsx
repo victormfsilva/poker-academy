@@ -451,12 +451,25 @@ function Trainer() {
 }
 
 export default function Module25() {
-  const { markLessonRead, getModuleProgress } = useProgress()
-  const progress = getModuleProgress(25)
-  const [mode, setMode] = useState(progress.lessonRead ? 'trainer' : 'lesson')
+  const { progress, markLessonRead, getModuleProgress } = useProgress()
+  const mod = progress.modules[25]
+  const modProgress = getModuleProgress(25)
+  const [view, setView] = useState(modProgress.lessonRead ? 'trainer' : 'lesson')
 
-  if (mode === 'lesson') {
-    return <Lesson onComplete={() => { markLessonRead(25); setMode('trainer') }} />
-  }
-  return <Trainer />
+  if (!mod?.unlocked) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o modulo anterior para desbloquear.</p></div>
+    </div>
+  )
+  return (
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
+      <div className="max-w-2xl mx-auto pt-6">
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>Aula</button>
+          <button onClick={() => modProgress.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (modProgress.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: modProgress.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!modProgress.lessonRead && '🔒'}</button>
+        </div>
+        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(25); setView('trainer') }} /> : <Trainer />}
+      </div>
+    </div>
+  )
 }
