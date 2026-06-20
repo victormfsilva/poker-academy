@@ -266,7 +266,7 @@ export function ProgressProvider({ children, userId, userEmail }) {
   }
 
   function getModuleProgress(moduleId) {
-    const mod = progress.modules[moduleId]
+    const mod = progress.modules[moduleId] || { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false }
     const accuracy = mod.totalAnswered > 0
       ? Math.round((mod.totalCorrect / mod.totalAnswered) * 100)
       : 0
