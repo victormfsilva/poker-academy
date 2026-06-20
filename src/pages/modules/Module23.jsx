@@ -1,6 +1,16 @@
 import { useState, useCallback } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import DecisionTree from '../../components/DecisionTree'
+import ModulePokerTable from '../../components/ModulePokerTable'
+
+const SUITS_POOL = ['s','h','d','c']
+function randSuit() { return SUITS_POOL[Math.floor(Math.random() * 4)] }
+function randSuitExcluding(s) { const o = SUITS_POOL.filter(x => x !== s); return o[Math.floor(Math.random() * o.length)] }
+function makeRainbowBoard(ranks) {
+  const used = new Set()
+  return ranks.map(r => { let s; do { s = randSuit() } while (used.has(s) && used.size < 4); used.add(s); return r + s })
+}
+function makeHeroCards(r1, r2, suited) { const s1 = randSuit(); return [r1 + s1, r2 + (suited ? s1 : randSuitExcluding(s1))] }
 
 // ================================================================
 // MODULO 23 — Range Advantage vs Nut Advantage
@@ -14,6 +24,7 @@ const SCENARIOS = [
     b: 'BB',
     aCorrect: true,
     explanation: 'BTN abriu o pote, entao seu range esta cheio de Ax, Kx, broadways. BB defende com range mais amplo e mais fraco. BTN tem clara range advantage neste board alto.',
+    boardCards: makeRainbowBoard(['A','K','5']), heroPos: 'BTN', villainPos: 'BB', heroCards: makeHeroCards('A','Q',false), villainAction: 'Call', potLabel: '6.5bb',
   }),
   () => ({
     q: 'Flop 7-6-3 rainbow. BTN (raiser) vs BB (caller). Quem tem range advantage?',
@@ -21,34 +32,45 @@ const SCENARIOS = [
     b: 'BTN',
     aCorrect: true,
     explanation: 'Board baixo favorece o BB. BB defende com muitas maos conectadas baixas (76s, 65s, 54s, 33, 66, 77) que BTN nao teria aberto. BB tem range advantage em boards baixos.',
+    boardCards: makeRainbowBoard(['7','6','3']), heroPos: 'BTN', villainPos: 'BB', heroCards: makeHeroCards('A','J',false), villainAction: 'Call', potLabel: '6.5bb',
   }),
-  () => ({
-    q: 'BTN tem range advantage no flop. Qual a estrategia correta de c-bet?',
-    a: 'C-bet frequente (70%+) com sizing PEQUENO (25-33%)',
-    b: 'C-bet seletiva com sizing grande (66-75%)',
-    aCorrect: true,
-    explanation: 'Range advantage = bet com alta frequencia e sizing pequeno. Voce esta apostando com muitas maos, entao usa um sizing que nao precisa funcionar muito pra ser lucrativo.',
-  }),
+  () => {
+    const board = makeRainbowBoard(['Q','8','4'])
+    return {
+      q: 'BTN tem range advantage no flop. Qual a estrategia correta de c-bet?',
+      a: 'C-bet frequente (70%+) com sizing PEQUENO (25-33%)',
+      b: 'C-bet seletiva com sizing grande (66-75%)',
+      aCorrect: true,
+      explanation: 'Range advantage = bet com alta frequencia e sizing pequeno. Voce esta apostando com muitas maos, entao usa um sizing que nao precisa funcionar muito pra ser lucrativo.',
+      boardCards: board, heroPos: 'BTN', villainPos: 'BB', heroCards: makeHeroCards('K','T',false), villainAction: 'Check', potLabel: '6.5bb',
+    }
+  },
   () => ({
     q: 'Flop Q-J-T conectado. CO (raiser) vs BB. Quem tem nut advantage?',
     a: 'CO (tem mais AK, KK, QQ, JJ, TT, AQs no range)',
     b: 'BB',
     aCorrect: true,
     explanation: 'CO abriu com range mais forte e tem mais combos de AK (straight), QQ+, sets de J e T. CO tem nut advantage — suas maos monstro sao mais frequentes.',
+    boardCards: ['Q'+randSuit(), 'J'+randSuit(), 'T'+randSuit()], heroPos: 'CO', villainPos: 'BB', heroCards: makeHeroCards('A','K',false), villainAction: 'Check', potLabel: '7bb',
   }),
-  () => ({
-    q: 'Voce tem nut advantage mas NAO range advantage. Qual a estrategia?',
-    a: 'Bet MENOS frequente mas com sizing GRANDE (66-100%)',
-    b: 'Bet muito frequente com sizing pequeno',
-    aCorrect: true,
-    explanation: 'Nut advantage sem range advantage = polarize. Voce nao tem muitas maos boas no geral, mas quando tem, sao monstros. Bet grande com maos fortes e bluffs, check o meio.',
-  }),
+  () => {
+    const board = makeRainbowBoard(['9','5','2'])
+    return {
+      q: 'Voce tem nut advantage mas NAO range advantage. Qual a estrategia?',
+      a: 'Bet MENOS frequente mas com sizing GRANDE (66-100%)',
+      b: 'Bet muito frequente com sizing pequeno',
+      aCorrect: true,
+      explanation: 'Nut advantage sem range advantage = polarize. Voce nao tem muitas maos boas no geral, mas quando tem, sao monstros. Bet grande com maos fortes e bluffs, check o meio.',
+      boardCards: board, heroPos: 'CO', villainPos: 'BB', heroCards: makeHeroCards('A','A',false), villainAction: 'Check', potLabel: '7bb',
+    }
+  },
   () => ({
     q: 'Flop K-8-3 rainbow. UTG (raiser) vs BTN (caller). Quem tem range + nut advantage?',
     a: 'UTG (range mais forte: KK, AA, AK, KQ todas no range)',
     b: 'BTN',
     aCorrect: true,
     explanation: 'UTG abriu de early position com range muito forte. Tem todos os premium: AA, KK, AK, KQs. BTN tem range mais wide mas mais fraco. UTG domina tanto em range quanto em nut advantage.',
+    boardCards: makeRainbowBoard(['K','8','3']), heroPos: 'UTG', villainPos: 'BTN', heroCards: makeHeroCards('A','K',false), villainAction: 'Call', potLabel: '7bb',
   }),
   () => ({
     q: 'Flop 5-4-3 rainbow. CO (raiser) vs BB (caller). BB tem range advantage. O que BB deve fazer?',
@@ -56,50 +78,72 @@ const SCENARIOS = [
     b: 'Sempre checar pro raiser',
     aCorrect: true,
     explanation: 'Quando BB tem range advantage em board baixo, pode donk bet ou check-raise com mais frequencia. CO vai c-betar pouco nesse board, e BB pode tomar a iniciativa.',
+    boardCards: makeRainbowBoard(['5','4','3']), heroPos: 'BB', villainPos: 'CO', heroCards: makeHeroCards('6','5',true), villainAction: 'Bet 33%', potLabel: '7bb',
   }),
 
   // Nut Advantage
-  () => ({
-    q: 'Flop A-A-7. BTN (raiser) vs BB. Quem tem nut advantage?',
-    a: 'BTN (tem mais Ax no range — AK, AQ, AJ, ATs)',
-    b: 'BB (defende com mais maos)',
-    aCorrect: true,
-    explanation: 'Board pareado com A: BTN tem muito mais combinacoes de Ax (AK, AQ, AJ, ATs) que BB, que teria 3-bet muitas dessas maos. BTN domina o nut advantage.',
-  }),
-  () => ({
-    q: 'Flop 8-7-6 com flush draw. SB (3-bettor) vs BTN (caller). Quem tem nut advantage?',
-    a: 'Equilibrado (ambos tem sets, straights, flush draws)',
-    b: 'SB tem nut advantage claro',
-    aCorrect: true,
-    explanation: 'Em boards muito conectados com flush draw, ambos os ranges se conectam bem. SB tem overpairs fortes, BTN tem mais suited connectors. Nut advantage e equilibrado — sizing medio e correto.',
-  }),
-  () => ({
-    q: 'Voce tem range advantage E nut advantage. Qual a estrategia?',
-    a: 'C-bet com frequencia ALTA e sizing variado (mix de pequeno e grande)',
-    b: 'Sempre check pra trap',
-    aCorrect: true,
-    explanation: 'Quando voce domina em ambos, c-bet com alta frequencia. Use sizing pequeno com range advantage (maos medianas) e sizing grande com nut advantage (monstros e bluffs polarizados).',
-  }),
-  () => ({
-    q: 'Board K-Q-J com 2 copas. IP raiser vs OOP caller. O que dita o sizing?',
-    a: 'Nut advantage dita o sizing (quem tem mais ATs/KK/QQ/JJ betta grande)',
-    b: 'Range advantage dita o sizing',
-    aCorrect: true,
-    explanation: 'Em boards dinamicos (draws possiveis), o nut advantage importa mais pro sizing. Quem tem mais nuts (ATs straight, sets) pode bet grande pra proteger e pra valor.',
-  }),
-  () => ({
-    q: 'Flop 2-2-7. CO raiser vs BB. Qual e a textura e quem favorece?',
-    a: 'Board super seco e pareado — CO tem range advantage, c-bet pequeno frequente',
-    b: 'BB tem vantagem por ter mais 2x e 7x',
-    aCorrect: true,
-    explanation: 'Board muito seco e pareado. CO tem range advantage com overpairs (88-AA), broadways. BB tem poucos 2x. CO deve c-bet frequente com sizing minimo (25-33%).',
-  }),
+  () => {
+    const s1 = randSuit()
+    return {
+      q: 'Flop A-A-7. BTN (raiser) vs BB. Quem tem nut advantage?',
+      a: 'BTN (tem mais Ax no range — AK, AQ, AJ, ATs)',
+      b: 'BB (defende com mais maos)',
+      aCorrect: true,
+      explanation: 'Board pareado com A: BTN tem muito mais combinacoes de Ax (AK, AQ, AJ, ATs) que BB, que teria 3-bet muitas dessas maos. BTN domina o nut advantage.',
+      boardCards: ['A'+s1, 'A'+randSuitExcluding(s1), '7'+randSuit()], heroPos: 'BTN', villainPos: 'BB', heroCards: makeHeroCards('A','K',false), villainAction: 'Check', potLabel: '6.5bb',
+    }
+  },
+  () => {
+    const fs = randSuit()
+    return {
+      q: 'Flop 8-7-6 com flush draw. SB (3-bettor) vs BTN (caller). Quem tem nut advantage?',
+      a: 'Equilibrado (ambos tem sets, straights, flush draws)',
+      b: 'SB tem nut advantage claro',
+      aCorrect: true,
+      explanation: 'Em boards muito conectados com flush draw, ambos os ranges se conectam bem. SB tem overpairs fortes, BTN tem mais suited connectors. Nut advantage e equilibrado — sizing medio e correto.',
+      boardCards: ['8'+fs, '7'+fs, '6'+randSuitExcluding(fs)], heroPos: 'SB', villainPos: 'BTN', heroCards: makeHeroCards('Q','Q',false), villainAction: 'Call', potLabel: '13bb',
+    }
+  },
+  () => {
+    const board = makeRainbowBoard(['J','7','2'])
+    return {
+      q: 'Voce tem range advantage E nut advantage. Qual a estrategia?',
+      a: 'C-bet com frequencia ALTA e sizing variado (mix de pequeno e grande)',
+      b: 'Sempre check pra trap',
+      aCorrect: true,
+      explanation: 'Quando voce domina em ambos, c-bet com alta frequencia. Use sizing pequeno com range advantage (maos medianas) e sizing grande com nut advantage (monstros e bluffs polarizados).',
+      boardCards: board, heroPos: 'CO', villainPos: 'BB', heroCards: makeHeroCards('K','K',false), villainAction: 'Check', potLabel: '7bb',
+    }
+  },
+  () => {
+    const fs = randSuit()
+    return {
+      q: 'Board K-Q-J com 2 copas. IP raiser vs OOP caller. O que dita o sizing?',
+      a: 'Nut advantage dita o sizing (quem tem mais ATs/KK/QQ/JJ betta grande)',
+      b: 'Range advantage dita o sizing',
+      aCorrect: true,
+      explanation: 'Em boards dinamicos (draws possiveis), o nut advantage importa mais pro sizing. Quem tem mais nuts (ATs straight, sets) pode bet grande pra proteger e pra valor.',
+      boardCards: ['K'+fs, 'Q'+fs, 'J'+randSuitExcluding(fs)], heroPos: 'BTN', villainPos: 'BB', heroCards: makeHeroCards('A','T',false), villainAction: 'Check', potLabel: '7bb',
+    }
+  },
+  () => {
+    const s1 = randSuit()
+    return {
+      q: 'Flop 2-2-7. CO raiser vs BB. Qual e a textura e quem favorece?',
+      a: 'Board super seco e pareado — CO tem range advantage, c-bet pequeno frequente',
+      b: 'BB tem vantagem por ter mais 2x e 7x',
+      aCorrect: true,
+      explanation: 'Board muito seco e pareado. CO tem range advantage com overpairs (88-AA), broadways. BB tem poucos 2x. CO deve c-bet frequente com sizing minimo (25-33%).',
+      boardCards: ['2'+s1, '2'+randSuitExcluding(s1), '7'+randSuit()], heroPos: 'CO', villainPos: 'BB', heroCards: makeHeroCards('T','T',false), villainAction: 'Check', potLabel: '7bb',
+    }
+  },
   () => ({
     q: 'Flop T-9-8 monotone (3 copas). BTN vs BB. Qual a abordagem correta?',
     a: 'Check mais frequente (board perigoso, nut advantage diluido)',
     b: 'C-bet grande sempre',
     aCorrect: true,
     explanation: 'Board monotone conectado = muito perigoso. Ninguem tem nut advantage claro — flushes, straights e draws estao distribuidos entre os ranges. Check-back mais pra proteger range.',
+    boardCards: ['Th', '9h', '8h'], heroPos: 'BTN', villainPos: 'BB', heroCards: makeHeroCards('A','Q',false), villainAction: 'Check', potLabel: '6.5bb',
   }),
   () => ({
     q: 'Se o flop e A-K-2 rainbow e voce e o raiser IP, por que o sizing pequeno e melhor?',
@@ -107,17 +151,18 @@ const SCENARIOS = [
     b: 'Porque voce quer dar odds pro vilao chamar',
     aCorrect: true,
     explanation: 'Voce tem range advantage massivo (todos os Ax, Kx, AK). Sizing pequeno (25-33%) funciona porque: 1) lucra contra range fraco, 2) nao precisa de fold equity, 3) permite bet com mais maos.',
+    boardCards: makeRainbowBoard(['A','K','2']), heroPos: 'BTN', villainPos: 'BB', heroCards: makeHeroCards('K','J',false), villainAction: 'Check', potLabel: '6.5bb',
   }),
 ]
 
 function generateScenario() {
   const pick = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)]
-  const t = pick()
+  const t = typeof pick === 'function' ? pick() : pick
   const swap = Math.random() > 0.5
   const opts = swap
     ? [{ id: 'a', label: t.b, correct: !t.aCorrect }, { id: 'b', label: t.a, correct: t.aCorrect }]
     : [{ id: 'a', label: t.a, correct: t.aCorrect }, { id: 'b', label: t.b, correct: !t.aCorrect }]
-  return { question: t.q, options: opts, explanation: t.explanation }
+  return { question: t.q, options: opts, explanation: t.explanation, heroCards: t.heroCards, boardCards: t.boardCards, heroPos: t.heroPos, villainPos: t.villainPos, villainAction: t.villainAction, potLabel: t.potLabel }
 }
 
 // AULA
@@ -363,6 +408,19 @@ function Trainer() {
           <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 12 }}>
             RANGE vs NUT ADVANTAGE - {handNum + 1}/10
           </div>
+
+          {scenario.heroCards && scenario.heroCards.length > 0 && (
+            <ModulePokerTable
+              heroPos={scenario.heroPos || 'BTN'}
+              villainPos={scenario.villainPos || 'BB'}
+              heroCards={scenario.heroCards}
+              boardCards={scenario.boardCards || []}
+              villainAction={scenario.villainAction || ''}
+              potLabel={scenario.potLabel || ''}
+              contextTitle="Range vs Nut Advantage"
+              contextDesc=""
+            />
+          )}
 
           <p style={{ color: '#fdfdfd', fontSize: 15, lineHeight: 1.7, marginBottom: 20 }}>
             {scenario.question}

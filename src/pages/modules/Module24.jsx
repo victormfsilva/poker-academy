@@ -1,6 +1,16 @@
 import { useState, useCallback } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import DecisionTree from '../../components/DecisionTree'
+import ModulePokerTable from '../../components/ModulePokerTable'
+
+const SUITS_POOL = ['s','h','d','c']
+function randSuit() { return SUITS_POOL[Math.floor(Math.random() * 4)] }
+function randSuitExcluding(s) { const o = SUITS_POOL.filter(x => x !== s); return o[Math.floor(Math.random() * o.length)] }
+function makeRainbowBoard(ranks) {
+  const used = new Set()
+  return ranks.map(r => { let s; do { s = randSuit() } while (used.has(s) && used.size < 4); used.add(s); return r + s })
+}
+function makeHeroCards(r1, r2, suited) { const s1 = randSuit(); return [r1 + s1, r2 + (suited ? s1 : randSuitExcluding(s1))] }
 
 // ================================================================
 // MODULO 24 — Polarizacao vs Merge
@@ -13,6 +23,7 @@ const SCENARIOS = [
     b: 'Merged (apostar com tudo que e razoavel)',
     aCorrect: true,
     explanation: 'No river IP, voce tem informacao posicional. Range polarizado e ideal: aposta com maos monstro (dois pares+, sets) e bluffs puros (draws que nao fecharam). Checa maos medianas que nao precisam de protecao.',
+    boardCards: makeRainbowBoard(['A','K','8','4','2']), heroCards: makeHeroCards('A','Q',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '18bb',
   }),
   () => ({
     q: 'Flop 9-5-2 rainbow. Voce e OOP e o raiser. Qual tipo de range usar para c-bet?',
@@ -20,6 +31,7 @@ const SCENARIOS = [
     b: 'Polarizado (so AA/KK e bluffs)',
     aCorrect: true,
     explanation: 'OOP voce quer proteger seu range de check. Em boards secos OOP, merge e melhor: aposta com maos boas (overpairs ate middle pair) e checa o lixo. Nao da pra defender range de check polarizado OOP.',
+    boardCards: makeRainbowBoard(['9','5','2']), heroCards: makeHeroCards('Q','Q',false), heroPos: 'CO', villainPos: 'BTN', villainAction: 'Call', potLabel: '7bb',
   }),
   () => ({
     q: 'Qual a diferenca principal entre range polarizado e merged?',
@@ -27,6 +39,7 @@ const SCENARIOS = [
     b: 'Polarizado: maos fortes. Merged: maos fracas.',
     aCorrect: true,
     explanation: 'Polarizado = "bimodal" — voce tem ou o melhor ou o pior, nada no meio. Merged = "linear" — voce aposta com tudo que tem valor, do melhor ate maos medianas. A ausencia do meio e a chave do polarizado.',
+    boardCards: makeRainbowBoard(['J','7','3']), heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
   }),
   () => ({
     q: 'Board seco (K-7-2 rainbow). Raiser IP vs BB. Qual estrategia de c-bet?',
@@ -34,34 +47,45 @@ const SCENARIOS = [
     b: 'Polarizado: so KK+ e air',
     aCorrect: true,
     explanation: 'Board seco = poucas draws = pouca necessidade de protecao extrema. Merge funciona bem: aposta com muitas maos de valor (Kx, overpairs, ate 88-TT) porque o vilao nao vai melhorar muito nos turns.',
+    boardCards: makeRainbowBoard(['K','7','2']), heroCards: makeHeroCards('K','J',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '6.5bb',
   }),
-  () => ({
-    q: 'Board umido (J-T-8 com flush draw). Raiser IP vs BB. Qual estrategia?',
-    a: 'Polarizado: maos muito fortes e semi-bluffs, check maos medianas',
-    b: 'Merge: apostar com tudo',
-    aCorrect: true,
-    explanation: 'Board umido = muitos draws = equities mudam muito no turn. Range polarizado e melhor: aposta grande com sets, overpairs fortes, e semi-bluffs (flush draws, straight draws). Checa maos medianas que nao querem enfrentar raise.',
-  }),
+  () => {
+    const fs = randSuit()
+    return {
+      q: 'Board umido (J-T-8 com flush draw). Raiser IP vs BB. Qual estrategia?',
+      a: 'Polarizado: maos muito fortes e semi-bluffs, check maos medianas',
+      b: 'Merge: apostar com tudo',
+      aCorrect: true,
+      explanation: 'Board umido = muitos draws = equities mudam muito no turn. Range polarizado e melhor: aposta grande com sets, overpairs fortes, e semi-bluffs (flush draws, straight draws). Checa maos medianas que nao querem enfrentar raise.',
+      boardCards: ['J'+fs, 'T'+fs, '8'+randSuitExcluding(fs)], heroCards: makeHeroCards('A','A',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
+    }
+  },
   () => ({
     q: 'IP no river apos check-check no turn. Board A-9-4-7-3. Voce tem Ah5h (ace high, draw perdido). Apostar?',
     a: 'Sim — bom bluff polarizado (nao tem showdown value)',
     b: 'Nao — check back',
     aCorrect: true,
     explanation: 'Ace high sem showdown value e um bluff perfeito no range polarizado do river. Voce nao ganha no showdown, entao transformar em bluff e melhor. O check-check no turn faz o range do vilao parecer fraco.',
+    boardCards: ['As', '9d', '4c', '7h', '3d'], heroCards: ['Ah', '5h'], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
   }),
-  () => ({
-    q: 'OOP no flop 6-5-4 com flush draw. Voce e o 3-bettor com range premium. Qual abordagem?',
-    a: 'Merge: c-bet com overpairs e sets, check os misses',
-    b: 'Polarizado: apostar so com nuts e bluffs',
-    aCorrect: true,
-    explanation: 'OOP em board conectado como 3-bettor, merge e correto. Seus overpairs (AA-JJ) sao maos de valor claras e precisam de protecao. Aposte com maos boas, check com Ax, Kx que nao conectaram.',
-  }),
+  () => {
+    const fs = randSuit()
+    return {
+      q: 'OOP no flop 6-5-4 com flush draw. Voce e o 3-bettor com range premium. Qual abordagem?',
+      a: 'Merge: c-bet com overpairs e sets, check os misses',
+      b: 'Polarizado: apostar so com nuts e bluffs',
+      aCorrect: true,
+      explanation: 'OOP em board conectado como 3-bettor, merge e correto. Seus overpairs (AA-JJ) sao maos de valor claras e precisam de protecao. Aposte com maos boas, check com Ax, Kx que nao conectaram.',
+      boardCards: ['6'+fs, '5'+fs, '4'+randSuitExcluding(fs)], heroCards: makeHeroCards('K','K',false), heroPos: 'SB', villainPos: 'BTN', villainAction: 'Call', potLabel: '13bb',
+    }
+  },
   () => ({
     q: 'Voce esta IP no turn. Board Q-8-3-K. Vilao checkou flop e turn. Qual range para bet?',
     a: 'Polarizado (forte: KQ, sets + bluffs: draws perdidos)',
     b: 'Merged (QJ, Q9, K9, etc)',
     aCorrect: true,
     explanation: 'Quando vilao checa duas streets, seu range esta fraco/cappado. IP voce polariza: aposta grande com maos fortes (KQ, sets, dois pares) e bluffs puros. Maos medianas como Q9 ja ganham no showdown — check.',
+    boardCards: makeRainbowBoard(['Q','8','3','K']), heroCards: makeHeroCards('K','Q',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
   }),
   () => ({
     q: 'Regra geral: quando voce tende a polarizar mais?',
@@ -69,6 +93,7 @@ const SCENARIOS = [
     b: 'OOP, flop, boards secos',
     aCorrect: true,
     explanation: 'Polarizacao e mais eficiente IP (ve a reacao do vilao), em streets tardias (ranges mais definidos), e em boards umidos (equities volateis). OOP tende a mergear mais por falta de informacao.',
+    boardCards: makeRainbowBoard(['T','7','3','J']), heroCards: makeHeroCards('A','T',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '12bb',
   }),
   () => ({
     q: 'Sizing ideal para range merged vs polarizado:',
@@ -76,6 +101,7 @@ const SCENARIOS = [
     b: 'Merged = sizing grande. Polarizado = sizing pequeno.',
     aCorrect: true,
     explanation: 'Merged aposta com muitas maos de valor, entao sizing pequeno funciona (nao precisa fold equity). Polarizado quer maximizar: maos fortes querem valor maximo, bluffs precisam de fold equity — sizing grande.',
+    boardCards: makeRainbowBoard(['Q','9','4']), heroCards: makeHeroCards('J','J',false), heroPos: 'CO', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
   }),
   () => ({
     q: 'River em single raise pot. Voce IP com TT em board A-J-5-3-8. Apostar?',
@@ -83,6 +109,7 @@ const SCENARIOS = [
     b: 'Bet (proteger contra Kx)',
     aCorrect: true,
     explanation: 'TT em board com A e J e uma mao mediana classica. No river IP, range polarizado e ideal. TT nao e nuts (nao aposta por valor) nem bluff (tem showdown value). Check back e correto.',
+    boardCards: makeRainbowBoard(['A','J','5','3','8']), heroCards: makeHeroCards('T','T',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '12bb',
   }),
   () => ({
     q: 'Board T-6-2 rainbow. CO vs BB. CO faz c-bet 33% com 80% do range. Isso e estrategia:',
@@ -90,6 +117,7 @@ const SCENARIOS = [
     b: 'Polarizada',
     aCorrect: true,
     explanation: 'C-bet frequente com sizing pequeno = estrategia merged classica. CO tem range advantage em board seco, aposta com muitas maos (overpairs, broadways com backdoors, underpairs) usando sizing minimo.',
+    boardCards: makeRainbowBoard(['T','6','2']), heroCards: makeHeroCards('A','Q',false), heroPos: 'CO', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
   }),
   () => ({
     q: 'Qual a fraqueza de um range polarizado OOP?',
@@ -97,24 +125,29 @@ const SCENARIOS = [
     b: 'Nao tem maos fortes suficientes',
     aCorrect: true,
     explanation: 'Se voce polariza OOP, seu range de check fica cheio de maos medianas que sao vulneraveis. O vilao IP pode explorar apostando com frequencia contra esse range capped. Por isso OOP prefere merge.',
+    boardCards: makeRainbowBoard(['K','8','3']), heroCards: makeHeroCards('9','9',false), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 66%', potLabel: '7bb',
   }),
-  () => ({
-    q: 'Flop A-A-5. BTN vs BB. BTN faz c-bet 100% com sizing 25%. Qual o conceito?',
-    a: 'Merge extremo: range advantage enorme, aposta com tudo barato',
-    b: 'Polarizado: proteger com maos fortes',
-    aCorrect: true,
-    explanation: 'Board pareado com A e o extremo do merge. BTN tem range advantage absurdo (todos os Ax, e BB quase nunca tem trip As). C-bet 100% sizing minimo funciona porque qualquer mao pode representar o A.',
-  }),
+  () => {
+    const s1 = randSuit()
+    return {
+      q: 'Flop A-A-5. BTN vs BB. BTN faz c-bet 100% com sizing 25%. Qual o conceito?',
+      a: 'Merge extremo: range advantage enorme, aposta com tudo barato',
+      b: 'Polarizado: proteger com maos fortes',
+      aCorrect: true,
+      explanation: 'Board pareado com A e o extremo do merge. BTN tem range advantage absurdo (todos os Ax, e BB quase nunca tem trip As). C-bet 100% sizing minimo funciona porque qualquer mao pode representar o A.',
+      boardCards: ['A'+s1, 'A'+randSuitExcluding(s1), '5'+randSuit()], heroCards: makeHeroCards('K','T',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '6.5bb',
+    }
+  },
 ]
 
 function generateScenario() {
   const pick = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)]
-  const t = pick()
+  const t = typeof pick === 'function' ? pick() : pick
   const swap = Math.random() > 0.5
   const opts = swap
     ? [{ id: 'a', label: t.b, correct: !t.aCorrect }, { id: 'b', label: t.a, correct: t.aCorrect }]
     : [{ id: 'a', label: t.a, correct: t.aCorrect }, { id: 'b', label: t.b, correct: !t.aCorrect }]
-  return { question: t.q, options: opts, explanation: t.explanation }
+  return { question: t.q, options: opts, explanation: t.explanation, heroCards: t.heroCards, boardCards: t.boardCards, heroPos: t.heroPos, villainPos: t.villainPos, villainAction: t.villainAction, potLabel: t.potLabel }
 }
 
 // AULA
@@ -347,6 +380,19 @@ function Trainer() {
         </div>
 
         <div className="rounded-2xl p-5" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+          {scenario.heroCards && scenario.heroCards.length > 0 && (
+            <ModulePokerTable
+              heroPos={scenario.heroPos || 'BTN'}
+              villainPos={scenario.villainPos || 'BB'}
+              heroCards={scenario.heroCards}
+              boardCards={scenario.boardCards || []}
+              villainAction={scenario.villainAction || ''}
+              potLabel={scenario.potLabel || ''}
+              contextTitle="Polarizacao vs Merge"
+              contextDesc=""
+            />
+          )}
+
           <div style={{ color: '#fdfdfd', fontSize: 15, lineHeight: 1.7, marginBottom: 20 }}>
             {scenario.question}
           </div>

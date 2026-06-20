@@ -1,6 +1,16 @@
 import { useState, useCallback } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import DecisionTree from '../../components/DecisionTree'
+import ModulePokerTable from '../../components/ModulePokerTable'
+
+const SUITS_POOL = ['s','h','d','c']
+function randSuit() { return SUITS_POOL[Math.floor(Math.random() * 4)] }
+function randSuitExcluding(s) { const o = SUITS_POOL.filter(x => x !== s); return o[Math.floor(Math.random() * o.length)] }
+function makeRainbowBoard(ranks) {
+  const used = new Set()
+  return ranks.map(r => { let s; do { s = randSuit() } while (used.has(s) && used.size < 4); used.add(s); return r + s })
+}
+function makeHeroCards(r1, r2, suited) { const s1 = randSuit(); return [r1 + s1, r2 + (suited ? s1 : randSuitExcluding(s1))] }
 
 // ================================================================
 // MODULO 26 — Sizing Theory (Cada Sizing Conta uma Historia)
@@ -13,20 +23,26 @@ const SCENARIOS = [
     b: '75% pot (sizing grande — board alto)',
     aCorrect: true,
     explanation: 'Range advantage = muitas maos no range conectam com o board. Aposta com muitas maos e sizing pequeno porque nao precisa de fold equity — o lucro vem da frequencia, nao do tamanho.',
+    boardCards: makeRainbowBoard(['A','K','5']), heroCards: makeHeroCards('A','Q',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '6.5bb',
   }),
-  () => ({
-    q: 'Flop J-T-8 com flush draw. IP com set de JJ. Qual sizing?',
-    a: '66-75% pot (proteger contra draws, cobrar caro)',
-    b: '25-33% pot (sizing padrao)',
-    aCorrect: true,
-    explanation: 'Board ultra-umido com flush draw + straight draws. Draws tem 30-40% equity. Sizing grande forca draws a pagar preco errado. Protecao e mais importante que frequencia aqui.',
-  }),
+  () => {
+    const fs = randSuit()
+    return {
+      q: 'Flop J-T-8 com flush draw. IP com set de JJ. Qual sizing?',
+      a: '66-75% pot (proteger contra draws, cobrar caro)',
+      b: '25-33% pot (sizing padrao)',
+      aCorrect: true,
+      explanation: 'Board ultra-umido com flush draw + straight draws. Draws tem 30-40% equity. Sizing grande forca draws a pagar preco errado. Protecao e mais importante que frequencia aqui.',
+      boardCards: ['J'+fs, 'T'+fs, '8'+randSuitExcluding(fs)], heroCards: ['J'+randSuitExcluding(fs), 'J'+randSuitExcluding(fs)], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
+    }
+  },
   () => ({
     q: 'River em board seco A-7-2-4-9. Voce tem AA (nuts). Vilao checkou 3 streets. Qual sizing?',
     a: '33-50% pot (vilao tem range fraco, sizing grande assusta)',
     b: '100%+ pot (overbet — maximizar valor)',
     aCorrect: true,
     explanation: 'Vilao checkou 3x, range e fraco (pares medianos, Ax fracos). Sizing grande faz ele foldar tudo. Sizing menor (33-50%) extrai valor fino de maos que pagam por curiosidade ou pot odds.',
+    boardCards: makeRainbowBoard(['A','7','2','4','9']), heroCards: makeHeroCards('A','A',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '45bb',
   }),
   () => ({
     q: 'Voce quer overbet (100%+ pot) no river. Quando isso faz sentido?',
@@ -34,6 +50,7 @@ const SCENARIOS = [
     b: 'Quando voce tem qualquer mao forte',
     aCorrect: true,
     explanation: 'Overbet e a arma do range polarizado. Funciona quando: 1) vilao tem range capped (nao pode ter nuts), 2) voce pode ter nuts e bluffs. Maximiza valor das nuts E fold equity dos bluffs.',
+    boardCards: makeRainbowBoard(['K','9','4','3','2']), heroCards: makeHeroCards('K','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '30bb',
   }),
   () => ({
     q: 'Flop 9-5-2 rainbow. Voce e o raiser IP com range advantage. C-bet com AA. Sizing?',
@@ -41,6 +58,7 @@ const SCENARIOS = [
     b: '75% (AA e forte, bet grande)',
     aCorrect: true,
     explanation: 'AA e forte, mas o sizing deve ser consistente com sua estrategia de range. Se voce aposta 25-33% com range advantage, AA tambem usa esse sizing. Variar sizing por mao da informacao ao vilao.',
+    boardCards: makeRainbowBoard(['9','5','2']), heroCards: makeHeroCards('A','A',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '6.5bb',
   }),
   () => ({
     q: 'Turn em board Q-8-3-K. Voce IP bettou flop 33%. Agora tem AK (dois pares). Sizing do turn?',
@@ -48,6 +66,7 @@ const SCENARIOS = [
     b: '33% pot (manter sizing pequeno)',
     aCorrect: true,
     explanation: 'Turn sizing geralmente escala. Flop foi 33% com range, agora no turn voce tem mao forte e quer construir pote. 60-75% constroi pote pro river e cobra draws. Sizing de flop != sizing de turn.',
+    boardCards: makeRainbowBoard(['Q','8','3','K']), heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '14bb',
   }),
   () => ({
     q: 'Conceito: por que usar sizing de 33% no flop e mais eficiente que 75% em boards secos?',
@@ -55,20 +74,26 @@ const SCENARIOS = [
     b: 'Porque maos fortes preferem sizing pequeno',
     aCorrect: true,
     explanation: 'Bet 33% pot precisa funcionar ~25% das vezes. Bet 75% precisa funcionar ~43%. Em boards secos com range advantage, voce lucra mais apostando 33% com MUITAS maos do que 75% com poucas.',
+    boardCards: makeRainbowBoard(['K','8','3']), heroCards: makeHeroCards('A','J',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '6.5bb',
   }),
-  () => ({
-    q: 'River com straight feito em board com flush possible. Vilao checkou. Voce IP. Sizing?',
-    a: '75-100% (polarizado — mao forte quer valor maximo, flush possible limita calls)',
-    b: '33% (sizing fino)',
-    aCorrect: true,
-    explanation: 'Straight feito e mao forte mas nao invulneravel (flush possivel). Sizing grande (75-100%) maximiza valor contra maos que vao pagar (dois pares, sets) e bleffa bem com air. Range polarizado = sizing grande.',
-  }),
+  () => {
+    const fs = randSuit()
+    return {
+      q: 'River com straight feito em board com flush possible. Vilao checkou. Voce IP. Sizing?',
+      a: '75-100% (polarizado — mao forte quer valor maximo, flush possible limita calls)',
+      b: '33% (sizing fino)',
+      aCorrect: true,
+      explanation: 'Straight feito e mao forte mas nao invulneravel (flush possivel). Sizing grande (75-100%) maximiza valor contra maos que vao pagar (dois pares, sets) e bleffa bem com air. Range polarizado = sizing grande.',
+      boardCards: ['T'+fs, '9'+fs, '6'+randSuitExcluding(fs), '7'+randSuit(), '2'+fs], heroCards: makeHeroCards('J','8',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '25bb',
+    }
+  },
   () => ({
     q: '50% pot sizing e usado quando:',
     a: 'Protecao moderada — mao boa mas nao monster (top pair bom kicker)',
     b: 'Sempre que voce tem par',
     aCorrect: true,
     explanation: '50% e o sizing "padrao" de protecao. Funciona com maos que querem valor mas nao sao nuts: top pair bom kicker, overpairs em boards medianos. Cobra draws sem over-investir.',
+    boardCards: makeRainbowBoard(['Q','7','3']), heroCards: makeHeroCards('Q','J',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
   }),
   () => ({
     q: 'Flop 6-5-4 monotone (3 copas). Voce tem Ah7h (nut flush draw + overpair gutshot). Sizing de semi-bluff?',
@@ -76,6 +101,7 @@ const SCENARIOS = [
     b: '25% (manter barato)',
     aCorrect: true,
     explanation: 'Semi-bluff forte em board ultra-umido = sizing grande. Voce quer: 1) forca draws piores a pagar errado, 2) fold equity contra maos feitas fracas, 3) construir pote pra quando fechar o flush.',
+    boardCards: ['6h', '5h', '4h'], heroCards: ['Ah', '7h'], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
   }),
   () => ({
     q: 'Qual sizing conta a historia mais consistente de "eu tenho nuts"?',
@@ -83,6 +109,7 @@ const SCENARIOS = [
     b: '75% pot',
     aCorrect: true,
     explanation: 'Overbet grita "eu tenho nuts ou nada". E o sizing mais polarizado possivel. Se voce fizer overbet e nao tiver nuts, precisa de bluffs criveis no range. Qualquer sizing menor pode ter maos medianas.',
+    boardCards: makeRainbowBoard(['A','T','5','3','8']), heroCards: makeHeroCards('A','T',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '30bb',
   }),
   () => ({
     q: 'Voce esta OOP em board K-7-2. Donk bet (apostar antes do raiser). Qual sizing ideal?',
@@ -90,6 +117,7 @@ const SCENARIOS = [
     b: '25% pot',
     aCorrect: true,
     explanation: 'Donk bet geralmente usa 50-66%. Sizing muito pequeno (25%) nao gera fold equity e nao protege. Sizing muito grande overcommit sem necessidade. 50-66% equilibra valor e protecao no donk.',
+    boardCards: makeRainbowBoard(['K','7','2']), heroCards: makeHeroCards('K','9',false), heroPos: 'BB', villainPos: 'BTN', villainAction: '', potLabel: '7bb',
   }),
   () => ({
     q: 'Regra de thumb para sizing por street:',
@@ -97,6 +125,7 @@ const SCENARIOS = [
     b: 'Mesmo sizing em todas as streets',
     aCorrect: true,
     explanation: 'Sizings escalam pelas streets. Flop e mais frequente com sizing menor (muitas maos). Turn filtra — sizing maior. River e polarizado — sizing grande ou overbet. Isso constroi pote naturalmente.',
+    boardCards: makeRainbowBoard(['J','8','4']), heroCards: makeHeroCards('A','J',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '7bb',
   }),
   () => ({
     q: 'Vilao min-betta (2x) no river em pote de 100. Voce tem 2nd pair. O que o sizing dele te diz?',
@@ -104,17 +133,18 @@ const SCENARIOS = [
     b: 'Bluff claro (sizing muito pequeno)',
     aCorrect: true,
     explanation: 'Min-bet no river geralmente e valor fino — vilao quer ser pago por maos piores mas nao quer investir muito. Com 2nd pair voce tem uma decisao dificil: vilao raramente blefa com sizing minimo.',
+    boardCards: makeRainbowBoard(['K','T','5','3','7']), heroCards: makeHeroCards('T','9',false), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 2bb', potLabel: '100bb',
   }),
 ]
 
 function generateScenario() {
   const pick = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)]
-  const t = pick()
+  const t = typeof pick === 'function' ? pick() : pick
   const swap = Math.random() > 0.5
   const opts = swap
     ? [{ id: 'a', label: t.b, correct: !t.aCorrect }, { id: 'b', label: t.a, correct: t.aCorrect }]
     : [{ id: 'a', label: t.a, correct: t.aCorrect }, { id: 'b', label: t.b, correct: !t.aCorrect }]
-  return { question: t.q, options: opts, explanation: t.explanation }
+  return { question: t.q, options: opts, explanation: t.explanation, heroCards: t.heroCards, boardCards: t.boardCards, heroPos: t.heroPos, villainPos: t.villainPos, villainAction: t.villainAction, potLabel: t.potLabel }
 }
 
 // AULA
@@ -338,6 +368,19 @@ function Trainer() {
         </div>
 
         <div className="rounded-2xl p-5" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+          {scenario.heroCards && scenario.heroCards.length > 0 && (
+            <ModulePokerTable
+              heroPos={scenario.heroPos || 'BTN'}
+              villainPos={scenario.villainPos || 'BB'}
+              heroCards={scenario.heroCards}
+              boardCards={scenario.boardCards || []}
+              villainAction={scenario.villainAction || ''}
+              potLabel={scenario.potLabel || ''}
+              contextTitle="Sizing Theory"
+              contextDesc=""
+            />
+          )}
+
           <div style={{ color: '#fdfdfd', fontSize: 15, lineHeight: 1.7, marginBottom: 20 }}>
             {scenario.question}
           </div>

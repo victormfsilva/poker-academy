@@ -1,6 +1,16 @@
 import { useState, useCallback } from 'react'
 import { useProgress } from '../../context/ProgressContext'
 import DecisionTree from '../../components/DecisionTree'
+import ModulePokerTable from '../../components/ModulePokerTable'
+
+const SUITS_POOL = ['s','h','d','c']
+function randSuit() { return SUITS_POOL[Math.floor(Math.random() * 4)] }
+function randSuitExcluding(s) { const o = SUITS_POOL.filter(x => x !== s); return o[Math.floor(Math.random() * o.length)] }
+function makeRainbowBoard(ranks) {
+  const used = new Set()
+  return ranks.map(r => { let s; do { s = randSuit() } while (used.has(s) && used.size < 4); used.add(s); return r + s })
+}
+function makeHeroCards(r1, r2, suited) { const s1 = randSuit(); return [r1 + s1, r2 + (suited ? s1 : randSuitExcluding(s1))] }
 
 // ================================================================
 // MODULO 25 — Multistreet Planning
@@ -13,20 +23,26 @@ const SCENARIOS = [
     b: 'Check (pot control)',
     aCorrect: true,
     explanation: 'AK em K-9-4-2 e muito forte. O 2 e um blank que nao muda nada. Plano de 3 streets: bet flop, bet turn por valor, e avaliar river. Kx piores e 9x vao pagar turn.',
+    boardCards: [...makeRainbowBoard(['K','9','4']), '2h'], heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '13bb',
   }),
-  () => ({
-    q: 'Voce bettou flop com 87s (flush draw + gutshot) em board T-6-2 com 2 copas. Turn: Kh (sem copa). O que fazer?',
-    a: 'Bet turn (barrel com equity + carta de scare)',
-    b: 'Give up (check/fold)',
-    aCorrect: true,
-    explanation: 'O K no turn e uma scare card otima. Vilao vai foldar muitas maos medianas (7x, 8x, underpairs). Voce ainda tem flush draw + gutshot como backup. Double barrel e o plano correto.',
-  }),
+  () => {
+    const fs = randSuit()
+    return {
+      q: 'Voce bettou flop com 87s (flush draw + gutshot) em board T-6-2 com 2 copas. Turn: Kh (sem copa). O que fazer?',
+      a: 'Bet turn (barrel com equity + carta de scare)',
+      b: 'Give up (check/fold)',
+      aCorrect: true,
+      explanation: 'O K no turn e uma scare card otima. Vilao vai foldar muitas maos medianas (7x, 8x, underpairs). Voce ainda tem flush draw + gutshot como backup. Double barrel e o plano correto.',
+      boardCards: ['Tc', '6c', '2'+randSuitExcluding('c'), 'Kh'], heroCards: ['8c', '7c'], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '15bb',
+    }
+  },
   () => ({
     q: 'Voce fez c-bet no flop A-7-3 com QQ. Vilao call. Turn: A. O que fazer?',
     a: 'Check (A no turn faz vilao ter mais trips, seu QQ piorou muito)',
     b: 'Bet (representar o A)',
     aCorrect: true,
     explanation: 'O A no turn e terrivel pra QQ. Agora qualquer Ax do vilao (que pagou flop) te tem dominado. Pot control e o plano: check turn, possivelmente call river se sizing for pequeno.',
+    boardCards: [...makeRainbowBoard(['A','7','3']), 'A'+randSuit()], heroCards: makeHeroCards('Q','Q',false), heroPos: 'CO', villainPos: 'BB', villainAction: 'Call', potLabel: '14bb',
   }),
   () => ({
     q: 'Plano de 3 streets com AA em board J-7-2 rainbow (SPR ~10). Qual o plano correto?',
@@ -34,6 +50,7 @@ const SCENARIOS = [
     b: 'Bet flop grande, check turn (trap), bet river',
     aCorrect: true,
     explanation: 'AA em board seco com SPR ~10 quer 3 streets de valor. O plano: bet 50-60% flop, 60-70% turn, 60-75% river. Nao precisa de check turn — voce quer construir o pote gradualmente.',
+    boardCards: makeRainbowBoard(['J','7','2']), heroCards: makeHeroCards('A','A',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '6.5bb',
   }),
   () => ({
     q: 'Voce bettou flop e turn com Ah5h (nut flush draw) em board K-8-3-6 com 2 copas. River: 2d (nao fecha). O que fazer?',
@@ -41,6 +58,7 @@ const SCENARIOS = [
     b: 'Give up (draw nao fechou)',
     aCorrect: true,
     explanation: 'Voce representou mao forte em 2 streets. O river nao muda nada. Vilao vai foldar maos medianas (8x, 99-QQ) que sobreviveram ate aqui. O triple barrel e o final logico do plano.',
+    boardCards: ['Kh', '8h', '3s', '6d', '2d'], heroCards: ['Ah', '5h'], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '35bb',
   }),
   () => ({
     q: 'Voce checkou flop como caller em board Q-J-5. Vilao bettou, voce call com T9s (OESD). Turn: 3. Vilao betta de novo. Plano?',
@@ -48,20 +66,26 @@ const SCENARIOS = [
     b: 'Raise turn (semi-bluff)',
     aCorrect: true,
     explanation: 'Com OESD (8 outs) no turn, voce tem ~16% pra fechar. Se esta recebendo odds (bet sizing < 75%), call e correto. Raise e muito agressivo — voce estaria committed sem a melhor mao. Call e avaliar river.',
+    boardCards: [...makeRainbowBoard(['Q','J','5']), '3'+randSuit()], heroCards: makeHeroCards('T','9',true), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 66%', potLabel: '18bb',
   }),
-  () => ({
-    q: 'Voce tem set de 7 no flop 7-6-5 com flush draw. Qual o plano multistreet?',
-    a: 'Raise/bet grande flop, bet grande turn pra proteger de draws',
-    b: 'Slowplay: check flop, check-raise turn',
-    aCorrect: true,
-    explanation: 'Board ultra-umido (flush draw + straight draw). Set DEVE apostar grande ou raise no flop. Draws tem ~35-45% equity aqui. Protecao e urgente. Plano: bet/raise flop grande, bet turn grande, shove river se necessario.',
-  }),
+  () => {
+    const fs = randSuit()
+    return {
+      q: 'Voce tem set de 7 no flop 7-6-5 com flush draw. Qual o plano multistreet?',
+      a: 'Raise/bet grande flop, bet grande turn pra proteger de draws',
+      b: 'Slowplay: check flop, check-raise turn',
+      aCorrect: true,
+      explanation: 'Board ultra-umido (flush draw + straight draw). Set DEVE apostar grande ou raise no flop. Draws tem ~35-45% equity aqui. Protecao e urgente. Plano: bet/raise flop grande, bet turn grande, shove river se necessario.',
+      boardCards: ['7'+fs, '6'+fs, '5'+randSuitExcluding(fs)], heroCards: ['7'+randSuitExcluding(fs), '7'+randSuitExcluding(fs)], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Bet 50%', potLabel: '7bb',
+    }
+  },
   () => ({
     q: 'Board A-K-8-4. Voce IP bettou flop com JTs (gutshot + backdoor). Turn completou nada. Qual a decisao key?',
     a: 'Check turn (conservar fichas, mao nao melhorou)',
     b: 'Barrel turn (manter pressao)',
     aCorrect: true,
     explanation: 'JTs perdeu as backdoor draws. No turn A-K-8-4 voce so tem gutshot (4 outs). Nao vale a pena investir mais. O plano correto e: bet flop (semi-bluff com equity), check turn (desistir), talvez bluff river se fizer sentido.',
+    boardCards: makeRainbowBoard(['A','K','8','4']), heroCards: makeHeroCards('J','T',true), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '14bb',
   }),
   () => ({
     q: 'Conceito: por que planejar as 3 streets ANTES de apostar no flop?',
@@ -69,6 +93,7 @@ const SCENARIOS = [
     b: 'Pra intimidar o vilao desde o inicio',
     aCorrect: true,
     explanation: 'Multistreet planning evita situacoes onde voce aposta no flop sem saber o que fazer no turn. Se sua mao so aguenta 2 streets de valor (ex: top pair kicker medio), voce ja sabe que vai check um street.',
+    boardCards: makeRainbowBoard(['Q','8','3']), heroCards: makeHeroCards('A','Q',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '7bb',
   }),
   () => ({
     q: 'Voce tem KK em board 8-5-2. Bettou flop, bettou turn (4). River: A. O que fazer?',
@@ -76,6 +101,7 @@ const SCENARIOS = [
     b: 'Bet (river de valor, KK ainda e forte)',
     aCorrect: true,
     explanation: 'KK planejou 3 streets de valor em board 8-5-2, mas o A no river muda tudo. Vilao que pagou flop e turn com Ax agora te tem dominado. Check e correto — nao transforma mao de valor em bluff.',
+    boardCards: [...makeRainbowBoard(['8','5','2']), '4'+randSuit(), 'A'+randSuit()], heroCards: makeHeroCards('K','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '40bb',
   }),
   () => ({
     q: 'Turn: voce bettou flop e turn com par de As em board A-T-6-3. River: T (pareia o board). Qual a decisao?',
@@ -83,6 +109,7 @@ const SCENARIOS = [
     b: 'Check (medo de trips de T)',
     aCorrect: true,
     explanation: 'O T no river pareia, mas voce tem AA com full house (AA sobre TT). Vilao quase nunca tem TT (teria raisado pre ou no flop geralmente). Continue o plano de 3 streets de valor — maos como KT, QT vao pagar.',
+    boardCards: [...makeRainbowBoard(['A','T','6']), '3'+randSuit(), 'T'+randSuit()], heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '45bb',
   }),
   () => ({
     q: 'Conceito de "check-raise turn" como plano. Quando e correto?',
@@ -90,6 +117,7 @@ const SCENARIOS = [
     b: 'Sempre que temos set ou melhor',
     aCorrect: true,
     explanation: 'Check-raise turn e um plano especifico: check flop (trap), call ou check, e entao check-raise turn pra construir pote enorme. Funciona com sets/straights OOP contra vilao agressivo que vai bet 2 streets.',
+    boardCards: [...makeRainbowBoard(['9','7','3']), '2'+randSuit()], heroCards: ['9'+randSuit(), '9'+randSuit()], heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 66%', potLabel: '14bb',
   }),
   () => ({
     q: 'Voce tem JJ em board Q-7-3 rainbow. Bettou flop. Turn: K. Plano?',
@@ -97,6 +125,7 @@ const SCENARIOS = [
     b: 'Bet turn (JJ ainda e overpair ao 7 e 3)',
     aCorrect: true,
     explanation: 'JJ em Q-7-3-K tem DUAS overcards no board. Qualquer Qx ou Kx te domina. O plano muda: bet flop por valor/protecao, check turn (pot control), fold ou call river dependendo do sizing.',
+    boardCards: [...makeRainbowBoard(['Q','7','3']), 'K'+randSuit()], heroCards: makeHeroCards('J','J',false), heroPos: 'CO', villainPos: 'BB', villainAction: 'Call', potLabel: '14bb',
   }),
   () => ({
     q: 'Regra de ouro para decidir quantas streets apostar por valor:',
@@ -104,17 +133,18 @@ const SCENARIOS = [
     b: 'Sempre aposte 3 streets com top pair ou melhor',
     aCorrect: true,
     explanation: 'A pergunta-chave e "quais maos piores me chamam?". TPTK (como AK em A-high board) pode apostar 3 streets porque Ax piores, Kx, e draws pagam. Mas top pair kicker fraco so aguenta 1-2 streets.',
+    boardCards: makeRainbowBoard(['A','9','4']), heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '7bb',
   }),
 ]
 
 function generateScenario() {
   const pick = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)]
-  const t = pick()
+  const t = typeof pick === 'function' ? pick() : pick
   const swap = Math.random() > 0.5
   const opts = swap
     ? [{ id: 'a', label: t.b, correct: !t.aCorrect }, { id: 'b', label: t.a, correct: t.aCorrect }]
     : [{ id: 'a', label: t.a, correct: t.aCorrect }, { id: 'b', label: t.b, correct: !t.aCorrect }]
-  return { question: t.q, options: opts, explanation: t.explanation }
+  return { question: t.q, options: opts, explanation: t.explanation, heroCards: t.heroCards, boardCards: t.boardCards, heroPos: t.heroPos, villainPos: t.villainPos, villainAction: t.villainAction, potLabel: t.potLabel }
 }
 
 // AULA
@@ -351,6 +381,19 @@ function Trainer() {
         </div>
 
         <div className="rounded-2xl p-5" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+          {scenario.heroCards && scenario.heroCards.length > 0 && (
+            <ModulePokerTable
+              heroPos={scenario.heroPos || 'BTN'}
+              villainPos={scenario.villainPos || 'BB'}
+              heroCards={scenario.heroCards}
+              boardCards={scenario.boardCards || []}
+              villainAction={scenario.villainAction || ''}
+              potLabel={scenario.potLabel || ''}
+              contextTitle="Multistreet Planning"
+              contextDesc=""
+            />
+          )}
+
           <div style={{ color: '#fdfdfd', fontSize: 15, lineHeight: 1.7, marginBottom: 20 }}>
             {scenario.question}
           </div>
