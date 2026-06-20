@@ -172,22 +172,28 @@ function holeToNotation(hole) {
 
 // ─── Bot pre-flop usando ranges GTO ──────────────────────
 // botIsSB: true = bot é SB (age primeiro), false = bot é BB (defende)
-function botPreflopDecision(botHole, botIsSB) {
+function botPreflopDecision(botHole, botIsSB, profile = 'gto') {
   const hand = holeToNotation(botHole)
+  const prof = BOT_PROFILES[profile] || BOT_PROFILES.gto
 
   if (botIsSB) {
-    // Bot é SB: usar SB_raise range
     const raiseRange = BLIND_WARS.SB_raise?.raise || []
     if (raiseRange.includes(hand)) return 'raise'
-    // Complete range (limp)
     const completeRange = BLIND_WARS.SB_complete?.complete || []
-    if (completeRange.includes(hand)) return 'call' // limp/complete
+    if (completeRange.includes(hand)) return 'call'
+    // LAG abre mais maos fora do range (random limp/raise)
+    if (prof.preflopTight < 0 && Math.random() < Math.abs(prof.preflopTight)) return Math.random() < 0.6 ? 'raise' : 'call'
     return 'fold'
   } else {
-    // Bot é BB: facing SB raise, usar BB_VS_RFI.vsSB
     const bbRange = BB_VS_RFI.vsSB || {}
-    if (bbRange.threebet?.includes(hand)) return 'raise' // 3-bet
-    if (bbRange.call?.includes(hand)) return 'call'
+    if (bbRange.threebet?.includes(hand)) return 'raise'
+    if (bbRange.call?.includes(hand)) {
+      // Nit folda maos do range de call
+      if (prof.preflopTight > 0 && Math.random() < prof.preflopTight * 0.5) return 'fold'
+      return 'call'
+    }
+    // LAG defende mais fora do range
+    if (prof.preflopTight < 0 && Math.random() < Math.abs(prof.preflopTight)) return 'call'
     return 'fold'
   }
 }
@@ -267,19 +273,80 @@ function boardTexture(board) {
   return { wet, paired, monotone, connected, highCards, flushDraw }
 }
 
+// ─── Blocker analysis ─────────────────────────────────────
+// Analisa se as cartas do bot bloqueiam combos importantes do oponente
+function blockerEffect(botHole, board) {
+  if (board.length === 0) return { nutBlocker: false, flushBlocker: false, straightBlocker: false, bluffBoost: 0, callBoost: 0 }
+
+  const botRanks = botHole.map(c => RANK_VAL[c.slice(0, -1)])
+  const botSuits = botHole.map(c => c.slice(-1))
+  const boardRanks = board.map(c => RANK_VAL[c.slice(0, -1)])
+  const boardSuits = board.map(c => c.slice(-1))
+
+  // Flush blocker: bot tem carta do naipe mais frequente do board
+  const suitCount = {}
+  boardSuits.forEach(s => { suitCount[s] = (suitCount[s] || 0) + 1 })
+  const dominantSuit = Object.entries(suitCount).sort((a, b) => b[1] - a[1])[0]
+  const flushBlocker = dominantSuit && dominantSuit[1] >= 2 && botSuits.some(s => s === dominantSuit[0])
+  const hasAceFlushBlocker = flushBlocker && botHole.some(c => c.slice(0, -1) === 'A' && c.slice(-1) === dominantSuit[0])
+
+  // Straight blocker: bot tem cartas que completam sequencias no board
+  const sorted = [...new Set(boardRanks)].sort((a, b) => a - b)
+  let straightBlocker = false
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const gap = sorted[i + 1] - sorted[i]
+    if (gap === 2) {
+      // Carta que preenche o gap
+      const filler = sorted[i] + 1
+      if (botRanks.includes(filler)) straightBlocker = true
+    }
+  }
+
+  // Nut blocker: bot bloqueia as nuts (top pair com A, set com carta do board)
+  const topBoardRank = Math.max(...boardRanks)
+  const nutBlocker = botRanks.includes(topBoardRank) || botRanks.includes(14) // tem o A ou top card
+
+  // Calcular boosts
+  let bluffBoost = 0
+  let callBoost = 0
+
+  // Se bloqueia flush draw do oponente -> pode blefar mais (oponente tem menos nuts)
+  if (hasAceFlushBlocker) bluffBoost += 0.12
+  else if (flushBlocker) bluffBoost += 0.06
+
+  // Se bloqueia straight -> pode blefar mais
+  if (straightBlocker) bluffBoost += 0.05
+
+  // Se tem nut blocker -> oponente menos provavel de ter nuts -> pode call mais
+  if (nutBlocker) callBoost += 0.08
+
+  // Se bloqueia combos de bluff do oponente (tem cartas baixas que oponente usaria pra blefar)
+  // -> deve foldar mais (oponente tem mais valor)
+  if (botRanks.every(r => r <= 6) && !flushBlocker && !straightBlocker) callBoost -= 0.05
+
+  return { nutBlocker, flushBlocker, straightBlocker, bluffBoost, callBoost }
+}
+
 // ─── Bot GTO (decisoes heuristicas avancadas) ────────────
 // Retorna { action, sizePct } onde sizePct = fracao do pote (0.33, 0.5, 0.75, 1.0)
-function botDecision(botHole, board, street, pot, lastBet, isIP) {
+function botDecision(botHole, board, street, pot, lastBet, isIP, profile = 'gto') {
   if (board.length === 0) return 'call' // fallback pre-flop
 
   const strength = handStrength(botHole, board)
   const texture = boardTexture(board)
-  const rng = Math.random()
+  const blockers = blockerEffect(botHole, board)
+  const prof = BOT_PROFILES[profile] || BOT_PROFILES.gto
   const streetIdx = { flop: 0, turn: 1, river: 2 }[street] ?? 0
+
+  // Profile: LAG aposta mais, Nit folda mais — rng shift
+  const rng = Math.min(1, Math.max(0, Math.random() * (1 / prof.betMult)))
 
   // Ajustes por posicao: IP pode blefar mais, OOP precisa proteger mais
   const ipBonus = isIP ? 0.08 : 0
   const oopProtect = !isIP ? 0.10 : 0
+  // Blocker + profile adjustments
+  const bluffAdj = blockers.bluffBoost * prof.bluffMult
+  const callAdj = blockers.callBoost * prof.callMult
 
   // ─── Facing a bet ───
   if (lastBet > 0) {
@@ -308,32 +375,31 @@ function botDecision(botHole, board, street, pot, lastBet, isIP) {
         return 'call'
 
       case 'draw':
-        // Semi-bluff raise IP, call com pot odds boas
-        if (streetIdx === 0 && isIP && rng < 0.28) return 'raise'
-        if (streetIdx === 1 && isIP && rng < 0.15) return 'raise' // turn semi-bluff
-        // Pot odds: flop tem 2 streets, turn tem 1
+        // Semi-bluff raise IP, call com pot odds boas — blockers boost semi-bluff
+        if (streetIdx === 0 && isIP && rng < (0.28 + bluffAdj)) return 'raise'
+        if (streetIdx === 1 && isIP && rng < (0.15 + bluffAdj)) return 'raise'
         if (streetIdx === 0 && potOdds < 0.35) return 'call'
         if (streetIdx === 1 && potOdds < 0.28) return 'call'
-        if (streetIdx === 2) return rng < 0.12 ? 'call' : 'fold' // river: draw falhou
-        return rng < 0.20 ? 'call' : 'fold'
+        if (streetIdx === 2) return rng < (0.12 + callAdj) ? 'call' : 'fold'
+        return rng < (0.20 + callAdj) ? 'call' : 'fold'
 
       case 'marginal':
-        // Pot odds mais precisos
-        if (betRelPot < 0.35) return rng < 0.65 ? 'call' : 'fold'
-        if (betRelPot < 0.55) return rng < 0.35 ? 'call' : 'fold'
-        if (streetIdx === 2) return 'fold' // river com mao marginal contra bet = fold
-        return rng < 0.12 ? 'call' : 'fold'
+        // Pot odds + blocker + profile adjustments (nit folds more, lag calls more)
+        if (betRelPot < 0.35) return rng < ((0.65 + callAdj) / prof.foldMult) ? 'call' : 'fold'
+        if (betRelPot < 0.55) return rng < ((0.35 + callAdj) / prof.foldMult) ? 'call' : 'fold'
+        if (streetIdx === 2) return rng < Math.max(0, callAdj / prof.foldMult) ? 'call' : 'fold'
+        return rng < ((0.12 + callAdj) / prof.foldMult) ? 'call' : 'fold'
 
       case 'weak':
-        // Bluff-raise raro no river IP, resto fold
-        if (streetIdx === 2 && isIP && rng < 0.10) return 'raise'
-        if (betRelPot < 0.3 && streetIdx === 0) return rng < 0.15 ? 'call' : 'fold'
+        // Bluff-raise raro no river IP, resto fold — blockers aumentam frequencia
+        if (streetIdx === 2 && isIP && rng < (0.10 + bluffAdj)) return 'raise'
+        if (betRelPot < 0.3 && streetIdx === 0) return rng < (0.15 + callAdj) ? 'call' : 'fold'
         return 'fold'
 
       default: // air
-        // Bluff-raise raro em spots polarizados
-        if (streetIdx === 0 && isIP && rng < 0.08) return 'raise'
-        if (streetIdx === 2 && isIP && !texture.wet && rng < 0.06) return 'raise' // river bluff raise
+        // Bluff-raise em spots polarizados — blockers fazem blefar mais
+        if (streetIdx === 0 && isIP && rng < (0.08 + bluffAdj)) return 'raise'
+        if (streetIdx === 2 && isIP && !texture.wet && rng < (0.06 + bluffAdj)) return 'raise'
         return 'fold'
     }
   }
@@ -372,26 +438,26 @@ function botDecision(botHole, board, street, pot, lastBet, isIP) {
       return 'check'
 
     case 'weak':
-      // Bluffs com frequencia GTO: mais em dry boards e IP
+      // Bluffs com frequencia GTO: mais em dry boards e IP — blockers boost bluff freq
       if (!texture.wet && isIP) {
-        if (streetIdx === 0) return rng < 0.30 ? 'bet' : 'check'
-        if (streetIdx === 1) return rng < 0.20 ? 'bet' : 'check' // barrel
-        return rng < 0.15 ? 'bet' : 'check' // river bluff
+        if (streetIdx === 0) return rng < (0.30 + bluffAdj) ? 'bet' : 'check'
+        if (streetIdx === 1) return rng < (0.20 + bluffAdj) ? 'bet' : 'check'
+        return rng < (0.15 + bluffAdj) ? 'bet' : 'check'
       }
-      if (texture.wet) return rng < 0.06 ? 'bet' : 'check'
-      if (streetIdx === 0) return rng < 0.22 ? 'bet' : 'check'
-      return rng < 0.10 ? 'bet' : 'check'
+      if (texture.wet) return rng < (0.06 + bluffAdj * 0.5) ? 'bet' : 'check'
+      if (streetIdx === 0) return rng < (0.22 + bluffAdj) ? 'bet' : 'check'
+      return rng < (0.10 + bluffAdj) ? 'bet' : 'check'
 
     default: // air
-      // Bluffs polarizados: IP em dry boards
+      // Bluffs polarizados: IP em dry boards — blockers boost
       if (!texture.wet && isIP) {
-        if (streetIdx === 0) return rng < 0.28 ? 'bet' : 'check'
-        if (streetIdx === 1) return rng < 0.16 ? 'bet' : 'check'
-        return rng < 0.12 ? 'bet' : 'check' // river bluff
+        if (streetIdx === 0) return rng < (0.28 + bluffAdj) ? 'bet' : 'check'
+        if (streetIdx === 1) return rng < (0.16 + bluffAdj) ? 'bet' : 'check'
+        return rng < (0.12 + bluffAdj) ? 'bet' : 'check'
       }
-      if (!isIP && texture.paired && rng < 0.18) return 'bet' // bluff em board pareado OOP
-      if (streetIdx === 0) return rng < 0.14 ? 'bet' : 'check'
-      return rng < 0.06 ? 'bet' : 'check'
+      if (!isIP && texture.paired && rng < (0.18 + bluffAdj)) return 'bet'
+      if (streetIdx === 0) return rng < (0.14 + bluffAdj) ? 'bet' : 'check'
+      return rng < (0.06 + bluffAdj) ? 'bet' : 'check'
   }
 }
 
@@ -1014,6 +1080,76 @@ function saveRating(data) {
   try { localStorage.setItem(RATING_KEY, JSON.stringify(data)) } catch {}
 }
 
+// ─── Bot Profiles ────────────────────────────────────────
+const BOT_PROFILES = {
+  gto: { label: 'GTO', desc: 'Equilibrado', color: '#4fce82', betMult: 1, bluffMult: 1, callMult: 1, foldMult: 1, preflopTight: 0 },
+  lag: { label: 'LAG', desc: 'Loose-Aggressive', color: '#f5a623', betMult: 1.35, bluffMult: 1.5, callMult: 0.8, foldMult: 0.6, preflopTight: -0.15 },
+  tag: { label: 'TAG', desc: 'Tight-Aggressive', color: '#0a84d7', betMult: 1.2, bluffMult: 0.6, callMult: 0.9, foldMult: 1.3, preflopTight: 0.2 },
+  nit: { label: 'Nit', desc: 'Ultra-tight', color: '#a78bfa', betMult: 0.8, bluffMult: 0.2, callMult: 0.7, foldMult: 1.8, preflopTight: 0.35 },
+}
+
+// ─── ICM / MTT ──────────────────────────────────────────
+const MTT_PLAYERS = 9
+const MTT_STARTING_STACK = 1500
+const MTT_PAYOUTS = [0.50, 0.30, 0.20] // top 3 paid
+const MTT_NAMES = ['Hero', 'Alice', 'Bob', 'Carlos', 'Diana', 'Erik', 'Fiona', 'Greg', 'Hana']
+
+// ICM: calcula equity ($EV) de cada jogador baseado nos stacks
+function icmEquity(stacks, payouts) {
+  const total = stacks.reduce((a, b) => a + b, 0)
+  if (total === 0) return stacks.map(() => 0)
+  const n = stacks.length
+  const alive = stacks.map((s, i) => ({ idx: i, stack: s })).filter(p => p.stack > 0)
+
+  // Simplified ICM via Malmuth-Harville
+  const equity = new Array(n).fill(0)
+
+  function distribute(remaining, probProduct, placeIdx) {
+    if (placeIdx >= payouts.length || remaining.length === 0) return
+    const totalRemaining = remaining.reduce((a, b) => a + b.stack, 0)
+    for (let i = 0; i < remaining.length; i++) {
+      const p = remaining[i]
+      const prob = (p.stack / totalRemaining) * probProduct
+      equity[p.idx] += prob * payouts[placeIdx]
+      // Recurse for next place without this player
+      const next = remaining.filter((_, j) => j !== i)
+      distribute(next, prob, placeIdx + 1)
+    }
+  }
+
+  distribute(alive, 1, 0)
+  return equity
+}
+
+function createMttState() {
+  const players = MTT_NAMES.map((name, i) => ({
+    name,
+    stack: MTT_STARTING_STACK,
+    eliminated: false,
+    place: null,
+    isHero: i === 0,
+  }))
+  return {
+    players,
+    round: 1,
+    blindLevel: 0,
+    heroOpponentIdx: null,
+    log: [],
+    finished: false,
+  }
+}
+
+function simulateBotVsBot(p1, p2, blinds) {
+  // Simple simulation: random result weighted by stack sizes
+  const total = p1.stack + p2.stack
+  const p1WinProb = 0.45 + (p1.stack / total) * 0.1 // slight advantage for bigger stack
+  const potSize = Math.min(p1.stack, p2.stack, blinds * 5 + Math.floor(Math.random() * blinds * 10))
+  if (Math.random() < p1WinProb) {
+    return { winner: p1, loser: p2, amount: potSize }
+  }
+  return { winner: p2, loser: p1, amount: potSize }
+}
+
 // ─── localStorage helpers ─────────────────────────────────
 const STORAGE_KEY = 'poker-arena-match'
 
@@ -1041,6 +1177,20 @@ export default function Arena() {
   const [gameState, setGameState] = useState(null)
   const [feedbacks, setFeedbacks] = useState([])
   const [betSize, setBetSize] = useState(0)
+
+  // Arena mode: hu (heads-up) or mtt (tournament)
+  const [arenaMode, setArenaMode] = useState('hu')
+
+  // MTT state
+  const [mttState, setMttState] = useState(null)
+
+  // Replay de mao
+  const [replayHand, setReplayHand] = useState(null)
+
+  // Perfil de bot
+  const [botProfile, setBotProfile] = useState('gto') // gto, lag, tag, nit
+  const botProfileRef = useRef(botProfile)
+  botProfileRef.current = botProfile
 
   // Modo Pressao
   const [pressureMode, setPressureMode] = useState(false)
@@ -1092,6 +1242,136 @@ export default function Arena() {
     setGameState(null)
     setFeedbacks([])
   }, [updateMatch])
+
+  // ─── MTT Functions ──────────────────────────────────────
+  const startMtt = useCallback(() => {
+    const mtt = createMttState()
+    // Pick first opponent for hero
+    const aliveOthers = mtt.players.filter((p, i) => i > 0 && !p.eliminated)
+    const oppIdx = Math.floor(Math.random() * aliveOthers.length)
+    const opponent = aliveOthers[oppIdx]
+    mtt.heroOpponentIdx = mtt.players.indexOf(opponent)
+    setMttState(mtt)
+    // Start a HU match vs this opponent
+    const m = {
+      heroStack: mtt.players[0].stack,
+      villainStack: opponent.stack,
+      handNum: 0,
+      stats: { hands: 0, won: 0, correctActions: 0, totalActions: 0 },
+      handHistory: [],
+      matchOver: false,
+      winner: null,
+      mttMode: true,
+    }
+    updateMatch(m)
+    setGameState(null)
+    setFeedbacks([])
+  }, [updateMatch])
+
+  const advanceMttRound = useCallback((heroWon, heroStack, villainStack) => {
+    setMttState(prev => {
+      if (!prev) return prev
+      const players = [...prev.players.map(p => ({ ...p }))]
+      const oppIdx = prev.heroOpponentIdx
+
+      // Update hero and opponent stacks
+      players[0].stack = heroStack
+      if (oppIdx != null) players[oppIdx].stack = villainStack
+
+      // Mark eliminated
+      if (villainStack <= 0 && oppIdx != null) {
+        players[oppIdx].eliminated = true
+        players[oppIdx].place = players.filter(p => p.eliminated).length
+        // Give remaining stack to hero
+        players[0].stack = heroStack + 0 // already accounted
+      }
+      if (heroStack <= 0) {
+        players[0].eliminated = true
+        players[0].place = players.filter(p => p.eliminated).length
+      }
+
+      // Simulate bot vs bot battles
+      const alive = players.filter((p, i) => i > 0 && !p.eliminated)
+      const mttBlinds = MTT_STARTING_STACK * 0.01 * (prev.round + 1)
+      for (let i = 0; i < alive.length - 1; i += 2) {
+        const result = simulateBotVsBot(alive[i], alive[i + 1], mttBlinds)
+        const wIdx = players.indexOf(result.winner)
+        const lIdx = players.indexOf(result.loser)
+        players[wIdx].stack += result.amount
+        players[lIdx].stack -= result.amount
+        if (players[lIdx].stack <= 0) {
+          players[lIdx].stack = 0
+          players[lIdx].eliminated = true
+          players[lIdx].place = players.filter(p => p.eliminated).length
+        }
+      }
+
+      const aliveAll = players.filter(p => !p.eliminated)
+      const finished = aliveAll.length <= 1 || players[0].eliminated
+
+      // Assign final places
+      if (finished) {
+        const remaining = players.filter(p => !p.eliminated).sort((a, b) => b.stack - a.stack)
+        remaining.forEach((p, i) => { p.place = i + 1 })
+      }
+
+      // Pick next opponent
+      let nextOpp = null
+      if (!finished && !players[0].eliminated) {
+        const nextAlive = players.filter((p, i) => i > 0 && !p.eliminated)
+        if (nextAlive.length > 0) {
+          nextOpp = nextAlive[Math.floor(Math.random() * nextAlive.length)]
+        }
+      }
+
+      const log = [...prev.log]
+      if (heroWon) log.push(`Round ${prev.round}: Hero venceu vs ${oppIdx != null ? players[oppIdx].name : '?'}`)
+      else log.push(`Round ${prev.round}: Hero perdeu vs ${oppIdx != null ? players[oppIdx].name : '?'}`)
+
+      return {
+        ...prev,
+        players,
+        round: prev.round + 1,
+        heroOpponentIdx: nextOpp ? players.indexOf(nextOpp) : null,
+        log,
+        finished,
+      }
+    })
+  }, [])
+
+  // When MTT match ends, advance the tournament
+  useEffect(() => {
+    if (!mttState || mttState.finished || !match?.mttMode || !match.matchOver) return
+
+    const heroWon = match.winner === 'hero'
+    advanceMttRound(heroWon, match.heroStack, match.villainStack)
+
+    // If tournament continues, start next match after delay
+    const timer = setTimeout(() => {
+      setMttState(prev => {
+        if (!prev || prev.finished || prev.players[0].eliminated) return prev
+        const oppIdx = prev.heroOpponentIdx
+        if (oppIdx == null) return prev
+        const opp = prev.players[oppIdx]
+        const hero = prev.players[0]
+        const m = {
+          heroStack: hero.stack,
+          villainStack: opp.stack,
+          handNum: 0,
+          stats: { hands: 0, won: 0, correctActions: 0, totalActions: 0 },
+          handHistory: [],
+          matchOver: false,
+          winner: null,
+          mttMode: true,
+        }
+        updateMatch(m)
+        setGameState(null)
+        setFeedbacks([])
+        return prev
+      })
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [match?.matchOver, match?.mttMode, mttState?.finished, advanceMttRound, updateMatch])
 
   const startNewHand = useCallback(() => {
     if (!match || match.matchOver) return
@@ -1182,7 +1462,7 @@ export default function Arena() {
           hands: prev.stats.hands + 1,
           won: prev.stats.won + (winner === 'hero' ? 1 : winner === 'tie' ? 0.5 : 0),
         },
-        handHistory: [{ heroCards: gs.heroCards, villainCards: gs.villainCards, board: gs.board || [], winner, pot, heroHand: heroEval.label, villainHand: villainEval.label }, ...prev.handHistory].slice(0, 20),
+        handHistory: [{ heroCards: gs.heroCards, villainCards: gs.villainCards, board: gs.board || [], winner, pot, heroHand: heroEval.label, villainHand: villainEval.label, actions: gs.actions || [], heroIsBtn: gs.heroIsBtn }, ...prev.handHistory].slice(0, 20),
         matchOver,
         winner: matchWinner,
       }
@@ -1198,7 +1478,7 @@ export default function Arena() {
         const gs = { ...prev, waitingBotPreflop: false, villainActed: true }
         const vStack = gs.villainStartStack || 500
         const vRemaining = vStack - (gs.villainInvested || 0)
-        const botAction = vRemaining <= 0 ? 'fold' : botPreflopDecision(gs.villainCards, true)
+        const botAction = vRemaining <= 0 ? 'fold' : botPreflopDecision(gs.villainCards, true, botProfileRef.current)
         if (botAction === 'raise') {
           const raiseTotal = Math.min(Math.round(gs.blinds.bb * 2.5), vStack)
           gs.villainInvested = raiseTotal
@@ -1296,7 +1576,7 @@ export default function Arena() {
     // Bot age primeiro se eh OOP (BB)
     if (heroIsIP) {
       const currentPot = (gs.heroInvested || 0) + (gs.villainInvested || 0)
-      const botAction = vRemaining <= 0 ? 'check' : botDecision(gs.villainCards, board, next, currentPot, 0, false)
+      const botAction = vRemaining <= 0 ? 'check' : botDecision(gs.villainCards, board, next, currentPot, 0, false, botProfileRef.current)
       if (botAction === 'bet') {
         const sizePct = botBetSizing(gs.villainCards, board, next, currentPot, false)
         const bSize = Math.min(Math.max(gs.blinds?.bb || 2, Math.round(currentPot * sizePct)), vRemaining)
@@ -1453,8 +1733,8 @@ export default function Arena() {
     if (action === 'bet' || action === 'raise') {
       const newPot = (gs.heroInvested || 0) + (gs.villainInvested || 0)
       const botAction = gs.street === 'preflop'
-        ? botPreflopDecision(gs.villainCards, !gs.heroIsBtn)
-        : botDecision(gs.villainCards, gs.board, gs.street, newPot, gs.lastBet, !gs.heroIsBtn)
+        ? botPreflopDecision(gs.villainCards, !gs.heroIsBtn, botProfileRef.current)
+        : botDecision(gs.villainCards, gs.board, gs.street, newPot, gs.lastBet, !gs.heroIsBtn, botProfileRef.current)
 
       if (botAction === 'fold') {
         gs.actions = [...gs.actions, { who: 'villain', action: 'fold', label: 'Fold', street: gs.street }]
@@ -1523,7 +1803,7 @@ export default function Arena() {
         // Villain acts after hero check (hero is OOP)
         const cp = (gs.heroInvested || 0) + (gs.villainInvested || 0)
         const vRemaining = (gs.villainStartStack || 500) - (gs.villainInvested || 0)
-        const botAction = vRemaining <= 0 ? 'check' : botDecision(gs.villainCards, gs.board, gs.street, cp, 0, true)
+        const botAction = vRemaining <= 0 ? 'check' : botDecision(gs.villainCards, gs.board, gs.street, cp, 0, true, botProfileRef.current)
         if (botAction === 'bet') {
           const sizePct = botBetSizing(gs.villainCards, gs.board, gs.street, cp, true)
           const bSize = Math.min(Math.max(gs.blinds?.bb || 2, Math.round(cp * sizePct)), vRemaining)
@@ -1646,10 +1926,10 @@ export default function Arena() {
         {/* Header + Rating Badge */}
         <div className="text-center mb-4">
           <h1 style={{ color: 'white', fontSize: 22, fontWeight: 700, fontFamily: 'Poppins' }}>
-            Arena HU
+            {mttState ? 'Arena MTT' : 'Arena HU'}
           </h1>
           <div className="flex items-center justify-center gap-3 mt-1">
-            <p style={{ color: '#676671', fontSize: 13 }}>Heads-Up vs Bot GTO</p>
+            <p style={{ color: '#676671', fontSize: 13 }}>{mttState ? 'Torneio Multi-Mesa' : 'Heads-Up vs Bot GTO'}</p>
             <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full" style={{
               background: `${getRatingTier(ratingData.rating).color}15`,
               border: `1px solid ${getRatingTier(ratingData.rating).color}40`,
@@ -1739,19 +2019,132 @@ export default function Arena() {
                 </div>
               )}
             </div>
-            <p style={{ color: '#b3b3b8', fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
-              Jogue Heads-Up contra um bot GTO.<br />
-              500 vs 500 fichas. Blinds sobem a cada 5 maos.<br />
-              Cada decisao afeta seu rating.
+            {/* Mode selector */}
+            <div className="flex gap-2 justify-center mb-5">
+              <button onClick={() => setArenaMode('hu')}
+                className="px-5 py-2 rounded-lg"
+                style={{
+                  background: arenaMode === 'hu' ? '#4fce8220' : '#1a1a1d',
+                  border: `1px solid ${arenaMode === 'hu' ? '#4fce82' : '#2a2a2e'}`,
+                  color: arenaMode === 'hu' ? '#4fce82' : '#676671',
+                  cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                }}>
+                Heads-Up
+              </button>
+              <button onClick={() => setArenaMode('mtt')}
+                className="px-5 py-2 rounded-lg"
+                style={{
+                  background: arenaMode === 'mtt' ? '#f5a62320' : '#1a1a1d',
+                  border: `1px solid ${arenaMode === 'mtt' ? '#f5a623' : '#2a2a2e'}`,
+                  color: arenaMode === 'mtt' ? '#f5a623' : '#676671',
+                  cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                }}>
+                Torneio MTT
+              </button>
+            </div>
+
+            <p style={{ color: '#b3b3b8', fontSize: 15, marginBottom: 16, lineHeight: 1.6 }}>
+              {arenaMode === 'hu' ? (
+                <>Jogue Heads-Up contra um bot.<br />500 vs 500 fichas. Blinds sobem a cada 5 maos.<br />Cada decisao afeta seu rating.</>
+              ) : (
+                <>Torneio com 9 jogadores e ICM.<br />Elimine oponentes e chegue ao top 3.<br />Premiacao: 50% / 30% / 20%</>
+              )}
             </p>
-            <button onClick={startMatch}
+
+            {/* Bot profile selector */}
+            <div className="mb-5">
+              <div style={{ color: '#676671', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Perfil do Bot</div>
+              <div className="flex gap-2 justify-center flex-wrap">
+                {Object.entries(BOT_PROFILES).map(([key, p]) => (
+                  <button key={key} onClick={() => setBotProfile(key)}
+                    className="px-4 py-2 rounded-lg"
+                    style={{
+                      background: botProfile === key ? `${p.color}20` : '#1a1a1d',
+                      border: `1px solid ${botProfile === key ? p.color : '#2a2a2e'}`,
+                      color: botProfile === key ? p.color : '#676671',
+                      cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    }}>
+                    <div>{p.label}</div>
+                    <div style={{ fontSize: 10, fontWeight: 400, opacity: 0.7 }}>{p.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={arenaMode === 'mtt' ? startMtt : startMatch}
               className="px-10 py-4 rounded-xl font-bold text-lg"
-              style={{ background: '#4fce82', color: '#0f0f0f', border: 'none', cursor: 'pointer' }}>
-              Iniciar Partida
+              style={{ background: arenaMode === 'mtt' ? '#f5a623' : '#4fce82', color: '#0f0f0f', border: 'none', cursor: 'pointer' }}>
+              {arenaMode === 'mtt' ? 'Iniciar Torneio' : 'Iniciar Partida'}
             </button>
           </div>
+        ) : matchOver && mttState?.finished ? (
+          /* MTT Finished */
+          <div className="text-center" style={{ paddingTop: 30 }}>
+            {(() => {
+              const heroPlace = mttState.players[0].place || MTT_PLAYERS
+              const itm = heroPlace <= MTT_PAYOUTS.length
+              const payout = itm ? MTT_PAYOUTS[heroPlace - 1] : 0
+              return (
+                <>
+                  <div style={{ fontSize: 60, marginBottom: 12 }}>{heroPlace === 1 ? '🏆' : heroPlace <= 3 ? '🥈' : '💀'}</div>
+                  <h2 style={{ color: itm ? '#f5a623' : '#e5484d', fontSize: 28, fontWeight: 700 }}>
+                    {heroPlace === 1 ? 'Campeao!' : itm ? `${heroPlace}o Lugar` : `Eliminado em ${heroPlace}o`}
+                  </h2>
+                  {itm && (
+                    <div style={{ color: '#4fce82', fontSize: 18, fontWeight: 700, marginTop: 8, fontFamily: 'JetBrains Mono' }}>
+                      Premio: {Math.round(payout * 100)}%
+                    </div>
+                  )}
+                  <div className="rounded-xl p-3 mt-4 max-w-xs mx-auto" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                    <div style={{ color: '#676671', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Resultado Final</div>
+                    {mttState.players
+                      .filter(p => p.place != null)
+                      .sort((a, b) => a.place - b.place)
+                      .map((p, i) => (
+                        <div key={i} className="flex items-center justify-between py-1" style={{
+                          borderBottom: i < mttState.players.length - 1 ? '1px solid #2a2a2e' : 'none',
+                        }}>
+                          <div className="flex items-center gap-2">
+                            <span style={{ color: p.place <= 3 ? '#f5a623' : '#676671', fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono', width: 20 }}>
+                              #{p.place}
+                            </span>
+                            <span style={{ color: p.isHero ? '#4fce82' : '#b3b3b8', fontSize: 13, fontWeight: p.isHero ? 700 : 400 }}>
+                              {p.name}
+                            </span>
+                          </div>
+                          <span style={{ color: '#676671', fontSize: 11, fontFamily: 'JetBrains Mono' }}>
+                            {p.place <= MTT_PAYOUTS.length ? `${Math.round(MTT_PAYOUTS[p.place - 1] * 100)}%` : '-'}
+                          </span>
+                        </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-3 justify-center mt-6">
+                    <button onClick={() => { clearMatch(); setMatch(null); setGameState(null); setMttState(null) }}
+                      className="px-6 py-3 rounded-xl font-bold"
+                      style={{ background: '#2a2a2e', color: '#b3b3b8', border: 'none', cursor: 'pointer' }}>
+                      Menu
+                    </button>
+                    <button onClick={startMtt}
+                      className="px-6 py-3 rounded-xl font-bold"
+                      style={{ background: '#f5a623', color: '#0f0f0f', border: 'none', cursor: 'pointer' }}>
+                      Novo Torneio
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+        ) : matchOver && mttState && !mttState.finished ? (
+          /* MTT round over, waiting for next */
+          <div className="text-center" style={{ paddingTop: 30 }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>{match.winner === 'hero' ? '✓' : '✗'}</div>
+            <h2 style={{ color: match.winner === 'hero' ? '#4fce82' : '#e5484d', fontSize: 22, fontWeight: 700 }}>
+              {match.winner === 'hero' ? 'Round vencido!' : 'Round perdido'}
+            </h2>
+            <p style={{ color: '#676671', fontSize: 13, marginTop: 8 }}>Preparando proximo round...</p>
+          </div>
         ) : matchOver ? (
-          /* Match over */
+          /* Match over (HU) */
           <div className="text-center" style={{ paddingTop: 30 }}>
             <div style={{ fontSize: 60, marginBottom: 12 }}>{match.winner === 'hero' ? '🏆' : '💀'}</div>
             <h2 style={{ color: match.winner === 'hero' ? '#4fce82' : '#e5484d', fontSize: 28, fontWeight: 700 }}>
@@ -1803,7 +2196,7 @@ export default function Arena() {
               </div>
             </div>
             <div className="flex gap-3 justify-center mt-6">
-              <button onClick={() => { clearMatch(); setMatch(null); setGameState(null) }}
+              <button onClick={() => { clearMatch(); setMatch(null); setGameState(null); setMttState(null) }}
                 className="px-6 py-3 rounded-xl font-bold"
                 style={{ background: '#2a2a2e', color: '#b3b3b8', border: 'none', cursor: 'pointer' }}>
                 Menu
@@ -1818,6 +2211,52 @@ export default function Arena() {
         ) : (
           /* Active match — mesa sempre visivel */
           <div>
+            {/* MTT Standings */}
+            {mttState && !mttState.finished && (
+              <div className="rounded-xl p-3 mb-3" style={{ background: '#1a1a1d', border: '1px solid #f5a62330' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span style={{ color: '#f5a623', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+                    Torneio · Round {mttState.round}
+                  </span>
+                  <span style={{ color: '#676671', fontSize: 11 }}>
+                    {mttState.players.filter(p => !p.eliminated).length}/{MTT_PLAYERS} vivos
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {mttState.players
+                    .sort((a, b) => b.stack - a.stack)
+                    .map((p, i) => (
+                    <div key={i} className="flex items-center gap-1 px-2 py-1 rounded"
+                      style={{
+                        background: p.isHero ? 'rgba(79,206,130,0.1)' : p.eliminated ? '#22222580' : '#222225',
+                        border: `1px solid ${p.isHero ? '#4fce8240' : p.eliminated ? '#2a2a2e40' : '#2a2a2e'}`,
+                        opacity: p.eliminated ? 0.4 : 1,
+                      }}>
+                      <span style={{
+                        color: p.isHero ? '#4fce82' : p.eliminated ? '#676671' : '#b3b3b8',
+                        fontSize: 10, fontWeight: 600,
+                      }}>{p.name}</span>
+                      <span style={{
+                        color: p.isHero ? '#4fce82' : '#676671',
+                        fontSize: 10, fontFamily: 'JetBrains Mono', fontWeight: 700,
+                      }}>{p.eliminated ? '✗' : p.stack}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* ICM equity */}
+                {(() => {
+                  const stacks = mttState.players.map(p => p.eliminated ? 0 : p.stack)
+                  const eq = icmEquity(stacks, MTT_PAYOUTS)
+                  const heroEq = eq[0]
+                  return heroEq > 0 ? (
+                    <div style={{ color: '#f5a623', fontSize: 11, fontWeight: 600, marginTop: 6, fontFamily: 'JetBrains Mono' }}>
+                      ICM Equity: {(heroEq * 100).toFixed(1)}%
+                    </div>
+                  ) : null
+                })()}
+              </div>
+            )}
+
             {/* Stacks + Blinds HUD */}
             <div className="grid grid-cols-3 gap-2 mb-3">
               <div className="rounded-xl py-2 text-center" style={{ background: '#1a1a1d', border: '1px solid #4fce8244' }}>
@@ -1854,6 +2293,19 @@ export default function Arena() {
               <span style={{ color: '#676671', fontSize: 11 }}>Win {winRate}%</span>
               <span style={{ color: '#676671', fontSize: 11 }}>·</span>
               <span style={{ color: '#676671', fontSize: 11 }}>GTO {acc}%</span>
+              {botProfile !== 'gto' && (
+                <>
+                  <span style={{ color: '#676671', fontSize: 11 }}>·</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                    color: BOT_PROFILES[botProfile].color,
+                    background: `${BOT_PROFILES[botProfile].color}15`,
+                    padding: '1px 6px', borderRadius: 4,
+                  }}>
+                    vs {BOT_PROFILES[botProfile].label}
+                  </span>
+                </>
+              )}
               {gameState && !gameState.result && (() => {
                 const pot = (gameState.heroInvested || 0) + (gameState.villainInvested || 0)
                 const effectiveStack = Math.min(match.heroStack - (gameState.heroInvested || 0), match.villainStack - (gameState.villainInvested || 0))
@@ -2222,7 +2674,10 @@ export default function Arena() {
                 <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>HISTORICO</div>
                 <div className="space-y-2">
                   {match.handHistory.slice(0, 8).map((h, i) => (
-                    <div key={i} className="flex items-center gap-2" style={{ fontSize: 12 }}>
+                    <div key={i} className="flex items-center gap-2" style={{ fontSize: 12, cursor: h.actions?.length > 0 ? 'pointer' : 'default', padding: '2px 0', borderRadius: 4 }}
+                      onClick={() => h.actions?.length > 0 && setReplayHand(h)}
+                      title={h.actions?.length > 0 ? 'Clique para replay' : ''}
+                    >
                       <span style={{
                         color: h.winner === 'hero' ? '#4fce82' : h.winner === 'tie' ? '#f5a623' : '#e5484d',
                         fontWeight: 700, width: 14,
@@ -2241,6 +2696,11 @@ export default function Arena() {
                         {h.heroHand && h.heroHand !== '-' && h.villainHand && h.villainHand !== '-' ? ' vs ' : ''}
                         {h.villainHand && h.villainHand !== '-' ? h.villainHand : ''}
                       </span>
+                      {h.actions?.length > 0 && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#676671" strokeWidth="2">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                      )}
                       <span style={{ color: '#b3b3b8', fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono', minWidth: 28, textAlign: 'right' }}>
                         {h.pot.toFixed(0)}
                       </span>
@@ -2251,14 +2711,140 @@ export default function Arena() {
             )}
 
             {/* Abandonar partida */}
-            <button onClick={() => { clearMatch(); setMatch(null); setGameState(null) }}
+            <button onClick={() => { clearMatch(); setMatch(null); setGameState(null); setMttState(null) }}
               className="w-full py-2 rounded-lg text-sm"
               style={{ background: 'transparent', color: '#676671', border: '1px solid #2a2a2e', cursor: 'pointer' }}>
-              Abandonar partida
+              {mttState ? 'Abandonar torneio' : 'Abandonar partida'}
             </button>
           </div>
         )}
       </div>
+
+      {/* Replay Modal */}
+      {replayHand && (() => {
+        const h = replayHand
+        const rStreets = ['preflop', 'flop', 'turn', 'river']
+        const rGrouped = {}
+        ;(h.actions || []).forEach(a => {
+          const s = a.street || 'preflop'
+          if (!rGrouped[s]) rGrouped[s] = []
+          rGrouped[s].push(a)
+        })
+        const rActiveStreets = rStreets.filter(s => rGrouped[s]?.length > 0)
+
+        const heroStr = h.board?.length >= 3 ? handStrength(h.heroCards, h.board) : null
+        const villainStr = h.board?.length >= 3 ? handStrength(h.villainCards, h.board) : null
+        const heroBlockers = h.board?.length >= 3 ? blockerEffect(h.heroCards, h.board) : null
+
+        return (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          }} onClick={() => setReplayHand(null)}>
+            <div style={{
+              background: '#1a1a1d', border: '1px solid #2a2a2e', borderRadius: 16,
+              maxWidth: 420, width: '100%', padding: 20, maxHeight: '85vh', overflowY: 'auto',
+            }} onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 style={{ color: '#fdfdfd', fontSize: 16, fontWeight: 700 }}>Replay</h3>
+                <button onClick={() => setReplayHand(null)} style={{ color: '#676671', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
+              </div>
+
+              <div className="rounded-lg p-3 mb-4" style={{
+                background: h.winner === 'hero' ? 'rgba(79,206,130,0.1)' : h.winner === 'tie' ? 'rgba(245,166,35,0.1)' : 'rgba(229,72,77,0.1)',
+                border: `1px solid ${h.winner === 'hero' ? '#4fce82' : h.winner === 'tie' ? '#f5a623' : '#e5484d'}`,
+              }}>
+                <span style={{ color: h.winner === 'hero' ? '#4fce82' : h.winner === 'tie' ? '#f5a623' : '#e5484d', fontWeight: 700, fontSize: 14 }}>
+                  {h.winner === 'hero' ? 'Voce ganhou' : h.winner === 'tie' ? 'Empate' : 'Bot ganhou'}
+                </span>
+                <span style={{ color: '#b3b3b8', fontSize: 12, marginLeft: 8 }}>Pot {h.pot?.toFixed(0)}</span>
+                {h.heroIsBtn !== undefined && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, marginLeft: 8,
+                    color: h.heroIsBtn ? '#4fce82' : '#0a84d7',
+                    background: h.heroIsBtn ? 'rgba(79,206,130,0.15)' : 'rgba(10,132,215,0.15)',
+                    padding: '1px 6px', borderRadius: 4,
+                  }}>{h.heroIsBtn ? 'BTN' : 'BB'}</span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="text-center">
+                  <div style={{ color: '#676671', fontSize: 10, fontWeight: 700, marginBottom: 4 }}>HERO</div>
+                  <div className="flex gap-1 justify-center">
+                    {h.heroCards.map((c, j) => <Card key={j} card={parseCard(c)} size="sm" />)}
+                  </div>
+                  {h.heroHand && h.heroHand !== '-' && (
+                    <div style={{ color: '#4fce82', fontSize: 11, fontWeight: 600, marginTop: 4 }}>{h.heroHand}</div>
+                  )}
+                </div>
+                <span style={{ color: '#676671', fontSize: 14 }}>vs</span>
+                <div className="text-center">
+                  <div style={{ color: '#676671', fontSize: 10, fontWeight: 700, marginBottom: 4 }}>BOT</div>
+                  <div className="flex gap-1 justify-center">
+                    {h.villainCards.map((c, j) => <Card key={j} card={parseCard(c)} size="sm" />)}
+                  </div>
+                  {h.villainHand && h.villainHand !== '-' && (
+                    <div style={{ color: '#e5484d', fontSize: 11, fontWeight: 600, marginTop: 4 }}>{h.villainHand}</div>
+                  )}
+                </div>
+              </div>
+
+              {h.board?.length > 0 && (
+                <div className="flex gap-1 justify-center mb-4">
+                  {h.board.map((c, j) => <Card key={j} card={parseCard(c)} size="sm" />)}
+                </div>
+              )}
+
+              {rActiveStreets.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {rActiveStreets.map(rSt => (
+                    <div key={rSt} className="flex items-start gap-2">
+                      <span style={{
+                        fontSize: 9, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                        color: '#676671', background: '#2a2a2e', padding: '2px 6px',
+                        borderRadius: 4, textTransform: 'uppercase', minWidth: 52, textAlign: 'center',
+                        flexShrink: 0, marginTop: 1,
+                      }}>{rSt}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {rGrouped[rSt].map((a, i) => (
+                          <span key={i} style={{
+                            fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono',
+                            color: a.who === 'hero' ? '#4fce82' : '#e5484d',
+                            background: a.who === 'hero' ? 'rgba(79,206,130,0.1)' : 'rgba(229,72,77,0.1)',
+                            padding: '1px 6px', borderRadius: 4,
+                          }}>
+                            {a.who === 'hero' ? 'H' : 'V'}: {a.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {heroStr && (
+                <div className="rounded-lg p-3" style={{ background: '#222225', border: '1px solid #2a2a2e' }}>
+                  <div style={{ color: '#676671', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Analise</div>
+                  <div className="space-y-1" style={{ fontSize: 12 }}>
+                    <div><span style={{ color: '#676671' }}>Hero strength:</span> <span style={{ color: '#4fce82', fontWeight: 600 }}>{heroStr}</span></div>
+                    <div><span style={{ color: '#676671' }}>Bot strength:</span> <span style={{ color: '#e5484d', fontWeight: 600 }}>{villainStr}</span></div>
+                    {heroBlockers && (heroBlockers.flushBlocker || heroBlockers.straightBlocker || heroBlockers.nutBlocker) && (
+                      <div style={{ marginTop: 4 }}>
+                        <span style={{ color: '#676671' }}>Blockers:</span>
+                        {heroBlockers.nutBlocker && <span style={{ color: '#f5a623', marginLeft: 6, fontSize: 11 }}>Nut blocker</span>}
+                        {heroBlockers.flushBlocker && <span style={{ color: '#0a84d7', marginLeft: 6, fontSize: 11 }}>Flush blocker</span>}
+                        {heroBlockers.straightBlocker && <span style={{ color: '#a78bfa', marginLeft: 6, fontSize: 11 }}>Straight blocker</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
