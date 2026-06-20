@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 
 const STORAGE_KEY = 'poker_academy_progress'
@@ -176,6 +176,16 @@ export function ProgressProvider({ children, userId, userEmail }) {
     }, 1500)
   }, [progress, userId])
 
+  // Admin: todos os modulos desbloqueados
+  const effectiveProgress = useMemo(() => {
+    if (!isAdmin) return progress
+    const unlocked = {}
+    for (const key of Object.keys(progress.modules)) {
+      unlocked[key] = { ...progress.modules[key], unlocked: true }
+    }
+    return { ...progress, modules: unlocked }
+  }, [isAdmin, progress])
+
   function markLessonRead(moduleId) {
     setProgress(prev => ({
       ...prev,
@@ -266,14 +276,14 @@ export function ProgressProvider({ children, userId, userEmail }) {
   }
 
   function getModuleProgress(moduleId) {
-    const mod = progress.modules[moduleId] || { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: false, completed: false }
+    const mod = effectiveProgress.modules[moduleId] || { lessonRead: false, trainerSessions: [], bestStreak: 0, totalCorrect: 0, totalAnswered: 0, unlocked: isAdmin, completed: false }
     const accuracy = mod.totalAnswered > 0
       ? Math.round((mod.totalCorrect / mod.totalAnswered) * 100)
       : 0
     const sessions = mod.trainerSessions || []
     const lastTwo = sessions.slice(-2)
     const sessionsToComplete = lastTwo.filter(s => s.accuracy >= 90).length
-    return { ...mod, accuracy, sessionsToComplete, unlocked: isAdmin ? true : mod.unlocked }
+    return { ...mod, accuracy, sessionsToComplete }
   }
 
   function getPendingReviews() {
@@ -323,7 +333,7 @@ export function ProgressProvider({ children, userId, userEmail }) {
   }
 
   return (
-    <ProgressContext.Provider value={{ progress, markLessonRead, recordAnswer, recordSession, getModuleProgress, getPendingReviews, setDailyGoal, updateArenaData, recordArenaHand }}>
+    <ProgressContext.Provider value={{ progress: effectiveProgress, markLessonRead, recordAnswer, recordSession, getModuleProgress, getPendingReviews, setDailyGoal, updateArenaData, recordArenaHand }}>
       {children}
     </ProgressContext.Provider>
   )
