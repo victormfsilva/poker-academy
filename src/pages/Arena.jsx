@@ -1788,8 +1788,19 @@ export default function Arena() {
                 </span>
               </div>
             </div>
-            <div style={{ color: '#b3b3b8', fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
-              {match.stats.hands} maos jogadas · Win rate {winRate}% · Acerto GTO {acc}%
+            <div className="grid grid-cols-3 gap-2 mt-4 max-w-xs mx-auto">
+              <div className="rounded-lg p-2" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                <div style={{ color: '#676671', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Maos</div>
+                <div style={{ color: '#fdfdfd', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{match.stats.hands}</div>
+              </div>
+              <div className="rounded-lg p-2" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                <div style={{ color: '#676671', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Win Rate</div>
+                <div style={{ color: winRate >= 50 ? '#4fce82' : '#e5484d', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{winRate}%</div>
+              </div>
+              <div className="rounded-lg p-2" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+                <div style={{ color: '#676671', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>GTO Acc</div>
+                <div style={{ color: acc >= 70 ? '#4fce82' : acc >= 50 ? '#f5a623' : '#e5484d', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{acc}%</div>
+              </div>
             </div>
             <div className="flex gap-3 justify-center mt-6">
               <button onClick={() => { clearMatch(); setMatch(null); setGameState(null) }}
@@ -1824,12 +1835,38 @@ export default function Arena() {
             </div>
 
             {/* Stats bar */}
-            <div className="flex gap-3 mb-3 justify-center">
+            <div className="flex gap-3 mb-3 justify-center flex-wrap">
               <span style={{ color: '#676671', fontSize: 11 }}>Mao #{match.handNum + 1}</span>
               <span style={{ color: '#676671', fontSize: 11 }}>·</span>
+              {gameState && (
+                <>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                    color: gameState.heroIsBtn ? '#4fce82' : '#0a84d7',
+                    background: gameState.heroIsBtn ? 'rgba(79,206,130,0.15)' : 'rgba(10,132,215,0.15)',
+                    padding: '1px 6px', borderRadius: 4,
+                  }}>
+                    {gameState.heroIsBtn ? 'BTN' : 'BB'}
+                  </span>
+                  <span style={{ color: '#676671', fontSize: 11 }}>·</span>
+                </>
+              )}
               <span style={{ color: '#676671', fontSize: 11 }}>Win {winRate}%</span>
               <span style={{ color: '#676671', fontSize: 11 }}>·</span>
               <span style={{ color: '#676671', fontSize: 11 }}>GTO {acc}%</span>
+              {gameState && !gameState.result && (() => {
+                const pot = (gameState.heroInvested || 0) + (gameState.villainInvested || 0)
+                const effectiveStack = Math.min(match.heroStack - (gameState.heroInvested || 0), match.villainStack - (gameState.villainInvested || 0))
+                const spr = pot > 0 ? (effectiveStack / pot).toFixed(1) : '-'
+                return spr !== '-' && gameState.street !== 'preflop' ? (
+                  <>
+                    <span style={{ color: '#676671', fontSize: 11 }}>·</span>
+                    <span style={{ color: '#f5a623', fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
+                      SPR {spr}
+                    </span>
+                  </>
+                ) : null
+              })()}
             </div>
 
             {/* Street indicator */}
