@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useProgress } from '../context/ProgressContext'
 import { analyzeLeaks } from '../utils/leaks'
+import DecisionTree from '../components/DecisionTree'
 import { RFI_RANGES, PUSH_FOLD_RANGES, BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI, BLIND_WARS } from '../data/ranges'
 import Card, { handToCards, parseCard } from '../components/Card'
 import RangeViewer from '../components/RangeViewer'
@@ -1320,6 +1321,9 @@ export default function Infinite() {
               )}
               {rangeViewerProps && (
                 <RangeViewer {...rangeViewerProps} />
+              )}
+              {!result.isCorrect && (
+                <DecisionTree scenario={scenario} result={result} />
               )}
             </div>
           )}

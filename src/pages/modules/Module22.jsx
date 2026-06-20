@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useProgress } from '../../context/ProgressContext'
+import DecisionTree from '../../components/DecisionTree'
 
 // ================================================================
 // MODULO 22 — SPR (Stack-to-Pot Ratio)
@@ -375,7 +376,7 @@ function Trainer() {
     setStreak(newStreak)
     if (isCorrect) setSessionCorrect(s => s + 1)
     recordAnswer(22, isCorrect, newStreak, { tp: 'spr' })
-    setResult({ isCorrect, explanation: scenario.explanation })
+    setResult({ isCorrect, explanation: scenario.explanation, chosenId: optionId })
   }, [result, scenario, streak, recordAnswer])
 
   const handleNext = useCallback(() => {
@@ -437,6 +438,7 @@ function Trainer() {
               <div style={{ color: '#b3b3b8', fontSize: 13, lineHeight: 1.6 }}>
                 {result.explanation}
               </div>
+              {!result.isCorrect && <DecisionTree scenario={{ ...scenario, moduleId: 22 }} result={result} />}
             </div>
           )}
 

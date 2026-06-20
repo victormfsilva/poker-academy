@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useProgress } from '../../context/ProgressContext'
+import DecisionTree from '../../components/DecisionTree'
 
 // ================================================================
 // MODULO 23 — Range Advantage vs Nut Advantage
@@ -320,7 +321,7 @@ function Trainer() {
     setStreak(newStreak)
     if (isCorrect) setSessionCorrect(s => s + 1)
     recordAnswer(23, isCorrect, newStreak, { tp: 'rna' })
-    setResult({ isCorrect, explanation: scenario.explanation })
+    setResult({ isCorrect, explanation: scenario.explanation, chosenId: optionId })
   }, [result, scenario, streak, recordAnswer])
 
   const handleNext = useCallback(() => {
@@ -378,6 +379,7 @@ function Trainer() {
               <div style={{ color: '#b3b3b8', fontSize: 13, lineHeight: 1.6 }}>
                 {result.explanation}
               </div>
+              {!result.isCorrect && <DecisionTree scenario={{ ...scenario, moduleId: 23 }} result={result} />}
             </div>
           )}
 
