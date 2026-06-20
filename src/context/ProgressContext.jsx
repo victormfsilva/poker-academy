@@ -129,7 +129,7 @@ const ProgressContext = createContext(null)
 const ADMIN_EMAIL = 'victormenezes722@gmail.com'
 
 export function ProgressProvider({ children, userId, userEmail }) {
-  const isAdmin = userEmail === ADMIN_EMAIL
+  const isAdmin = userEmail?.toLowerCase().trim() === ADMIN_EMAIL
   const syncTimer = useRef(null)
 
   const [progress, setProgress] = useState(() => {
