@@ -40,6 +40,7 @@ import Infinite from './pages/Infinite'
 import Arena from './pages/Arena'
 import Stats from './pages/Stats'
 import StudyGuide from './pages/StudyGuide'
+import HandAnalysis from './pages/HandAnalysis'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -116,6 +117,7 @@ function App() {
           <Route path="/mental" element={<MentalGame />} />
           <Route path="/infinito" element={<Infinite />} />
           <Route path="/arena" element={<Arena />} />
+          <Route path="/analise" element={<HandAnalysis />} />
         </Routes>
       </BrowserRouter>
     </ProgressProvider>

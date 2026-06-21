@@ -17,183 +17,279 @@ function makeHeroCards(r1, r2, suited) { const s1 = randSuit(); return [r1 + s1,
 // MODULO 27 — Blocker Effects Avancados
 // ================================================================
 
+// Pools parametrizados
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)] }
+function suitName(s) { return s === 'h' ? 'copas' : s === 'd' ? 'ouros' : s === 'c' ? 'paus' : 'espadas' }
+
+const FLUSH_HIGHS = [['K','Q','7'],['A','J','5'],['Q','T','4'],['K','J','6'],['A','9','3'],['Q','8','4'],['K','T','5'],['A','Q','6'],['J','9','3'],['K','8','4']]
+const STRAIGHT_BOARDS = [
+  { ranks: ['Q','J','T','4','2'], nut: 'AK', nutName: 'broadway' },
+  { ranks: ['J','T','9','3','7'], nut: 'KQ', nutName: 'K-high straight' },
+  { ranks: ['T','9','8','2','K'], nut: 'QJ', nutName: 'Q-high straight' },
+  { ranks: ['9','8','7','2','A'], nut: 'JT', nutName: 'J-high straight' },
+  { ranks: ['8','7','6','3','K'], nut: 'T9', nutName: 'T-high straight' },
+  { ranks: ['A','K','Q','J','4'], nut: 'AT', nutName: 'broadway' },
+]
+const CONNECTED_LOW = [['T','9','7','6','2'],['9','8','6','5','K'],['8','7','5','4','A'],['9','8','7','3','Q'],['T','9','8','4','2']]
+const PAIRED_BOARDS = [['8','8','K','4','2'],['9','9','A','5','3'],['7','7','Q','3','2'],['T','T','K','5','4'],['6','6','J','4','2'],['Q','Q','7','3','2']]
+const DRY_RIVER = [['A','K','8','5','3'],['K','J','7','4','2'],['A','Q','6','3','9'],['Q','T','5','2','8'],['A','J','7','3','6'],['K','T','8','4','2']]
+const IP_POS = ['BTN','CO','HJ']
+const OOP_POS = ['BB','SB']
+const EP_POS = ['UTG','LJ','HJ']
+const LP_POS = ['CO','BTN']
+const POTS_SMALL = ['15bb','18bb','20bb','22bb']
+const POTS_MED = ['25bb','28bb','30bb','35bb']
+const POTS_BIG = ['40bb','45bb','50bb','60bb']
+const BIG_BETS = ['Bet 75%','Bet 100%','Overbet','All-in']
+const MED_BETS = ['Bet 50%','Bet 66%','Bet 75%']
+
 const SCENARIOS = [
-  // Blockers pra blefe
+  // 1. Nut flush blocker bluff — parametrizado
   () => {
     const fs = randSuit()
+    const board = pick(FLUSH_HIGHS)
+    const kicker = pick(['3','4','5','6','2'])
     return {
-      q: `River em board K-Q-7-4-2 com 3 ${fs === 'h' ? 'copas' : fs === 'd' ? 'ouros' : fs === 'c' ? 'paus' : 'espadas'}. Voce tem A${fs} (blocker do nut flush) sem par. Blefar?`,
+      q: `River em board ${board[0]}-${board[1]}-${board[2]} com 3 ${suitName(fs)}. Voce tem A${fs}${kicker}x (blocker do nut flush) sem par. Blefar?`,
       a: 'Sim — voce bloqueia o nut flush, vilao raramente tem nuts',
       b: 'Nao — voce nao tem nada',
       aCorrect: true,
       explanation: `Ter o A${fs} bloqueia o nut flush do vilao. Ele nao pode ter a melhor mao possivel. Isso faz seu blefe mais credivel e reduz a chance dele chamar. Blocker de nuts = otimo bluff candidate.`,
-      boardCards: ['K'+fs, 'Q'+fs, '7'+fs, '4'+randSuitExcluding(fs), '2'+randSuitExcluding(fs)], heroCards: ['A'+fs, '3'+randSuitExcluding(fs)], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '25bb',
+      boardCards: [board[0]+fs, board[1]+fs, board[2]+fs, pick(['4','5','6','3'])+randSuitExcluding(fs), pick(['2','3','9'])+randSuitExcluding(fs)], heroCards: ['A'+fs, kicker+randSuitExcluding(fs)], heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'Check', potLabel: pick(POTS_MED),
     }
   },
-  () => ({
-    q: 'River em board A-K-8-5-3 rainbow. Voce tem KK. Vilao betta grande. O que seus blockers dizem?',
-    a: 'Voce bloqueia KK mas NAO bloqueia AA, AK, sets — call e ruim',
-    b: 'KK e forte, sempre call',
-    aCorrect: true,
-    explanation: 'Seus KK bloqueiam Kx (vilao tem menos KK, KQ, KJ), mas voce NAO bloqueia AA nem sets (88, 55, 33). Bet grande no river geralmente e valor com maos que te vencem. Seus blockers nao ajudam no call.',
-    boardCards: makeRainbowBoard(['A','K','8','5','3']), heroCards: makeHeroCards('K','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Bet 100%', potLabel: '30bb',
-  }),
-  () => ({
-    q: 'River em board Q-J-T-4-2 rainbow. Voce tem AK (straight). Vilao checka. Qual o blocker effect da sua mao?',
-    a: 'Voce bloqueia AK (nuts) — vilao nao pode ter a mesma straight. Bet grande por valor!',
-    b: 'Blocker nao importa quando voce tem nuts',
-    aCorrect: true,
-    explanation: 'Voce TEM a nuts (AK = straight broadway). E mais: voce bloqueia todos os outros combos de AK. Vilao so pode ter K9 (straight menor). Bet grande por valor porque ele NAO pode ter a mesma mao que voce.',
-    boardCards: makeRainbowBoard(['Q','J','T','4','2']), heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '20bb',
-  }),
-  // Blockers pra call
-  () => ({
-    q: 'River em board 9-8-5-4-2. Vilao betta overbet. Voce tem 77 (bloqueia straight 6-7). Call ou fold?',
-    a: 'Melhor call — voce bloqueia 76 (straight), reduz combos de valor do vilao',
-    b: 'Fold — 77 e muito fraco',
-    aCorrect: true,
-    explanation: 'Seus 77 bloqueiam 76s (a straight mais provavel nesse board). Isso reduz significativamente os combos de valor do vilao. Alem disso, voce nao bloqueia bluffs tipicos (Tx, Jx). Blocker favoravel = call.',
-    boardCards: makeRainbowBoard(['9','8','5','4','2']), heroCards: makeHeroCards('7','7',false), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Overbet', potLabel: '18bb',
-  }),
-  () => ({
-    q: 'River. Vilao betta grande. Voce tem AJ em board A-T-7-3-K. Chamar?',
-    a: 'AJ bloqueia bluffs (AQ, AJ tipo maos que dariam up) — nao e bom call',
-    b: 'Top pair e sempre call',
-    aCorrect: false,
-    explanation: 'Ter AJ e ruim pra call porque: 1) voce bloqueia maos que o vilao DESISTIRIA (bluffs com A), 2) voce NAO bloqueia maos fortes (KK, TT, AK). Blockers desfavoraveis = nao ideal pra call.',
-    boardCards: makeRainbowBoard(['A','T','7','3','K']), heroCards: makeHeroCards('A','J',false), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 75%', potLabel: '22bb',
-  }),
-  () => ({
-    q: 'Conceito: qual mao e melhor pra BLEFAR no river — uma que bloqueia as nuts ou que bloqueia bluffs?',
-    a: 'Bloqueia as nuts (remove maos fortes do vilao = ele folda mais)',
-    b: 'Bloqueia bluffs (remove lixo do vilao)',
-    aCorrect: true,
-    explanation: 'Pra BLEFAR voce quer bloquear as NUTS do vilao. Se voce tem o As em board com flush possivel, vilao nao pode ter nut flush e tera mais bluffs/maos medianas no range — que foldam ao seu blefe.',
-    boardCards: makeRainbowBoard(['J','8','4','2','6']), heroCards: makeHeroCards('A','Q',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '15bb',
-  }),
-  () => ({
-    q: 'Conceito: qual mao e melhor pra CALL no river — uma que bloqueia valor ou que bloqueia bluffs?',
-    a: 'Bloqueia VALOR do vilao (remove nuts, fica mais bluffs proporcionalmente)',
-    b: 'Bloqueia bluffs (vilao blefa menos)',
-    aCorrect: true,
-    explanation: 'Pra CALL voce quer bloquear as maos de VALOR do vilao. Se voce bloqueia combos que te vencem, a proporcao de bluffs no range dele aumenta. Nunca bloqueie bluffs quando quer call — isso REDUZ a chance dele blefar.',
-    boardCards: makeRainbowBoard(['K','9','5','3','T']), heroCards: makeHeroCards('T','T',false), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 66%', potLabel: '20bb',
-  }),
-  // Board texture + blockers
+  // 2. Overpair ruim blocker pra call — parametrizado
   () => {
-    const s1 = randSuit()
+    const board = pick(DRY_RIVER)
+    const topCard = board[0]
+    const pair = topCard === 'A' ? 'KK' : topCard === 'K' ? 'QQ' : 'JJ'
+    const r = pair[0]
     return {
-      q: `Board K-Q-J-5-3 (${s1 === 'h' ? '3 copas' : '3 espadas'}). Voce tem T${s1} sem par. Blefar no river?`,
-      a: 'Sim — T bloqueia straight (AT, T9), naipe bloqueia flush. Blocker duplo!',
-      b: 'Nao — voce nao tem nada',
+      q: `River em board ${board.join('-')} rainbow. Voce tem ${pair}. Vilao betta grande. O que seus blockers dizem?`,
+      a: `Voce bloqueia ${pair} mas NAO bloqueia ${topCard === 'A' ? 'AA, AK, sets' : 'maos fortes (sets, dois pares)'} — call e ruim`,
+      b: `${pair} e forte, sempre call`,
       aCorrect: true,
-      explanation: 'T bloqueia a straight (AT = broadway, T9 = straight menor). O naipe bloqueia flush combos. Blocker duplo (straight + flush) faz essa uma das melhores maos pra blefar nesse board.',
-      boardCards: ['K'+s1, 'Q'+s1, 'J'+s1, '5'+randSuitExcluding(s1), '3'+randSuitExcluding(s1)], heroCards: ['T'+s1, '2'+randSuitExcluding(s1)], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '22bb',
+      explanation: `Seus ${pair} bloqueiam ${r}x (vilao tem menos ${pair}, ${r}Q, ${r}J), mas voce NAO bloqueia as maos que te vencem (${topCard}x, sets). Bet grande no river geralmente e valor com maos que te vencem. Blockers nao ajudam no call.`,
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards(r,r,false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: pick(BIG_BETS), potLabel: pick(POTS_MED),
     }
   },
-  () => ({
-    q: 'Board pareado: 8-8-K-4-2. Voce tem 8x (trips). Vilao faz overbet. Qual o blocker effect?',
-    a: 'Voce bloqueia quads (88 impossivel) e trips — vilao quase nunca te vence',
-    b: 'Overbet = sempre forte, fold',
-    aCorrect: true,
-    explanation: 'Voce tem um 8 — isso torna 88 (quads) impossivel pro vilao e reduz combos de trips. Ele so te vence com KK (que teria raisado pre geralmente). Seu blocker torna o call muito lucrativo.',
-    boardCards: ['8'+randSuit(), '8'+randSuit(), ...makeRainbowBoard(['K','4','2'])], heroCards: ['8'+randSuit(), '9'+randSuit()], heroPos: 'BB', villainPos: 'BTN', villainAction: 'Overbet', potLabel: '25bb',
-  }),
-  () => ({
-    q: 'Voce tem AA no river em board T-9-7-6-2. Vilao shova. Seus AA bloqueiam algo relevante?',
-    a: 'Nao — AA nao bloqueia straights (J8, 85, 53) nem sets. Call e baseado em pot odds.',
-    b: 'AA bloqueia AA do vilao, entao call',
-    aCorrect: true,
-    explanation: 'AA nao bloqueia NADA relevante nesse board. Straights (J8, 85), sets (TT, 99, 77) e duas-pairs nao sao afetados. Quando seus blockers nao ajudam, a decisao volta pra pot odds e leitura pura.',
-    boardCards: makeRainbowBoard(['T','9','7','6','2']), heroCards: makeHeroCards('A','A',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'All-in', potLabel: '40bb',
-  }),
-  // Unblockers
-  () => ({
-    q: 'Conceito de "unblocker": voce NAO tem cartas que o vilao usaria pra blefar. Isso e bom pra call?',
-    a: 'Sim — unblocking bluffs = vilao pode ter mais bluffs = melhor pra call',
-    b: 'Nao — nao importa o que voce nao tem',
-    aCorrect: true,
-    explanation: 'Unblocker e tao importante quanto blocker. Se voce NAO tem cartas de bluff do vilao (flush draws perdidos, straight draws perdidos), ele PODE ter essas maos. Mais bluffs no range dele = seu call e melhor.',
-    boardCards: makeRainbowBoard(['Q','8','5','3','K']), heroCards: makeHeroCards('9','9',false), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 75%', potLabel: '18bb',
-  }),
+  // 3. Tem nuts + bloqueia nuts do vilao — value bet grande
+  () => {
+    const spot = pick(STRAIGHT_BOARDS)
+    return {
+      q: `River: board ${spot.ranks.join('-')}. Voce tem ${spot.nut} (${spot.nutName}). Vilao checou. Qual o blocker effect?`,
+      a: `Voce bloqueia ${spot.nut} (nuts) — vilao nao pode ter a mesma straight. Bet grande por valor!`,
+      b: 'Blocker nao importa quando voce tem nuts',
+      aCorrect: true,
+      explanation: `Voce TEM a nuts (${spot.nut} = ${spot.nutName}). Voce bloqueia todos os outros combos de ${spot.nut}. Bet grande por valor porque vilao NAO pode ter a mesma mao que voce.`,
+      boardCards: makeRainbowBoard(spot.ranks), heroCards: makeHeroCards(spot.nut[0], spot.nut[1], false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'Check', potLabel: pick(POTS_MED),
+    }
+  },
+  // 4. Par bloqueia straight do vilao — bom call
+  () => {
+    const spots = [
+      { board: ['9','8','5','4','2'], pair: '7', blocks: '76' },
+      { board: ['T','9','6','5','3'], pair: '8', blocks: '87' },
+      { board: ['8','7','4','3','K'], pair: '6', blocks: '65' },
+      { board: ['J','T','7','6','2'], pair: '9', blocks: '98' },
+      { board: ['9','8','5','4','A'], pair: '7', blocks: '76' },
+    ]
+    const spot = pick(spots)
+    return {
+      q: `River em board ${spot.board.join('-')}. Vilao betta overbet. Voce tem ${spot.pair}${spot.pair} (bloqueia straight ${spot.blocks}). Call ou fold?`,
+      a: `Melhor call — voce bloqueia ${spot.blocks} (straight), reduz combos de valor do vilao`,
+      b: `Fold — ${spot.pair}${spot.pair} e muito fraco`,
+      aCorrect: true,
+      explanation: `Seus ${spot.pair}${spot.pair} bloqueiam ${spot.blocks}s (a straight mais provavel nesse board). Isso reduz os combos de valor do vilao. Voce nao bloqueia bluffs tipicos. Blocker favoravel = call.`,
+      boardCards: makeRainbowBoard(spot.board), heroCards: makeHeroCards(spot.pair, spot.pair, false), heroPos: pick(OOP_POS), villainPos: pick(IP_POS), villainAction: 'Overbet', potLabel: pick(POTS_SMALL),
+    }
+  },
+  // 5. Ax bloqueia bluffs — ruim pra call
+  () => {
+    const kickers = ['J','T','9','8']
+    const kicker = pick(kickers)
+    const boards = [['A','T','7','3','K'],['A','J','5','2','Q'],['A','8','6','3','K'],['A','9','4','2','J'],['A','Q','7','3','T']]
+    const board = pick(boards)
+    return {
+      q: `River. Vilao betta grande. Voce tem A${kicker} em board ${board.join('-')}. Chamar?`,
+      a: `A${kicker} bloqueia bluffs (maos com A que o vilao desistiria) — nao e bom call`,
+      b: 'Top pair e sempre call',
+      aCorrect: false,
+      explanation: `Ter A${kicker} e ruim pra call: voce bloqueia maos que o vilao DESISTIRIA (bluffs com A). Voce NAO bloqueia maos fortes (sets, dois pares). Blockers desfavoraveis = nao ideal pra call.`,
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards('A', kicker, false), heroPos: pick(OOP_POS), villainPos: pick(IP_POS), villainAction: pick(BIG_BETS), potLabel: pick(POTS_MED),
+    }
+  },
+  // 6. Conceito: blefar = bloqueie nuts
+  () => {
+    const board = pick([['J','8','4','2','6'],['Q','7','3','5','9'],['K','6','2','4','T'],['A','8','3','5','J'],['Q','9','4','2','7']])
+    const hero = pick([['A','Q'],['A','J'],['A','T'],['K','Q'],['A','9']])
+    return {
+      q: 'Conceito: qual mao e melhor pra BLEFAR no river — uma que bloqueia as nuts ou que bloqueia bluffs?',
+      a: 'Bloqueia as nuts (remove maos fortes do vilao = ele folda mais)',
+      b: 'Bloqueia bluffs (remove lixo do vilao)',
+      aCorrect: true,
+      explanation: 'Pra BLEFAR voce quer bloquear as NUTS do vilao. Se voce tem o As em board com flush possivel, vilao nao pode ter nut flush e tera mais bluffs/maos medianas no range — que foldam ao seu blefe.',
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards(hero[0], hero[1], false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'Check', potLabel: pick(POTS_SMALL),
+    }
+  },
+  // 7. Conceito: call = bloqueie valor
+  () => {
+    const board = pick([['K','9','5','3','T'],['Q','8','4','2','J'],['A','7','3','5','K'],['J','6','2','4','Q'],['T','7','3','5','A']])
+    const pair = pick(['T','9','8','7','J'])
+    return {
+      q: 'Conceito: qual mao e melhor pra CALL no river — uma que bloqueia valor ou que bloqueia bluffs?',
+      a: 'Bloqueia VALOR do vilao (remove nuts, fica mais bluffs proporcionalmente)',
+      b: 'Bloqueia bluffs (vilao blefa menos)',
+      aCorrect: true,
+      explanation: 'Pra CALL voce quer bloquear as maos de VALOR do vilao. Se voce bloqueia combos que te vencem, a proporcao de bluffs no range dele aumenta. Nunca bloqueie bluffs quando quer call — isso REDUZ a chance dele blefar.',
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards(pair, pair, false), heroPos: pick(OOP_POS), villainPos: pick(IP_POS), villainAction: pick(MED_BETS), potLabel: pick(POTS_MED),
+    }
+  },
+  // 8. Blocker duplo (straight + flush) — bluff spot
   () => {
     const fs = randSuit()
+    const configs = [
+      { board: ['K','Q','J'], blocker: 'T', blockDesc: 'T bloqueia straight (AT, T9) + naipe bloqueia flush' },
+      { board: ['Q','J','T'], blocker: 'K', blockDesc: 'K bloqueia straight (AK, KQ) + naipe bloqueia flush' },
+      { board: ['J','T','9'], blocker: 'Q', blockDesc: 'Q bloqueia straight (KQ, Q8) + naipe bloqueia flush' },
+      { board: ['A','K','Q'], blocker: 'J', blockDesc: 'J bloqueia straight (JT) + naipe bloqueia flush' },
+    ]
+    const cfg = pick(configs)
     return {
-      q: `Board com flush possivel (3 ${fs === 'h' ? 'copas' : 'espadas'}). Vilao betta river. Voce NAO tem nenhuma carta de ${fs === 'h' ? 'copas' : 'espadas'}. Isso e bom ou ruim pra call?`,
-      a: 'BOM — voce nao bloqueia o flush dele, mas tambem nao bloqueia draws perdidos (bluffs)',
+      q: `Board ${cfg.board.join('-')}-${pick(['5','4','3'])}-${pick(['2','3','6'])} (3 ${suitName(fs)}). Voce tem ${cfg.blocker}${fs} sem par. Blefar no river?`,
+      a: `Sim — ${cfg.blockDesc}. Blocker duplo!`,
+      b: 'Nao — voce nao tem nada',
+      aCorrect: true,
+      explanation: `${cfg.blockDesc}. Blocker duplo (straight + flush) faz essa uma das melhores maos pra blefar nesse board. Remove combos de valor e flush do vilao simultaneamente.`,
+      boardCards: [cfg.board[0]+fs, cfg.board[1]+fs, cfg.board[2]+fs, pick(['5','4','3'])+randSuitExcluding(fs), pick(['2','3','6'])+randSuitExcluding(fs)], heroCards: [cfg.blocker+fs, '2'+randSuitExcluding(fs)], heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'Check', potLabel: pick(POTS_MED),
+    }
+  },
+  // 9. Board pareado — trips bloqueia quads
+  () => {
+    const bp = pick(PAIRED_BOARDS)
+    const pairRank = bp[0]
+    const kicker = pick(['9','T','J','Q','A','K'].filter(r => r !== pairRank && !bp.includes(r)))
+    return {
+      q: `Board pareado: ${bp.join('-')}. Voce tem ${pairRank}x (trips). Vilao faz overbet. Qual o blocker effect?`,
+      a: `Voce bloqueia quads (${pairRank}${pairRank} impossivel) e trips — vilao quase nunca te vence`,
+      b: 'Overbet = sempre forte, fold',
+      aCorrect: true,
+      explanation: `Voce tem um ${pairRank} — isso torna ${pairRank}${pairRank} (quads) impossivel pro vilao e reduz combos de trips. Seu blocker torna o call muito lucrativo.`,
+      boardCards: [pairRank+randSuit(), pairRank+randSuit(), ...makeRainbowBoard(bp.slice(2))], heroCards: [pairRank+randSuit(), kicker+randSuit()], heroPos: pick(OOP_POS), villainPos: pick(IP_POS), villainAction: 'Overbet', potLabel: pick(POTS_MED),
+    }
+  },
+  // 10. AA nao bloqueia nada em board conectado
+  () => {
+    const board = pick(CONNECTED_LOW)
+    return {
+      q: `Voce tem AA no river em board ${board.join('-')}. Vilao shova. Seus AA bloqueiam algo relevante?`,
+      a: 'Nao — AA nao bloqueia straights nem sets. Call e baseado em pot odds puro.',
+      b: 'AA bloqueia AA do vilao, entao call',
+      aCorrect: true,
+      explanation: 'AA nao bloqueia NADA relevante nesse board conectado. Straights, sets e duas-pairs nao sao afetados. Quando seus blockers nao ajudam, a decisao volta pra pot odds e leitura pura.',
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards('A','A',false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'All-in', potLabel: pick(POTS_BIG),
+    }
+  },
+  // 11. Unblocker conceito
+  () => {
+    const board = pick([['Q','8','5','3','K'],['J','7','4','2','A'],['T','6','3','2','K'],['Q','9','5','2','J'],['K','8','4','3','T']])
+    const pair = pick(['9','8','7','6','T'])
+    return {
+      q: `Conceito de "unblocker": voce NAO tem cartas que o vilao usaria pra blefar (draws perdidos). Isso e bom pra call?`,
+      a: 'Sim — unblocking bluffs = vilao pode ter mais bluffs = melhor pra call',
+      b: 'Nao — nao importa o que voce nao tem',
+      aCorrect: true,
+      explanation: 'Unblocker e tao importante quanto blocker. Se voce NAO tem cartas de bluff do vilao (flush draws perdidos, straight draws perdidos), ele PODE ter essas maos. Mais bluffs no range dele = seu call e melhor.',
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards(pair, pair, false), heroPos: pick(OOP_POS), villainPos: pick(IP_POS), villainAction: pick(BIG_BETS), potLabel: pick(POTS_SMALL),
+    }
+  },
+  // 12. Nao ter carta do naipe — neutro/positivo pra call
+  () => {
+    const fs = randSuit()
+    const high = pick(['Q','K','A','J'])
+    const mid = pick(['8','9','T','7'])
+    const low = pick(['4','3','2','5'])
+    const pair = pick(['T','9','8','J'])
+    return {
+      q: `Board com flush possivel (3 ${suitName(fs)}). Vilao betta river. Voce NAO tem nenhuma carta de ${suitName(fs)}. Isso e bom ou ruim pra call?`,
+      a: 'BOM — voce nao bloqueia draws perdidos do vilao (bluffs dele)',
       b: 'RUIM — voce nao bloqueia nada',
       aCorrect: true,
-      explanation: 'Nao ter cartas do naipe do flush e na verdade NEUTRO a POSITIVO. Voce nao bloqueia bluffs (draws perdidos com 1 carta daquele naipe) E nao bloqueia valor. A decisao volta pra frequencia e sizing.',
-      boardCards: ['Q'+fs, '8'+fs, '4'+randSuitExcluding(fs), '3'+randSuitExcluding(fs), '7'+fs], heroCards: makeHeroCards('T','T',false), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 66%', potLabel: '20bb',
+      explanation: `Nao ter cartas de ${suitName(fs)} e NEUTRO a POSITIVO. Voce nao bloqueia bluffs (draws perdidos com 1 carta do naipe) E nao bloqueia valor. A decisao volta pra frequencia e sizing.`,
+      boardCards: [high+fs, mid+fs, low+randSuitExcluding(fs), pick(['3','4','5'])+randSuitExcluding(fs), pick(['7','6','9'])+fs], heroCards: makeHeroCards(pair, pair, false), heroPos: pick(OOP_POS), villainPos: pick(IP_POS), villainAction: pick(MED_BETS), potLabel: pick(POTS_MED),
     }
   },
-  // Avancado: blocker-based decisions
-  () => ({
-    q: 'River board A-K-Q-J-4. Voce tem T9 (nao tem straight — precisa de T pra broadway mas T faz J-high straight). Blefar?',
-    a: 'Sim — T bloqueia a nuts (AT = broadway). Vilao nao tem a melhor straight.',
-    b: 'Nao — voce tem T-high, nao vale blefar',
-    aCorrect: true,
-    explanation: 'O T na sua mao bloqueia AT (a nut straight broadway). Vilao tem menos combos de straight. Seu 9 nao bloqueia nada relevante. T como blocker e suficiente pra tornar esse um bom bluff spot.',
-    boardCards: makeRainbowBoard(['A','K','Q','J','4']), heroCards: makeHeroCards('T','9',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '28bb',
-  }),
-  () => ({
-    q: 'Regra geral de blockers pra decisoes no river:',
-    a: 'Blefar = bloqueie valor. Call = bloqueie valor + unblock bluffs.',
-    b: 'Sempre considere blockers igualmente pra blefe e call',
-    aCorrect: true,
-    explanation: 'Resumo: BLEFAR = bloqueie nuts/valor (vilao folda mais). CALL = bloqueie valor do vilao E nao bloqueie bluffs (proporcao de bluffs aumenta). Os dois lados sao complementares mas funcionam diferente.',
-    boardCards: makeRainbowBoard(['K','J','7','4','2']), heroCards: makeHeroCards('A','9',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Bet 75%', potLabel: '22bb',
-  }),
-  // --- Cenarios incorporados do antigo Modulo 19 ---
-  // Blocker pre-flop: KQs bloqueia folds
+  // 13. Blocker de straight pra bluff — T em broadway board
   () => {
-    const heroPos = ['BTN','CO','HJ'][Math.floor(Math.random()*3)]
-    const villainPos = ['UTG','UTG+1','LJ'][Math.floor(Math.random()*3)]
-    const hand = ['KQs','KJs','QJs'][Math.floor(Math.random()*3)]
+    const board = pick([['A','K','Q','J','4'],['A','K','Q','J','6'],['A','K','Q','J','3'],['A','K','Q','J','8']])
+    const kicker = pick(['9','8','7','6','5'])
+    return {
+      q: `River board ${board.join('-')}. Voce tem T${kicker} (sem straight). Blefar?`,
+      a: 'Sim — T bloqueia a nuts (AT = broadway). Vilao nao tem a melhor straight.',
+      b: 'Nao — voce tem T-high, nao vale blefar',
+      aCorrect: true,
+      explanation: `O T na sua mao bloqueia AT (a nut straight broadway). Vilao tem menos combos de straight. T como blocker e suficiente pra tornar esse um bom bluff spot.`,
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards('T', kicker, false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'Check', potLabel: pick(POTS_MED),
+    }
+  },
+  // 14. Regra geral blockers
+  () => {
+    const board = pick([['K','J','7','4','2'],['Q','T','6','3','8'],['A','9','5','2','J'],['K','8','4','2','T']])
+    return {
+      q: 'Regra geral de blockers pra decisoes no river:',
+      a: 'Blefar = bloqueie valor. Call = bloqueie valor + unblock bluffs.',
+      b: 'Sempre considere blockers igualmente pra blefe e call',
+      aCorrect: true,
+      explanation: 'Resumo: BLEFAR = bloqueie nuts/valor (vilao folda mais). CALL = bloqueie valor do vilao E nao bloqueie bluffs (proporcao de bluffs aumenta). Os dois lados sao complementares mas funcionam diferente.',
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards('A','9',false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: pick(BIG_BETS), potLabel: pick(POTS_MED),
+    }
+  },
+  // 15. KQs/KJs bloqueia folds — ruim pra 3-bet bluff
+  () => {
+    const heroPos = pick(['BTN','CO','HJ','SB','BB'])
+    const villainPos = pick(['UTG','LJ','HJ','CO','BTN'])
+    const hand = pick(['KQs','KJs','QJs','KTs','QTs'])
+    const r1 = hand[0]; const r2 = hand[1]
     return {
       q: `${villainPos} fez raise. Voce esta no ${heroPos} com ${hand}. ${hand} e um bom 3-bet blefe?`,
-      a: `Nao — ${hand} bloqueia maos que FOLDAM (KJs, QTs), nao maos que continuam`,
+      a: `Nao — ${hand} bloqueia maos que FOLDAM (${r2}Ts, ${r1}9s), nao maos que continuam`,
       b: `Sim — ${hand} e forte o suficiente`,
       aCorrect: true,
-      explanation: `${hand} bloqueia maos que voce QUER que ele folde (KJs, QTs, etc). Para 3-bet blefe, bloqueie maos que CONTINUAM (AA, KK, AK) — nao maos que foldam. Use A5s/A4s como 3-bet blefe.`,
-      boardCards: [], heroCards: hand === 'KQs' ? makeHeroCards('K','Q',true) : hand === 'KJs' ? makeHeroCards('K','J',true) : makeHeroCards('Q','J',true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
+      explanation: `${hand} bloqueia maos que voce QUER que ele folde. Para 3-bet blefe, bloqueie maos que CONTINUAM (AA, KK, AK) — nao maos que foldam. Use A5s/A4s como 3-bet blefe.`,
+      boardCards: [], heroCards: makeHeroCards(r1, r2, true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
     }
   },
-  // Blocker pre-flop: A5s/A4s bom 3-bet blefe
+  // 16. A5s/A4s bom 3-bet bluff
   () => {
-    const hand = ['A5s','A4s','A3s','A2s'][Math.floor(Math.random()*4)]
-    const heroPos = ['BB','SB','BTN'][Math.floor(Math.random()*3)]
-    const villainPos = ['BTN','CO','HJ'][Math.floor(Math.random()*3)]
+    const hand = pick(['A5s','A4s','A3s','A2s'])
+    const heroPos = pick(['BB','SB','BTN','CO'])
+    const villainPos = pick(['BTN','CO','HJ','LJ','UTG'])
+    const kicker = hand[1]
     return {
       q: `${villainPos} fez raise. Voce esta no ${heroPos} com ${hand}. Bom 3-bet blefe?`,
       a: 'Sim — Ace bloqueia AA (de 6 pra 3 combos) e AK/AQ',
       b: 'Nao — mao muito fraca pra 3-bet',
       aCorrect: true,
       explanation: `${hand} e excelente para 3-bet blefe! O Ace bloqueia AA (de 6 combos para 3) e AK/AQ. Alem disso, tem equity de backup (wheel potential, suited).`,
-      boardCards: [], heroCards: makeHeroCards('A', hand[1], true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
+      boardCards: [], heroCards: makeHeroCards('A', kicker, true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
     }
   },
-  // Straight blocker afeta sizing do value bet
+  // 17. Straight blocker afeta sizing do value bet
   () => {
-    const spots = [
-      { board: ['Q','J','T','4','2'], hand: 'AK', block: 'AK' },
-      { board: ['J','T','9','3','7'], hand: 'KQ', block: 'KQ' },
-      { board: ['T','9','8','2','K'], hand: 'QJ', block: 'QJ' },
-    ]
-    const spot = spots[Math.floor(Math.random()*spots.length)]
+    const spot = pick(STRAIGHT_BOARDS)
     return {
-      q: `River: board ${spot.board.join('-')}. Voce tem ${spot.hand} (straight). Vilao checou. Qual sizing?`,
-      a: 'Aposta media (33-50%) — voce bloqueia combos que pagariam grande',
+      q: `River: board ${spot.ranks.join('-')}. Voce tem ${spot.nut} (${spot.nutName}). Vilao checou. Qual sizing?`,
+      a: `Aposta media (33-50%) — voce bloqueia ${spot.nut} que pagaria grande`,
       b: 'Aposta grande (75%+) — straight e forte',
       aCorrect: true,
-      explanation: `Voce BLOQUEIA ${spot.block} do vilao — uma das maos que pagaria grande. Com board conectado, aposte menor para extrair de pares e dois pares que nao foldam a bet pequena.`,
-      boardCards: makeRainbowBoard(spot.board), heroCards: makeHeroCards(spot.hand[0], spot.hand[1], false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '20bb',
+      explanation: `Voce BLOQUEIA ${spot.nut} do vilao — uma das maos que pagaria grande. Com board conectado, aposte menor para extrair de pares e dois pares que nao foldam a bet pequena.`,
+      boardCards: makeRainbowBoard(spot.ranks), heroCards: makeHeroCards(spot.nut[0], spot.nut[1], false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'Check', potLabel: pick(POTS_MED),
     }
   },
-  // AA bloqueia range de 3-bet — 4-bet sizing
+  // 18. AA bloqueia range de 3-bet — 4-bet sizing
   () => {
-    const heroPos = ['UTG','LJ','CO','BTN'][Math.floor(Math.random()*4)]
-    const villainPos = ['BB','SB','BTN'][Math.floor(Math.random()*3)]
+    const heroPos = pick(['UTG','LJ','CO','BTN','HJ'])
+    const villainPos = pick(['BB','SB','BTN','CO'])
     return {
       q: `Voce abriu do ${heroPos} com AA. ${villainPos} fez 3-bet. Como blockers afetam seu 4-bet?`,
       a: '4-bet menor — voce bloqueia AA/AK dele, range de 3-bet e mais leve',
@@ -203,42 +299,43 @@ const SCENARIOS = [
       boardCards: [], heroCards: makeHeroCards('A','A',false), heroPos, villainPos, villainAction: '3-Bet', potLabel: 'Pre-flop',
     }
   },
-  // Suit blocker em semi-blefe no flop
+  // 19. Suit blocker em semi-blefe no flop
   () => {
-    const suit = ['ouros','copas','espadas'][Math.floor(Math.random()*3)]
-    const sc = suit === 'ouros' ? 'd' : suit === 'copas' ? 'h' : 's'
-    const r1 = ['7','8','6','5'][Math.floor(Math.random()*4)]
-    const r2 = ['4','3','2'][Math.floor(Math.random()*3)]
-    const high = ['A','K','Q'][Math.floor(Math.random()*3)]
+    const sc = pick(['d','h','s','c'])
+    const suitN = suitName(sc)
+    const r1 = pick(['7','8','6','5','4'])
+    const r2 = pick(['4','3','2','5'].filter(x => x !== r1))
+    const high = pick(['A','K','Q','J'])
+    const mid = pick(['8','9','T','7'].filter(x => x !== r1))
     return {
-      q: `Flop: ${high}${sc}-8${sc}-3${sc}. SB apostou 33%. Voce esta no BB com ${r1}${sc}${r2}${sc} (flush draw + 2 blockers). Check-raise?`,
-      a: 'Sim — flush draw + blockers de naipe reduzem flush draws do vilao',
+      q: `Flop: ${high}-${mid}-3 monotone (${suitN}). SB apostou 33%. Voce no BB com ${r1}${sc}${r2}${sc} (flush draw + 2 blockers). Check-raise?`,
+      a: `Sim — flush draw + blockers de ${suitN} reduzem flush draws do vilao`,
       b: 'Nao — apenas call com flush draw',
       aCorrect: true,
-      explanation: `Duas cartas de ${suit} reduzem os combos de flush draw do vilao. Ele provavelmente nao tem flush draw — esta apostando com top pair ou air. Check-raise com fold equity + equity do draw.`,
-      boardCards: [high+sc, '8'+sc, '3'+sc], heroCards: [r1+sc, r2+sc], heroPos: 'BB', villainPos: 'SB', villainAction: 'Bet 33%', potLabel: '6bb',
+      explanation: `Duas cartas de ${suitN} reduzem os combos de flush draw do vilao. Ele provavelmente nao tem flush draw — esta apostando com top pair ou air. Check-raise com fold equity + equity do draw.`,
+      boardCards: [high+sc, mid+sc, '3'+sc], heroCards: [r1+sc, r2+sc], heroPos: 'BB', villainPos: 'SB', villainAction: 'Bet 33%', potLabel: pick(['6bb','7bb','8bb']),
     }
   },
-  // Blocker de continue vs blocker de fold
+  // 20. Blocker de continue vs blocker de fold
   () => {
-    const hand1 = ['A5s','A4s','A3s'][Math.floor(Math.random()*3)]
-    const hand2 = ['KQs','KJs','QJs'][Math.floor(Math.random()*3)]
-    const heroPos = ['BTN','SB','BB'][Math.floor(Math.random()*3)]
-    const villainPos = ['UTG','LJ','HJ','CO'][Math.floor(Math.random()*4)]
+    const hand1 = pick(['A5s','A4s','A3s','A2s'])
+    const hand2 = pick(['KQs','KJs','QJs','KTs','QTs'])
+    const heroPos = pick(['BTN','SB','BB','CO'])
+    const villainPos = pick(['UTG','LJ','HJ','CO'])
     return {
       q: `${villainPos} fez raise. Voce esta no ${heroPos}. Qual e MELHOR pra 3-bet blefe: ${hand1} ou ${hand2}?`,
       a: `${hand1} — bloqueia continues (AA, AK)`,
       b: `${hand2} — cartas altas sao melhores`,
       aCorrect: true,
-      explanation: `${hand1} bloqueia AA e AK (maos que 4-bet ou call). ${hand2} bloqueia KJ, QJ — maos que FOLDAM. Para 3-bet blefe, bloqueie continues, nao folds.`,
+      explanation: `${hand1} bloqueia AA e AK (maos que 4-bet ou call). ${hand2} bloqueia maos que FOLDAM. Para 3-bet blefe, bloqueie continues, nao folds.`,
       boardCards: [], heroCards: makeHeroCards('A', hand1[1], true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
     }
   },
-  // Playability vs blockers — JTs melhor call que 3-bet
+  // 21. Playability vs blockers — suited connectors = call
   () => {
-    const hand = ['JTs','T9s','98s','QJs'][Math.floor(Math.random()*4)]
-    const heroPos = ['BTN','CO'][Math.floor(Math.random()*2)]
-    const villainPos = ['UTG','LJ','HJ','CO'][Math.floor(Math.random()*4)]
+    const hand = pick(['JTs','T9s','98s','QJs','87s','76s'])
+    const heroPos = pick(['BTN','CO','HJ'])
+    const villainPos = pick(['UTG','LJ','HJ','CO'])
     return {
       q: `${villainPos} fez raise. Voce esta no ${heroPos} com ${hand}. 3-bet blefe ou call?`,
       a: 'Call — mao com muita equity pos-flop, nao bloqueia continues',
@@ -248,11 +345,68 @@ const SCENARIOS = [
       boardCards: [], heroCards: makeHeroCards(hand[0], hand[1], true), heroPos, villainPos, villainAction: 'Raise 2.5x', potLabel: 'Pre-flop',
     }
   },
+  // 22. Flush blocker pra bluff — K do naipe
+  () => {
+    const fs = randSuit()
+    const board = pick(FLUSH_HIGHS)
+    return {
+      q: `River com 3 ${suitName(fs)} no board ${board[0]}-${board[1]}-${board[2]}. Voce tem K${fs} (segundo nut flush blocker) sem par. Blefar?`,
+      a: 'Sim — K do naipe bloqueia o 2nd nut flush e reduz combos de flush forte',
+      b: 'Nao — K nao bloqueia o nut flush (que e com A)',
+      aCorrect: true,
+      explanation: `K${fs} bloqueia o segundo nut flush. Combinado com o fato de que vilao tambem tem menos flush draws completados, seu blefe funciona bem. Nao e tao forte quanto ter o A do naipe, mas ainda e um bom blocker pra bluff.`,
+      boardCards: [board[0]+fs, board[1]+fs, board[2]+fs, pick(['4','5','6'])+randSuitExcluding(fs), pick(['2','3','9'])+randSuitExcluding(fs)], heroCards: ['K'+fs, pick(['4','3','2'])+randSuitExcluding(fs)], heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'Check', potLabel: pick(POTS_MED),
+    }
+  },
+  // 23. Nao bloqueia valor — ruim pra call
+  () => {
+    const board = pick(CONNECTED_LOW)
+    const high = pick(['A','K','Q'])
+    return {
+      q: `Board ${board.join('-')}. Vilao shova. Voce tem ${high}${high} (overpair). Seus blockers ajudam no call?`,
+      a: `Nao — ${high}${high} nao bloqueia straights nem sets desse board. Decisao e de pot odds.`,
+      b: `${high}${high} e forte, sempre call`,
+      aCorrect: true,
+      explanation: `${high}${high} nao bloqueia nada relevante nesse board conectado. As straights e sets possiveis nao envolvem ${high}. Quando seus blockers nao ajudam, a decisao e puramente de pot odds e frequencia de bluff do vilao.`,
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards(high, high, false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'All-in', potLabel: pick(POTS_BIG),
+    }
+  },
+  // 24. Combo math — quantos combos remove
+  () => {
+    const scenarios = [
+      { mao: 'As', tipo: 'AA', antes: 6, depois: 3, desc: 'Voce tem As. AA passa de 6 para 3 combos' },
+      { mao: 'As', tipo: 'AKo', antes: 12, depois: 9, desc: 'Voce tem As. AKo passa de 12 para 9 combos' },
+      { mao: 'Ks+As', tipo: 'AK', antes: 16, depois: 9, desc: 'Voce tem AK. Outro AK passa de 16 para 9 combos' },
+      { mao: 'Ks', tipo: 'KK', antes: 6, depois: 3, desc: 'Voce tem Ks. KK passa de 6 para 3 combos' },
+    ]
+    const sc = pick(scenarios)
+    return {
+      q: `Matematica de blockers: voce tem ${sc.mao}. Quantos combos de ${sc.tipo} o vilao pode ter agora?`,
+      a: `${sc.depois} combos (antes eram ${sc.antes})`,
+      b: `${sc.antes} combos (blocker nao muda nada)`,
+      aCorrect: true,
+      explanation: `${sc.desc}. Cada blocker remove combos significativamente. Entender a matematica e essencial pra avaliar blockers corretamente.`,
+      boardCards: [], heroCards: makeHeroCards('A','K',false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: '', potLabel: 'Conceito',
+    }
+  },
+  // 25. Board seco — blockers menos relevantes
+  () => {
+    const board = pick(DRY_RIVER)
+    const pair = pick(['T','J','Q','9','8'])
+    return {
+      q: `River em board seco ${board.join('-')}. Vilao betta 50%. Voce tem ${pair}${pair}. Blockers sao decisivos?`,
+      a: 'Nao — em board seco sem draws completados, blockers sao menos relevantes. Foque em pot odds.',
+      b: 'Sim — blockers sao sempre o fator principal',
+      aCorrect: true,
+      explanation: `Em boards secos sem flush ou straight completados, blockers tem impacto menor. Nao ha draws perdidos pra unblock nem nuts de flush/straight pra bloquear. A decisao volta pra fundamentals: pot odds, range do vilao, e sizing.`,
+      boardCards: makeRainbowBoard(board), heroCards: makeHeroCards(pair, pair, false), heroPos: pick(OOP_POS), villainPos: pick(IP_POS), villainAction: 'Bet 50%', potLabel: pick(POTS_MED),
+    }
+  },
 ]
 
 function generateScenario() {
-  const pick = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)]
-  const t = typeof pick === 'function' ? pick() : pick
+  const chosen = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)]
+  const t = typeof chosen === 'function' ? chosen() : chosen
   const swap = Math.random() > 0.5
   const opts = swap
     ? [{ id: 'a', label: t.b, correct: !t.aCorrect }, { id: 'b', label: t.a, correct: t.aCorrect }]

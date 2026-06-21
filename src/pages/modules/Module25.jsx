@@ -17,130 +17,604 @@ function makeHeroCards(r1, r2, suited) { const s1 = randSuit(); return [r1 + s1,
 // MODULO 25 — Multistreet Planning
 // ================================================================
 
+// ================================================================
+// POOLS para parametrizacao
+// ================================================================
+
+const DRY_BOARDS = [
+  ['K','7','2'],['A','8','3'],['J','6','2'],['Q','9','3'],['T','5','2'],
+  ['K','8','3'],['A','7','2'],['J','5','2'],['Q','6','3'],['T','4','2'],
+  ['K','6','2'],['A','9','4'],['J','7','3'],['Q','8','2'],['9','4','2'],
+]
+const WET_BOARDS = [
+  ['J','T','9'],['T','9','8'],['9','8','7'],['8','7','6'],['J','9','8'],
+  ['Q','J','T'],['K','Q','J'],['T','8','7'],['9','7','6'],['J','8','7'],
+]
+const SEMI_WET_BOARDS = [
+  ['Q','J','5'],['J','T','4'],['T','9','3'],['K','J','8'],['A','J','T'],
+  ['Q','T','6'],['K','T','7'],['J','9','5'],['T','8','4'],['Q','9','6'],
+]
+const PAIRED_BOARDS = [
+  ['A','A','7'],['K','K','4'],['Q','Q','8'],['J','J','5'],['T','T','3'],
+  ['9','9','2'],['8','8','4'],['7','7','6'],['A','A','9'],['K','K','6'],
+]
+
+const BLANK_TURNS = ['2','3','4','5','6']
+const SCARE_TURNS = ['A','K','Q']
+const DRAW_COMPLETE_TURNS = ['flush_complete','straight_complete']
+
+const HERO_POSITIONS = ['BTN','CO','HJ','SB']
+const VILLAIN_POSITIONS = ['BB','SB','CO','BB']
+const VILLAIN_ACTIONS_PASSIVE = ['Call','Check, Call']
+const VILLAIN_ACTIONS_BET = ['Bet 33%','Bet 50%','Bet 66%','Bet 75%']
+const POT_LABELS_SMALL = ['6bb','7bb','8bb','9bb','10bb']
+const POT_LABELS_MED = ['12bb','14bb','15bb','16bb','18bb']
+const POT_LABELS_BIG = ['25bb','30bb','35bb','40bb','45bb']
+
+function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)] }
+function randPot(pool) { return randFrom(pool) }
+function heroIPPos() { const i = Math.floor(Math.random() * HERO_POSITIONS.length); return { heroPos: HERO_POSITIONS[i], villainPos: VILLAIN_POSITIONS[i] } }
+
+// ================================================================
+// SCENARIOS — 22 templates gerando combinacoes unicas
+// ================================================================
+
 const SCENARIOS = [
-  () => ({
-    q: 'Flop K-9-4 rainbow. Voce IP com AKo (TPTK). Fez c-bet 50%. Vilao call. Turn: 2h. O que fazer?',
-    a: 'Bet turn (double barrel — mao forte, quer valor de Kx piores e 9x)',
-    b: 'Check (pot control)',
-    aCorrect: true,
-    explanation: 'AK em K-9-4-2 e muito forte. O 2 e um blank que nao muda nada. Plano de 3 streets: bet flop, bet turn por valor, e avaliar river. Kx piores e 9x vao pagar turn.',
-    boardCards: [...makeRainbowBoard(['K','9','4']), '2h'], heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '13bb',
-  }),
+
+  // 1. TPTK em board seco — double barrel blank turn
   () => {
-    const fs = randSuit()
+    const board = randFrom(DRY_BOARDS)
+    const topRank = board[0]
+    const blank = randFrom(BLANK_TURNS)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    const kickers = { 'K': 'A', 'A': 'K', 'J': 'A', 'Q': 'A', 'T': 'A', '9': 'A' }
+    const kicker = kickers[topRank] || 'A'
     return {
-      q: 'Voce bettou flop com 87s (flush draw + gutshot) em board T-6-2 com 2 copas. Turn: Kh (sem copa). O que fazer?',
-      a: 'Bet turn (barrel com equity + carta de scare)',
-      b: 'Give up (check/fold)',
+      q: `Flop ${board.join('-')} rainbow. Voce IP com ${kicker}${topRank}o (TPTK). C-bet 50%, vilao call. Turn: ${blank}. O que fazer?`,
+      a: `Bet turn (double barrel — TPTK forte, blank nao ajuda vilao)`,
+      b: `Check (pot control, talvez virar showdown hand)`,
       aCorrect: true,
-      explanation: 'O K no turn e uma scare card otima. Vilao vai foldar muitas maos medianas (7x, 8x, underpairs). Voce ainda tem flush draw + gutshot como backup. Double barrel e o plano correto.',
-      boardCards: ['Tc', '6c', '2'+randSuitExcluding('c'), 'Kh'], heroCards: ['8c', '7c'], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '15bb',
+      explanation: `${kicker}${topRank} em board ${board.join('-')}-${blank} continua sendo uma mao muito forte. O ${blank} e um blank puro — nao conecta em quase nada da range do vilao. Plano de 3 streets: bet flop, bet turn por valor, avaliar river. Maos como ${topRank}x piores e pares medianos vao pagar turn.`,
+      boardCards: [...makeRainbowBoard(board), blank + randSuit()],
+      heroCards: makeHeroCards(kicker, topRank, false),
+      ...pos, villainAction: 'Call', potLabel: pot,
     }
   },
-  () => ({
-    q: 'Voce fez c-bet no flop A-7-3 com QQ. Vilao call. Turn: A. O que fazer?',
-    a: 'Check (A no turn faz vilao ter mais trips, seu QQ piorou muito)',
-    b: 'Bet (representar o A)',
-    aCorrect: true,
-    explanation: 'O A no turn e terrivel pra QQ. Agora qualquer Ax do vilao (que pagou flop) te tem dominado. Pot control e o plano: check turn, possivelmente call river se sizing for pequeno.',
-    boardCards: [...makeRainbowBoard(['A','7','3']), 'A'+randSuit()], heroCards: makeHeroCards('Q','Q',false), heroPos: 'CO', villainPos: 'BB', villainAction: 'Call', potLabel: '14bb',
-  }),
-  () => ({
-    q: 'Plano de 3 streets com AA em board J-7-2 rainbow (SPR ~10). Qual o plano correto?',
-    a: 'Bet flop medio, bet turn medio, bet river por valor',
-    b: 'Bet flop grande, check turn (trap), bet river',
-    aCorrect: true,
-    explanation: 'AA em board seco com SPR ~10 quer 3 streets de valor. O plano: bet 50-60% flop, 60-70% turn, 60-75% river. Nao precisa de check turn — voce quer construir o pote gradualmente.',
-    boardCards: makeRainbowBoard(['J','7','2']), heroCards: makeHeroCards('A','A',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '6.5bb',
-  }),
-  () => ({
-    q: 'Voce bettou flop e turn com Ah5h (nut flush draw) em board K-8-3-6 com 2 copas. River: 2d (nao fecha). O que fazer?',
-    a: 'Bluff river (triple barrel — contou uma historia consistente)',
-    b: 'Give up (draw nao fechou)',
-    aCorrect: true,
-    explanation: 'Voce representou mao forte em 2 streets. O river nao muda nada. Vilao vai foldar maos medianas (8x, 99-QQ) que sobreviveram ate aqui. O triple barrel e o final logico do plano.',
-    boardCards: ['Kh', '8h', '3s', '6d', '2d'], heroCards: ['Ah', '5h'], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '35bb',
-  }),
-  () => ({
-    q: 'Voce checkou flop como caller em board Q-J-5. Vilao bettou, voce call com T9s (OESD). Turn: 3. Vilao betta de novo. Plano?',
-    a: 'Call turn (odds de draw), avaliar river',
-    b: 'Raise turn (semi-bluff)',
-    aCorrect: true,
-    explanation: 'Com OESD (8 outs) no turn, voce tem ~16% pra fechar. Se esta recebendo odds (bet sizing < 75%), call e correto. Raise e muito agressivo — voce estaria committed sem a melhor mao. Call e avaliar river.',
-    boardCards: [...makeRainbowBoard(['Q','J','5']), '3'+randSuit()], heroCards: makeHeroCards('T','9',true), heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 66%', potLabel: '18bb',
-  }),
+
+  // 2. Overpair em board seco — turn scare card (A ou K)
   () => {
-    const fs = randSuit()
+    const board = randFrom([['J','7','2'],['T','6','3'],['9','5','2'],['8','4','2'],['T','7','3'],['9','6','2']])
+    const scareRank = Math.random() > 0.5 ? 'A' : 'K'
+    const overPairs = { 'J': ['Q','Q'], 'T': ['Q','Q'], '9': ['J','J'], '8': ['J','J'] }
+    const pp = overPairs[board[0]] || ['Q','Q']
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
     return {
-      q: 'Voce tem set de 7 no flop 7-6-5 com flush draw. Qual o plano multistreet?',
-      a: 'Raise/bet grande flop, bet grande turn pra proteger de draws',
-      b: 'Slowplay: check flop, check-raise turn',
+      q: `Voce IP com ${pp[0]}${pp[1]}o, bettou flop ${board.join('-')} rainbow. Vilao call. Turn: ${scareRank}. O que fazer?`,
+      a: `Check turn (${scareRank} no turn pode dar top pair ao vilao — pot control)`,
+      b: `Bet turn (overpair ainda e forte no board baixo)`,
       aCorrect: true,
-      explanation: 'Board ultra-umido (flush draw + straight draw). Set DEVE apostar grande ou raise no flop. Draws tem ~35-45% equity aqui. Protecao e urgente. Plano: bet/raise flop grande, bet turn grande, shove river se necessario.',
-      boardCards: ['7'+fs, '6'+fs, '5'+randSuitExcluding(fs)], heroCards: ['7'+randSuitExcluding(fs), '7'+randSuitExcluding(fs)], heroPos: 'BTN', villainPos: 'BB', villainAction: 'Bet 50%', potLabel: '7bb',
+      explanation: `${pp[0]}${pp[0]} era favorito claro no flop ${board.join('-')}, mas o ${scareRank} no turn e uma scare card perigosa. Vilao que pagou flop pode ter Ax ou ${scareRank}x. Agora voce e segundo par mais alto. Check turn: pot control, e possivel call/fold river dependendo do sizing.`,
+      boardCards: [...makeRainbowBoard(board), scareRank + randSuit()],
+      heroCards: makeHeroCards(pp[0], pp[1], false),
+      ...pos, villainAction: 'Call', potLabel: pot,
     }
   },
-  () => ({
-    q: 'Board A-K-8-4. Voce IP bettou flop com JTs (gutshot + backdoor). Turn completou nada. Qual a decisao key?',
-    a: 'Check turn (conservar fichas, mao nao melhorou)',
-    b: 'Barrel turn (manter pressao)',
-    aCorrect: true,
-    explanation: 'JTs perdeu as backdoor draws. No turn A-K-8-4 voce so tem gutshot (4 outs). Nao vale a pena investir mais. O plano correto e: bet flop (semi-bluff com equity), check turn (desistir), talvez bluff river se fizer sentido.',
-    boardCards: makeRainbowBoard(['A','K','8','4']), heroCards: makeHeroCards('J','T',true), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '14bb',
-  }),
-  () => ({
-    q: 'Conceito: por que planejar as 3 streets ANTES de apostar no flop?',
-    a: 'Pra saber se sua mao aguenta 3 streets de valor ou se deve desacelerar',
-    b: 'Pra intimidar o vilao desde o inicio',
-    aCorrect: true,
-    explanation: 'Multistreet planning evita situacoes onde voce aposta no flop sem saber o que fazer no turn. Se sua mao so aguenta 2 streets de valor (ex: top pair kicker medio), voce ja sabe que vai check um street.',
-    boardCards: makeRainbowBoard(['Q','8','3']), heroCards: makeHeroCards('A','Q',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '7bb',
-  }),
-  () => ({
-    q: 'Voce tem KK em board 8-5-2. Bettou flop, bettou turn (4). River: A. O que fazer?',
-    a: 'Check (A no river e terrivel — vilao que pagou 2 streets pode ter Ax)',
-    b: 'Bet (river de valor, KK ainda e forte)',
-    aCorrect: true,
-    explanation: 'KK planejou 3 streets de valor em board 8-5-2, mas o A no river muda tudo. Vilao que pagou flop e turn com Ax agora te tem dominado. Check e correto — nao transforma mao de valor em bluff.',
-    boardCards: [...makeRainbowBoard(['8','5','2']), '4'+randSuit(), 'A'+randSuit()], heroCards: makeHeroCards('K','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Check', potLabel: '40bb',
-  }),
-  () => ({
-    q: 'Turn: voce bettou flop e turn com par de As em board A-T-6-3. River: T (pareia o board). Qual a decisao?',
-    a: 'Bet river por valor (vilao raramente tem TT, voce tem full house)',
-    b: 'Check (medo de trips de T)',
-    aCorrect: true,
-    explanation: 'O T no river pareia, mas voce tem AA com full house (AA sobre TT). Vilao quase nunca tem TT (teria raisado pre ou no flop geralmente). Continue o plano de 3 streets de valor — maos como KT, QT vao pagar.',
-    boardCards: [...makeRainbowBoard(['A','T','6']), '3'+randSuit(), 'T'+randSuit()], heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '45bb',
-  }),
-  () => ({
-    q: 'Conceito de "check-raise turn" como plano. Quando e correto?',
-    a: 'Com maos muito fortes OOP que querem construir pote grande rapidamente',
-    b: 'Sempre que temos set ou melhor',
-    aCorrect: true,
-    explanation: 'Check-raise turn e um plano especifico: check flop (trap), call ou check, e entao check-raise turn pra construir pote enorme. Funciona com sets/straights OOP contra vilao agressivo que vai bet 2 streets.',
-    boardCards: [...makeRainbowBoard(['9','7','3']), '2'+randSuit()], heroCards: ['9'+randSuit(), '9'+randSuit()], heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 66%', potLabel: '14bb',
-  }),
-  () => ({
-    q: 'Voce tem JJ em board Q-7-3 rainbow. Bettou flop. Turn: K. Plano?',
-    a: 'Check turn (2 overcards no board, JJ perdeu muito valor)',
-    b: 'Bet turn (JJ ainda e overpair ao 7 e 3)',
-    aCorrect: true,
-    explanation: 'JJ em Q-7-3-K tem DUAS overcards no board. Qualquer Qx ou Kx te domina. O plano muda: bet flop por valor/protecao, check turn (pot control), fold ou call river dependendo do sizing.',
-    boardCards: [...makeRainbowBoard(['Q','7','3']), 'K'+randSuit()], heroCards: makeHeroCards('J','J',false), heroPos: 'CO', villainPos: 'BB', villainAction: 'Call', potLabel: '14bb',
-  }),
-  () => ({
-    q: 'Regra de ouro para decidir quantas streets apostar por valor:',
-    a: 'Pergunte: "quais maos piores me pagam?" — se a resposta e poucas, reduza streets',
-    b: 'Sempre aposte 3 streets com top pair ou melhor',
-    aCorrect: true,
-    explanation: 'A pergunta-chave e "quais maos piores me chamam?". TPTK (como AK em A-high board) pode apostar 3 streets porque Ax piores, Kx, e draws pagam. Mas top pair kicker fraco so aguenta 1-2 streets.',
-    boardCards: makeRainbowBoard(['A','9','4']), heroCards: makeHeroCards('A','K',false), heroPos: 'BTN', villainPos: 'BB', villainAction: 'Call', potLabel: '7bb',
-  }),
+
+  // 3. Set em board umido — proteção urgente (bet grande)
+  () => {
+    const wetBoards = [['J','T','9'],['T','9','8'],['9','8','7'],['8','7','6'],['J','9','8'],['Q','J','T']]
+    const board = randFrom(wetBoards)
+    const setRank = board[0]
+    const fs = randSuit()
+    const s2 = randSuitExcluding(fs)
+    const s3 = randSuitExcluding(fs)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_SMALL)
+    return {
+      q: `Voce IP tem set de ${setRank} no flop ${board.join('-')} (board ultra-umido, flush draw + straight draw). Vilao bet 50%. Qual o plano?`,
+      a: `Raise grande no flop e bet grande no turn — proteger de draws urgentemente`,
+      b: `Call flop, avaliar turn (nao revelar forca)`,
+      aCorrect: true,
+      explanation: `Board ${board.join('-')} e ultra-umido: draws tem ~35-45% equity contra seu set. Slowplay aqui e um erro sério. Voce DEVE raise grande no flop pra cobrar equity dos draws e proteger sua mao. Plano: raise/bet grande flop, bet turn grande, shove river se necessario.`,
+      boardCards: [board[0]+fs, board[1]+fs, board[2]+s3],
+      heroCards: [setRank+s2, setRank+randSuitExcluding(s2)],
+      ...pos, villainAction: 'Bet 50%', potLabel: pot,
+    }
+  },
+
+  // 4. Draw semi-bluff — barrel turn com scare card
+  () => {
+    const semiWet = randFrom(SEMI_WET_BOARDS)
+    const scareCards = ['A','K','Q']
+    const scare = randFrom(scareCards.filter(c => !semiWet.includes(c)))
+    const draws = [['8','7'],['9','8'],['7','6'],['6','5'],['J','T']]
+    const draw = randFrom(draws)
+    const suit = randSuit()
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce IP bettou flop ${semiWet.join('-')} com ${draw[0]}${draw[1]}s (flush draw + OESD). Vilao call. Turn: ${scare} (sem completar draw). O que fazer?`,
+      a: `Bet turn (barrel — scare card + equity residual = boa pressao)`,
+      b: `Check/fold turn (draw nao melhorou, desistir)`,
+      aCorrect: true,
+      explanation: `O ${scare} no turn e uma scare card excelente. Vilao vai foldar maos medianas (pares medios, underpairs) que nao conectaram. Voce ainda tem flush draw e OESD como backup (~14 outs). O double barrel combina pressao de fold equity com equity real — plano correto.`,
+      boardCards: [...makeRainbowBoard(semiWet), scare + randSuit()],
+      heroCards: [draw[0]+suit, draw[1]+suit],
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 5. Nut flush draw — triple barrel bluff quando draw nao fecha
+  () => {
+    const suit = randSuit()
+    const flops = [['K','8','3'],['Q','9','4'],['J','7','3'],['T','6','2'],['A','8','4'],['K','9','5']]
+    const board = randFrom(flops)
+    const turn = randFrom(['5','6','7','2','3'])
+    const river = randFrom(['2','3','4','5'])
+    const heroA = 'A'
+    const heroB = randFrom(['2','3','4','5','6'])
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_BIG)
+    return {
+      q: `Voce bettou flop e turn com A${heroB}s (nut flush draw) em board ${board.join('-')}-${turn} com 2 cartas do mesmo naipe. River: ${river} offsuit (draw nao fechou). O que fazer?`,
+      a: `Bluff river (triple barrel — historia consistente de mao forte, vilao pode foldar)`,
+      b: `Give up (draw falhou, sem showdown value)`,
+      aCorrect: true,
+      explanation: `Voce representou mao forte nas primeiras duas streets. O river sem completar o draw nao precisa parar o plano. Vilao que sobreviveu ate aqui com maos medianas (pares medios, underpairs) vai foldar ao triple barrel. A historia e consistente — voce pode ter AA, KK, set. Triple barrel e a conclusao logica.`,
+      boardCards: [board[0]+suit, board[1]+suit, board[2]+randSuitExcluding(suit), turn+randSuitExcluding(suit), river+randSuitExcluding(suit)],
+      heroCards: [heroA+suit, heroB+suit],
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 6. OESD como caller OOP — call turn, avaliar river
+  () => {
+    const flop = randFrom([['Q','J','5'],['K','T','4'],['J','T','3'],['Q','T','6'],['K','J','7']])
+    const blank = randFrom(BLANK_TURNS)
+    const draws = [['T','9'],['9','8'],['A','Q'],['8','7']]
+    const draw = randFrom(draws)
+    const betAction = randFrom(VILLAIN_ACTIONS_BET.slice(1,3))
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce OOP com ${draw[0]}${draw[1]}s (OESD) no flop ${flop.join('-')}. Vilao bettou, voce call. Turn: ${blank}. Vilao bet ${betAction.replace('Bet ','')} novamente. Plano?`,
+      a: `Call turn (8 outs = ~16% equity, recebendo odds), avaliar river`,
+      b: `Raise turn (semi-bluff agressivo para pressionar)`,
+      aCorrect: true,
+      explanation: `Com OESD (8 outs), voce tem ~16% pra fechar no river. Se o sizing do vilao esta dando odds, call e matematicamente correto. Raise turn e muito agressivo — voce ficaria committed sem a melhor mao. O plano: call turn com odds, e no river: value bet se completar, check/fold se nao completar.`,
+      boardCards: [...makeRainbowBoard(flop), blank + randSuit()],
+      heroCards: makeHeroCards(draw[0], draw[1], true),
+      heroPos: 'BB', villainPos: 'BTN', villainAction: betAction, potLabel: pot,
+    }
+  },
+
+  // 7. QQ/JJ — turn completa board paired — re-avaliação
+  () => {
+    const overpairs = [['Q','Q'],['J','J'],['T','T']]
+    const pp = randFrom(overpairs)
+    const boards = [['A','7','3'],['K','6','2'],['A','8','4'],['K','9','5'],['A','6','2']]
+    const board = randFrom(boards)
+    const pairedTurn = board[0]
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce IP com ${pp[0]}${pp[1]}o. Bettou flop ${board.join('-')}. Vilao call. Turn: ${pairedTurn} (pareia o top card). O que fazer?`,
+      a: `Check turn (${pairedTurn} tripla o board — vilao com Ax ou ${pairedTurn}x agora te domina)`,
+      b: `Bet turn (${pp[0]}${pp[1]} ainda e overpair ao ${board[1]} e ${board[2]})`,
+      aCorrect: true,
+      explanation: `Seu ${pp[0]}${pp[0]} era overpair confortavel no flop ${board.join('-')}, mas o ${pairedTurn} no turn muda tudo. Qualquer Ax ou ${pairedTurn}x do vilao (que pagou flop justamente por isso) agora tem trips. O plano muda: check turn por pot control. River: call pequeno, fold grande.`,
+      boardCards: [...makeRainbowBoard(board), pairedTurn + randSuit()],
+      heroCards: makeHeroCards(pp[0], pp[1], false),
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 8. KK/QQ — river A cai (muda plano completamente)
+  () => {
+    const heroHand = Math.random() > 0.5 ? ['K','K'] : ['Q','Q']
+    const dryBoards = [['8','5','2'],['9','6','3'],['7','4','2'],['8','4','3'],['T','5','2']]
+    const board = randFrom(dryBoards)
+    const turnBlank = randFrom(['3','4','5','6','7'].filter(r => !board.includes(r)))
+    const riverScare = Math.random() > 0.5 ? 'A' : 'K'
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_BIG)
+    return {
+      q: `Voce IP com ${heroHand[0]}${heroHand[1]}o. Bettou flop ${board.join('-')}, bettou turn ${turnBlank}. River: ${riverScare}. O que fazer?`,
+      a: `Check river (${riverScare} e terrivel — vilao que pagou 2 streets com Ax agora te domina)`,
+      b: `Bet river de valor (${heroHand[0]}${heroHand[0]} ainda pode ser melhor)`,
+      aCorrect: true,
+      explanation: `${heroHand[0]}${heroHand[0]} tinha plano solido de 3 streets em board ${board.join('-')}, mas o ${riverScare} no river cancela tudo. Vilao que chamou flop e turn pode facilmente ter A-x que esperava o ${riverScare}. Check river e obrigatorio — nao transforme uma hand de showdown em bluff perdedor.`,
+      boardCards: [...makeRainbowBoard(board), turnBlank + randSuit(), riverScare + randSuit()],
+      heroCards: makeHeroCards(heroHand[0], heroHand[1], false),
+      ...pos, villainAction: 'Check', potLabel: pot,
+    }
+  },
+
+  // 9. AA em board seco — plano de 3 streets correto
+  () => {
+    const board = randFrom(DRY_BOARDS)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_SMALL)
+    return {
+      q: `Voce IP com AA em board ${board.join('-')} rainbow, SPR ~8-10. Qual o plano ideal de 3 streets?`,
+      a: `Bet flop medio (~50%), bet turn medio (~60%), bet river por valor (~65%)`,
+      b: `Bet flop grande, check turn (trap), bet river grande`,
+      aCorrect: true,
+      explanation: `AA em board seco como ${board.join('-')} e candidato perfeito pra 3 streets de valor. Com SPR 8-10, voce quer construir o pote gradualmente: 50% flop, 60% turn, 65% river. Nao precisa de check trap — vilao com Jx, 9x ou draws vai pagar incrementalmente. Bet grande no flop espanta exatamente quem vai pagar 3 streets.`,
+      boardCards: makeRainbowBoard(board),
+      heroCards: makeHeroCards('A','A',false),
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 10. Board pareia no river — full house opportunity
+  () => {
+    const heroHands = [['A','K'],['A','Q'],['A','J'],['K','Q']]
+    const hh = randFrom(heroHands)
+    const topCard = hh[1]
+    const flops = { 'K': ['K','T','6'], 'Q': ['Q','9','4'], 'J': ['J','8','3'], 'K': ['K','7','3'] }
+    const board3 = flops[topCard] || ['K','T','6']
+    const turnBlank = randFrom(BLANK_TURNS.filter(r => !board3.includes(r)))
+    const riverPairs = board3[1]
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_BIG)
+    return {
+      q: `Voce IP com ${hh[0]}${hh[1]}o (TPTK). Bettou flop ${board3.join('-')}, bettou turn ${turnBlank}. River: ${riverPairs} (pareia o board). O que fazer?`,
+      a: `Bet river por valor (voce tem full house, vilao raramente tem trips de ${riverPairs})`,
+      b: `Check (medo do vilao ter trips do ${riverPairs})`,
+      aCorrect: true,
+      explanation: `O ${riverPairs} no river pareia o board, mas com ${hh[0]}${topCard} voce tem dois pares (full house sobre ${riverPairs}s). Vilao raramente tem ${riverPairs}${riverPairs} — teria raisado flop ou turn geralmente. Maos como K${riverPairs}, Q${riverPairs}, J${riverPairs} do vilao agora tem 2 pares/trips e vao pagar o river. Continue o plano.`,
+      boardCards: [...makeRainbowBoard(board3), turnBlank + randSuit(), riverPairs + randSuit()],
+      heroCards: makeHeroCards(hh[0], hh[1], false),
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 11. Check-raise turn OOP como plano (set ou straight OOP)
+  () => {
+    const strongHands = [
+      { cards: ['9','9'], board: ['9','7','3'], label: 'set de 9' },
+      { cards: ['8','8'], board: ['8','5','2'], label: 'set de 8' },
+      { cards: ['T','T'], board: ['T','6','2'], label: 'set de T' },
+      { cards: ['J','9'], board: ['Q','T','8'], label: 'straight (J9)' },
+      { cards: ['7','6'], board: ['8','5','4'], label: 'straight (76)' },
+    ]
+    const hand = randFrom(strongHands)
+    const blank = randFrom(BLANK_TURNS)
+    const betAction = randFrom(['Bet 66%','Bet 75%','Bet 50%'])
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce OOP com ${hand.label} no board ${hand.board.join('-')}. Check flop, vilao bet, voce call. Turn: ${blank}. Vilao betta de novo (${betAction}). Plano?`,
+      a: `Check-raise turn (construir pote enorme com mao muito forte OOP)`,
+      b: `Call turn (nao revelar forca ainda, esperar river)`,
+      aCorrect: true,
+      explanation: `Check-raise turn e o plano ideal aqui. Voce tem ${hand.label} — uma das maos mais fortes possiveis. OOP, voce precisa construir o pote ativamente. Se voce so chama, o vilao pode check river e extrair menos. Check-raise turn constroi pote enorme e te mantém com iniciativa. Call seria passivo demais com essa mao.`,
+      boardCards: [...makeRainbowBoard(hand.board), blank + randSuit()],
+      heroCards: makeHeroCards(hand.cards[0], hand.cards[1], false),
+      heroPos: 'BB', villainPos: 'BTN', villainAction: betAction, potLabel: pot,
+    }
+  },
+
+  // 12. JJ/TT — dois overcards no board + turn piora ainda mais
+  () => {
+    const ppairs = [['J','J'],['T','T'],['9','9']]
+    const pp = randFrom(ppairs)
+    const overcardBoards = {
+      'J': [['Q','8','4'],['K','7','3'],['A','6','2']],
+      'T': [['J','8','3'],['Q','7','2'],['K','6','2'],['A','5','2']],
+      '9': [['T','6','3'],['J','7','2'],['Q','5','2'],['K','4','2']],
+    }
+    const board = randFrom(overcardBoards[pp[0]] || [['Q','7','3']])
+    const scares = ['K','A','Q'].filter(c => !board.includes(c))
+    const turn = randFrom(scares)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce IP com ${pp[0]}${pp[1]}o. Bettou flop ${board.join('-')}. Vilao call. Turn: ${turn}. Plano?`,
+      a: `Check turn (DUAS overcards no board agora — ${pp[0]}${pp[0]} virou hand marginal)`,
+      b: `Bet turn (ainda tenho overpair ao ${board[1]} e ${board[2]})`,
+      aCorrect: true,
+      explanation: `${pp[0]}${pp[0]} em ${board.join('-')}-${turn} tem DUAS overcards no board. Qualquer ${board[0]}x ou ${turn}x te domina. A range do vilao que chamou flop e muito pesada em ${board[0]}x e draws. Agora com o ${turn}, ainda mais maos te batem. Check turn: pot control. River: call pequeno possivel, fold grande.`,
+      boardCards: [...makeRainbowBoard(board), turn + randSuit()],
+      heroCards: makeHeroCards(pp[0], pp[1], false),
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 13. Bluff com ar — give up no turn (sem equity, sem fold equity)
+  () => {
+    const board = randFrom([['A','K','8'],['A','Q','7'],['K','Q','9'],['A','J','6'],['K','J','8']])
+    const turn = randFrom(BLANK_TURNS)
+    const bluffs = [['J','T'],['T','9'],['8','7'],['6','5'],['7','6']]
+    const bluff = randFrom(bluffs)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce IP bettou flop ${board.join('-')} com ${bluff[0]}${bluff[1]}o (puro bluff, sem equity). Turn: ${turn}. Vilao call de novo. O que fazer?`,
+      a: `Give up — check turn (sem equity, vilao mostra forca, historia nao sustenta)`,
+      b: `Double barrel — continuar a pressao no turn`,
+      aCorrect: true,
+      explanation: `Bluffar no flop ${board.join('-')} tem logica (voce pode representar Ax ou Kx). Mas ${bluff[0]}${bluff[1]} nao tem equity real — sem draws, sem pares. No turn, vilao que chamou flop provavelmente tem Ax, Kx ou draw forte. Double barrel sem backup equity e queimar fichas. Give up: check turn, avaliar se o river da uma oportunidade de bluff final.`,
+      boardCards: [...makeRainbowBoard(board), turn + randSuit()],
+      heroCards: makeHeroCards(bluff[0], bluff[1], false),
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 14. JTs/98s com backdoor perde equity no turn — give up
+  () => {
+    const boards = [['A','K','8'],['A','Q','6'],['K','Q','7'],['A','J','9'],['K','T','8']]
+    const board = randFrom(boards)
+    const turn = randFrom(['4','5','3','2'])
+    const draws = [['J','T'],['9','8'],['T','9'],['8','7']]
+    const draw = randFrom(draws)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Board ${board.join('-')}-${turn}. Voce IP bettou flop com ${draw[0]}${draw[1]}s (backdoor draws). Turn ${turn} completou nada. Decisao?`,
+      a: `Check turn (mao perdeu equity de backdoor, so tem gutshot fraco)`,
+      b: `Barrel turn (manter pressao na range do vilao)`,
+      aCorrect: true,
+      explanation: `${draw[0]}${draw[1]}s no flop ${board.join('-')} tinha backdoor flush + gutshot ou OESD. No turn ${turn}, as backdoor draws falharam e so restam 3-4 outs. Nao vale investir mais fichas sem equity real. Plano correto: bet flop (equity + bluff), check turn (desistir graciosamente), considerar river bluff so se a carta for perfeita.`,
+      boardCards: makeRainbowBoard([...board, turn]),
+      heroCards: makeHeroCards(draw[0], draw[1], true),
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 15. Top pair kicker fraco — quantas streets apostar?
+  () => {
+    const tpwk = [
+      { hero: ['K','7'], board: ['K','9','4'], label: 'top pair kicker fraco (K7)' },
+      { hero: ['A','6'], board: ['A','T','5'], label: 'top pair kicker fraco (A6)' },
+      { hero: ['Q','5'], board: ['Q','8','3'], label: 'top pair kicker fraco (Q5)' },
+      { hero: ['J','6'], board: ['J','9','4'], label: 'top pair kicker fraco (J6)' },
+    ]
+    const sc = randFrom(tpwk)
+    const blank = randFrom(BLANK_TURNS)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce IP com ${sc.label} no flop ${sc.board.join('-')}. Bettou flop, vilao call. Turn: ${blank} (blank). Qual a abordagem correta de multistreet?`,
+      a: `Check turn (top pair kicker fraco aguenta 1-2 streets, nao 3)`,
+      b: `Bet turn (top pair e top pair, apostar 3 streets)`,
+      aCorrect: true,
+      explanation: `Top pair kicker fraco como ${sc.hero[0]}${sc.hero[1]} em ${sc.board.join('-')} nao aguenta 3 streets de valor. A pergunta-chave: "quais maos piores me pagam em 3 streets?". A resposta e poucas — vilao raramente paga com mao mais fraca que ${sc.hero[0]}${sc.hero[1]}. Check turn: pot control, talvez thin value no river se check-check.`,
+      boardCards: [...makeRainbowBoard(sc.board), blank + randSuit()],
+      heroCards: makeHeroCards(sc.hero[0], sc.hero[1], false),
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 16. Draw completa no turn — vilao tem nuts, hero deve parar
+  () => {
+    const suit = randSuit()
+    const s2 = randSuitExcluding(suit)
+    const flops = [
+      { board: ['K','8','3'], flushSuit: suit },
+      { board: ['Q','9','4'], flushSuit: suit },
+      { board: ['J','7','2'], flushSuit: suit },
+      { board: ['T','6','3'], flushSuit: suit },
+    ]
+    const sc = randFrom(flops)
+    const blank = randFrom(BLANK_TURNS)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce bettou flop ${sc.board.join('-')} (2 ${sc.flushSuit}). Turn: ${blank}${sc.flushSuit} (completa flush). Voce tem ${sc.board[0]}${s2} (top pair sem flush). Vilao check. O que fazer?`,
+      a: `Check (draw completou, voce nao tem flush — pot control essencial)`,
+      b: `Bet por valor (top pair ainda pode ser melhor)`,
+      aCorrect: true,
+      explanation: `O turn ${blank}${sc.flushSuit} completou o flush draw. Agora qualquer Xx${sc.flushSuit} do vilao que chamou flop tem flush e te domina. Bet aqui e apostar por valor sendo batido na maioria das vezes. Check turn: controlar pote. River: check/call pequeno se fizer sentido, fold para bet grande.`,
+      boardCards: [sc.board[0]+sc.flushSuit, sc.board[1]+sc.flushSuit, sc.board[2]+s2, blank+sc.flushSuit],
+      heroCards: [sc.board[0]+s2, randFrom(['K','Q','J','T','9'].filter(r => r !== sc.board[0]))+s2],
+      ...pos, villainAction: 'Check', potLabel: pot,
+    }
+  },
+
+  // 17. Straight completa no turn — hero tem set, cuidado!
+  () => {
+    const straights = [
+      { board: ['J','T','9'], turn: '8', hero: ['J','J'] },
+      { board: ['T','9','8'], turn: '7', hero: ['T','T'] },
+      { board: ['9','8','7'], turn: '6', hero: ['9','9'] },
+      { board: ['8','7','6'], turn: '5', hero: ['8','8'] },
+      { board: ['Q','J','T'], turn: '9', hero: ['Q','Q'] },
+    ]
+    const sc = randFrom(straights)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce IP tem ${sc.hero[0]}${sc.hero[1]}o (set). Bettou flop ${sc.board.join('-')} (board umido). Vilao call. Turn: ${sc.turn} (completa reta). Vilao bet grande. O que fazer?`,
+      a: `Fold ou call cauteloso (straight completou — set perdeu muito valor)`,
+      b: `Raise (set ainda tem outs pra full house — press on)`,
+      aCorrect: true,
+      explanation: `O ${sc.turn} no turn completou straight (QJT9, JT98, etc.). Vilao que chamou flop umido e agora bettando grande provavelmente tem a reta. Seu set tem outs pra full house (~10 outs), mas nao com SPR suficiente pra um raise. Call/fold dependendo dos odds — mas nao raise. Plano: recalcular com as novas informacoes.`,
+      boardCards: [...makeRainbowBoard(sc.board), sc.turn + randSuit()],
+      heroCards: makeHeroCards(sc.hero[0], sc.hero[1], false),
+      ...pos, villainAction: 'Bet 75%', potLabel: pot,
+    }
+  },
+
+  // 18. Conceito — A pergunta-chave do multistreet
+  () => {
+    const hands = [
+      { hero: 'AKo em A-high', streets: '2-3', board: makeRainbowBoard(['A','9','4']), heroCards: makeHeroCards('A','K',false) },
+      { hero: 'QQ em board baixo', streets: '2-3', board: makeRainbowBoard(['7','4','2']), heroCards: makeHeroCards('Q','Q',false) },
+      { hero: 'set de J', streets: '3', board: makeRainbowBoard(['J','7','3']), heroCards: makeHeroCards('J','J',false) },
+    ]
+    const sc = randFrom(hands)
+    const pos = heroIPPos()
+    return {
+      q: `Conceito multistreet: antes de apostar no flop com ${sc.hero}, qual pergunta voce deve fazer?`,
+      a: `"Quais maos piores me pagam em cada street?" — para definir quantas streets de valor`,
+      b: `"Sou favorito agora?" — se sim, aposto 3 streets automaticamente`,
+      aCorrect: true,
+      explanation: `A pergunta-chave do multistreet planning nao e "sou favorito?" — e "quais maos piores me pagam?". Com ${sc.hero}, a resposta define ${sc.streets} streets de valor. Apostando sem essa analise, voce pode bet 3 streets em situacoes onde vilao so paga com maos que te dominam.`,
+      boardCards: sc.board, heroCards: sc.heroCards,
+      ...pos, villainAction: 'Call', potLabel: randPot(POT_LABELS_SMALL),
+    }
+  },
+
+  // 19. Board paired no flop — set vs. full house dynamics
+  () => {
+    const pairedFlops = PAIRED_BOARDS.slice(0,6)
+    const board3 = randFrom(pairedFlops)
+    const setRank = board3[0]
+    const blank = randFrom(BLANK_TURNS)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_SMALL)
+    return {
+      q: `Flop ${board3.join('-')} (board pareado). Voce IP tem ${setRank}${setRank}o (full house no flop!). Vilao check. Qual a linha correta?`,
+      a: `Bet (construir pote com full house — mesmo board pareado, voce e nut)`,
+      b: `Check (slowplay — esperar que vilao aposte com trips ou two pair)`,
+      aCorrect: true,
+      explanation: `Com full house em flop ${board3.join('-')}, voce ja tem a nuts (ou perto). Slowplay tem valor aqui, mas bet tem mais: vilao pode ter trips de ${board3[0]} (ex: ${setRank}x), two pair fantasma, ou bluff. Bet leva o pote crescendo. Plano: bet flop/turn, e no river bet grande para extrair valor maximo de trips do vilao.`,
+      boardCards: [...makeRainbowBoard([board3[0], board3[1], board3[2]]), blank + randSuit()],
+      heroCards: makeHeroCards(setRank, setRank, false),
+      ...pos, villainAction: 'Check', potLabel: pot,
+    }
+  },
+
+  // 20. Middle pair OOP — quando parar de apostar
+  () => {
+    const middlePairs = [
+      { hero: ['9','8'], board: ['A','9','4'], label: 'par medio (9)' },
+      { hero: ['8','7'], board: ['K','8','3'], label: 'par medio (8)' },
+      { hero: ['T','9'], board: ['A','T','5'], label: 'par medio (T)' },
+      { hero: ['7','6'], board: ['Q','7','2'], label: 'par medio (7)' },
+    ]
+    const sc = randFrom(middlePairs)
+    const blank = randFrom(BLANK_TURNS)
+    const pot = randPot(POT_LABELS_MED)
+    return {
+      q: `Voce OOP com ${sc.label} no board ${sc.board.join('-')}. Vilao bet 50%, voce call. Turn: ${blank}. Voce checa. Vilao bet 66%. O que fazer?`,
+      a: `Fold (middle pair nao aguenta 2 streets de bet — range de valor do vilao te domina)`,
+      b: `Call (ainda tenho par, posso ser melhor)`,
+      aCorrect: true,
+      explanation: `Middle pair como ${sc.hero[0]}${sc.hero[1]} em ${sc.board.join('-')} aguenta 0-1 streets de call, nao 2. Vilao que bet flop E turn tem uma range muito forte: top pair+, draws fortes, sets. Seu ${sc.hero[0]}${sc.hero[1]} raramente e melhor aqui. Fold e a jogada disciplinada — nao "protect de draws" com par medio OOP.`,
+      boardCards: [...makeRainbowBoard(sc.board), blank + randSuit()],
+      heroCards: makeHeroCards(sc.hero[0], sc.hero[1], false),
+      heroPos: 'BB', villainPos: 'BTN', villainAction: 'Bet 66%', potLabel: pot,
+    }
+  },
+
+  // 21. Slowplay vs. bet imediato com nuts — analise de SPR
+  () => {
+    const nuts = [
+      { hero: ['A','A'], board: ['K','7','2'], label: 'AA overpair' },
+      { hero: ['K','K'], board: ['Q','8','3'], label: 'KK overpair' },
+      { hero: ['A','K'], board: ['A','K','5'], label: 'dois pares (AK)' },
+      { hero: ['J','J'], board: ['J','8','3'], label: 'set de J' },
+    ]
+    const sc = randFrom(nuts)
+    const spr = randFrom(['alto (~15)', 'medio (~8)', 'baixo (~3)'])
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_SMALL)
+    return {
+      q: `SPR ${spr}. Voce IP com ${sc.label} no flop ${sc.board.join('-')}. Board seco. Vilao check. Qual o plano correto?`,
+      a: `Bet imediato (construir o pote — nao depender de vilao fazer algo)`,
+      b: `Check (slowplay — deixar vilao pegar outs e depois value bet)`,
+      aCorrect: true,
+      explanation: `Com ${sc.label} em board seco, slowplay e arriscado independente do SPR. Com SPR ${spr}, voce precisa construir o pote ativamente — nao pode depender do vilao ter iniciativa. Se voce checa e vilao tambem checa turn, voce perdeu uma street de valor. Bet: construa o pote no ritmo que voce controla.`,
+      boardCards: makeRainbowBoard(sc.board),
+      heroCards: makeHeroCards(sc.hero[0], sc.hero[1], false),
+      ...pos, villainAction: 'Check', potLabel: pot,
+    }
+  },
+
+  // 22. River decision — thin value bet ou check
+  () => {
+    const scenarios = [
+      { hero: ['A','Q'], board5: ['A','9','4','2','7'], label: 'TPTK (AQ)', correct: 'bet', wrongLabel: 'check' },
+      { hero: ['K','Q'], board5: ['K','8','3','2','6'], label: 'TPTK (KQ)', correct: 'bet', wrongLabel: 'check' },
+      { hero: ['T','9'], board5: ['J','T','9','3','2'], label: 'dois pares (T9)', correct: 'bet', wrongLabel: 'check' },
+    ]
+    const sc = randFrom(scenarios)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_BIG)
+    return {
+      q: `River completo: ${sc.board5.join('-')}. Voce IP com ${sc.label}. Vilao check. Voce bettou flop e turn. O que fazer no river?`,
+      a: `Bet river por valor (${sc.label} ainda extrai de maos piores que pagam)`,
+      b: `Check (pot control — nao exagerar no value)`,
+      aCorrect: true,
+      explanation: `Com ${sc.label} em ${sc.board5.join('-')}, voce ainda tem mao forte. Vilao que chegou ao river pode ter pares medios, draws perdidos, ou maos que pagam thin value. Check aqui seria deixar dinheiro na mesa. Bet pequeno (~33-40% pot): thinly value bet, extraindo de maos que chamam por pot odds.`,
+      boardCards: sc.board5.slice(0,4).map((r,i) => i < 3 ? r+randSuit() : r+randSuit()).concat([sc.board5[4]+randSuit()]),
+      heroCards: makeHeroCards(sc.hero[0], sc.hero[1], false),
+      ...pos, villainAction: 'Check', potLabel: pot,
+    }
+  },
+
+  // 23. Bluff com story consistente — quando triple barrel faz sentido
+  () => {
+    const bluffStories = [
+      { hero: ['A','Q'], board: ['K','J','T'], turn: '5', river: '2', label: 'AQo (gutshot blocker)', story: 'AQ bloqueia nuts (AKs, AJ)' },
+      { hero: ['A','K'], board: ['Q','J','T'], turn: '4', river: '3', label: 'AKo (nut straight blocker)', story: 'AK bloqueia A9 de straight' },
+      { hero: ['J','T'], board: ['A','K','Q'], turn: '3', river: '2', label: 'JTo (straight blocker)', story: 'JT tem straight, representa nuts' },
+    ]
+    const sc = randFrom(bluffStories)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_BIG)
+    return {
+      q: `Voce IP com ${sc.label} em board ${sc.board.join('-')}-${sc.turn}-${sc.river}. Bettou flop e turn representando mao forte. ${sc.story}. River brick. O que fazer?`,
+      a: `Triple barrel bluff river (historia consistente — voce pode representar nuts convincentemente)`,
+      b: `Give up river (mao nao melhorou, e perigoso)`,
+      aCorrect: true,
+      explanation: `Triple barrel faz sentido quando: 1) voce contou historia consistente nas 2 primeiras streets, 2) sua mao bloqueia a nuts do board, 3) vilao pode ter maos medias que dobram. ${sc.story}. River brick nao ajuda o vilao. O bluff precisa ter logica de range — e aqui tem.`,
+      boardCards: [...makeRainbowBoard(sc.board), sc.turn + randSuit(), sc.river + randSuit()],
+      heroCards: makeHeroCards(sc.hero[0], sc.hero[1], false),
+      ...pos, villainAction: 'Call', potLabel: pot,
+    }
+  },
+
+  // 24. Two pair no board umido — quando proteger vs slowplay
+  () => {
+    const twoPairs = [
+      { hero: ['T','9'], board: ['T','9','8'], label: 'dois pares (T9) em board umido' },
+      { hero: ['J','8'], board: ['J','8','7'], label: 'dois pares (J8) em board umido' },
+      { hero: ['Q','9'], board: ['Q','9','8'], label: 'dois pares (Q9) em board umido' },
+    ]
+    const sc = randFrom(twoPairs)
+    const pos = heroIPPos()
+    const pot = randPot(POT_LABELS_SMALL)
+    return {
+      q: `Voce IP com ${sc.label}. Vilao check. Qual o plano multistreet correto?`,
+      a: `Bet grande agora (board umido — draws tem muita equity, protecao urgente)`,
+      b: `Check (slowplay dois pares — deixar vilao melhorar e pagar depois)`,
+      aCorrect: true,
+      explanation: `Dois pares em ${sc.board.join('-')} parece forte, mas o board tem muitos draws. Draws (flush, straight) tem ~35-50% equity. Slowplay aqui seria caro: se draw fecha no turn, voce perde muito valor. Bet grande: cobra equity dos draws AGORA e define o tamanho do pote que voce controla. Plano: bet grande flop, bet turn, avalie river.`,
+      boardCards: makeRainbowBoard(sc.board),
+      heroCards: makeHeroCards(sc.hero[0], sc.hero[1], false),
+      ...pos, villainAction: 'Check', potLabel: pot,
+    }
+  },
+
+  // 25 (bonus). Conceito — quantas streets de valor por tipo de mao
+  () => {
+    const handTypes = [
+      { mao: 'set de 8', streets: 3, board: makeRainbowBoard(['8','5','2']), heroCards: makeHeroCards('8','8',false) },
+      { mao: 'TPTK (AK)', streets: 3, board: makeRainbowBoard(['A','7','3']), heroCards: makeHeroCards('A','K',false) },
+      { mao: 'top pair kicker medio (A7)', streets: 2, board: makeRainbowBoard(['A','9','4']), heroCards: makeHeroCards('A','7',false) },
+      { mao: 'par medio (9 em K-9-4)', streets: 1, board: makeRainbowBoard(['K','9','4']), heroCards: makeHeroCards('T','9',false) },
+    ]
+    const sc = randFrom(handTypes)
+    const pos = heroIPPos()
+    return {
+      q: `Regra de streets: com ${sc.mao}, quantas streets de valor voce deve planejar?`,
+      a: `${sc.streets} street${sc.streets > 1 ? 's' : ''} — baseado em quais maos piores pagam`,
+      b: `Sempre 3 streets se voce e favorito no flop`,
+      aCorrect: true,
+      explanation: `${sc.mao} suporta ${sc.streets} street${sc.streets > 1 ? 's' : ''} de valor. A regra nao e "sou favorito = 3 streets". E "quais maos piores pagam em cada street?". ${sc.streets === 3 ? 'Com set ou TPTK, muitas maos piores pagam 3 streets.' : sc.streets === 2 ? 'Com top pair kicker medio, poucas maos piores pagam 3 streets completos.' : 'Com par medio, raramente extraimos 2 streets de valor — 1 bet e suficiente.'}`,
+      boardCards: sc.board, heroCards: sc.heroCards,
+      ...pos, villainAction: 'Call', potLabel: randPot(POT_LABELS_SMALL),
+    }
+  },
 ]
 
 function generateScenario() {
-  const pick = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)]
-  const t = typeof pick === 'function' ? pick() : pick
+  const chosen = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)]
+  const t = typeof chosen === 'function' ? chosen() : chosen
   const swap = Math.random() > 0.5
   const opts = swap
     ? [{ id: 'a', label: t.b, correct: !t.aCorrect }, { id: 'b', label: t.a, correct: t.aCorrect }]
