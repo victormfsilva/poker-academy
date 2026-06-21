@@ -181,6 +181,108 @@ export default function Stats() {
           )}
         </div>
 
+        {/* Weekly evolution chart */}
+        {(() => {
+          const allEntries = Object.entries(progress.dailyHistory || {}).sort(([a], [b]) => a.localeCompare(b))
+          if (allEntries.length < 2) return null
+
+          // Group by week (ISO week starting Monday)
+          function getWeekKey(dateStr) {
+            const d = new Date(dateStr + 'T12:00:00')
+            const day = d.getDay() || 7
+            d.setDate(d.getDate() + 4 - day)
+            const yearStart = new Date(d.getFullYear(), 0, 1)
+            const weekNum = Math.ceil(((d - yearStart) / 86400000 + 1) / 7)
+            return `${d.getFullYear()}-S${String(weekNum).padStart(2, '0')}`
+          }
+
+          const weekMap = {}
+          allEntries.forEach(([date, data]) => {
+            const wk = getWeekKey(date)
+            if (!weekMap[wk]) weekMap[wk] = { hands: 0, correct: 0, days: 0 }
+            weekMap[wk].hands += data.hands
+            weekMap[wk].correct += data.correct
+            if (data.hands > 0) weekMap[wk].days++
+          })
+
+          const weeks = Object.entries(weekMap).sort(([a], [b]) => a.localeCompare(b)).slice(-12)
+          if (weeks.length < 2) return null
+
+          const wW = 320, wH = 160, wPadL = 35, wPadR = 10, wPadT = 20, wPadB = 35
+          const wChartW = wW - wPadL - wPadR
+          const wChartH = wH - wPadT - wPadB
+          const maxWeekHands = Math.max(...weeks.map(([, w]) => w.hands), 1)
+
+          const accPts = weeks.map(([label, w], i) => {
+            const x = wPadL + (i / (weeks.length - 1)) * wChartW
+            const acc = w.hands > 0 ? Math.round((w.correct / w.hands) * 100) : 0
+            const y = wPadT + wChartH - (acc / 100) * wChartH
+            return { x, y, acc, label: label.split('-')[1], hands: w.hands }
+          })
+
+          const handsPts = weeks.map(([, w], i) => {
+            const x = wPadL + (i / (weeks.length - 1)) * wChartW
+            const y = wPadT + wChartH - (w.hands / maxWeekHands) * wChartH
+            return { x, y, hands: w.hands }
+          })
+
+          const accLinePath = accPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+          const handsLinePath = handsPts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+          const handsAreaPath = handsLinePath + ` L${handsPts[handsPts.length - 1].x},${wPadT + wChartH} L${handsPts[0].x},${wPadT + wChartH} Z`
+
+          return (
+            <div className="rounded-xl p-5 mb-5" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+              <div className="flex items-center justify-between mb-3">
+                <span style={{ color: '#fdfdfd', fontWeight: 600, fontSize: 15 }}>Evolucao Semanal</span>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5"><div style={{ width: 10, height: 2, borderRadius: 1, background: '#0a84d7' }} /><span style={{ color: '#b3b3b8', fontSize: 11 }}>Maos</span></div>
+                  <div className="flex items-center gap-1.5"><div style={{ width: 10, height: 2, borderRadius: 1, background: '#4fce82' }} /><span style={{ color: '#b3b3b8', fontSize: 11 }}>Acerto</span></div>
+                </div>
+              </div>
+              <svg viewBox={`0 0 ${wW} ${wH}`} style={{ width: '100%', height: 'auto' }}>
+                {[0, 25, 50, 75, 100].map(v => {
+                  const y = wPadT + wChartH - (v / 100) * wChartH
+                  return <line key={v} x1={wPadL} x2={wW - wPadR} y1={y} y2={y} stroke="#2a2a2e" strokeWidth={0.5} />
+                })}
+                <text x={2} y={wPadT + 4} fill="#676671" fontSize={8}>100%</text>
+                <text x={2} y={wPadT + wChartH / 2 + 3} fill="#676671" fontSize={8}>50%</text>
+                <text x={2} y={wPadT + wChartH + 3} fill="#676671" fontSize={8}>0%</text>
+
+                <path d={handsAreaPath} fill="#0a84d7" opacity={0.08} />
+                <path d={handsLinePath} fill="none" stroke="#0a84d7" strokeWidth={1.5} opacity={0.5} strokeLinecap="round" strokeLinejoin="round" />
+
+                <path d={accLinePath} fill="none" stroke="#4fce82" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                {accPts.map((p, i) => (
+                  <g key={i}>
+                    <circle cx={p.x} cy={p.y} r={3} fill="#0f0f0f" stroke="#4fce82" strokeWidth={1.5} />
+                    {(i === 0 || i === accPts.length - 1 || i % Math.max(1, Math.floor(accPts.length / 4)) === 0) && (
+                      <text x={p.x} y={p.y - 7} fill="#4fce82" fontSize={7} textAnchor="middle" fontFamily="JetBrains Mono">{p.acc}%</text>
+                    )}
+                  </g>
+                ))}
+
+                {accPts.map((p, i) => (
+                  (i === 0 || i === accPts.length - 1 || i % Math.max(1, Math.floor(accPts.length / 3)) === 0) && (
+                    <text key={`l${i}`} x={p.x} y={wH - 5} fill="#676671" fontSize={7} textAnchor="middle">{p.label}</text>
+                  )
+                ))}
+              </svg>
+              <div className="flex justify-between mt-2">
+                <span style={{ color: '#676671', fontSize: 11 }}>{weeks.length} semanas</span>
+                <span style={{ color: '#676671', fontSize: 11 }}>
+                  {(() => {
+                    const first = weeks[0][1], last = weeks[weeks.length - 1][1]
+                    const firstAcc = first.hands > 0 ? Math.round((first.correct / first.hands) * 100) : 0
+                    const lastAcc = last.hands > 0 ? Math.round((last.correct / last.hands) * 100) : 0
+                    const diff = lastAcc - firstAcc
+                    return diff > 0 ? `+${diff}% de evolucao` : diff < 0 ? `${diff}% de variacao` : 'Estavel'
+                  })()}
+                </span>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Summary grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
           {[
