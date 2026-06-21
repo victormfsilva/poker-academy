@@ -34,6 +34,9 @@ import Module24 from './pages/modules/Module24'
 import Module25 from './pages/modules/Module25'
 import Module26 from './pages/modules/Module26'
 import Module27 from './pages/modules/Module27'
+import Module28 from './pages/modules/Module28'
+import Module29 from './pages/modules/Module29'
+import Module30 from './pages/modules/Module30'
 import Tools from './pages/Tools'
 import MentalGame from './pages/MentalGame'
 import Infinite from './pages/Infinite'
@@ -111,6 +114,9 @@ function App() {
           <Route path="/modulos/25" element={<Module25 />} />
           <Route path="/modulos/26" element={<Module26 />} />
           <Route path="/modulos/27" element={<Module27 />} />
+          <Route path="/modulos/28" element={<Module28 />} />
+          <Route path="/modulos/29" element={<Module29 />} />
+          <Route path="/modulos/30" element={<Module30 />} />
           <Route path="/guia" element={<StudyGuide />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/ferramentas" element={<Tools />} />

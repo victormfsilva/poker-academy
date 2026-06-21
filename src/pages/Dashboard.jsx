@@ -29,6 +29,9 @@ const MODULES = [
   { id: 25, name: 'Multistreet', desc: 'Planejar 3 streets', icon: 'U', cat: 'advanced' },
   { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta historia', icon: 'Z', cat: 'advanced' },
   { id: 27, name: 'Blocker Effects', desc: 'Cartas que mudam range', icon: 'B', cat: 'advanced' },
+  { id: 28, name: 'Facing Barrel', desc: 'Defender vs double barrel', icon: 'F', cat: 'advanced' },
+  { id: 29, name: 'River Defense', desc: 'Call ou fold no river', icon: 'R', cat: 'advanced' },
+  { id: 30, name: 'Probe Bet', desc: 'Apostar OOP quando checam', icon: 'Q', cat: 'advanced' },
 ]
 
 const CATEGORIES = {
