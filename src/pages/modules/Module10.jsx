@@ -69,18 +69,37 @@ function hasMadeStraight(hole, flop) {
   return false
 }
 
-function hasStraightDraw(hole, flop) {
+// Retorna 'oesd' (8 outs), 'gutshot' (4 outs) ou false
+function getStraightDrawType(hole, flop) {
   if (hasMadeStraight(hole, flop)) return false
   const holeVals = hole.map(c => RANK_VAL[c.slice(0, -1)])
   const allVals = [...new Set([...hole, ...flop].map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
   if (allVals.includes(14)) allVals.unshift(1)
-  for (let i = 0; i < allVals.length - 3; i++) {
-    if (allVals[i + 3] - allVals[i] <= 4) {
-      const window = allVals.slice(i, i + 4)
-      if (holeVals.some(v => window.includes(v) || (v === 14 && window.includes(1)))) return true
+  // Check OESD: 4 consecutivas com ambas as pontas abertas
+  let hasOESD = false
+  for (let i = 0; i <= allVals.length - 4; i++) {
+    if (allVals[i+3] - allVals[i] === 3 && allVals[i+1] === allVals[i]+1 && allVals[i+2] === allVals[i]+2) {
+      if (holeVals.some(v => [allVals[i],allVals[i+1],allVals[i+2],allVals[i+3]].includes(v) || (v === 14 && allVals[i] === 1))) {
+        const lowEnd = allVals[i] - 1
+        const highEnd = allVals[i+3] + 1
+        if (lowEnd >= 1 && highEnd <= 14) { hasOESD = true; break }
+      }
+    }
+  }
+  if (hasOESD) return 'oesd'
+  // Check gutshot: 4 cards within span of 5
+  for (let start = 1; start <= 10; start++) {
+    const window = [start, start+1, start+2, start+3, start+4]
+    const present = window.filter(v => allVals.includes(v))
+    if (present.length === 4 && holeVals.some(v => present.includes(v) || (v === 14 && present.includes(1)))) {
+      return 'gutshot'
     }
   }
   return false
+}
+
+function hasStraightDraw(hole, flop) {
+  return !!getStraightDrawType(hole, flop)
 }
 
 function hasMadeFlush(hole, flop) {
@@ -146,21 +165,36 @@ function getCorrectAction(hole, flop, cbetSize) {
   if (hasFlushDraw(hole, flop) && !texture.isWet) {
     return { action: 'call', actionType: 'call', reason: `Flush draw em board relativamente seco — call. Boas odds implicitas (${potOdds}% necessario, ~35% equity) e voce nao precisa inflar o pote ainda.` }
   }
-  if (hasStraightDraw(hole, flop) && texture.isWet && !texture.paired) {
-    if (cbetSize === '75%') {
-      return { action: 'raise', actionType: 'raise-bluff', reason: 'Straight draw em board umido nao-pareado contra aposta grande — check-raise de BLEFE. Boa equity (~32%) + fold equity combinados.' }
+  const sdType = getStraightDrawType(hole, flop)
+  const sdOuts = sdType === 'oesd' ? 8 : sdType === 'gutshot' ? 4 : 0
+  const sdEquity = sdOuts * 2 // Rule of 2 para uma street
+  const sdLabel = sdType === 'oesd' ? 'OESD (straight aberto)' : 'gutshot (furo no meio)'
+
+  if (sdType && texture.isWet && !texture.paired) {
+    if (sdType === 'oesd' && cbetSize === '75%') {
+      return { action: 'raise', actionType: 'raise-bluff', reason: `${sdLabel} em board umido nao-pareado contra aposta grande — check-raise de BLEFE. ${sdOuts} outs (~${sdEquity}% equity) + fold equity combinados.` }
     }
-    return { action: 'call', actionType: 'call', reason: `Straight draw com pot odds razoaveis (${potOdds}% necessario, ~32% com 8 outs). Call.` }
+    if (sdType === 'oesd') {
+      return { action: 'call', actionType: 'call', reason: `${sdLabel} com pot odds razoaveis (${potOdds}% necessario, ~${sdEquity}% com ${sdOuts} outs). Call.` }
+    }
+    // Gutshot em board wet
+    if (cbetSize === '33%') {
+      return { action: 'call', actionType: 'call', reason: `${sdLabel} com aposta pequena — ${sdOuts} outs (~${sdEquity}%). Pot odds aceitaveis pra call.` }
+    }
+    return { action: 'fold', actionType: 'fold', reason: `${sdLabel} (so ${sdOuts} outs, ~${sdEquity}%) contra aposta ${cbetSize}. Pot odds desfavoraveis. Fold.` }
   }
 
-  if (hasStraightDraw(hole, flop)) {
-    if (cbetSize === '33%') {
-      return { action: 'call', actionType: 'call', reason: `Straight draw com aposta pequena — pot odds excelentes (so precisa de ${potOdds}%). Com 8 outs (~32% de equity), call e facil.` }
+  if (sdType) {
+    if (sdType === 'oesd' && cbetSize === '33%') {
+      return { action: 'call', actionType: 'call', reason: `${sdLabel} com aposta pequena — pot odds excelentes (so precisa de ${potOdds}%). Com ${sdOuts} outs (~${sdEquity}% equity), call facil.` }
     }
-    if (cbetSize === '50%') {
-      return { action: 'call', actionType: 'call', reason: `Straight draw com pot odds razoaveis (${potOdds}% necessario, voce tem ~32% com 8 outs). Call e correto.` }
+    if (sdType === 'oesd' && cbetSize === '50%') {
+      return { action: 'call', actionType: 'call', reason: `${sdLabel} com pot odds razoaveis (${potOdds}% necessario, ~${sdEquity}% com ${sdOuts} outs). Call correto.` }
     }
-    return { action: 'fold', actionType: 'fold', reason: `Straight draw contra aposta grande (75%) — voce precisa de ${potOdds}% de equity, mas so tem ~32% com 8 outs. Pot odds desfavoraveis. Fold.` }
+    if (sdType === 'gutshot' && cbetSize === '33%') {
+      return { action: 'call', actionType: 'call', reason: `${sdLabel} com aposta pequena — ${sdOuts} outs (~${sdEquity}%), pot odds ok pra ${potOdds}%. Call.` }
+    }
+    return { action: 'fold', actionType: 'fold', reason: `${sdLabel} (${sdOuts} outs, ~${sdEquity}%) contra aposta ${cbetSize} — precisa de ${potOdds}% equity. Pot odds desfavoraveis. Fold.` }
   }
 
   // Overpair ou top pair forte: call
@@ -179,11 +213,7 @@ function getCorrectAction(hole, flop, cbetSize) {
     return { action: 'call', actionType: 'call', reason: `Par medio/baixo contra aposta ${cbetSize === '33%' ? 'pequena' : 'media'} — pot odds razoaveis e voce pode melhorar. Call.` }
   }
 
-  // Nada: fold (exceto sizing muito pequeno em board seco)
-  if (cbetSize === '33%' && texture.isDry) {
-    return { action: 'call', actionType: 'call', reason: `Aposta pequena em board seco — voce tem pot odds bons (so precisa de ${potOdds}%) e pode ter alguma equity de backdoor. Call leve e aceitavel.` }
-  }
-
+  // Nada: fold sempre — sem mao, sem draw, sem equity pra defender
   return { action: 'fold', actionType: 'fold', reason: `Sem mao, sem draw, sem equity. Contra c-bet de ${cbetSize}, fold e a unica opcao correta. Nao desperdice fichas defendendo sem motivo.` }
 }
 

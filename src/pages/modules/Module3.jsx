@@ -52,7 +52,15 @@ function analyzeDraws(hole, board) {
     for (let i = 0; i <= values.length - 4; i++) {
       const run = [values[i], values[i]+1, values[i]+2, values[i]+3]
       if (run.every(v => values.includes(v)) && run.some(v => holeValues.has(v))) {
-        hasOESD = true; break
+        // Verificar se ambas as pontas completam (OESD real vs gutshot de borda)
+        const lowEnd = values[i] - 1
+        const highEnd = values[i] + 4
+        const canCompleteLow = lowEnd >= 1
+        const canCompleteHigh = highEnd <= 14
+        if (canCompleteLow && canCompleteHigh) {
+          hasOESD = true; break
+        }
+        // Se só uma ponta completa, é gutshot, não OESD
       }
     }
   }
@@ -116,7 +124,9 @@ function generateScenario() {
 
   const draw = analyzeDraws(hole, board)
   const street = board.length === 3 ? 'flop' : 'turn'
-  const multiplier = street === 'flop' ? 4 : 2
+  // Rule of 2: para decisão de call de uma aposta (1 street), sempre outs × 2
+  // Rule of 4 só vale se for all-in no flop (vê turn + river)
+  const multiplier = 2
   const equity = Math.min(draw.outs * multiplier, 100)
 
   const potSizes = [80, 100, 120, 150, 200]

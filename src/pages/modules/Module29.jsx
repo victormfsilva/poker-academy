@@ -139,7 +139,8 @@ function getCorrectAction(hole, board, villainSizing) {
   const flushSuit = Object.keys(boardSuitCounts).find(s => boardSuitCounts[s] >= 3)
   const holeSuits = hole.map(c => c.slice(-1))
   const holeRanks = hole.map(c => c.slice(0, -1))
-  const hasNutFlushBlocker = flushSuit && holeSuits.includes(flushSuit) && holeRanks.some(r => r === 'A')
+  // Verifica se hero tem o Ás ESPECIFICAMENTE do naipe do flush
+  const hasNutFlushBlocker = flushSuit && hole.some(c => c.slice(0, -1) === 'A' && c.slice(-1) === flushSuit)
 
   // ── NUTS / NEAR-NUTS: sempre call, considerar raise ──────────────────────
   if (hasMadeFlush(hole, board)) {
@@ -173,10 +174,17 @@ function getCorrectAction(hole, board, villainSizing) {
   }
 
   if (hasSetFn(hole, board)) {
+    if (!flushOnBoard && !straightOnBoard) {
+      return {
+        action: 'raise',
+        sizing: villainSizing,
+        reason: `Set no river em board limpo! Raise para extrair valor máximo. Seu set vence top pair, dois pares e bluffs. O vilão pode continuar com mãos piores pensando que você está blefando.`,
+      }
+    }
     return {
       action: 'call',
       sizing: villainSizing,
-      reason: `Set no river — mão muito forte. Você deve sempre chamar contra ${villainSizing} do pot. Seu set vence a imensa maioria do range do vilão (top pair, dois pares, bluffs). As pot odds são excelentes para uma mão tão forte. Considere raise se o board for limpo.`,
+      reason: `Set no river — mão muito forte, mas board tem ${flushOnBoard ? 'flush' : 'straight'} possível. Call é correto — você vence a maioria dos bluffs e value bets menores, mas raise pode ser explorado se vilão tiver nuts.`,
     }
   }
 

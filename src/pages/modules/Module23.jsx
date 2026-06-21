@@ -411,7 +411,7 @@ const SCENARIOS = [
   () => {
     const ranks = pick(CONNECTED_LO)
     const board = makeFlushDrawBoard(ranks)
-    const [raiser3, caller3] = randRaiserCaller(['BTN','CO'], ['SB','BB'])
+    const [caller3, raiser3] = randRaiserCaller(['BTN','CO'], ['SB','BB'])
     return {
       q: `Pote 3-bet. ${raiser3} (3-bettor OOP) vs ${caller3} (caller IP). Flop ${ranks[0]}-${ranks[1]}-${ranks[2]}. Quem tem nut advantage?`,
       a: `${caller3} (range de call inclui mais suited connectors, sets baixos e straights)`,

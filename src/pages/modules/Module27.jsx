@@ -114,7 +114,7 @@ const SCENARIOS = [
       q: `River. Vilao betta grande. Voce tem A${kicker} em board ${board.join('-')}. Chamar?`,
       a: `A${kicker} bloqueia bluffs (maos com A que o vilao desistiria) — nao e bom call`,
       b: 'Top pair e sempre call',
-      aCorrect: false,
+      aCorrect: true,
       explanation: `Ter A${kicker} e ruim pra call: voce bloqueia maos que o vilao DESISTIRIA (bluffs com A). Voce NAO bloqueia maos fortes (sets, dois pares). Blockers desfavoraveis = nao ideal pra call.`,
       boardCards: makeRainbowBoard(board), heroCards: makeHeroCards('A', kicker, false), heroPos: pick(OOP_POS), villainPos: pick(IP_POS), villainAction: pick(BIG_BETS), potLabel: pick(POTS_MED),
     }

@@ -261,10 +261,10 @@ const SCENARIOS = [
     const pot = randPot(POT_LABELS_BIG)
     return {
       q: `Voce IP com ${hh[0]}${hh[1]}o (TPTK). Bettou flop ${board3.join('-')}, bettou turn ${turnBlank}. River: ${riverPairs} (pareia o board). O que fazer?`,
-      a: `Bet river por valor (voce tem full house, vilao raramente tem trips de ${riverPairs})`,
+      a: `Bet river por valor (voce tem top pair top kicker, vilao raramente tem trips de ${riverPairs})`,
       b: `Check (medo do vilao ter trips do ${riverPairs})`,
       aCorrect: true,
-      explanation: `O ${riverPairs} no river pareia o board, mas com ${hh[0]}${topCard} voce tem dois pares (full house sobre ${riverPairs}s). Vilao raramente tem ${riverPairs}${riverPairs} — teria raisado flop ou turn geralmente. Maos como K${riverPairs}, Q${riverPairs}, J${riverPairs} do vilao agora tem 2 pares/trips e vao pagar o river. Continue o plano.`,
+      explanation: `O ${riverPairs} no river pareia o board, mas com ${hh[0]}${topCard} voce ainda tem TPTK (top pair top kicker). Voce NAO tem full house — precisaria de um par na mao que combinasse com o board. Vilao raramente tem ${riverPairs}${riverPairs} — teria raisado flop ou turn geralmente. Maos piores do vilao vao pagar. Continue o plano de valor.`,
       boardCards: [...makeRainbowBoard(board3), turnBlank + randSuit(), riverPairs + randSuit()],
       heroCards: makeHeroCards(hh[0], hh[1], false),
       ...pos, villainAction: 'Call', potLabel: pot,

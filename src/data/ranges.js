@@ -807,7 +807,7 @@ export const POSITION_INFO = {
   CO: {
     name: 'CO (Cutoff)',
     shortName: 'CO',
-    playersAfter: 2,
+    playersAfter: 3,
     rangePercent: { 100: 37, 50: 38, 25: 34, 15: 30 }, // GTO Wizard: 37.1% / 37.5% / 34% / 29.6%
     description: 'Salto de +10% em relação ao HJ. Posição muito boa.',
     color: '#4a90e2'

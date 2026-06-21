@@ -223,8 +223,14 @@ function getCorrectAction(hole, flop, turn) {
     return { action: 'bet', sizing: '50%', reason: 'Top pair em turn favoravel - aposte 50%. Extraia valor enquanto sua mao ainda e boa.' }
   }
 
-  // Flush draw: barrel como semi-blefe
+  // Flush draw: barrel como semi-blefe (mas não se board tem 3+ suited — flush possível no board)
   if (hasFlushDraw(hole, board)) {
+    const suitCounts = {}
+    board.forEach(c => { const s = c.slice(-1); suitCounts[s] = (suitCounts[s] || 0) + 1 })
+    const boardHas3Suited = Object.values(suitCounts).some(v => v >= 3)
+    if (boardHas3Suited) {
+      return { action: 'check', reason: 'Flush draw mas o board ja tem 3 cartas do mesmo naipe - adversario pode ter flush completo. Check e controle o pote.' }
+    }
     return { action: 'bet', sizing: '50%', reason: 'Flush draw no turn - double barrel como semi-blefe! Voce tem 9 outs (~20% no river). Se ele foldar, voce ganha na hora. Se chamar, voce ainda pode completar.' }
   }
 
@@ -234,11 +240,6 @@ function getCorrectAction(hole, flop, turn) {
       return { action: 'check', reason: 'Straight draw mas turn trouxe flush possivel. Check - adversario pode ter flush e seus outs podem nao ser limpos.' }
     }
     return { action: 'bet', sizing: '33%', reason: 'Straight draw no turn - barrel pequeno (33%) como semi-blefe. Voce tem 8 outs e mantem a pressao.' }
-  }
-
-  // Par medio com draw
-  if (hasAnyPair(hole, board) && (hasFlushDraw(hole, board) || hasStraightDraw(hole, board))) {
-    return { action: 'bet', sizing: '33%', reason: 'Par + draw - barrel pequeno como semi-blefe. Voce tem equity extra com o draw.' }
   }
 
   // Par medio/baixo puro

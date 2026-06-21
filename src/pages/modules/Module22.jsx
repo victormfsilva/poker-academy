@@ -6,8 +6,8 @@ import ModulePokerTable from '../../components/ModulePokerTable'
 
 const SUITS_POOL = ['s','h','d','c']
 function randSuit() { return SUITS_POOL[Math.floor(Math.random() * 4)] }
-function randSuitExcluding(exclude) {
-  const opts = SUITS_POOL.filter(s => s !== exclude)
+function randSuitExcluding(...excludes) {
+  const opts = SUITS_POOL.filter(s => !excludes.includes(s))
   return opts[Math.floor(Math.random() * opts.length)]
 }
 function makeRainbowBoard(ranks) {
@@ -76,11 +76,11 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(pairs, pairs, false)
     const pos = [['BTN','BB'],['CO','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `3-bet pot. Flop K-${lowB}-${lowA} seco. Voce tem ${pairs}${pairs} (overpair). SPR = ${spr}. Vilao checka.`,
-      a: 'Bet e commit (SPR baixo, overpair forte)',
-      b: 'Check pra pot control',
-      aCorrect: true,
-      explanation: `SPR ${spr} = so cabe 1 bet e all-in. ${pairs}${pairs} em K-high board e overpair forte nesse SPR. Betta qualquer sizing e vai tudo.`,
+      q: `3-bet pot. Flop K-${lowB}-${lowA} seco. Voce tem ${pairs}${pairs} (underpair ao K). SPR = ${spr}. Vilao checka.`,
+      a: 'Bet pequeno como blefe (representar o K)',
+      b: 'Check pra pot control (underpair ao board)',
+      aCorrect: false,
+      explanation: `${pairs}${pairs} NAO e overpair em K-high board — e underpair. Com SPR ${spr}, voce deve controlar o pote. O vilao pode ter Kx facilmente em 3-bet pot. Check e reavaliar no turn.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check', potLabel: `SPR ${spr}`,
     }
   },
@@ -94,7 +94,9 @@ const SPR_SCENARIOS = [
     const s3 = randSuitExcluding(s1)
     const board = [tops[0]+s1, tops[1]+s2, tops[2]+s3]
     const setRank = tops[0]
-    const hero = [setRank+randSuitExcluding(s1), setRank+randSuitExcluding(s1)]
+    const heroSuit1 = randSuitExcluding(s1)
+    const heroSuit2 = randSuitExcluding(s1, heroSuit1)
+    const hero = [setRank+heroSuit1, setRank+heroSuit2]
     const pos = [['CO','BTN'],['BTN','BB'],['HJ','CO']][Math.floor(Math.random() * 3)]
     return {
       q: `SPR = ${spr}. Flop ${tops[0]}-${tops[1]}-${tops[2]} conectado. Voce tem ${setRank}${setRank} (top set). Vilao betta.`,

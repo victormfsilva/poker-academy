@@ -444,7 +444,8 @@ function potoddsScenario() {
   const hasFD = hasFlushDraw(hole, flop)
   const hasSD = hasStraightDraw(hole, flop)
   const outs = hasFD && hasSD ? 15 : hasFD ? 9 : hasSD ? 8 : 0
-  const equity = outs * 4
+  // Rule of 2: call de uma aposta = 1 street, não all-in
+  const equity = outs * 2
   const betPcts = [33, 50, 75]
   const betPct = betPcts[Math.floor(Math.random() * betPcts.length)]
   const potOdds = Math.round((betPct / (100 + betPct)) * 100)
@@ -986,8 +987,8 @@ const GENERATORS = {
   8: () => rangeScenario(8),
   9: () => rangeScenario(9),
   10: defenseCbetScenario,
-  11: defenseCbetScenario,
-  12: cbetFlopScenario,
+  11: checkRaiseScenario,
+  12: betSizingScenario,
   13: donkBetScenario,
   14: cbetTurnScenario,
   15: riverPlayScenario,
