@@ -42,13 +42,13 @@ const TEMPLATES = [
       situation: `Late game. ${heroBB}bb no ${heroPos}. Antes de ${antes}bb por jogador. Fold ate voce. Voce tem ${hand}.`,
       question: `Com ${heroBB}bb, qual a melhor acao?`,
       options: [
-        { id: 'shove', label: 'Open shove', correct: heroBB <= 12 },
-        { id: 'raise', label: 'Raise 2.2x', correct: heroBB > 12 },
+        { id: 'shove', label: 'Open shove', correct: heroBB <= 10 },
+        { id: 'raise', label: 'Raise 2.2x', correct: heroBB > 10 },
       ],
-      explanation: heroBB <= 12
+      explanation: heroBB <= 10
         ? `Com ${heroBB}bb, open shove é melhor que min-raise. Se voce raisa e leva 3-bet, vai foldar e perder 2.2bb. Shove maximiza fold equity e evita o squeeze.`
-        : `Com ${heroBB}bb, voce ainda tem fold equity pos-3bet. Raise 2.2x permite foldar contra 3-bet sem comprometer todo o stack. Shove seria prematuro.`,
-      concept: 'Regra geral: abaixo de 12bb, open shove. 12-20bb, min-raise. A fronteira depende do ante e posicao.',
+        : `Com ${heroBB}bb, voce ainda tem fold equity pos-3bet. Raise 2-2.2x permite foldar contra 3-bet sem comprometer todo o stack. Shove seria prematuro com este stack.`,
+      concept: 'Regra geral: abaixo de ~10bb, open shove. 10-20bb, min-raise. A fronteira depende do ante e posicao.',
     }
   },
 
@@ -214,10 +214,10 @@ const TEMPLATES = [
     }
   },
 
-  // 12. Stop and go — short stack pos-flop play
+  // 12. Stop and go — short stack pos-flop play (mãos medianas, não premiums)
   () => {
     const heroBB = randBB(6, 10)
-    const hand = pick(['ATo', 'KJs', 'QTs', 'A8s', 'KQo'])
+    const hand = pick(['QTs', 'J9s', 'T9s', 'A5o', 'K9o', 'Q9s'])
     const vilPos = pick(['CO', 'BTN'])
     return {
       situation: `Late game. Voce tem ${heroBB}bb no BB. ${vilPos} raisa 2.2x. Voce tem ${hand}. O raise te da pot odds pra call.`,

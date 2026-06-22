@@ -227,11 +227,25 @@ function getCorrectAction(hole, board, villainSizing) {
         reason: `Overpair em board assustador (flush/straight possível) e vilão apostou ${villainSizing} do pot. Sizing polarizado grande indica nuts ou bluff puro — sua overpair perde para toda a range de valor (flush, straight, set). Você precisaria de ${villainSizing === '75%' ? '30%' : '33%'} de equity. Fold.`,
       }
     }
-    if (flushOnBoard || straightOnBoard) {
+    if (flushOnBoard && (isSmallSizing || isMedSizing)) {
+      return {
+        action: 'call',
+        sizing: villainSizing,
+        reason: `Overpair em board com flush possível, mas vilão apostou apenas ${villainSizing}. Sizing pequeno indica range amplo com muitos bluffs. Suas pot odds justificam o call — overpair vence bluffs e value bets menores.`,
+      }
+    }
+    if (straightOnBoard && isSmallSizing) {
+      return {
+        action: 'call',
+        sizing: villainSizing,
+        reason: `Overpair em board com straight possível, vilão apostou apenas ${villainSizing}. Pot odds exigem ~20% equity. Overpair vence bluffs e muitas mãos de valor — call correto contra sizing pequeno.`,
+      }
+    }
+    if ((flushOnBoard || straightOnBoard) && isMedSizing) {
       return {
         action: 'fold',
         sizing: villainSizing,
-        reason: `Overpair em board perigoso, mesmo com sizing ${villainSizing}. Quando o board completa draws, sua overpair perde para muitas mãos de valor do vilão. A frequência de bluffs não é alta o suficiente para justificar o call aqui. Fold prudente.`,
+        reason: `Overpair em board perigoso contra ${villainSizing}. Board completa draws e o sizing sugere que vilão tem range forte. Fold marginal mas prudente.`,
       }
     }
     if (isSmallSizing) {
@@ -263,11 +277,27 @@ function getCorrectAction(hole, board, villainSizing) {
     const myKickerVals = holeRanks.filter(r => r !== topPairRank).map(r => RANK_VAL[r])
     const goodKicker = myKickerVals.some(v => v >= RANK_VAL['J'])
 
-    if (flushOnBoard || straightOnBoard) {
+    if ((flushOnBoard || straightOnBoard) && isBigSizing) {
       return {
         action: 'fold',
         sizing: villainSizing,
-        reason: `Top pair em board perigoso (flush/straight completou), vilão apostou ${villainSizing}. Top pair perde para toda a range de valor do vilão (flush, straight, sets). Você não tem equity suficiente para chamar qualquer sizing aqui. Fold.`,
+        reason: `Top pair em board perigoso (flush/straight possível), vilão apostou ${villainSizing}. Sizing grande polarizado — top pair perde para range de valor (flush, straight, sets). Fold.`,
+      }
+    }
+    if ((flushOnBoard || straightOnBoard) && isSmallSizing) {
+      return {
+        action: 'call',
+        sizing: villainSizing,
+        reason: `Top pair em board perigoso, mas vilão apostou apenas ${villainSizing}. Pot odds de ~20% — top pair ${goodKicker ? 'com bom kicker' : ''} vence bluffs e thin value bets. Call correto contra sizing pequeno.`,
+      }
+    }
+    if ((flushOnBoard || straightOnBoard) && isMedSizing) {
+      return {
+        action: goodKicker ? 'call' : 'fold',
+        sizing: villainSizing,
+        reason: goodKicker
+          ? `Top pair bom kicker em board perigoso contra ${villainSizing}. Marginal mas pot odds de 25% justificam call com bom kicker.`
+          : `Top pair kicker fraco em board perigoso contra ${villainSizing}. Sem kicker bom, fold é mais seguro.`,
       }
     }
 

@@ -125,9 +125,9 @@ const TEMPLATES = [
     }
   },
 
-  // 7. Mão lixo com pot odds — fold
+  // 7. Mão lixo com pot odds — fold (só mãos realmente ruins)
   () => {
-    const hand = pick(HANDS_OFFSUIT)
+    const hand = pick(['Q8o', 'J8o', 'T8o', 'K7o', 'Q7o', 'J7o', '95o', '84o', '73o'])
     const callers = pick([3, 4])
     const odds = pick(['4:1', '5:1', '6:1'])
     return {

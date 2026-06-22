@@ -239,6 +239,12 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
         reason: `Dois pares, mas o turn completou possivel flush. Contra double barrel em board com flush, call e mais seguro. Se o villain tiver flush, seu raise nao seria bom. Chame e avalie o river.`
       }
     }
+    if (turnInfo.scary && turnInfo.type === 'straight') {
+      return {
+        action: 'call',
+        reason: `Dois pares em board com straight possivel. Raise e arriscado — villain pode ter completado a straight. Call e avalie o river com cuidado.`
+      }
+    }
     return {
       action: 'raise',
       reason: `Dois pares no turn! Mao forte o suficiente para raise. Contra double barrel, voce quer construir pote — o villain pode ter top pair ou draw pagando caro.`

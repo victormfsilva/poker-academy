@@ -19,11 +19,10 @@ function generateAllHands() {
   return hands
 }
 
-// SB agindo vs BB
+// SB agindo vs BB: primeiro checa se raise (range premium), depois complete (mãos jogáveis)
 function getSBAction(hand) {
-  if (BLIND_WARS.SB_raise.raise.includes(hand)) return 'raise'
-  if (BLIND_WARS.SB_complete.raise.includes(hand)) return 'raise'
-  if (BLIND_WARS.SB_complete.complete.includes(hand)) return 'complete'
+  if (BLIND_WARS.SB_raise?.raise?.includes(hand)) return 'raise'
+  if (BLIND_WARS.SB_complete?.complete?.includes(hand)) return 'complete'
   return 'fold'
 }
 

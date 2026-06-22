@@ -63,10 +63,11 @@ const TEMPLATES = [
     const totalPlayers = pick([10, 15, 20])
     const vagas = Math.floor(totalPlayers / 2)
     const heroBB = randBB(15, 30)
-    const isPremium = Math.random() > 0.6
-    const hand = isPremium ? pick(['AA', 'KK']) : pick([...HANDS_MEDIUM, 'AJo', 'KQo', 'TT', '99'])
+    const isPremium = Math.random() > 0.5
+    const hand = isPremium ? pick(['AA', 'KK', 'QQ']) : pick([...HANDS_MEDIUM.filter(h => h !== '99'), 'AJo', 'KQo'])
     const villainBB = randBB(8, 15)
     const villainPos = pick(['UTG', 'CO', 'BTN'])
+    // Em satélite: AA/KK/QQ = call, o resto = fold (ICM extremo)
     const shouldCall = isPremium
     return {
       situation: `Satélite. ${totalPlayers} jogadores, ${vagas} vagas (prêmio igual). Você tem ${heroBB}bb. ${villainPos} (${villainBB}bb) shova. Você tem ${hand} no BB.`,

@@ -78,10 +78,10 @@ const SCENARIOS = [
     const spot = pick(STRAIGHT_BOARDS)
     return {
       q: `River: board ${spot.ranks.join('-')}. Voce tem ${spot.nut} (${spot.nutName}). Vilao checou. Qual o blocker effect?`,
-      a: `Voce bloqueia ${spot.nut} (nuts) — vilao nao pode ter a mesma straight. Bet grande por valor!`,
+      a: `Voce bloqueia ${spot.nut} — vilao nao pode ter a mesma straight. Aposte por valor (sizing depende do que ele paga)`,
       b: 'Blocker nao importa quando voce tem nuts',
       aCorrect: true,
-      explanation: `Voce TEM a nuts (${spot.nut} = ${spot.nutName}). Voce bloqueia todos os outros combos de ${spot.nut}. Bet grande por valor porque vilao NAO pode ter a mesma mao que voce.`,
+      explanation: `Voce TEM a nuts (${spot.nut} = ${spot.nutName}). Voce bloqueia as maos que PAGARIAM grande (outras straights). Aposte por valor, mas considere sizing medio (33-50%) para extrair de pares e dois pares que nao foldam.`,
       boardCards: makeRainbowBoard(spot.ranks), heroCards: makeHeroCards(spot.nut[0], spot.nut[1], false), heroPos: pick(IP_POS), villainPos: pick(OOP_POS), villainAction: 'Check', potLabel: pick(POTS_MED),
     }
   },

@@ -212,6 +212,26 @@ function getCorrectAction(hole, flop, turn) {
 }
 
 // ─── Scenario generator ───────────────────────────────────────────────────────
+// Filtro: mão que o hero teria defendido pré-flop do BB/SB vs raise
+function isRealisticPreflop(hole) {
+  const ranks = hole.map(c => c.slice(0, -1))
+  const vals = ranks.map(r => RANK_VAL[r]).sort((a, b) => b - a)
+  const suited = hole[0].slice(-1) === hole[1].slice(-1)
+  const isPair = ranks[0] === ranks[1]
+  const gap = vals[0] - vals[1]
+  // Pares: sempre ok
+  if (isPair) return true
+  // Suited: aceita se ambas >= 5 ou se tem A/K/Q
+  if (suited) return vals[0] >= 12 || (vals[0] >= 10 && gap <= 3) || (vals[1] >= 5 && gap <= 4)
+  // Offsuit: precisa de pelo menos uma broadway (>= T) e gap <= 4
+  if (vals[0] >= 10 && vals[1] >= 7 && gap <= 5) return true
+  // Broadways offsuit: KQo, KJo, QJo, etc
+  if (vals[0] >= 11 && vals[1] >= 10) return true
+  // Axo com kicker razoável
+  if (vals[0] === 14 && vals[1] >= 5) return true
+  return false
+}
+
 function generateScenario() {
   const heroPositions    = ['BB', 'SB']
   const villainPositions = ['CO', 'BTN', 'HJ']
@@ -220,7 +240,11 @@ function generateScenario() {
 
   const flop = randomCards(3, [])
   const turn = randomCards(1, flop)[0]
-  const hole = randomCards(2, [...flop, turn])
+  let hole, attempts = 0
+  do {
+    hole = randomCards(2, [...flop, turn])
+    attempts++
+  } while (!isRealisticPreflop(hole) && attempts < 30)
 
   const board   = [...flop, turn]
   const texture = getBoardTexture(flop)

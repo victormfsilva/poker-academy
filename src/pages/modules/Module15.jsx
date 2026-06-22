@@ -87,8 +87,11 @@ function boardHasFlushPossible(board) {
 function boardHasStraightPossible(board) {
   const vals = [...new Set(board.map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
   if (vals.includes(14)) vals.unshift(1)
-  for (let i = 0; i < vals.length - 2; i++) {
-    if (vals[i + 2] - vals[i] <= 4) return true
+  // Precisa de pelo menos 3 cartas em span de 5 (mais restritivo que span ≤ 4 com 3)
+  for (let start = 1; start <= 10; start++) {
+    const window = [start, start+1, start+2, start+3, start+4]
+    const count = window.filter(v => vals.includes(v)).length
+    if (count >= 3) return true
   }
   return false
 }
@@ -190,6 +193,18 @@ function getCorrectAction(hole, board) {
 
   if (hasFlushDrawMissed(hole, board)) {
     return { action: 'bluff', reason: 'Flush draw que não completou — blefe no river! Você não tem showdown value nenhum, então a unica forma de ganhar é fazendo o adversário foldar. Aposte grande.' }
+  }
+
+  // Straight draw que não completou — pode blefar se board tem straight possível (representa a straight)
+  if (straightOnBoard) {
+    const holeVals = hole.map(c => RANK_VAL[c.slice(0, -1)])
+    const allVals = [...new Set([...hole, ...board].map(c => RANK_VAL[c.slice(0, -1)]))].sort((a, b) => a - b)
+    // Verifica se hero tem cartas conectadas ao board (tinha draw)
+    const boardVals = board.map(c => RANK_VAL[c.slice(0, -1)])
+    const hasConnector = holeVals.some(v => boardVals.some(bv => Math.abs(v - bv) <= 2))
+    if (hasConnector) {
+      return { action: 'bluff', reason: 'Straight draw que não completou, mas board tem straight possível — blefe representando a straight! Aposte grande (75%). Sem showdown value, blefe é a única forma de ganhar.' }
+    }
   }
 
   return { action: 'check', reason: 'Sem mão e sem historia pra blefar. Check e desista — dar give up no river é correto quando não tem motivo pra apostar.' }

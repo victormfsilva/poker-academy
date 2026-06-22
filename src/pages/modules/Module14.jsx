@@ -220,6 +220,9 @@ function getCorrectAction(hole, flop, turn) {
     if (turnInfo.scary && turnInfo.type === 'straight') {
       return { action: 'check', reason: 'Top pair com kicker fraco em board conectado. Check pra controlar o pote.' }
     }
+    if (turnInfo.type === 'overcard' || turnInfo.type === 'overcard_low') {
+      return { action: 'check', reason: 'Top pair com kicker fraco e turn trouxe overcard - check. Se turn e maior que seu par, voce pode estar atras. Controle o pote.' }
+    }
     return { action: 'bet', sizing: '50%', reason: 'Top pair em turn favoravel - aposte 50%. Extraia valor enquanto sua mao ainda e boa.' }
   }
 
