@@ -104,6 +104,7 @@ export default function MultiStreet() {
   const [reviewData, setReviewData] = useState([])
   const [score, setScore] = useState({ correct: 0, total: 0 })
   const [solveInfo, setSolveInfo] = useState(null)
+  const [solveError, setSolveError] = useState(null)
   const deckRef = useRef([])
 
   // ─── Start new hand ───────────────────────────────
@@ -132,13 +133,19 @@ export default function MultiStreet() {
     const { oopRange, ipRange } = getSpotRanges(chosenSpot)
 
     try {
-      const result = await solve({
+      const t0 = performance.now()
+      const solvePromise = solve({
         oopRange, ipRange,
         board: flop,
         startingPot: 6,
         effectiveStack: 100,
-        iterations: 150,
+        iterations: 100,
       })
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Solver timeout (>15s)')), 15000)
+      )
+      const result = await Promise.race([solvePromise, timeoutPromise])
+      console.log('[Solver] solved in', Math.round(performance.now() - t0), 'ms', result)
       setSolveInfo(result)
 
       // Get root strategy
@@ -151,7 +158,8 @@ export default function MultiStreet() {
 
       setPhase(PHASE.PLAY_FLOP)
     } catch (err) {
-      console.error('Solver error:', err)
+      console.error('[Solver] error:', err)
+      setSolveError(err.message || 'Erro desconhecido no solver')
       setPhase(PHASE.SETUP)
     }
   }, [solve, getStrategy, getHandStrategy])
@@ -347,8 +355,13 @@ export default function MultiStreet() {
             <p style={{ color: '#b3b3b8', fontSize: 14, marginBottom: 16 }}>
               O solver GTO vai rodar no seu browser em tempo real. Voce recebe uma mao e decide em cada street.
             </p>
+            {solveError && (
+              <div style={{ color: '#e5484d', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(229,72,77,0.08)', borderRadius: 8 }}>
+                Erro: {solveError}
+              </div>
+            )}
             <button
-              onClick={startHand}
+              onClick={() => { setSolveError(null); startHand() }}
               className="px-6 py-3 rounded-lg font-semibold"
               style={{ background: '#0a84d7', color: '#fff', cursor: 'pointer', border: 'none', fontSize: 15 }}
             >

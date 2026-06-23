@@ -24,6 +24,13 @@ function getWorker() {
         else p.resolve(result)
       }
     }
+    workerInstance.onerror = (e) => {
+      const err = new Error('Worker error: ' + (e.message || 'unknown'))
+      for (const [id, p] of pending) {
+        p.reject(err)
+      }
+      pending.clear()
+    }
   }
   return workerInstance
 }
