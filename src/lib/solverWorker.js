@@ -81,6 +81,7 @@ function solveSituation(config) {
   const boardBytes = new Uint8Array(board.map(c => typeof c === 'string' ? cardToIndex(c) : c))
 
   if (gm) { gm.free(); gm = null }
+  cachedStrategyOffset = -1
   gm = GameManager.new()
 
   const bets = betSizings || {
@@ -133,6 +134,34 @@ function solveSituation(config) {
 // ==========================================
 // Get strategy at a node
 // ==========================================
+// Find strategy offset in results by searching for blocks where action freqs sum to ~1
+let cachedStrategyOffset = -1
+
+function findStrategyOffset(results, numCombos, numActions) {
+  if (cachedStrategyOffset >= 0) return cachedStrategyOffset
+  // Scan possible header sizes (0 to 10 blocks)
+  for (let h = 0; h <= 12; h++) {
+    const offset = h * numCombos
+    if (offset + numActions * numCombos > results.length) break
+    let goodCount = 0
+    for (let i = 0; i < numCombos; i++) {
+      let sum = 0
+      for (let a = 0; a < numActions; a++) {
+        const v = results[offset + a * numCombos + i]
+        if (v < -0.01 || v > 1.01) { sum = -999; break }
+        sum += v
+      }
+      if (Math.abs(sum - 1.0) < 0.1) goodCount++
+    }
+    if (goodCount > numCombos * 0.4) {
+      cachedStrategyOffset = h
+      return h
+    }
+  }
+  // Fallback: try header=5 (original assumption)
+  return 5
+}
+
 function getNodeStrategy(history) {
   if (!gm) return null
 
@@ -142,17 +171,17 @@ function getNodeStrategy(history) {
   if (player === 'terminal' || player === 'chance') return { player, history }
 
   const numActions = gm.num_actions()
-  const results = gm.get_results()       // Float64Array
+  const results = gm.get_results()
   const actionsStr = gm.actions_after(new Uint32Array(history))
   const actions = actionsStr ? actionsStr.split(':') : []
 
-  // private_cards: player 0=OOP, 1=IP
   const playerIdx = player === 'oop' ? 0 : 1
   const privateCards = gm.private_cards(playerIdx)
   const numCombos = privateCards.length
 
-  // Results layout: [weights(n), normalization(n), equity(n), ev(n), eqr(n), strategy[action*n]...]
-  const headerSize = 5 * numCombos
+  // Auto-detect strategy offset
+  const headerBlocks = findStrategyOffset(results, numCombos, numActions)
+  const headerSize = headerBlocks * numCombos
 
   // Strategy: frequency per action per combo
   const strategy = []
@@ -160,7 +189,7 @@ function getNodeStrategy(history) {
     strategy.push(Array.from(results.subarray(headerSize + a * numCombos, headerSize + (a + 1) * numCombos)))
   }
 
-  // Weights for averaging
+  // Weights are in block 0
   const weights = Array.from(results.subarray(0, numCombos))
   const totalWeight = weights.reduce((s, w) => s + w, 0)
 
@@ -172,28 +201,10 @@ function getNodeStrategy(history) {
     return sum / totalWeight
   })
 
-  // Average equity
-  const equityArr = Array.from(results.subarray(2 * numCombos, 3 * numCombos))
-  let avgEquity = 0
-  if (totalWeight > 0) {
-    for (let i = 0; i < numCombos; i++) avgEquity += equityArr[i] * weights[i]
-    avgEquity /= totalWeight
-  }
-
-  // Average EV
-  const evArr = Array.from(results.subarray(3 * numCombos, 4 * numCombos))
-  let avgEV = 0
-  if (totalWeight > 0) {
-    for (let i = 0; i < numCombos; i++) avgEV += evArr[i] * weights[i]
-    avgEV /= totalWeight
-  }
-
   return {
     player,
     actions,
     avgFreqs,
-    avgEquity,
-    avgEV,
     numCombos,
     numActions,
     history
@@ -218,35 +229,29 @@ function getHandStrategy(history, hand) {
   const numCombos = privateCards.length
 
   // Find the combo index for the given hand
+  // wasm-postflop encodes combos as: low_card | (high_card << 8)
   const c1 = cardToIndex(hand[0])
   const c2 = cardToIndex(hand[1])
-  const handEncoded = Math.min(c1, c2) * 52 + Math.max(c1, c2)
-  // privateCards are Uint16Array of encoded combos
+  const lo = Math.min(c1, c2)
+  const hi = Math.max(c1, c2)
+  const handEncoded = lo | (hi << 8)
   let comboIdx = -1
   for (let i = 0; i < numCombos; i++) {
     if (privateCards[i] === handEncoded) { comboIdx = i; break }
   }
 
-  // Try reverse encoding if not found
-  if (comboIdx === -1) {
-    const handEncoded2 = Math.min(c1, c2) + Math.max(c1, c2) * 52
-    for (let i = 0; i < numCombos; i++) {
-      if (privateCards[i] === handEncoded2) { comboIdx = i; break }
-    }
-  }
-
   if (comboIdx === -1) return { actions, freqs: actions.map(() => 0), notInRange: true }
 
-  const headerSize = 5 * numCombos
+  // Auto-detect strategy offset
+  const headerBlocks = findStrategyOffset(results, numCombos, numActions)
+  const headerSize = headerBlocks * numCombos
+
   const freqs = []
   for (let a = 0; a < numActions; a++) {
     freqs.push(results[headerSize + a * numCombos + comboIdx])
   }
 
-  const equity = results[2 * numCombos + comboIdx]
-  const ev = results[3 * numCombos + comboIdx]
-
-  return { actions, freqs, equity, ev, comboIdx }
+  return { actions, freqs, comboIdx }
 }
 
 // ==========================================

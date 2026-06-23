@@ -455,10 +455,9 @@ export default function MultiStreet() {
                   <Card key={i} card={c} size="lg" />
                 ))}
               </div>
-              {handStrategy?.equity != null && (
-                <div style={{ color: '#676671', fontSize: 11, marginTop: 8 }}>
-                  Equity: {(handStrategy.equity * 100).toFixed(1)}%
-                  {handStrategy.ev != null && ` | EV: ${handStrategy.ev.toFixed(2)}bb`}
+              {handStrategy?.notInRange && (
+                <div style={{ color: '#f5a623', fontSize: 11, marginTop: 8 }}>
+                  Mao fora do range do solver
                 </div>
               )}
             </div>
