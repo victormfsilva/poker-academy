@@ -80,7 +80,9 @@ function solveSituation(config) {
   const range2 = rangeTextToArray(ipRange)
   const boardBytes = new Uint8Array(board.map(c => typeof c === 'string' ? cardToIndex(c) : c))
 
-  if (gm) { gm.free(); gm = null }
+  // Drop previous GameManager — let FinalizationRegistry handle cleanup
+  // Calling gm.free() directly can fail with "attempted to take ownership
+  // while borrowed" if Rust internal state still holds borrows after finalize()
   gm = GameManager.new()
 
   const bets = betSizings || {
@@ -178,14 +180,12 @@ function getNodeStrategy(history) {
   }
 
   const numActions = gm.num_actions()
-  const resultsRaw = gm.get_results()
-  const results = new Float64Array(resultsRaw)
+  const results = gm.get_results()
   const actionsStr = gm.actions_after(new Uint32Array(history))
   const actions = actionsStr ? actionsStr.split('/') : []
 
   const playerIdx = player === 'oop' ? 0 : 1
-  const pcRaw = gm.private_cards(playerIdx)
-  const privateCards = new Uint16Array(pcRaw)
+  const privateCards = gm.private_cards(playerIdx)
   const numCombos = privateCards.length
 
   // Auto-detect layout (offset and stride)
@@ -234,14 +234,12 @@ function getHandStrategy(history, hand) {
   if (player === 'terminal' || player === 'chance') return null
 
   const numActions = gm.num_actions()
-  const resultsRaw = gm.get_results()
-  const results = new Float64Array(resultsRaw)
+  const results = gm.get_results()
   const actionsStr = gm.actions_after(new Uint32Array(history))
   const actions = actionsStr ? actionsStr.split('/') : []
 
   const playerIdx = player === 'oop' ? 0 : 1
-  const pcRaw = gm.private_cards(playerIdx)
-  const privateCards = new Uint16Array(pcRaw)
+  const privateCards = gm.private_cards(playerIdx)
   const numCombos = privateCards.length
 
   // Find the combo index for the given hand
