@@ -81,7 +81,7 @@ function solveSituation(config) {
   const boardBytes = new Uint8Array(board.map(c => typeof c === 'string' ? cardToIndex(c) : c))
 
   if (gm) { gm.free(); gm = null }
-  cachedStrategyOffset = -1
+  cachedLayout = null
   gm = GameManager.new()
 
   const bets = betSizings || {
@@ -134,32 +134,44 @@ function solveSituation(config) {
 // ==========================================
 // Get strategy at a node
 // ==========================================
-// Find strategy offset in results by searching for blocks where action freqs sum to ~1
-let cachedStrategyOffset = -1
+// Detect the stride (n) and header offset for strategy data in results
+let cachedLayout = null
 
-function findStrategyOffset(results, numCombos, numActions) {
-  if (cachedStrategyOffset >= 0) return cachedStrategyOffset
-  // Scan possible header sizes (0 to 10 blocks)
-  for (let h = 0; h <= 12; h++) {
-    const offset = h * numCombos
-    if (offset + numActions * numCombos > results.length) break
-    let goodCount = 0
-    for (let i = 0; i < numCombos; i++) {
-      let sum = 0
-      for (let a = 0; a < numActions; a++) {
-        const v = results[offset + a * numCombos + i]
-        if (v < -0.01 || v > 1.01) { sum = -999; break }
-        sum += v
+function detectResultsLayout(results, numCombosFiltered, numActions) {
+  if (cachedLayout) return cachedLayout
+
+  // The stride might differ from privateCards.length if results includes blocked combos
+  // Try strides near numCombosFiltered
+  const stridesToTry = []
+  for (let s = numCombosFiltered; s <= numCombosFiltered + 10; s++) stridesToTry.push(s)
+  for (let s = numCombosFiltered - 1; s >= numCombosFiltered - 5 && s > 0; s--) stridesToTry.push(s)
+
+  let bestMatch = { stride: numCombosFiltered, header: 5, score: 0 }
+
+  for (const stride of stridesToTry) {
+    for (let h = 0; h <= 12; h++) {
+      const offset = h * stride
+      if (offset + numActions * stride > results.length) break
+      let goodCount = 0
+      const testCount = Math.min(stride, numCombosFiltered)
+      for (let i = 0; i < testCount; i++) {
+        let sum = 0
+        let valid = true
+        for (let a = 0; a < numActions; a++) {
+          const v = results[offset + a * stride + i]
+          if (v < -0.01 || v > 1.01) { valid = false; break }
+          sum += v
+        }
+        if (valid && Math.abs(sum - 1.0) < 0.05) goodCount++
       }
-      if (Math.abs(sum - 1.0) < 0.1) goodCount++
-    }
-    if (goodCount > numCombos * 0.4) {
-      cachedStrategyOffset = h
-      return h
+      if (goodCount > bestMatch.score) {
+        bestMatch = { stride, header: h, score: goodCount }
+      }
     }
   }
-  // Fallback: try header=5 (original assumption)
-  return 5
+
+  cachedLayout = bestMatch
+  return cachedLayout
 }
 
 function getNodeStrategy(history) {
@@ -179,18 +191,24 @@ function getNodeStrategy(history) {
   const privateCards = gm.private_cards(playerIdx)
   const numCombos = privateCards.length
 
-  // Auto-detect strategy offset
-  const headerBlocks = findStrategyOffset(results, numCombos, numActions)
-  const headerSize = headerBlocks * numCombos
+  // Auto-detect layout (stride and header offset)
+  const layout = detectResultsLayout(results, numCombos, numActions)
+  const { stride, header } = layout
+  const stratOffset = header * stride
 
   // Strategy: frequency per action per combo
   const strategy = []
   for (let a = 0; a < numActions; a++) {
-    strategy.push(Array.from(results.subarray(headerSize + a * numCombos, headerSize + (a + 1) * numCombos)))
+    const arr = []
+    for (let i = 0; i < numCombos; i++) {
+      arr.push(results[stratOffset + a * stride + i])
+    }
+    strategy.push(arr)
   }
 
   // Weights are in block 0
-  const weights = Array.from(results.subarray(0, numCombos))
+  const weights = []
+  for (let i = 0; i < numCombos; i++) weights.push(results[i])
   const totalWeight = weights.reduce((s, w) => s + w, 0)
 
   // Average frequency per action
@@ -242,13 +260,14 @@ function getHandStrategy(history, hand) {
 
   if (comboIdx === -1) return { actions, freqs: actions.map(() => 0), notInRange: true }
 
-  // Auto-detect strategy offset
-  const headerBlocks = findStrategyOffset(results, numCombos, numActions)
-  const headerSize = headerBlocks * numCombos
+  // Auto-detect layout
+  const layout = detectResultsLayout(results, numCombos, numActions)
+  const { stride, header } = layout
+  const stratOffset = header * stride
 
   const freqs = []
   for (let a = 0; a < numActions; a++) {
-    freqs.push(results[headerSize + a * numCombos + comboIdx])
+    freqs.push(results[stratOffset + a * stride + comboIdx])
   }
 
   return { actions, freqs, comboIdx }
