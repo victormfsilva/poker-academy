@@ -45,6 +45,7 @@ import Arena from './pages/Arena'
 import Stats from './pages/Stats'
 import StudyGuide from './pages/StudyGuide'
 import HandAnalysis from './pages/HandAnalysis'
+import MultiStreet from './pages/MultiStreet'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -126,6 +127,7 @@ function App() {
           <Route path="/infinito" element={<Infinite />} />
           <Route path="/arena" element={<Arena />} />
           <Route path="/analise" element={<HandAnalysis />} />
+          <Route path="/solver" element={<MultiStreet />} />
         </Routes>
       </BrowserRouter>
     </ProgressProvider>

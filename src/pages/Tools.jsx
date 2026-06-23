@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { GLOSSARIO, PUSH_FOLD_RANGES } from '../data/ranges'
 
 const POSITIONS_PUSHFOLD = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB']
@@ -381,6 +382,7 @@ export default function Tools() {
     { id: 'threebet', label: '3-Bet', icon: '🔥' },
     { id: 'pushfold', label: 'Push/Fold', icon: '📊' },
     { id: 'glossario', label: 'Glossário', icon: '📖' },
+    { id: 'solver', label: 'Solver GTO', icon: '🧠' },
   ]
 
   return (
@@ -406,6 +408,22 @@ export default function Tools() {
         {activeTab === 'threebet' && <ThreeBetGuide />}
         {activeTab === 'pushfold' && <PushFoldGuide />}
         {activeTab === 'glossario' && <Glossary />}
+        {activeTab === 'solver' && (
+          <div className="rounded-xl p-6 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🧠</div>
+            <h2 style={{ color: '#fdfdfd', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Multi-Street GTO Trainer</h2>
+            <p style={{ color: '#b3b3b8', fontSize: 13, marginBottom: 16, lineHeight: 1.6 }}>
+              Solver GTO real rodando no seu browser via WebAssembly. Receba uma mao, decida em cada street (flop, turn, river) e compare com a estrategia otima do solver.
+            </p>
+            <Link
+              to="/solver"
+              className="inline-block px-6 py-3 rounded-lg font-semibold"
+              style={{ background: '#0a84d7', color: '#fff', fontSize: 15 }}
+            >
+              Abrir Solver Trainer
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )
