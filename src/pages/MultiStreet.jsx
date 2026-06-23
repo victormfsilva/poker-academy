@@ -33,14 +33,19 @@ const SPOTS = [
 ]
 
 // ─── Card utilities ───────────────────────────────────
+function shuffleArray(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 function newDeck() {
   const deck = []
   for (const r of RANKS) for (const s of SUITS) deck.push(r + s)
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[deck[i], deck[j]] = [deck[j], deck[i]]
-  }
-  return deck
+  return shuffleArray(deck)
 }
 
 function dealCards(deck, exclude, n) {
@@ -51,6 +56,38 @@ function dealCards(deck, exclude, n) {
   return result
 }
 
+// Parse range string into array of hand combos (e.g. 'AKs' -> ['AKss','AKhh',...])
+function rangeToHands(rangeStr) {
+  const hands = []
+  for (const part of rangeStr.split(',')) {
+    const h = part.trim().split(':')[0] // strip weight
+    if (h.length < 2) continue
+    const r1 = h[0], r2 = h[1], type = h[2] || ''
+    if (r1 === r2) {
+      // Pair: all 6 combos
+      for (let i = 0; i < SUITS.length; i++)
+        for (let j = i + 1; j < SUITS.length; j++)
+          hands.push([r1 + SUITS[i], r2 + SUITS[j]])
+    } else if (type === 's') {
+      // Suited: 4 combos
+      for (const s of SUITS) hands.push([r1 + s, r2 + s])
+    } else {
+      // Offsuit: 12 combos
+      for (const s1 of SUITS)
+        for (const s2 of SUITS)
+          if (s1 !== s2) hands.push([r1 + s1, r2 + s2])
+    }
+  }
+  return hands
+}
+
+// Pick a random hand from the hero's range that doesn't conflict with the board
+function pickHeroHand(rangeStr, board) {
+  const allHands = rangeToHands(rangeStr)
+  const valid = allHands.filter(([c1, c2]) => !board.includes(c1) && !board.includes(c2))
+  return valid[Math.floor(Math.random() * valid.length)]
+}
+
 // Action name mapping
 const ACTION_LABELS = {
   'F': 'Fold', 'X': 'Check', 'C': 'Call',
@@ -59,13 +96,25 @@ const ACTION_LABELS = {
 
 function parseAction(actionStr) {
   if (!actionStr) return { type: '?', label: '?', size: 0 }
+  // Solver returns format like "Check:0", "Bet:2", "Fold:0", "Allin:100"
+  const colonIdx = actionStr.indexOf(':')
+  if (colonIdx > 0) {
+    const word = actionStr.slice(0, colonIdx)
+    const val = parseInt(actionStr.slice(colonIdx + 1)) || 0
+    const typeMap = { Check: 'X', Bet: 'B', Fold: 'F', Call: 'C', Raise: 'R', Allin: 'A' }
+    const type = typeMap[word] || word[0]
+    if (word === 'Check') return { type, label: 'Check', size: 0 }
+    if (word === 'Fold') return { type, label: 'Fold', size: 0 }
+    if (word === 'Call') return { type, label: 'Call', size: val }
+    if (word === 'Allin') return { type, label: 'All-In', size: val }
+    if (word === 'Bet') return { type, label: val ? `Bet ${val}bb` : 'Bet', size: val }
+    if (word === 'Raise') return { type, label: val ? `Raise ${val}bb` : 'Raise', size: val }
+    return { type, label: actionStr, size: val }
+  }
+  // Fallback for old format
   const type = actionStr[0]
   const label = ACTION_LABELS[type] || actionStr
-  const sizeMatch = actionStr.match(/(\d+)/)
-  const size = sizeMatch ? parseInt(sizeMatch[1]) : 0
-  if (type === 'B' && size) return { type, label: `Bet ${size}%`, size }
-  if (type === 'R' && size) return { type, label: `Raise ${size}%`, size }
-  return { type, label, size }
+  return { type, label, size: 0 }
 }
 
 // ─── Phases ───────────────────────────────────────────
@@ -99,9 +148,11 @@ export default function MultiStreet() {
     const deck = newDeck()
     deckRef.current = deck
 
-    // Deal hero hand and flop
-    const hero = [deck[0], deck[1]]
-    const flop = [deck[2], deck[3], deck[4]]
+    // Deal flop first, then pick hero hand from range
+    const flop = [deck[0], deck[1], deck[2]]
+    const heroRange = chosenSpot.heroIsOOP ? chosenSpot.oopRange : chosenSpot.ipRange
+    const hero = pickHeroHand(heroRange, flop)
+    if (!hero) { console.error('No valid hand in range'); return }
 
     setSpot(chosenSpot)
     setHeroHand(hero)
@@ -206,7 +257,7 @@ export default function MultiStreet() {
           // Chance node = deal next card
           if (phase === PHASE.PLAY_FLOP) {
             // Deal turn
-            const turnCard = dealCards(deckRef.current.slice(5), [...heroHand, ...board], 1)[0]
+            const turnCard = dealCards(deckRef.current.slice(3), [...heroHand, ...board], 1)[0]
             const newBoard = [...board, turnCard]
             setBoard(newBoard)
 
@@ -234,8 +285,7 @@ export default function MultiStreet() {
             setPhase(PHASE.PLAY_TURN)
           } else if (phase === PHASE.PLAY_TURN) {
             // Deal river
-            const riverCard = dealCards(deckRef.current.slice(5), [...heroHand, ...board], 2)[1] ||
-                              dealCards(deckRef.current.slice(6), [...heroHand, ...board], 1)[0]
+            const riverCard = dealCards(deckRef.current.slice(3), [...heroHand, ...board], 1)[0]
             const newBoard = [...board, riverCard]
             setBoard(newBoard)
 
