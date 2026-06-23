@@ -768,6 +768,319 @@ export const SB_VS_RFI = {
 }
 
 // ============================================================
+// MÓDULO 7 — VS 3BET RANGES (defesa quando levamos 3bet)
+// Fonte: GreenCharts 2024 (Greenline Poker) + Pekarstas
+// Formato: call = flat call, fourbet = 4bet, allin = 5bet shove, mix = misto
+// ============================================================
+
+export const VS_3BET_RANGES = {
+  // UTG vs 3bet de cada posição
+  UTG: {
+    vsMP: {
+      call: ['99','AJs','AQs','ATs','KJs','KQs','KTs','QQ','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A5s','AQo'],
+      fold: []
+    },
+    vsCO: {
+      call: ['88','99','AJs','AQs','ATs','KJs','KQs','KTs','QJs','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A5s','AQo'],
+      fold: []
+    },
+    vsBTN: {
+      call: ['55','66','77','87s','88','99','AJs','AQs','ATs','JTs','KJs','KQs','KTs','QJs','QTs','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A4s','A5s','AQo'],
+      fold: []
+    },
+    vsSB: {
+      call: ['66','77','87s','88','99','AJs','AQs','ATs','JTs','KJs','KQs','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs'],
+      allin: ['AA','KK','QQ','AKs'],
+      mix: ['A4s','A5s','KTs'],
+      fold: []
+    },
+    vsBB: {
+      call: ['87s','88','99','AJs','AQs','ATs','JTs','KJs','KQs','QJs','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A4s','A5s','KTs'],
+      fold: []
+    }
+  },
+
+  // MP (Greenline "MP") vs 3bet
+  MP: {
+    vsCO: {
+      call: ['77','88','99','AJs','AQs','ATs','JTs','KJs','KQs','QJs','QTs','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A4s','A5s','AQo','KTs'],
+      fold: []
+    },
+    vsBTN: {
+      call: ['55','66','76s','77','87s','88','99','A9s','AJs','AQs','ATs','JTs','KJs','KQs','QJs','QTs','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A4s','A5s','AQo','KTs'],
+      fold: []
+    },
+    vsSB: {
+      call: ['55','65s','66','76s','77','87s','88','99','A9s','AJs','AQs','ATs','JTs','KJs','KQs','QJs','T9s','TT'],
+      fourbet: ['AA','KK','AKs'],
+      allin: ['AA','KK','AKs'],
+      mix: ['A4s','A5s','KTs','QTs'],
+      fold: []
+    },
+    vsBB: {
+      call: ['65s','76s','77','87s','88','99','AJs','AQs','ATs','JTs','KJs','KQs','QJs','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A4s','A5s','KTs'],
+      fold: []
+    }
+  },
+
+  // CO vs 3bet
+  CO: {
+    vsBTN: {
+      call: ['54s','55','65s','66','76s','77','87s','88','98s','99','A6s','A7s','A9s','AJo','AJs','AQs','ATs','J9s','JTs','KJs','KQo','KQs','KTs','QJs','QTs','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','JJ','KK','QQ','AKs','AKo'],
+      mix: ['A4s','A5s','A8s','AQo','K9s'],
+      fold: []
+    },
+    vsSB: {
+      call: ['54s','55','65s','66','76s','77','87s','88','98s','99','A9s','AJs','AQo','AQs','ATs','JTs','KJs','KQs','KTs','QJs','QTs','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A4s','A5s','A8s','KQo'],
+      fold: []
+    },
+    vsBB: {
+      call: ['54s','55','65s','66','76s','77','87s','88','99','A9s','AJs','AQo','AQs','ATs','JTs','KJs','KQs','KTs','QJs','QTs','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','KK','QQ','AKs','AKo'],
+      mix: ['A4s','A5s','A8s','K8s'],
+      fold: []
+    }
+  },
+
+  // BTN vs 3bet
+  BTN: {
+    vsSB: {
+      call: ['22','33','44','54s','55','65s','66','76s','77','87s','88','97s','98s','99','A4s','A5s','A6s','A8s','A9s','AJs','AQo','AQs','ATo','ATs','J8s','J9s','JTs','K8s','K9s','KJs','KQs','KTs','Q8s','Q9s','QJs','QTs','T8s','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','JJ','KK','QQ','AKs','AKo'],
+      mix: ['A2s','A3s','A7s','AJo','K6s','K7s','KQo'],
+      fold: []
+    },
+    vsBB: {
+      call: ['22','33','44','54s','55','65s','66','76s','77','87s','88','98s','99','A4s','A5s','A6s','A7s','A8s','A9s','AJs','AQo','AQs','ATo','ATs','J8s','J9s','JTs','K8s','K9s','KJs','KQs','KTs','Q9s','QJs','QTs','T8s','T9s','TT'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','JJ','KK','QQ','AKs','AKo'],
+      mix: ['A2s','A3s','AJo','K6s','K7s','KQo'],
+      fold: []
+    }
+  },
+
+  // SB vs BB 3bet
+  SB: {
+    vsBB: {
+      call: ['22','33','44','54s','55','65s','66','76s','77','87s','88','97s','98s','99','A3s','A4s','A5s','A7s','A8s','A9s','AJs','AQs','ATo','ATs','J9s','JTs','K6s','K7s','K8s','K9s','KJo','KJs','KQs','KTs','Q9s','QJs','QTs','T8s','T9s'],
+      fourbet: ['AA','KK','QQ','AKs','AKo'],
+      allin: ['AA','JJ','KK','QQ','TT','AKs','AKo'],
+      mix: ['A2s','A6s','AJo','AQo','J8s','KQo','Q8s'],
+      fold: []
+    }
+  }
+}
+
+// ============================================================
+// MÓDULO 8 — VS 4BET RANGES (defesa quando levamos 4bet)
+// Fonte: GreenCharts 2024 + Pekarstas
+// Formato: call = flat 4bet, allin = 5bet shove, mix = misto
+// ============================================================
+
+export const VS_4BET_RANGES = {
+  // BB vs 4bet de cada posição
+  BB: {
+    vsUTG: {
+      call: ['AKo','JJ','QQ','TT'],
+      allin: ['AA','KK','AKs'],
+      fold: ['54s','65s','76s','87s','A4s','A5s','AJs','AQs','ATs','KJs','KQs','QJs']
+    },
+    vsMP: {
+      call: ['AKo','JJ','QQ','TT'],
+      allin: ['AA','KK','AKs'],
+      fold: ['54s','65s','76s','87s','A4s','A5s','AJs','AQs','ATs','KJs','KQs','QJs']
+    },
+    vsCO: {
+      call: ['76s','87s','98s','TT','AJs','AQs','KQs'],
+      allin: ['AA','KK','QQ','JJ','99','88','AKs','AKo'],
+      fold: ['65s','A4s','A5s','AJo','AQo','ATs','JTs','KJs','KQo','KTs','QJs','QTs']
+    },
+    vsBTN: {
+      call: ['98s','TT','AJs','AQs','ATs','JTs','KJs','KQs','T9s'],
+      allin: ['AA','KK','QQ','JJ','99','88','77','AKs','AKo'],
+      fold: ['54s','65s','76s','87s','A4s','A5s','AJo','AQo','KTs','QJs','QTs','T8s']
+    },
+    vsSB: {
+      call: ['99','AA','AJs','AQo','AQs','ATs','JTs','KJs','KQs','QJs','T9s'],
+      allin: ['KK','QQ','JJ','88','77','66','AKs','AKo'],
+      mix: ['54s','65s','76s','87s','A2s','A3s','A4s','A5s'],
+      fold: ['A2o','A3o','A4o','A5o','K4o','KQo','KTs','QTs','T6s','T7s']
+    }
+  },
+
+  // SB vs 4bet
+  SB: {
+    vsUTG: {
+      call: ['JJ','QQ','TT','AKo','AQs'],
+      allin: ['AA','KK','AKs'],
+      mix: ['99','A5s','AJs','AQo','ATs','JTs','KJs','KQs','QJs'],
+      fold: []
+    },
+    vsMP: {
+      call: ['JJ','QQ','TT','AQs'],
+      allin: ['AA','KK','AKs'],
+      mix: ['76s','87s','88','99','A4s','A5s','AJs','AKo','AQo','ATs','JTs','KJs','KQs','KTs','QJs','QTs'],
+      fold: []
+    },
+    vsCO: {
+      call: ['TT','AJs','AQs','KQs'],
+      allin: ['AA','KK','QQ','JJ','99','88','AKs','AKo'],
+      mix: ['87s','98s','A4s','A5s','A9s','AJo','AQo','ATs','JTs','KJs','KQo','KTs','QJs','QTs','T8s','T9s'],
+      fold: []
+    },
+    vsBTN: {
+      call: ['AA','TT','AJs','AQo','AQs','ATs','KQs','T9s'],
+      allin: ['KK','QQ','JJ','99','88','AKs','AKo'],
+      mix: ['76s','77','87s','98s','A2s','A3s','A4s','A5s','A6s','A7s','A8s','A9s','AJo','ATo','J9s','JTs','K9s','KJs','KQo','KTs','Q9s','QJs','QTs','T8s'],
+      fold: []
+    }
+  },
+
+  // BTN vs 4bet
+  BTN: {
+    vsUTG: {
+      call: ['76s','87s','98s','AA','AJs','AKo','AKs','AQs','JJ','KK','QQ','T9s','TT'],
+      allin: [],
+      mix: ['77','88','99','A2s','A3s','A4s','A5s','AQo','ATs','JTs','KJs','KQs','KTs','QJs','QTs'],
+      fold: []
+    },
+    vsCO: {
+      call: ['76s','87s','98s','AJs','AQs','ATs','JTs','KJs','KQs','KTs','QJs','QTs','T9s'],
+      allin: ['AA','KK','QQ','99','88','77','A5s','AKs','AKo'],
+      mix: ['66','A7s','A8s','A9s','AJo','AQo','J9s','K9s','KQo','Q9s','T8s'],
+      fold: []
+    }
+  },
+
+  // CO vs 4bet de UTG
+  CO: {
+    vsUTG: {
+      call: ['AA','AJs','AKo','AKs','AQs','JJ','KK','QQ','TT'],
+      allin: [],
+      mix: ['77','88','99','A4s','A5s','AQo','ATs','JTs','KJs','KQs','KTs','QJs','QTs'],
+      fold: []
+    }
+  },
+
+  // MP vs 4bet de UTG
+  MP: {
+    vsUTG: {
+      call: ['AA','AKo','AKs','AQs','JJ','KK','QQ'],
+      allin: [],
+      mix: ['77','88','99','A4s','A5s','AJs','AQo','ATs','JTs','KJs','KQs','KTs','QJs','QTs','TT'],
+      fold: []
+    }
+  }
+}
+
+// ============================================================
+// MÓDULO 9 — ISO RANGES (isolação de limpers)
+// Fonte: GreenCharts 2024 (Greenline Poker)
+// Sizing: 4bb + 1bb/limper IP, 5bb + 1bb/limper OOP
+// ============================================================
+
+export const ISO_RANGES = {
+  // MP ISO 11% — quando há limper(s) antes
+  MP: {
+    raise: [
+      'AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
+      'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
+      'KQs','KJs','KTs','K9s','K8s','K7s','K6s',
+      'QJs','QTs','Q9s',
+      'JTs',
+      'T9s','98s','87s','76s','65s',
+      'AKo','AQo','AJo','ATo',
+    ],
+    fold: []
+  },
+
+  // CO ISO 14%
+  CO: {
+    raise: [
+      'AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
+      'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
+      'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s',
+      'QJs','QTs','Q9s','Q8s',
+      'JTs','J9s','J8s',
+      'T9s','T8s','98s','97s','87s','86s','76s','75s','65s','64s','54s',
+      'AKo','AQo','AJo','ATo','KQo','KJo','KTo',
+    ],
+    fold: []
+  },
+
+  // BTN ISO 20%
+  BTN: {
+    raise: [
+      'AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
+      'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
+      'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s',
+      'QJs','QTs','Q9s','Q8s','Q7s','Q6s',
+      'JTs','J9s','J8s','J7s','J6s',
+      'T9s','T8s','T7s','T6s','98s','97s','96s','87s','86s','85s','76s','75s','74s','65s','64s','54s',
+      'AKo','AQo','AJo','ATo','A9o','KQo','KJo','KTo','QJo','QTo','JTo',
+    ],
+    fold: []
+  },
+
+  // SB ISO 12%
+  SB: {
+    raise: [
+      'AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
+      'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
+      'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s',
+      'QJs','QTs','Q9s','Q8s','Q7s','Q6s',
+      'JTs','J9s','J8s',
+      'T9s','T8s','98s','97s','87s','86s','76s','75s','65s','64s','54s',
+      'AKo','AQo','AJo','ATo','KQo','KJo','KTo',
+    ],
+    fold: []
+  },
+
+  // BB ISO 14% (quando há limper antes do BB)
+  BB: {
+    raise: [
+      'AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
+      'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
+      'KQs','KJs','KTs','K9s','K8s','K7s','K6s',
+      'QJs','QTs','Q9s',
+      'JTs','J9s',
+      'T9s','98s','87s','76s','65s','54s',
+      'AKo','AQo','AJo','ATo','A9o','KQo','KJo','QJo',
+    ],
+    fold: []
+  }
+}
+
+// ============================================================
 // POSIÇÕES — Informações sobre cada posição
 // ============================================================
 
