@@ -84,14 +84,14 @@ function solveSituation(config) {
   gm = GameManager.new()
 
   const bets = betSizings || {
-    oopFlopBet: '33', oopFlopRaise: '',
-    oopTurnBet: '75', oopTurnRaise: '',
+    oopFlopBet: '33%', oopFlopRaise: '',
+    oopTurnBet: '75%', oopTurnRaise: '',
     oopTurnDonk: '',
-    oopRiverBet: '75', oopRiverRaise: 'a',
+    oopRiverBet: '75%', oopRiverRaise: 'a',
     oopRiverDonk: '',
-    ipFlopBet: '33', ipFlopRaise: '',
-    ipTurnBet: '75', ipTurnRaise: '',
-    ipRiverBet: '75', ipRiverRaise: 'a',
+    ipFlopBet: '33%', ipFlopRaise: '',
+    ipTurnBet: '75%', ipTurnRaise: '',
+    ipRiverBet: '75%', ipRiverRaise: 'a',
   }
 
   const err = gm.init(
