@@ -117,6 +117,13 @@ function parseAction(actionStr) {
   return { type, label, size: 0 }
 }
 
+// Card index matching WASM encoding: rank*4+suit, rank 2=0..A=12, suit c=0,d=1,h=2,s=3
+const WASM_RANKS = '23456789TJQKA'
+const WASM_SUITS = 'cdhs'
+function cardToWasmIdx(cardStr) {
+  return WASM_RANKS.indexOf(cardStr[0]) * 4 + WASM_SUITS.indexOf(cardStr[1])
+}
+
 // ─── Phases ───────────────────────────────────────────
 const PHASE = { SETUP: 0, SOLVING: 1, PLAY_FLOP: 2, PLAY_TURN: 3, PLAY_RIVER: 4, REVIEW: 5 }
 
@@ -198,6 +205,59 @@ export default function MultiStreet() {
     }
   }, [solve, getStrategy, getHandStrategy])
 
+  // ─── Advance through chance/villain nodes until hero acts ───
+  const advanceFromHistory = useCallback(async (hist) => {
+    let curHist = hist
+    let curBoard = [...board]
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const strat = await getStrategy(curHist)
+
+      if (strat?.player === 'terminal') {
+        setPhase(PHASE.REVIEW)
+        return
+      }
+
+      if (strat?.player === 'chance') {
+        // Deal next community card
+        const usedCards = [...heroHand, ...curBoard]
+        const available = deckRef.current.filter(c => !usedCards.includes(c))
+        const newCard = available[Math.floor(Math.random() * available.length)]
+        if (!newCard) { setPhase(PHASE.REVIEW); return }
+
+        const cardIdx = cardToWasmIdx(newCard)
+        curBoard = [...curBoard, newCard]
+        setBoard(curBoard)
+        curHist = [...curHist, cardIdx]
+
+        if (curBoard.length === 4) setPhase(PHASE.PLAY_TURN)
+        else if (curBoard.length === 5) setPhase(PHASE.PLAY_RIVER)
+        setStreetActions([])
+        continue
+      }
+
+      // It's a player node
+      const isVillain = (strat.player === 'oop' && heroPos !== 'oop') ||
+                        (strat.player === 'ip' && heroPos !== 'ip')
+
+      if (isVillain) {
+        const bestIdx = strat.avgFreqs.indexOf(Math.max(...strat.avgFreqs))
+        const villainAction = parseAction(strat.actions[bestIdx])
+        setStreetActions(prev => [...prev, { player: strat.player + ' (vilao)', action: villainAction.label }])
+        curHist = [...curHist, bestIdx]
+        continue
+      }
+
+      // Hero's turn — set state and stop
+      setHistory(curHist)
+      setCurrentStrategy(strat)
+      const hs = await getHandStrategy(curHist, heroHand)
+      setHandStrategy(hs)
+      setFeedback(null)
+      return
+    }
+  }, [board, heroHand, heroPos, getStrategy, getHandStrategy])
+
   // ─── Hero makes a decision ────────────────────────
   const makeDecision = useCallback(async (actionIdx) => {
     if (!currentStrategy || !handStrategy) return
@@ -244,114 +304,13 @@ export default function MultiStreet() {
     // After showing feedback briefly, advance
     setTimeout(async () => {
       try {
-        // Check what happens next
-        const nextStrat = await getStrategy(newHistory)
-
-        if (nextStrat?.player === 'terminal') {
-          // Hand is over (fold/all-in)
-          setPhase(PHASE.REVIEW)
-          return
-        }
-
-        if (nextStrat?.player === 'chance') {
-          // Chance node = deal next card
-          if (phase === PHASE.PLAY_FLOP) {
-            // Deal turn
-            const turnCard = dealCards(deckRef.current.slice(3), [...heroHand, ...board], 1)[0]
-            const newBoard = [...board, turnCard]
-            setBoard(newBoard)
-
-            // Re-solve is not needed — solver already computed all streets!
-            // Navigate past chance node
-            const turnCardIdx = turnCard ? RANKS.indexOf(turnCard[0]) * 4 + SUITS.indexOf(turnCard[1]) : 0
-            // Chance node: action index = card index in available cards
-            // For simplicity, just skip to next player node
-            const chanceHistory = [...newHistory]
-            // Try to find the right chance action
-            const actionsAfterChance = await getStrategy(chanceHistory)
-            if (actionsAfterChance?.player === 'chance') {
-              // Need to select the card from chance actions
-              // The chance node has 52 possible actions (cards), we need to pick the right one
-              // For now, use a heuristic: the action index corresponds to card order
-              chanceHistory.push(turnCardIdx)
-            }
-
-            const turnStrat = await getStrategy(chanceHistory)
-            setHistory(chanceHistory)
-            setCurrentStrategy(turnStrat)
-            const hs = await getHandStrategy(chanceHistory, heroHand)
-            setHandStrategy(hs)
-            setFeedback(null)
-            setPhase(PHASE.PLAY_TURN)
-          } else if (phase === PHASE.PLAY_TURN) {
-            // Deal river
-            const riverCard = dealCards(deckRef.current.slice(3), [...heroHand, ...board], 1)[0]
-            const newBoard = [...board, riverCard]
-            setBoard(newBoard)
-
-            const chanceHistory = [...newHistory]
-            const riverCardIdx = riverCard ? RANKS.indexOf(riverCard[0]) * 4 + SUITS.indexOf(riverCard[1]) : 0
-            const nextCheck = await getStrategy(chanceHistory)
-            if (nextCheck?.player === 'chance') chanceHistory.push(riverCardIdx)
-
-            const riverStrat = await getStrategy(chanceHistory)
-            setHistory(chanceHistory)
-            setCurrentStrategy(riverStrat)
-            const hs = await getHandStrategy(chanceHistory, heroHand)
-            setHandStrategy(hs)
-            setFeedback(null)
-            setPhase(PHASE.PLAY_RIVER)
-          } else {
-            setPhase(PHASE.REVIEW)
-          }
-          return
-        }
-
-        // Villain's turn — auto-play GTO
-        if ((nextStrat.player === 'oop' && heroPos !== 'oop') ||
-            (nextStrat.player === 'ip' && heroPos !== 'ip')) {
-          // Villain acts: pick action with highest avg frequency
-          const villainBestIdx = nextStrat.avgFreqs.indexOf(Math.max(...nextStrat.avgFreqs))
-          const villainAction = parseAction(nextStrat.actions[villainBestIdx])
-          setStreetActions(prev => [...prev, { player: nextStrat.player + ' (vilao)', action: villainAction.label }])
-
-          const afterVillain = [...newHistory, villainBestIdx]
-          const afterStrat = await getStrategy(afterVillain)
-          setHistory(afterVillain)
-
-          if (afterStrat?.player === 'terminal') {
-            setPhase(PHASE.REVIEW)
-            return
-          }
-          if (afterStrat?.player === 'chance') {
-            // Advance to next street after villain acts
-            // This will be handled in the next iteration
-            setCurrentStrategy(afterStrat)
-            setHandStrategy(null)
-            setFeedback(null)
-            // Trigger chance handling by recursive call-like pattern
-            // For now, go to review
-            setPhase(PHASE.REVIEW)
-            return
-          }
-
-          setCurrentStrategy(afterStrat)
-          const hs2 = await getHandStrategy(afterVillain, heroHand)
-          setHandStrategy(hs2)
-          setFeedback(null)
-        } else {
-          // Hero's turn again
-          setCurrentStrategy(nextStrat)
-          const hs2 = await getHandStrategy(newHistory, heroHand)
-          setHandStrategy(hs2)
-          setFeedback(null)
-        }
+        await advanceFromHistory(newHistory)
       } catch (err) {
         console.error('Navigation error:', err)
         setPhase(PHASE.REVIEW)
       }
     }, 2500)
-  }, [currentStrategy, handStrategy, history, phase, heroPos, board, heroHand, getStrategy, getHandStrategy])
+  }, [currentStrategy, handStrategy, history, phase, heroPos, board, heroHand, advanceFromHistory])
 
   // ─── Render ─────────────────────────────────────────
   const streetName = phase === PHASE.PLAY_FLOP ? 'Flop' : phase === PHASE.PLAY_TURN ? 'Turn' : phase === PHASE.PLAY_RIVER ? 'River' : ''
