@@ -3,6 +3,7 @@ import { useProgress } from '../context/ProgressContext'
 import { analyzeLeaks } from '../utils/leaks'
 import DecisionTree from '../components/DecisionTree'
 import { RFI_RANGES, PUSH_FOLD_RANGES, BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI, BLIND_WARS } from '../data/ranges'
+import { POSTFLOP_SCENARIOS, ALL_POSTFLOP_CATEGORIES } from '../data/postflopScenarios'
 import Card, { handToCards, parseCard } from '../components/Card'
 import RangeViewer from '../components/RangeViewer'
 
@@ -974,6 +975,116 @@ function dynamicScenarioQuestion(moduleId) {
 }
 
 // ================================================================
+// MODULO 28 — Postflop GTO (PokerBench solver scenarios)
+// ================================================================
+function postflopGTOScenario() {
+  const cat = ALL_POSTFLOP_CATEGORIES[Math.floor(Math.random() * ALL_POSTFLOP_CATEGORIES.length)]
+  const pool = POSTFLOP_SCENARIOS[cat]
+  const sc = pool[Math.floor(Math.random() * pool.length)]
+  const isFacing = cat.startsWith('facing_bet')
+  const street = sc.b.length === 3 ? 'Flop' : sc.b.length === 4 ? 'Turn' : 'River'
+
+  const STREET_LABELS = {
+    facing_bet_flop: 'GTO Flop Defense',
+    facing_bet_turn: 'GTO Turn Defense',
+    facing_bet_river: 'GTO River Defense',
+    bet_or_check_flop: 'GTO Flop Action',
+    bet_or_check_turn: 'GTO Turn Action',
+    bet_or_check_river: 'GTO River Action',
+  }
+
+  let buttons, correctAction
+  if (isFacing) {
+    buttons = [
+      { id: 'fold', label: 'Fold', bg: '#0a84d7' },
+      { id: 'call', label: 'Call', bg: '#4fce82' },
+      { id: 'raise', label: 'Raise', bg: '#e5484d' },
+    ]
+    correctAction = sc.d
+  } else {
+    if (sc.d === 'raise') {
+      buttons = [
+        { id: 'check', label: 'Check', bg: '#0a84d7' },
+        { id: 'bet', label: 'Bet', bg: '#4fce82' },
+        { id: 'raise', label: 'Raise', bg: '#e5484d' },
+      ]
+      correctAction = 'raise'
+    } else {
+      buttons = [
+        { id: 'check', label: 'Check', bg: '#0a84d7' },
+        { id: 'bet', label: 'Bet', bg: '#e5484d' },
+      ]
+      correctAction = sc.d === 'bet' ? 'bet' : 'check'
+    }
+  }
+
+  const heroPos = sc.hp === 'IP' ? 'BTN' : 'BB'
+  const villainPos = sc.hp === 'IP' ? 'BB' : 'BTN'
+
+  return {
+    moduleId: 28, type: 'board', hand: null,
+    board: sc.b, hole: sc.h,
+    label: `${STREET_LABELS[cat]} · ${sc.hp} · Pot ${sc.pot}bb`,
+    tableContext: {
+      heroPos,
+      villainPos,
+      villainAction: isFacing ? 'bet' : 'check',
+      potBB: sc.pot,
+    },
+    buttons,
+    evaluate: (action) => {
+      const labelMap = { fold: 'Fold', call: 'Call', raise: 'Raise', check: 'Check', bet: 'Bet' }
+      return {
+        isCorrect: action === correctAction,
+        correctLabel: `${labelMap[correctAction]} (Solver GTO)`,
+        isMix: false,
+      }
+    }
+  }
+}
+
+function postflopModuleScenario(moduleId, categories) {
+  const cat = categories[Math.floor(Math.random() * categories.length)]
+  const pool = POSTFLOP_SCENARIOS[cat]
+  const sc = pool[Math.floor(Math.random() * pool.length)]
+  const isFacing = cat.startsWith('facing_bet')
+  const street = sc.b.length === 3 ? 'Flop' : sc.b.length === 4 ? 'Turn' : 'River'
+
+  const MOD_LABELS = { 28: 'Def vs Double Barrel', 29: 'Blockers + MDF', 30: 'Probe Bet' }
+
+  let buttons, correctAction
+  if (isFacing) {
+    buttons = [
+      { id: 'fold', label: 'Fold', bg: '#0a84d7' },
+      { id: 'call', label: 'Call', bg: '#4fce82' },
+      { id: 'raise', label: 'Raise', bg: '#e5484d' },
+    ]
+    correctAction = sc.d
+  } else {
+    buttons = [
+      { id: 'check', label: 'Check', bg: '#0a84d7' },
+      { id: 'bet', label: 'Bet', bg: '#e5484d' },
+    ]
+    correctAction = sc.d === 'bet' || sc.d === 'raise' ? 'bet' : 'check'
+  }
+
+  const heroPos = sc.hp === 'IP' ? 'BTN' : 'BB'
+  const villainPos = sc.hp === 'IP' ? 'BB' : 'BTN'
+
+  return {
+    moduleId, type: 'board', hand: null,
+    board: sc.b, hole: sc.h,
+    label: `${MOD_LABELS[moduleId] || 'GTO'} · ${street} · ${sc.hp}`,
+    tableContext: { heroPos, villainPos, villainAction: isFacing ? 'bet' : 'check', potBB: sc.pot },
+    buttons,
+    evaluate: (action) => {
+      const labelMap = { fold: 'Fold', call: 'Call', raise: 'Raise', check: 'Check', bet: 'Bet' }
+      return { isCorrect: action === correctAction, correctLabel: `${labelMap[correctAction]} (Solver)`, isMix: false }
+    }
+  }
+}
+
+// ================================================================
 // Gerador de cenario por modulo
 // ================================================================
 const GENERATORS = {
@@ -981,17 +1092,17 @@ const GENERATORS = {
   2: pushfoldScenario,
   3: potoddsScenario,
   4: bbScenario,
-  5: cbetFlopScenario,
+  5: () => Math.random() < 0.3 ? postflopModuleScenario(5, ['bet_or_check_flop']) : cbetFlopScenario(),
   6: blindWarsScenario,
   7: () => rangeScenario(7),
   8: () => rangeScenario(8),
   9: () => rangeScenario(9),
-  10: defenseCbetScenario,
+  10: () => Math.random() < 0.3 ? postflopModuleScenario(10, ['facing_bet_flop']) : defenseCbetScenario(),
   11: checkRaiseScenario,
   12: betSizingScenario,
   13: donkBetScenario,
-  14: cbetTurnScenario,
-  15: riverPlayScenario,
+  14: () => Math.random() < 0.3 ? postflopModuleScenario(14, ['bet_or_check_turn']) : cbetTurnScenario(),
+  15: () => Math.random() < 0.3 ? postflopModuleScenario(15, ['bet_or_check_river']) : riverPlayScenario(),
   16: () => dynamicScenarioQuestion(16),
   17: () => dynamicScenarioQuestion(17),
   18: () => dynamicScenarioQuestion(18),
@@ -1004,6 +1115,10 @@ const GENERATORS = {
   25: () => dynamicScenarioQuestion(25),
   26: () => dynamicScenarioQuestion(26),
   27: () => dynamicScenarioQuestion(27),
+  28: () => postflopModuleScenario(28, ['facing_bet_turn']),
+  29: () => postflopModuleScenario(29, ['facing_bet_river']),
+  30: () => postflopModuleScenario(30, ['bet_or_check_turn']),
+  31: postflopGTOScenario,
 }
 
 function newScenario(unlockedIds) {
@@ -1023,6 +1138,7 @@ const MOD_COLORS = {
   16: '#4fce82', 17: '#f5a623', 18: '#0a84d7', 19: '#e5484d', 20: '#4fce82', 21: '#e5484d',
   22: '#0a84d7', 23: '#f5a623', 24: '#e5484d', 25: '#0a84d7', 26: '#f5a623',
   27: '#4fce82',
+  28: '#f5a623', 29: '#e5484d', 30: '#4fce82', 31: '#00d4ff',
 }
 
 const MOD_NAMES_SHORT = {
@@ -1032,6 +1148,7 @@ const MOD_NAMES_SHORT = {
   16: 'GTO vs Exploit', 17: 'ICM', 18: 'Multiway', 19: 'Blockers (antigo)', 20: 'HUD/Solvers', 21: 'Late Game',
   22: 'SPR', 23: 'Range/Nut', 24: 'Polar/Merge', 25: 'Multistreet', 26: 'Sizing',
   27: 'Blockers',
+  28: 'Def DBarrel', 29: 'Blockers', 30: 'Probe Bet', 31: 'GTO Postflop',
 }
 
 // ================================================================

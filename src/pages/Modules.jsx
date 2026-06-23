@@ -30,6 +30,7 @@ const MODULES = [
   { id: 28, name: 'Facing Double Barrel', desc: 'Call, fold ou raise quando apostam de novo no turn', icon: 'F' },
   { id: 29, name: 'River Defense', desc: 'Enfrentar aposta no river com pot odds e blockers', icon: 'R' },
   { id: 30, name: 'Probe Bet', desc: 'Apostar OOP quando o raiser checa o flop', icon: 'Q' },
+  { id: 31, name: 'GTO Postflop Solver', desc: 'Cenarios reais de solver com decisoes GTO otimas', icon: 'S' },
 ]
 
 const FILTERS = [
@@ -44,13 +45,13 @@ const FILTERS = [
 
 const CATEGORY_IDS = {
   preflop: [1, 2, 4, 6, 7, 8, 9],
-  postflop: [5, 10, 13, 14, 15, 28, 29, 30],
+  postflop: [5, 10, 13, 14, 15, 28, 29, 30, 31],
   math: [3, 22, 23, 24, 25, 26],
   mtt: [2, 17, 21],
   advanced: [16, 18, 20, 27],
 }
 
-const STUDY_ORDER = [1, 3, 9, 4, 7, 8, 2, 6, 5, 10, 14, 15, 28, 29, 30, 22, 23, 24, 25, 26, 17, 21, 16, 18, 27, 13, 20]
+const STUDY_ORDER = [1, 3, 9, 4, 7, 8, 2, 6, 5, 10, 14, 15, 28, 29, 30, 31, 22, 23, 24, 25, 26, 17, 21, 16, 18, 27, 13, 20]
 
 const FILTER_COLORS = {
   all: '#b3b3b8',
