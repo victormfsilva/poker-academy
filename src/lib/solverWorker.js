@@ -81,7 +81,6 @@ function solveSituation(config) {
   const boardBytes = new Uint8Array(board.map(c => typeof c === 'string' ? cardToIndex(c) : c))
 
   if (gm) { gm.free(); gm = null }
-  cachedLayout = null
   gm = GameManager.new()
 
   const bets = betSizings || {
@@ -134,44 +133,31 @@ function solveSituation(config) {
 // ==========================================
 // Get strategy at a node
 // ==========================================
-// Detect the stride (n) and header offset for strategy data in results
-let cachedLayout = null
-
+// Detect the exact offset where strategy frequencies live in get_results()
 function detectResultsLayout(results, numCombosFiltered, numActions) {
-  if (cachedLayout) return cachedLayout
+  const stride = numCombosFiltered
+  let bestMatch = { offset: 0, stride, score: 0 }
+  const maxOffset = results.length - numActions * stride
 
-  // The stride might differ from privateCards.length if results includes blocked combos
-  // Try strides near numCombosFiltered
-  const stridesToTry = []
-  for (let s = numCombosFiltered; s <= numCombosFiltered + 10; s++) stridesToTry.push(s)
-  for (let s = numCombosFiltered - 1; s >= numCombosFiltered - 5 && s > 0; s--) stridesToTry.push(s)
-
-  let bestMatch = { stride: numCombosFiltered, header: 5, score: 0 }
-
-  for (const stride of stridesToTry) {
-    for (let h = 0; h <= 12; h++) {
-      const offset = h * stride
-      if (offset + numActions * stride > results.length) break
-      let goodCount = 0
-      const testCount = Math.min(stride, numCombosFiltered)
-      for (let i = 0; i < testCount; i++) {
-        let sum = 0
-        let valid = true
-        for (let a = 0; a < numActions; a++) {
-          const v = results[offset + a * stride + i]
-          if (v < -0.01 || v > 1.01) { valid = false; break }
-          sum += v
-        }
-        if (valid && Math.abs(sum - 1.0) < 0.05) goodCount++
+  for (let offset = 0; offset <= maxOffset; offset++) {
+    let goodCount = 0
+    for (let i = 0; i < stride; i++) {
+      let sum = 0
+      let valid = true
+      for (let a = 0; a < numActions; a++) {
+        const v = results[offset + a * stride + i]
+        if (v < -0.001 || v > 1.001) { valid = false; break }
+        sum += v
       }
-      if (goodCount > bestMatch.score) {
-        bestMatch = { stride, header: h, score: goodCount }
-      }
+      if (valid && Math.abs(sum - 1.0) < 0.02) goodCount++
+    }
+    if (goodCount > bestMatch.score) {
+      bestMatch = { offset, stride, score: goodCount }
+      if (goodCount === stride) break
     }
   }
 
-  cachedLayout = bestMatch
-  return cachedLayout
+  return bestMatch
 }
 
 function getNodeStrategy(history) {
@@ -191,10 +177,9 @@ function getNodeStrategy(history) {
   const privateCards = gm.private_cards(playerIdx)
   const numCombos = privateCards.length
 
-  // Auto-detect layout (stride and header offset)
+  // Auto-detect layout (offset and stride)
   const layout = detectResultsLayout(results, numCombos, numActions)
-  const { stride, header } = layout
-  const stratOffset = header * stride
+  const { offset: stratOffset, stride } = layout
 
   // Strategy: frequency per action per combo
   const strategy = []
@@ -262,8 +247,7 @@ function getHandStrategy(history, hand) {
 
   // Auto-detect layout
   const layout = detectResultsLayout(results, numCombos, numActions)
-  const { stride, header } = layout
-  const stratOffset = header * stride
+  const { offset: stratOffset, stride } = layout
 
   const freqs = []
   for (let a = 0; a < numActions; a++) {
