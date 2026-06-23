@@ -166,15 +166,26 @@ function getNodeStrategy(history) {
   gm.apply_history(new Uint32Array(history))
 
   const player = gm.current_player()
-  if (player === 'terminal' || player === 'chance') return { player, history }
+  if (player === 'terminal') return { player, history }
+  if (player === 'chance') {
+    // Return possible cards so frontend can pick a valid one
+    const mask = gm.possible_cards()
+    const possibleCards = []
+    for (let i = 0; i < 52; i++) {
+      if ((mask >> BigInt(i)) & 1n) possibleCards.push(i)
+    }
+    return { player, history, possibleCards }
+  }
 
   const numActions = gm.num_actions()
-  const results = gm.get_results()
+  const resultsRaw = gm.get_results()
+  const results = new Float64Array(resultsRaw)
   const actionsStr = gm.actions_after(new Uint32Array(history))
   const actions = actionsStr ? actionsStr.split('/') : []
 
   const playerIdx = player === 'oop' ? 0 : 1
-  const privateCards = gm.private_cards(playerIdx)
+  const pcRaw = gm.private_cards(playerIdx)
+  const privateCards = new Uint16Array(pcRaw)
   const numCombos = privateCards.length
 
   // Auto-detect layout (offset and stride)
@@ -223,12 +234,14 @@ function getHandStrategy(history, hand) {
   if (player === 'terminal' || player === 'chance') return null
 
   const numActions = gm.num_actions()
-  const results = gm.get_results()
+  const resultsRaw = gm.get_results()
+  const results = new Float64Array(resultsRaw)
   const actionsStr = gm.actions_after(new Uint32Array(history))
   const actions = actionsStr ? actionsStr.split('/') : []
 
   const playerIdx = player === 'oop' ? 0 : 1
-  const privateCards = gm.private_cards(playerIdx)
+  const pcRaw = gm.private_cards(playerIdx)
+  const privateCards = new Uint16Array(pcRaw)
   const numCombos = privateCards.length
 
   // Find the combo index for the given hand

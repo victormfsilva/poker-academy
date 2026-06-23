@@ -123,6 +123,9 @@ const WASM_SUITS = 'cdhs'
 function cardToWasmIdx(cardStr) {
   return WASM_RANKS.indexOf(cardStr[0]) * 4 + WASM_SUITS.indexOf(cardStr[1])
 }
+function wasmIdxToCard(idx) {
+  return WASM_RANKS[Math.floor(idx / 4)] + WASM_SUITS[idx % 4]
+}
 
 // ─── Phases ───────────────────────────────────────────
 const PHASE = { SETUP: 0, SOLVING: 1, PLAY_FLOP: 2, PLAY_TURN: 3, PLAY_RIVER: 4, REVIEW: 5 }
@@ -209,26 +212,41 @@ export default function MultiStreet() {
   const advanceFromHistory = useCallback(async (hist) => {
     let curHist = hist
     let curBoard = [...board]
+    let safety = 0
     // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const strat = await getStrategy(curHist)
-
-      if (strat?.player === 'terminal') {
+    while (safety++ < 20) {
+      let strat
+      try {
+        strat = await getStrategy(curHist)
+      } catch (err) {
+        console.error('[advance] getStrategy error:', err, 'history:', curHist)
         setPhase(PHASE.REVIEW)
         return
       }
 
-      if (strat?.player === 'chance') {
-        // Deal next community card
-        const usedCards = [...heroHand, ...curBoard]
-        const available = deckRef.current.filter(c => !usedCards.includes(c))
-        const newCard = available[Math.floor(Math.random() * available.length)]
-        if (!newCard) { setPhase(PHASE.REVIEW); return }
+      if (!strat || strat.player === 'terminal') {
+        setPhase(PHASE.REVIEW)
+        return
+      }
 
-        const cardIdx = cardToWasmIdx(newCard)
+      if (strat.player === 'chance') {
+        // Pick a random card from the WASM's possible cards list
+        const possible = strat.possibleCards || []
+        if (possible.length === 0) { setPhase(PHASE.REVIEW); return }
+
+        // Filter out cards that are in hero's hand (shouldn't be dealt)
+        const heroCardIdxs = heroHand.map(c => cardToWasmIdx(c))
+        const validCards = possible.filter(ci => !heroCardIdxs.includes(ci))
+        if (validCards.length === 0) { setPhase(PHASE.REVIEW); return }
+
+        // Pick random card, action index = position in possibleCards array
+        const pick = validCards[Math.floor(Math.random() * validCards.length)]
+        const actionIdx = possible.indexOf(pick)
+        const newCard = wasmIdxToCard(pick)
+
         curBoard = [...curBoard, newCard]
         setBoard(curBoard)
-        curHist = [...curHist, cardIdx]
+        curHist = [...curHist, actionIdx]
 
         if (curBoard.length === 4) setPhase(PHASE.PLAY_TURN)
         else if (curBoard.length === 5) setPhase(PHASE.PLAY_RIVER)
@@ -256,6 +274,8 @@ export default function MultiStreet() {
       setFeedback(null)
       return
     }
+    console.error('[advance] safety limit reached')
+    setPhase(PHASE.REVIEW)
   }, [board, heroHand, heroPos, getStrategy, getHandStrategy])
 
   // ─── Hero makes a decision ────────────────────────
