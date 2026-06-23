@@ -20,7 +20,7 @@ function rangeToString(rangeObj) {
   const hands = []
   if (rangeObj.raise) hands.push(...rangeObj.raise)
   if (rangeObj.call) hands.push(...rangeObj.call)
-  if (rangeObj.mix) hands.push(...rangeObj.mix.map(h => h + ':50'))
+  if (rangeObj.mix) hands.push(...rangeObj.mix.map(h => h + ':0.5'))
   return hands.join(',')
 }
 
@@ -28,15 +28,15 @@ function getSpotRanges(spot) {
   // IP range: RFI for that position
   let ipRange = ''
   const pos = spot.ipPos
-  if (pos === 'BTN') ipRange = rangeToString(RFI_RANGES?.BTN?.[100])
-  else if (pos === 'CO') ipRange = rangeToString(RFI_RANGES?.CO?.[100])
-  else if (pos === 'SB') ipRange = rangeToString(RFI_RANGES?.SB?.[100])
-  else if (pos === 'UTG') ipRange = rangeToString(RFI_RANGES?.UTG?.[100])
+  if (RFI_RANGES?.[pos]?.[100]) {
+    ipRange = rangeToString(RFI_RANGES[pos][100])
+  }
 
-  // OOP range: BB defense vs that position
+  // OOP range: BB defense vs that position (keys are vsBTN, vsCO, etc.)
   let oopRange = ''
-  if (BB_VS_RFI?.[pos]?.call) {
-    const bbr = BB_VS_RFI[pos]
+  const bbKey = 'vs' + pos
+  if (BB_VS_RFI?.[bbKey]) {
+    const bbr = BB_VS_RFI[bbKey]
     oopRange = rangeToString({ raise: bbr.threebet || [], call: bbr.call || [], mix: bbr.mix || [] })
   }
 

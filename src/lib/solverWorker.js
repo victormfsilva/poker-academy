@@ -31,12 +31,22 @@ function indexToCard(idx) {
 // ==========================================
 async function ensureInit() {
   if (!rangeReady) {
-    await initRange(new URL('/wasm-range.wasm', self.location.origin))
-    rangeReady = true
+    try {
+      const rangeUrl = new URL('/wasm-range.wasm', self.location.href)
+      await initRange(rangeUrl)
+      rangeReady = true
+    } catch (e) {
+      throw new Error('Failed to load wasm-range: ' + e.message)
+    }
   }
   if (!solverReady) {
-    await initSolver(new URL('/wasm-solver.wasm', self.location.origin))
-    solverReady = true
+    try {
+      const solverUrl = new URL('/wasm-solver.wasm', self.location.href)
+      await initSolver(solverUrl)
+      solverReady = true
+    } catch (e) {
+      throw new Error('Failed to load wasm-solver: ' + e.message)
+    }
   }
 }
 
@@ -75,13 +85,13 @@ function solveSituation(config) {
 
   const bets = betSizings || {
     oopFlopBet: '33', oopFlopRaise: '',
-    oopTurnBet: '66', oopTurnRaise: '',
+    oopTurnBet: '75', oopTurnRaise: '',
     oopTurnDonk: '',
-    oopRiverBet: '75', oopRiverRaise: '',
+    oopRiverBet: '75', oopRiverRaise: 'a',
     oopRiverDonk: '',
     ipFlopBet: '33', ipFlopRaise: '',
-    ipTurnBet: '66', ipTurnRaise: '',
-    ipRiverBet: '75', ipRiverRaise: '',
+    ipTurnBet: '75', ipTurnRaise: '',
+    ipRiverBet: '75', ipRiverRaise: 'a',
   }
 
   const err = gm.init(
@@ -105,7 +115,11 @@ function solveSituation(config) {
 
   if (err) throw new Error('Solver init error: ' + err)
 
-  gm.allocate_memory(false)
+  try {
+    gm.allocate_memory(false)
+  } catch (e) {
+    throw new Error('Memory allocation failed (tree too large?): ' + e.message)
+  }
 
   for (let i = 0; i < iterations; i++) {
     gm.solve_step(i)
