@@ -173,7 +173,7 @@ function getNodeStrategy(history) {
   const numActions = gm.num_actions()
   const results = gm.get_results()
   const actionsStr = gm.actions_after(new Uint32Array(history))
-  const actions = actionsStr ? actionsStr.split(':') : []
+  const actions = actionsStr ? actionsStr.split('/') : []
 
   const playerIdx = player === 'oop' ? 0 : 1
   const privateCards = gm.private_cards(playerIdx)
@@ -222,7 +222,7 @@ function getHandStrategy(history, hand) {
   const numActions = gm.num_actions()
   const results = gm.get_results()
   const actionsStr = gm.actions_after(new Uint32Array(history))
-  const actions = actionsStr ? actionsStr.split(':') : []
+  const actions = actionsStr ? actionsStr.split('/') : []
 
   const playerIdx = player === 'oop' ? 0 : 1
   const privateCards = gm.private_cards(playerIdx)

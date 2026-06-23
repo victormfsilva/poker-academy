@@ -432,7 +432,7 @@ export default function MultiStreet() {
               </div>
               {solveInfo && (
                 <div style={{ color: '#676671', fontSize: 11, marginTop: 4 }}>
-                  Exploitability: {(solveInfo.exploit * 100).toFixed(2)}% do pot
+                  Exploitability: {solveInfo.exploit.toFixed(2)}bb
                 </div>
               )}
             </div>
