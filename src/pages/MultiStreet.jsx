@@ -1,51 +1,36 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import Card from '../components/Card'
 import { useSolver } from '../lib/useSolver'
-import { RFI_RANGES, BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI } from '../data/ranges'
 
 // ─── Constants ────────────────────────────────────────
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
 
-// Preflop spots to train
+// Preflop spots — ranges compactas pro WASM solver rodar rapido (<5s)
+// ~20-30 combos por lado = solve em ~3s com 15 iters
 const SPOTS = [
-  { name: 'BTN vs BB', oopPos: 'BB', ipPos: 'BTN', label: 'BTN abre, BB defende' },
-  { name: 'CO vs BB', oopPos: 'BB', ipPos: 'CO', label: 'CO abre, BB defende' },
-  { name: 'SB vs BB', oopPos: 'BB', ipPos: 'SB', label: 'SB abre, BB defende' },
+  {
+    name: 'EP vs BB',
+    label: 'EP abre, BB defende',
+    heroIsOOP: true,
+    oopRange: 'AA,KK,QQ,JJ,TT,99,AKs,AQs,AJs,ATs,KQs,KJs,AKo,AQo',
+    ipRange: 'AA,KK,QQ,JJ,TT,99,88,AKs,AQs,AJs,ATs,KQs,KJs,KTs,AKo,AQo,AJo',
+  },
+  {
+    name: 'CO vs BB',
+    label: 'CO abre, BB defende',
+    heroIsOOP: true,
+    oopRange: 'AA,KK,QQ,JJ,TT,99,88,AKs,AQs,AJs,ATs,A5s,KQs,KJs,QJs,JTs,AKo,AQo',
+    ipRange: 'AA,KK,QQ,JJ,TT,99,88,77,66,AKs,AQs,AJs,ATs,A9s,A5s,KQs,KJs,KTs,QJs,QTs,JTs,T9s,98s,AKo,AQo,AJo,KQo',
+  },
+  {
+    name: 'BTN vs BB',
+    label: 'BTN abre, BB defende',
+    heroIsOOP: true,
+    oopRange: 'AA,KK,QQ,JJ,TT,99,88,77,AKs,AQs,AJs,ATs,A5s,KQs,KJs,QJs,JTs,T9s,AKo,AQo,AJo',
+    ipRange: 'AA,KK,QQ,JJ,TT,99,88,77,66,55,AKs,AQs,AJs,ATs,A9s,A5s,KQs,KJs,KTs,QJs,QTs,JTs,T9s,98s,87s,76s,AKo,AQo,AJo,KQo',
+  },
 ]
-
-// Convert range object format to string for WASM
-function rangeToString(rangeObj) {
-  if (!rangeObj) return ''
-  const hands = []
-  if (rangeObj.raise) hands.push(...rangeObj.raise)
-  if (rangeObj.call) hands.push(...rangeObj.call)
-  if (rangeObj.mix) hands.push(...rangeObj.mix.map(h => h + ':0.5'))
-  return hands.join(',')
-}
-
-function getSpotRanges(spot) {
-  // IP range: RFI for that position
-  let ipRange = ''
-  const pos = spot.ipPos
-  if (RFI_RANGES?.[pos]?.[100]) {
-    ipRange = rangeToString(RFI_RANGES[pos][100])
-  }
-
-  // OOP range: BB defense vs that position (keys are vsBTN, vsCO, etc.)
-  let oopRange = ''
-  const bbKey = 'vs' + pos
-  if (BB_VS_RFI?.[bbKey]) {
-    const bbr = BB_VS_RFI[bbKey]
-    oopRange = rangeToString({ raise: bbr.threebet || [], call: bbr.call || [], mix: bbr.mix || [] })
-  }
-
-  // Fallback: wide ranges
-  if (!ipRange) ipRange = '22+,A2s+,K5s+,Q8s+,J8s+,T8s+,97s+,86s+,76s,65s,54s,A8o+,KTo+,QTo+,JTo'
-  if (!oopRange) oopRange = '22+,A2s+,K8s+,Q8s+,J8s+,T8s+,98s,87s,76s,65s,A8o+,KTo+,QTo+,JTo'
-
-  return { oopRange, ipRange }
-}
 
 // ─── Card utilities ───────────────────────────────────
 function newDeck() {
@@ -129,20 +114,18 @@ export default function MultiStreet() {
     setReviewData([])
     setPhase(PHASE.SOLVING)
 
-    // Get ranges and solve
-    const { oopRange, ipRange } = getSpotRanges(chosenSpot)
-
     try {
       const t0 = performance.now()
       const solvePromise = solve({
-        oopRange, ipRange,
+        oopRange: chosenSpot.oopRange,
+        ipRange: chosenSpot.ipRange,
         board: flop,
         startingPot: 6,
         effectiveStack: 100,
-        iterations: 100,
+        iterations: 15,
       })
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Solver timeout (>15s)')), 15000)
+        setTimeout(() => reject(new Error('Solver demorou demais. Tente novamente.')), 30000)
       )
       const result = await Promise.race([solvePromise, timeoutPromise])
       console.log('[Solver] solved in', Math.round(performance.now() - t0), 'ms', result)
@@ -378,7 +361,7 @@ export default function MultiStreet() {
                 width: 20, height: 20, border: '2px solid #0a84d7', borderTopColor: 'transparent',
                 borderRadius: '50%', animation: 'spin 0.8s linear infinite'
               }} />
-              <span style={{ color: '#0a84d7', fontSize: 14 }}>Solver resolvendo (~2s)...</span>
+              <span style={{ color: '#0a84d7', fontSize: 14 }}>Solver resolvendo (~5s)...</span>
             </div>
           </div>
         )}
