@@ -4,6 +4,7 @@ import SessionReview from '../../components/SessionReview'
 import Card, { parseCard } from '../../components/Card'
 import { POSTFLOP_SCENARIOS, ALL_POSTFLOP_CATEGORIES } from '../../data/postflopScenarios'
 import { Hand } from 'pokersolver'
+import { calcEquity } from '../../lib/equity'
 
 // ─── Hand analysis helpers ───────────────────────────────────────────────────
 const RANK_VAL = { A:14,K:13,Q:12,J:11,T:10,'9':9,'8':8,'7':7,'6':6,'5':5,'4':4,'3':3,'2':2 }
@@ -86,78 +87,86 @@ function generateExplanation(hole, board, correctAction, isFacing, street, heroP
   const hand = analyzeHand(hole, board)
   let handName = ''
   try { handName = Hand.solve([...hole, ...board]).descr } catch {}
+  const equity = calcEquity(hole, board)
   const posLabel = heroPos === 'IP' ? 'em posicao' : 'fora de posicao'
   const streetPT = street === 'Flop' ? 'flop' : street === 'Turn' ? 'turn' : 'river'
   const boardDesc = tex.isDry ? 'seco' : tex.isWet ? 'umido' : 'neutro'
+  const eqStr = equity != null ? `${equity}% equity` : null
+  const eqLabel = eqStr ? ` (${eqStr} vs range aleatorio)` : ''
+
+  // Classifica equity em faixas
+  const eqHigh = equity >= 65
+  const eqMid = equity >= 40 && equity < 65
+  const eqLow = equity < 40
 
   if (isFacing) {
     if (correctAction === 'fold') {
+      if (eqStr && eqLow)
+        return `${handName || 'Sua mao'}${eqLabel}. Equity muito baixa para continuar. ${!hand.hasAnyPair && !hand.hasFlushDraw ? 'Sem par ou draw — ' : ''}fold evita perder fichas no ${streetPT} ${boardDesc}.`
       if (!hand.hasAnyPair && !hand.hasFlushDraw && !hand.hasStraightDraw)
-        return `Sem par, sem draw no ${streetPT}. ${handName ? `Sua mao (${handName})` : 'Sua mao'} nao tem equity suficiente para continuar contra a aposta do vilao. Fold evita perder mais fichas.`
+        return `Sem par, sem draw no ${streetPT}${eqLabel}. Fold — equity insuficiente contra a aposta do vilao.`
       if (hand.hasAnyPair && !hand.isTopPair)
-        return `Par fraco no ${streetPT} em board ${boardDesc}. ${handName ? `(${handName})` : ''} Contra a aposta, voce esta provavelmente atras de maos melhores no range do vilao. Fold e a decisao mais segura.`
-      if (hand.hasStraightDraw && !hand.hasFlushDraw)
-        return `Apenas straight draw no ${streetPT}. Pot odds desfavoraveis contra esta aposta — seus outs nao compensam o custo. Fold correto.`
-      return `${handName ? `${handName} — ` : ''}equity insuficiente contra a aposta do vilao no ${streetPT}. Board ${boardDesc} nao favorece continuar. Fold.`
+        return `Par fraco no ${streetPT} ${boardDesc}${eqLabel}. Contra a aposta, voce esta atras do range do vilao. Fold.`
+      return `${handName ? `${handName} — ` : ''}equity insuficiente no ${streetPT}${eqLabel}. Board ${boardDesc}, fold correto.`
     }
     if (correctAction === 'call') {
       if (hand.isOverpair || hand.isTopPair)
-        return `${handName || 'Top pair/overpair'} — mao boa o suficiente para call mas nao para raise. ${heroPos === 'OOP' ? 'Fora de posicao, controle o pote.' : 'Em posicao, chame e reavalie na proxima street.'}`
+        return `${handName || 'Top pair/overpair'}${eqLabel}. Mao boa para call mas nao para raise. ${heroPos === 'OOP' ? 'Fora de posicao, controle o pote.' : 'Em posicao, chame e reavalie.'}`
       if (hand.hasMadeFlush || hand.hasMadeStraight)
-        return `${handName || 'Mao forte'} — call para nao assustar o vilao. ${street === 'River' ? 'No river, call extrai mais valor do que raise se o vilao folda blefes.' : 'Slowplay para construir pote nas proximas streets.'}`
+        return `${handName || 'Mao forte'}${eqLabel}. Call para nao assustar o vilao. ${street === 'River' ? 'No river, call extrai mais do que raise.' : 'Slowplay para construir pote.'}`
       if (hand.hasFlushDraw)
-        return `Flush draw com 9 outs (~${street === 'Flop' ? '35' : '20'}% equity). ${handName ? `(${handName}) ` : ''}Pot odds favorecem o call. Se completar, voce tera mao forte.`
+        return `Flush draw — 9 outs${eqLabel}. Pot odds favorecem call. Se completar, mao forte.`
       if (hand.hasStraightDraw)
-        return `Straight draw com ~${street === 'Flop' ? '32' : '18'}% equity. ${handName ? `(${handName}) ` : ''}Call pelas odds implicitas — se acertar, voce ganha um pote grande.`
-      if (hand.hasAnyPair)
-        return `${handName || 'Par'} — showdown value suficiente para call. Board ${boardDesc} ${tex.isDry ? 'e poucas cartas assustam' : 'mas as odds justificam continuar'}.`
+        return `Straight draw${eqLabel}. Call pelas odds implicitas — se acertar, pote grande.`
       if (hand.isSet || hand.isTwoPair)
-        return `${handName || 'Mao forte'} — call para manter o blefe range do vilao no pote. Nao espante-o com raise agora.`
-      return `${handName ? `${handName} — ` : ''}equity suficiente para call ${posLabel}. ${street === 'River' ? 'No river, pague pra ver o showdown.' : 'Veja a proxima carta.'}`
+        return `${handName || 'Mao forte'}${eqLabel}. Call para manter blefes do vilao no pote.`
+      if (hand.hasAnyPair)
+        return `${handName || 'Par'}${eqLabel}. Showdown value suficiente para call. Board ${boardDesc}.`
+      return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Equity suficiente para call ${posLabel}.`
     }
     if (correctAction === 'raise') {
       if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
-        return `${handName || 'Mao monstruosa'}! Raise para valor maximo. O vilao ja apostou — construa o pote enquanto ele esta comprometido.`
+        return `${handName || 'Mao monstruosa'}!${eqLabel} Raise para valor maximo — o vilao ja apostou, construa o pote.`
       if (hand.isTwoPair)
-        return `${handName || 'Dois pares'} — raise de valor! Mao forte o suficiente para inflacionar o pote. O vilao pode pagar com top pair ou draws.`
+        return `${handName || 'Dois pares'}${eqLabel}. Raise de valor! Vilao paga com top pair ou draws.`
       if (hand.isOverpair || hand.isTopPair)
-        return `${handName || 'Top pair/overpair'} — raise de valor ${posLabel}. Board ${boardDesc} favorece o raise para proteger contra draws e extrair valor.`
+        return `${handName || 'Top pair/overpair'}${eqLabel}. Raise de valor ${posLabel}. Board ${boardDesc} favorece proteger contra draws.`
       if (hand.hasFlushDraw || hand.hasStraightDraw)
-        return `${handName ? `${handName} — ` : ''}Raise como semi-blefe! Voce tem equity significativa com seus draws e adiciona fold equity. Se o vilao foldar, voce ganha na hora.`
-      return `${handName ? `${handName} — ` : ''}Raise ${posLabel}. Board ${boardDesc} no ${streetPT} permite pressionar o range do vilao.`
+        return `${handName ? `${handName} — ` : ''}semi-blefe!${eqLabel} Equity significativa + fold equity. Se foldar, ganha na hora.`
+      return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Raise ${posLabel} — board ${boardDesc} permite pressionar.`
     }
   } else {
     if (correctAction === 'check') {
       if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
-        return `${handName || 'Mao monstruosa'} — check para induzir aposta do vilao (trapping). Se apostar, pode assustar e ele folda. Deixe ele blefar ou apostar por valor com mao pior.`
+        return `${handName || 'Mao monstruosa'}${eqLabel}. Check para trapping — induza aposta do vilao com mao pior.`
       if (hand.isTopPair || hand.isOverpair)
-        return `${handName || 'Top pair/overpair'} — check para controle de pote ${posLabel}. Board ${boardDesc} no ${streetPT}${tex.isWet ? ' — muitos draws possiveis, nao infle o pote desnecessariamente' : ''}.`
+        return `${handName || 'Top pair/overpair'}${eqLabel}. Check para controle de pote ${posLabel}. ${tex.isWet ? 'Board umido, nao infle desnecessariamente.' : ''}`
       if (hand.hasAnyPair)
-        return `${handName || 'Par'} — check. Mao com showdown value mas nao forte o bastante para apostar por valor. Board ${boardDesc}, controle o pote.`
+        return `${handName || 'Par'}${eqLabel}. Showdown value mas nao forte para bet de valor. Check, controle o pote.`
       if (hand.hasFlushDraw || hand.hasStraightDraw)
-        return `${handName ? `${handName} — ` : ''}Check com draw. ${heroPos === 'OOP' ? 'Fora de posicao, check e chame ou check-raise dependendo da acao do vilao.' : 'Em posicao, tome a carta gratis e tente completar.'}`
-      return `${handName ? `${handName} — ` : ''}Sem mao forte no ${streetPT}. Check — apostar sem valor ou blefe eficiente e desperdicar fichas. Board ${boardDesc}.`
+        return `${handName ? `${handName} — ` : ''}draw${eqLabel}. Check ${heroPos === 'OOP' ? 'e reaja ao vilao.' : 'e tome carta gratis.'}`
+      return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Sem valor para apostar no ${streetPT} ${boardDesc}. Check.`
     }
     if (correctAction === 'bet') {
       if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
-        return `${handName || 'Mao monstruosa'}! Bet de valor — extraia fichas! Mao forte demais para dar carta gratis ao vilao.`
+        return `${handName || 'Mao monstruosa'}!${eqLabel} Bet de valor — mao forte demais para dar carta gratis.`
       if (hand.isTwoPair)
-        return `${handName || 'Dois pares'} — bet de valor! Board ${boardDesc}, proteja sua mao e construa pote. Vilao pode pagar com par ou draw.`
+        return `${handName || 'Dois pares'}${eqLabel}. Bet de valor! Proteja sua mao e construa pote.`
       if (hand.isOverpair || hand.isTopPair)
-        return `${handName || 'Top pair/overpair'} — bet de valor no ${streetPT}. ${tex.isWet ? 'Board umido — aposte para proteger contra draws.' : 'Board seco — aposte para extrair de maos piores.'}`
+        return `${handName || 'Top pair/overpair'}${eqLabel}. Bet de valor no ${streetPT}. ${tex.isWet ? 'Proteja contra draws.' : 'Extraia de maos piores.'}`
       if (hand.hasFlushDraw || hand.hasStraightDraw)
-        return `${handName ? `${handName} — ` : ''}Bet como semi-blefe! Voce tem outs e fold equity. Se o vilao foldar, otimo. Se chamar, voce pode completar o draw.`
+        return `${handName ? `${handName} — ` : ''}semi-blefe!${eqLabel} Outs + fold equity. Vilao folda ou voce completa o draw.`
       if (!hand.hasAnyPair && !hand.hasFlushDraw && !hand.hasStraightDraw)
-        return `${handName ? `${handName} — ` : ''}Blefe puro no ${streetPT}! Board ${boardDesc} permite representar mao forte. Sem showdown value, apostar e a unica forma de ganhar.`
-      return `${handName ? `${handName} — ` : ''}Bet no ${streetPT} ${posLabel}. Board ${boardDesc} favorece a agressividade neste spot.`
+        return `${handName ? `${handName} — ` : ''}blefe puro no ${streetPT}${eqLabel}! Board ${boardDesc}, represente mao forte. Sem showdown value, apostar e a unica forma de ganhar.`
+      return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Bet no ${streetPT} ${posLabel}. Board ${boardDesc} favorece agressividade.`
     }
     if (correctAction === 'raise') {
       if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
-        return `${handName || 'Mao monstruosa'}! Raise para valor maximo — construa o pote com mao nuts.`
-      return `${handName ? `${handName} — ` : ''}Raise no ${streetPT}! ${hand.hasFlushDraw || hand.hasStraightDraw ? 'Semi-blefe com draw forte e fold equity.' : 'Pressione o range do vilao com agressividade.'}`
+        return `${handName || 'Mao monstruosa'}!${eqLabel} Raise para valor maximo — construa o pote.`
+      return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Raise no ${streetPT}! ${hand.hasFlushDraw || hand.hasStraightDraw ? 'Semi-blefe com draw forte.' : 'Pressione o range do vilao.'}`
     }
   }
-  return handName ? `Sua mao: ${handName}` : ''
+  return handName ? `Sua mao: ${handName}${eqLabel}` : (eqStr || '')
 }
 
 // ─── Generate a solver scenario ──────────────────────────────────────────────
