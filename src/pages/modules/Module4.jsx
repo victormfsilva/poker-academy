@@ -4,6 +4,7 @@ import SessionReview from '../../components/SessionReview'
 import { BB_VS_RFI } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import RangeBuilder from '../../components/RangeBuilder'
 import ModulePokerTable from '../../components/ModulePokerTable'
 
 const RAISER_POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB']
@@ -252,6 +253,37 @@ function Trainer() {
   )
 }
 
+function M4RangeBuilder() {
+  const [raiser, setRaiser] = useState('UTG')
+  const key = RAISER_KEYS[raiser]
+  const range = BB_VS_RFI[key] || {}
+  const allHands = generateAllHands()
+  const correctRange = {
+    '3bet': range.threebet || [],
+    call: range.call || [],
+    fold: allHands.filter(h => !(range.threebet || []).includes(h) && !(range.call || []).includes(h)),
+  }
+
+  return (
+    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+      <h2 className="text-lg font-bold mb-4" style={{ color: '#fdfdfd' }}>Construa o Range do BB vs RFI</h2>
+      <p className="text-sm mb-4" style={{ color: '#676671' }}>
+        Selecione 3bet, call ou fold para cada mao quando o vilao abre de cada posicao.
+      </p>
+      <div className="mb-4">
+        <label className="text-xs block mb-1" style={{ color: '#676671' }}>Vilao abriu de</label>
+        <div className="flex gap-1 flex-wrap">
+          {RAISER_POSITIONS.map(p => (
+            <button key={p} onClick={() => setRaiser(p)} className="px-2 py-1 rounded text-xs font-bold"
+              style={{ background: raiser === p ? '#e5484d' : '#222225', color: raiser === p ? '#fdfdfd' : '#676671' }}>{p}</button>
+          ))}
+        </div>
+      </div>
+      <RangeBuilder correctRange={correctRange} actions={['3bet', 'call', 'fold']} title={`BB vs ${raiser} RFI`} />
+    </div>
+  )
+}
+
 export default function Module4() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[4].lessonRead ? 'trainer' : 'lesson')
@@ -266,8 +298,11 @@ export default function Module4() {
         <div className="flex gap-2 mb-6">
           <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>📖 Aula</button>
           <button onClick={() => progress.modules[4].lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[4].lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[4].lessonRead ? 'pointer' : 'not-allowed' }}>🎯 Trainer {!progress.modules[4].lessonRead && '🔒'}</button>
+          <button onClick={() => progress.modules[4].lessonRead && setView('builder')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'builder' ? '#0a84d7' : '#1a1a1d', color: view === 'builder' ? 'white' : (progress.modules[4].lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[4].lessonRead ? 'pointer' : 'not-allowed' }}>🧩 Range Builder {!progress.modules[4].lessonRead && '🔒'}</button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(4); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' && <Lesson onComplete={() => { markLessonRead(4); setView('trainer') }} />}
+        {view === 'trainer' && <Trainer />}
+        {view === 'builder' && <M4RangeBuilder />}
       </div>
     </div>
   )

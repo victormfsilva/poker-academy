@@ -4,6 +4,7 @@ import SessionReview from '../../components/SessionReview'
 import { BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import RangeBuilder from '../../components/RangeBuilder'
 import ModulePokerTable from '../../components/ModulePokerTable'
 
 // Todas as combinações possíveis: [minha posição, posição do raiser]
@@ -328,6 +329,52 @@ function Trainer() {
   )
 }
 
+function M9RangeBuilder() {
+  const [filterPos, setFilterPos] = useState('BB')
+  const [raiser, setRaiser] = useState('UTG')
+  const allHands = generateAllHands()
+
+  const spot = SPOTS.find(s => s.myPos === filterPos && s.raiser === raiser)
+  const range = spot ? (spot.data[spot.key] || {}) : {}
+  const correctRange = {
+    '3bet': range.threebet || [],
+    call: range.call || [],
+    fold: allHands.filter(h => !(range.threebet || []).includes(h) && !(range.call || []).includes(h)),
+  }
+
+  const availableRaisers = [...new Set(SPOTS.filter(s => s.myPos === filterPos).map(s => s.raiser))]
+
+  return (
+    <div style={{ maxWidth: 600, margin: '0 auto' }}>
+      <div className="mb-4">
+        <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>SUA POSICAO</div>
+        <div className="flex flex-wrap gap-2">
+          {['BB', 'SB', 'BTN'].map(p => (
+            <button key={p} onClick={() => { setFilterPos(p); const r = SPOTS.find(s => s.myPos === p); if (r) setRaiser(r.raiser) }}
+              className="px-3 py-1 rounded-lg text-sm"
+              style={{ background: filterPos === p ? '#e5484d' : '#1a1a1d', color: filterPos === p ? 'white' : '#888', border: '1px solid #2a2a2e' }}>
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mb-4">
+        <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>RAISER</div>
+        <div className="flex flex-wrap gap-2">
+          {availableRaisers.map(p => (
+            <button key={p} onClick={() => setRaiser(p)}
+              className="px-3 py-1 rounded-lg text-sm"
+              style={{ background: raiser === p ? '#e5484d' : '#1a1a1d', color: raiser === p ? 'white' : '#888', border: '1px solid #2a2a2e' }}>
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+      <RangeBuilder correctRange={correctRange} actions={['3bet', 'call', 'fold']} title={`${filterPos} vs ${raiser}`} />
+    </div>
+  )
+}
+
 export default function Module9() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[9]?.lessonRead ? 'trainer' : 'lesson')
@@ -340,10 +387,13 @@ export default function Module9() {
     <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>Aula</button>
-          <button onClick={() => progress.modules[9]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[9]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[9]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[9]?.lessonRead && '🔒'}</button>
+          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>📖 Aula</button>
+          <button onClick={() => progress.modules[9]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[9]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[9]?.lessonRead ? 'pointer' : 'not-allowed' }}>🎯 Trainer {!progress.modules[9]?.lessonRead && '🔒'}</button>
+          <button onClick={() => progress.modules[9]?.lessonRead && setView('builder')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'builder' ? '#e5484d' : '#1a1a1d', color: view === 'builder' ? 'white' : (progress.modules[9]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[9]?.lessonRead ? 'pointer' : 'not-allowed' }}>🧩 Range Builder {!progress.modules[9]?.lessonRead && '🔒'}</button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(9); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' && <Lesson onComplete={() => { markLessonRead(9); setView('trainer') }} />}
+        {view === 'trainer' && <Trainer />}
+        {view === 'builder' && <M9RangeBuilder />}
       </div>
     </div>
   )

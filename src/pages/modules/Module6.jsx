@@ -4,6 +4,7 @@ import SessionReview from '../../components/SessionReview'
 import { BLIND_WARS } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import RangeBuilder from '../../components/RangeBuilder'
 import ModulePokerTable from '../../components/ModulePokerTable'
 
 function generateAllHands() {
@@ -239,6 +240,47 @@ function Trainer() {
   )
 }
 
+function M6RangeBuilder() {
+  const [scenario, setScenario] = useState('sb_vs_bb')
+  const allHands = generateAllHands()
+
+  let correctRange, actions, title
+  if (scenario === 'sb_vs_bb') {
+    const raiseHands = BLIND_WARS.SB_raise?.raise || []
+    const completeHands = BLIND_WARS.SB_complete?.complete || []
+    correctRange = {
+      raise: raiseHands,
+      complete: completeHands.filter(h => !raiseHands.includes(h)),
+      fold: allHands.filter(h => !raiseHands.includes(h) && !completeHands.includes(h)),
+    }
+    actions = ['raise', 'complete', 'fold']
+    title = 'SB agindo vs BB'
+  } else {
+    const betHands = BLIND_WARS.BB_vs_complete?.bet || []
+    correctRange = {
+      bet: betHands,
+      check: allHands.filter(h => !betHands.includes(h)),
+    }
+    actions = ['bet', 'check']
+    title = 'BB vs SB Complete'
+  }
+
+  return (
+    <div style={{ maxWidth: 600, margin: '0 auto' }}>
+      <div className="flex gap-2 mb-4">
+        {[['sb_vs_bb', 'SB agindo'], ['bb_vs_complete', 'BB vs Complete']].map(([s, l]) => (
+          <button key={s} onClick={() => setScenario(s)}
+            className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: scenario === s ? '#e5484d' : '#1a1a1d', color: scenario === s ? 'white' : '#888', border: '1px solid #2a2a2e' }}>
+            {l}
+          </button>
+        ))}
+      </div>
+      <RangeBuilder correctRange={correctRange} actions={actions} title={title} />
+    </div>
+  )
+}
+
 export default function Module6() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[6].lessonRead ? 'trainer' : 'lesson')
@@ -253,8 +295,11 @@ export default function Module6() {
         <div className="flex gap-2 mb-6">
           <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>📖 Aula</button>
           <button onClick={() => progress.modules[6].lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[6].lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[6].lessonRead ? 'pointer' : 'not-allowed' }}>🎯 Trainer {!progress.modules[6].lessonRead && '🔒'}</button>
+          <button onClick={() => progress.modules[6].lessonRead && setView('builder')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'builder' ? '#e5484d' : '#1a1a1d', color: view === 'builder' ? 'white' : (progress.modules[6].lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[6].lessonRead ? 'pointer' : 'not-allowed' }}>🧩 Range Builder {!progress.modules[6].lessonRead && '🔒'}</button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(6); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' && <Lesson onComplete={() => { markLessonRead(6); setView('trainer') }} />}
+        {view === 'trainer' && <Trainer />}
+        {view === 'builder' && <M6RangeBuilder />}
       </div>
     </div>
   )

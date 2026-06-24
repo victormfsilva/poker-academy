@@ -4,6 +4,7 @@ import SessionReview from '../../components/SessionReview'
 import { PUSH_FOLD_RANGES, POSITION_INFO } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import RangeBuilder from '../../components/RangeBuilder'
 import ModulePokerTable from '../../components/ModulePokerTable'
 
 const POSITIONS = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB']
@@ -303,6 +304,47 @@ function Trainer() {
   )
 }
 
+function M2RangeBuilder() {
+  const [pos, setPos] = useState('UTG')
+  const [stack, setStack] = useState(10)
+  const range = PUSH_FOLD_RANGES[pos]?.[stack] || []
+  const allHands = generateAllHands()
+  const correctRange = {
+    push: range,
+    fold: allHands.filter(h => !range.includes(h)),
+  }
+
+  return (
+    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+      <h2 className="text-lg font-bold mb-4" style={{ color: '#fdfdfd' }}>Construa o Range de Push</h2>
+      <p className="text-sm mb-4" style={{ color: '#676671' }}>
+        Selecione todas as maos que voce daria all-in nessa posicao e stack.
+      </p>
+      <div className="flex gap-3 mb-4 flex-wrap">
+        <div>
+          <label className="text-xs block mb-1" style={{ color: '#676671' }}>Posicao</label>
+          <div className="flex gap-1">
+            {POSITIONS.map(p => (
+              <button key={p} onClick={() => setPos(p)} className="px-2 py-1 rounded text-xs font-bold"
+                style={{ background: pos === p ? '#e5484d' : '#222225', color: pos === p ? '#fdfdfd' : '#676671' }}>{p}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="text-xs block mb-1" style={{ color: '#676671' }}>Stack</label>
+          <div className="flex gap-1">
+            {STACKS_OPTIONS.map(s => (
+              <button key={s} onClick={() => setStack(s)} className="px-2 py-1 rounded text-xs font-bold"
+                style={{ background: stack === s ? '#0a84d7' : '#222225', color: stack === s ? '#fdfdfd' : '#676671' }}>{s}bb</button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <RangeBuilder correctRange={correctRange} actions={['push', 'fold']} title={`Range Push — ${pos} ${stack}bb`} />
+    </div>
+  )
+}
+
 export default function Module2() {
   const { progress, markLessonRead } = useProgress()
   const [view, setView] = useState(progress.modules[2].lessonRead ? 'trainer' : 'lesson')
@@ -331,8 +373,14 @@ export default function Module2() {
             style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[2].lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[2].lessonRead ? 'pointer' : 'not-allowed' }}>
             🎯 Trainer {!progress.modules[2].lessonRead && '🔒'}
           </button>
+          <button onClick={() => progress.modules[2].lessonRead && setView('builder')} className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: view === 'builder' ? '#0a84d7' : '#1a1a1d', color: view === 'builder' ? 'white' : (progress.modules[2].lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[2].lessonRead ? 'pointer' : 'not-allowed' }}>
+            🧩 Range Builder {!progress.modules[2].lessonRead && '🔒'}
+          </button>
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(2); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' && <Lesson onComplete={() => { markLessonRead(2); setView('trainer') }} />}
+        {view === 'trainer' && <Trainer />}
+        {view === 'builder' && <M2RangeBuilder />}
       </div>
     </div>
   )
