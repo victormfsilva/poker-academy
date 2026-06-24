@@ -31,10 +31,28 @@ function ensureSvgSprite() {
   fetch('/cards/svg-cards.svg')
     .then(r => r.text())
     .then(svgText => {
+      // Parse the SVG and move card groups out of <defs> so <use> can render them
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(svgText, 'image/svg+xml')
+      const svgEl = doc.documentElement
+      const defs = svgEl.querySelector('defs')
+
+      if (defs) {
+        // Find all card groups (club_*, diamond_*, heart_*, spade_*)
+        const cardGroups = defs.querySelectorAll(
+          'g[id^="club_"], g[id^="diamond_"], g[id^="heart_"], g[id^="spade_"]'
+        )
+        cardGroups.forEach(g => {
+          defs.removeChild(g)
+          svgEl.appendChild(g)
+        })
+      }
+
+      // Inject as hidden sprite
       const container = document.createElement('div')
       container.id = 'svg-card-sprite'
       container.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden'
-      container.innerHTML = svgText
+      container.appendChild(svgEl)
       document.body.appendChild(container)
       spriteLoaded = true
       spriteCallbacks.forEach(cb => cb())
