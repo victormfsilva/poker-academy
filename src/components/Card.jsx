@@ -7,54 +7,23 @@ const SUIT_BG = { s: '#4b4b5e', h: '#b8312a', d: '#2563b5', c: '#48824a' }
 // ── SVG Card Style ──
 const SUIT_MAP = { s: 'spade', h: 'heart', d: 'diamond', c: 'club' }
 const RANK_MAP = { A: '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', T: '10', J: 'jack', Q: 'queen', K: 'king' }
-const CARD_W = 169.075
-const CARD_H = 244.640
 
-// Transforms de cada carta no sprite SVG (extraidos do svg-cards.svg)
-const CARD_TRANSFORMS = {
-  club_1:[1.25,236.52],club_2:[-166.325,236.52],club_3:[-333.9,236.52],club_4:[-501.475,236.52],club_5:[-669.05,236.52],club_6:[-836.625,236.52],club_7:[-1004.2,236.52],club_8:[-1171.77,236.52],club_9:[-1339.35,236.52],club_10:[-1506.92,236.52],club_jack:[-1674.5,236.52],club_queen:[-1842.07,236.52],club_king:[-2009.65,236.52],
-  diamond_1:[1.25,-6.617],diamond_2:[-166.325,-6.617],diamond_3:[-333.9,-6.617],diamond_4:[-501.475,-6.617],diamond_5:[-669.05,-6.617],diamond_6:[-836.625,-6.617],diamond_7:[-1004.2,-6.617],diamond_8:[-1171.77,-6.617],diamond_9:[-1339.35,-6.617],diamond_10:[-1506.92,-6.617],diamond_jack:[-1674.5,-6.617],diamond_queen:[-1842.07,-6.617],diamond_king:[-2009.65,-6.617],
-  heart_1:[1.25,-249.755],heart_2:[-166.325,-249.755],heart_3:[-333.9,-249.755],heart_4:[-501.475,-249.755],heart_5:[-669.05,-249.755],heart_6:[-836.625,-249.755],heart_7:[-1004.2,-249.755],heart_8:[-1171.77,-249.755],heart_9:[-1339.35,-249.755],heart_10:[-1506.92,-249.755],heart_jack:[-1674.5,-249.755],heart_queen:[-1842.07,-249.755],heart_king:[-2009.65,-249.755],
-  spade_1:[1.25,-492.892],spade_2:[-166.325,-492.892],spade_3:[-333.9,-492.892],spade_4:[-501.475,-492.892],spade_5:[-669.05,-492.892],spade_6:[-836.625,-492.892],spade_7:[-1004.2,-492.892],spade_8:[-1171.77,-492.892],spade_9:[-1339.35,-492.892],spade_10:[-1506.92,-492.892],spade_jack:[-1674.5,-492.892],spade_queen:[-1842.07,-492.892],spade_king:[-2009.65,-492.892],
-}
-
-// Singleton: carrega o SVG sprite uma unica vez
-let spriteLoaded = false
+// Singleton: carrega e parseia o SVG sprite uma unica vez
+let spriteSvgEl = null
 let spriteLoading = false
 const spriteCallbacks = []
 
 function ensureSvgSprite() {
-  if (spriteLoaded) return
+  if (spriteSvgEl) return
   if (spriteLoading) return
   spriteLoading = true
 
   fetch('/cards/svg-cards.svg')
     .then(r => r.text())
     .then(svgText => {
-      // Parse the SVG and move card groups out of <defs> so <use> can render them
       const parser = new DOMParser()
       const doc = parser.parseFromString(svgText, 'image/svg+xml')
-      const svgEl = doc.documentElement
-      const defs = svgEl.querySelector('defs')
-
-      if (defs) {
-        // Find all card groups (club_*, diamond_*, heart_*, spade_*)
-        const cardGroups = defs.querySelectorAll(
-          'g[id^="club_"], g[id^="diamond_"], g[id^="heart_"], g[id^="spade_"]'
-        )
-        cardGroups.forEach(g => {
-          defs.removeChild(g)
-          svgEl.appendChild(g)
-        })
-      }
-
-      // Inject as hidden sprite
-      const container = document.createElement('div')
-      container.id = 'svg-card-sprite'
-      container.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden'
-      container.appendChild(svgEl)
-      document.body.appendChild(container)
-      spriteLoaded = true
+      spriteSvgEl = doc.documentElement
       spriteCallbacks.forEach(cb => cb())
       spriteCallbacks.length = 0
     })
@@ -62,7 +31,7 @@ function ensureSvgSprite() {
 }
 
 function onSpriteReady(cb) {
-  if (spriteLoaded) { cb(); return }
+  if (spriteSvgEl) { cb(); return }
   spriteCallbacks.push(cb)
   ensureSvgSprite()
 }
@@ -86,11 +55,12 @@ export function useCardStyle() {
     function onStorage(e) {
       if (e.key === CARD_STYLE_KEY) _setStyle(e.newValue || 'css')
     }
+    function onCustom() { _setStyle(getCardStyle()) }
     window.addEventListener('storage', onStorage)
-    window.addEventListener('cardStyleChange', () => _setStyle(getCardStyle()))
+    window.addEventListener('cardStyleChange', onCustom)
     return () => {
       window.removeEventListener('storage', onStorage)
-      window.removeEventListener('cardStyleChange', () => {})
+      window.removeEventListener('cardStyleChange', onCustom)
     }
   }, [])
 
@@ -139,41 +109,69 @@ export function handToCards(hand) {
 }
 
 // ── Componente SVG Card ──
+// Clona os nodes DOM diretamente do sprite parseado para dentro de um container div.
+// Isso garante que todas as referências internas (xlink:href) são resolvidas.
 
 function SvgCard({ rank, suit, dims }) {
-  const [ready, setReady] = useState(spriteLoaded)
-  const svgRef = useRef(null)
+  const containerRef = useRef(null)
+  const [ready, setReady] = useState(!!spriteSvgEl)
 
   useEffect(() => {
-    if (!spriteLoaded) {
+    if (!spriteSvgEl) {
       onSpriteReady(() => setReady(true))
     }
   }, [])
 
-  const suitName = SUIT_MAP[suit]
-  const rankId = RANK_MAP[rank]
-  if (!suitName || !rankId) return null
+  useEffect(() => {
+    if (!ready || !spriteSvgEl || !containerRef.current) return
 
-  const cardId = suitName + '_' + rankId
-  const t = CARD_TRANSFORMS[cardId]
-  if (!t || !ready) {
-    // Fallback while loading: show CSS card
+    const suitName = SUIT_MAP[suit]
+    const rankId = RANK_MAP[rank]
+    if (!suitName || !rankId) return
+
+    const cardId = suitName + '_' + rankId
+    const cardGroup = spriteSvgEl.querySelector(`#${cardId}`)
+    if (!cardGroup) return
+
+    // Get card's transform to calculate viewBox
+    const transform = cardGroup.getAttribute('transform') || ''
+    const tMatch = transform.match(/translate\(([^,]+),([^)]+)\)/)
+    const tx = tMatch ? parseFloat(tMatch[1]) : 0
+    const ty = tMatch ? parseFloat(tMatch[2]) : 0
+
+    // Clone the entire sprite SVG (with all defs)
+    const svgClone = spriteSvgEl.cloneNode(true)
+
+    // Set viewBox to show only this card
+    svgClone.setAttribute('viewBox', `${tx} ${ty} 169.075 244.64`)
+    svgClone.setAttribute('width', String(dims.w))
+    svgClone.setAttribute('height', String(dims.h))
+    svgClone.style.borderRadius = dims.r + 'px'
+    svgClone.style.overflow = 'hidden'
+    svgClone.style.display = 'block'
+
+    // Move ALL card groups out of defs so they render
+    const defs = svgClone.querySelector('defs')
+    if (defs) {
+      const allCards = defs.querySelectorAll(
+        'g[id^="club_"], g[id^="diamond_"], g[id^="heart_"], g[id^="spade_"]'
+      )
+      allCards.forEach(g => {
+        defs.removeChild(g)
+        svgClone.appendChild(g)
+      })
+    }
+
+    // Clear previous content and insert
+    containerRef.current.innerHTML = ''
+    containerRef.current.appendChild(svgClone)
+  }, [ready, rank, suit, dims.w, dims.h, dims.r])
+
+  if (!ready) {
     return <CssCard rank={rank} suit={suit} dims={dims} />
   }
 
-  const vb = `${t[0]} ${t[1]} ${CARD_W} ${CARD_H}`
-
-  return (
-    <svg
-      ref={svgRef}
-      viewBox={vb}
-      width={dims.w}
-      height={dims.h}
-      style={{ borderRadius: dims.r, overflow: 'hidden', display: 'block' }}
-    >
-      <use href={`#${cardId}`} />
-    </svg>
-  )
+  return <div ref={containerRef} style={{ width: dims.w, height: dims.h, display: 'inline-block' }} />
 }
 
 // ── Componente CSS Card (original) ──
