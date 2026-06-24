@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useProgress } from '../context/ProgressContext'
 import { analyzeLeaks } from '../utils/leaks'
+import Card, { useCardStyle } from '../components/Card'
 
 const MODULES = [
   { id: 1, name: 'RFI ChipEV', desc: 'Raise First In', icon: 'R', cat: 'fundamentals' },
@@ -70,6 +71,7 @@ const DAY_NAMES = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 export default function Dashboard() {
   const { progress, getModuleProgress, setDailyGoal, getPendingReviews } = useProgress()
   const [editingGoal, setEditingGoal] = useState(false)
+  const [cardStyle, toggleCardStyle] = useCardStyle()
 
   const globalAcc = progress.globalStats.totalHands > 0
     ? Math.round((progress.globalStats.totalCorrect / progress.globalStats.totalHands) * 100)
@@ -328,6 +330,44 @@ export default function Dashboard() {
               <div className="rounded-full h-1" style={{ width: `${overallProgress}%`, background: '#4fce82' }} />
             </div>
           </div>
+        </div>
+
+        {/* Card style toggle */}
+        <div className="flex items-center justify-between rounded-xl px-5 py-3 mb-8" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1">
+              <Card card="As" size="sm" />
+              <Card card="Kh" size="sm" />
+            </div>
+            <div>
+              <div style={{ color: '#fdfdfd', fontSize: 13, fontWeight: 600 }}>Estilo das cartas</div>
+              <div style={{ color: '#676671', fontSize: 11 }}>{cardStyle === 'css' ? 'GTO Wizard (texto)' : 'SVG profissional'}</div>
+            </div>
+          </div>
+          <button
+            onClick={toggleCardStyle}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+            style={{
+              background: cardStyle === 'svg' ? 'rgba(79,206,130,0.12)' : '#222225',
+              border: `1px solid ${cardStyle === 'svg' ? 'rgba(79,206,130,0.3)' : '#2a2a2e'}`,
+              color: cardStyle === 'svg' ? '#4fce82' : '#b3b3b8',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            <div style={{
+              width: 32, height: 16, borderRadius: 8, position: 'relative',
+              background: cardStyle === 'svg' ? '#4fce82' : '#3a3a42',
+              transition: 'background 0.2s',
+            }}>
+              <div style={{
+                width: 12, height: 12, borderRadius: 6, position: 'absolute', top: 2,
+                left: cardStyle === 'svg' ? 18 : 2,
+                background: '#fdfdfd',
+                transition: 'left 0.2s',
+              }} />
+            </div>
+            SVG
+          </button>
         </div>
 
         {/* Module grid by category */}
