@@ -5,6 +5,161 @@ import Card, { parseCard } from '../../components/Card'
 import { POSTFLOP_SCENARIOS, ALL_POSTFLOP_CATEGORIES } from '../../data/postflopScenarios'
 import { Hand } from 'pokersolver'
 
+// ─── Hand analysis helpers ───────────────────────────────────────────────────
+const RANK_VAL = { A:14,K:13,Q:12,J:11,T:10,'9':9,'8':8,'7':7,'6':6,'5':5,'4':4,'3':3,'2':2 }
+const RANK_NAMES = { A:'As',K:'Reis',Q:'Damas',J:'Valetes',T:'Dez','9':'Noves','8':'Oitos','7':'Setes','6':'Seis','5':'Cincos','4':'Quatros','3':'Tres','2':'Doses' }
+
+function analyzeBoard(board) {
+  const vals = board.map(c => RANK_VAL[c.slice(0, -1)])
+  const suits = board.map(c => c.slice(-1))
+  const suitCounts = {}
+  suits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
+  const maxSuit = Math.max(...Object.values(suitCounts))
+  const sorted = [...new Set(vals)].sort((a, b) => a - b)
+  let maxRun = 1, run = 1
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] - sorted[i - 1] <= 2) { run++; maxRun = Math.max(maxRun, run) }
+    else run = 1
+  }
+  const highCards = vals.filter(v => v >= 11).length
+  return {
+    flushDraw: maxSuit === 3, flushComplete: maxSuit >= 4, monotone: maxSuit >= 3,
+    connected: maxRun >= 3, paired: new Set(vals).size < vals.length,
+    highBoard: highCards >= 2, lowBoard: Math.max(...vals) <= 9,
+    isWet: maxSuit >= 3 || maxRun >= 3, isDry: maxSuit < 3 && maxRun < 3,
+  }
+}
+
+function analyzeHand(hole, board) {
+  const holeRanks = hole.map(c => c.slice(0, -1))
+  const holeVals = holeRanks.map(r => RANK_VAL[r])
+  const holeSuits = hole.map(c => c.slice(-1))
+  const boardRanks = board.map(c => c.slice(0, -1))
+  const boardVals = boardRanks.map(r => RANK_VAL[r])
+  const allVals = [...holeVals, ...boardVals]
+  const allSuits = [...holeSuits, ...board.map(c => c.slice(-1))]
+  const suitCounts = {}
+  allSuits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1 })
+  const isPocket = holeRanks[0] === holeRanks[1]
+  const topBoard = Math.max(...boardVals)
+  const matchBoard = holeRanks.filter(r => boardRanks.includes(r))
+
+  return {
+    isPocket,
+    isOverpair: isPocket && holeVals[0] > topBoard,
+    isTopPair: matchBoard.length > 0 && Math.max(...matchBoard.map(r => RANK_VAL[r])) === topBoard,
+    hasAnyPair: matchBoard.length > 0,
+    isSet: isPocket && boardRanks.includes(holeRanks[0]),
+    isTwoPair: !isPocket && new Set(matchBoard).size >= 2,
+    hasFlushDraw: Object.values(suitCounts).some(v => v === 4),
+    hasMadeFlush: Object.values(suitCounts).some(v => v >= 5),
+    hasStraightDraw: (() => {
+      let vals = [...new Set(allVals)].sort((a, b) => a - b)
+      if (vals.includes(14)) vals = [1, ...vals]
+      for (let lo = 1; lo <= 10; lo++) {
+        const r5 = [lo,lo+1,lo+2,lo+3,lo+4]
+        if (r5.every(v => vals.includes(v))) return false
+      }
+      for (let lo = 1; lo <= 11; lo++) {
+        const r4 = [lo,lo+1,lo+2,lo+3]
+        if (r4.every(v => vals.includes(v)) && holeVals.some(hv => r4.includes(hv) || (hv===14 && r4.includes(1)))) return true
+      }
+      return false
+    })(),
+    hasMadeStraight: (() => {
+      let vals = [...new Set(allVals)].sort((a, b) => a - b)
+      if (vals.includes(14)) vals = [1, ...vals]
+      for (let lo = 1; lo <= 10; lo++) {
+        const r5 = [lo,lo+1,lo+2,lo+3,lo+4]
+        if (r5.every(v => vals.includes(v)) && holeVals.some(hv => r5.includes(hv) || (hv===14 && r5.includes(1)))) return true
+      }
+      return false
+    })(),
+    highHole: Math.max(...holeVals),
+    lowHole: Math.min(...holeVals),
+    holeDescr: holeRanks.join('') + (holeSuits[0] === holeSuits[1] ? 's' : 'o'),
+  }
+}
+
+function generateExplanation(hole, board, correctAction, isFacing, street, heroPos) {
+  const tex = analyzeBoard(board)
+  const hand = analyzeHand(hole, board)
+  let handName = ''
+  try { handName = Hand.solve([...hole, ...board]).descr } catch {}
+  const posLabel = heroPos === 'IP' ? 'em posicao' : 'fora de posicao'
+  const streetPT = street === 'Flop' ? 'flop' : street === 'Turn' ? 'turn' : 'river'
+  const boardDesc = tex.isDry ? 'seco' : tex.isWet ? 'umido' : 'neutro'
+
+  if (isFacing) {
+    if (correctAction === 'fold') {
+      if (!hand.hasAnyPair && !hand.hasFlushDraw && !hand.hasStraightDraw)
+        return `Sem par, sem draw no ${streetPT}. ${handName ? `Sua mao (${handName})` : 'Sua mao'} nao tem equity suficiente para continuar contra a aposta do vilao. Fold evita perder mais fichas.`
+      if (hand.hasAnyPair && !hand.isTopPair)
+        return `Par fraco no ${streetPT} em board ${boardDesc}. ${handName ? `(${handName})` : ''} Contra a aposta, voce esta provavelmente atras de maos melhores no range do vilao. Fold e a decisao mais segura.`
+      if (hand.hasStraightDraw && !hand.hasFlushDraw)
+        return `Apenas straight draw no ${streetPT}. Pot odds desfavoraveis contra esta aposta — seus outs nao compensam o custo. Fold correto.`
+      return `${handName ? `${handName} — ` : ''}equity insuficiente contra a aposta do vilao no ${streetPT}. Board ${boardDesc} nao favorece continuar. Fold.`
+    }
+    if (correctAction === 'call') {
+      if (hand.isOverpair || hand.isTopPair)
+        return `${handName || 'Top pair/overpair'} — mao boa o suficiente para call mas nao para raise. ${heroPos === 'OOP' ? 'Fora de posicao, controle o pote.' : 'Em posicao, chame e reavalie na proxima street.'}`
+      if (hand.hasMadeFlush || hand.hasMadeStraight)
+        return `${handName || 'Mao forte'} — call para nao assustar o vilao. ${street === 'River' ? 'No river, call extrai mais valor do que raise se o vilao folda blefes.' : 'Slowplay para construir pote nas proximas streets.'}`
+      if (hand.hasFlushDraw)
+        return `Flush draw com 9 outs (~${street === 'Flop' ? '35' : '20'}% equity). ${handName ? `(${handName}) ` : ''}Pot odds favorecem o call. Se completar, voce tera mao forte.`
+      if (hand.hasStraightDraw)
+        return `Straight draw com ~${street === 'Flop' ? '32' : '18'}% equity. ${handName ? `(${handName}) ` : ''}Call pelas odds implicitas — se acertar, voce ganha um pote grande.`
+      if (hand.hasAnyPair)
+        return `${handName || 'Par'} — showdown value suficiente para call. Board ${boardDesc} ${tex.isDry ? 'e poucas cartas assustam' : 'mas as odds justificam continuar'}.`
+      if (hand.isSet || hand.isTwoPair)
+        return `${handName || 'Mao forte'} — call para manter o blefe range do vilao no pote. Nao espante-o com raise agora.`
+      return `${handName ? `${handName} — ` : ''}equity suficiente para call ${posLabel}. ${street === 'River' ? 'No river, pague pra ver o showdown.' : 'Veja a proxima carta.'}`
+    }
+    if (correctAction === 'raise') {
+      if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
+        return `${handName || 'Mao monstruosa'}! Raise para valor maximo. O vilao ja apostou — construa o pote enquanto ele esta comprometido.`
+      if (hand.isTwoPair)
+        return `${handName || 'Dois pares'} — raise de valor! Mao forte o suficiente para inflacionar o pote. O vilao pode pagar com top pair ou draws.`
+      if (hand.isOverpair || hand.isTopPair)
+        return `${handName || 'Top pair/overpair'} — raise de valor ${posLabel}. Board ${boardDesc} favorece o raise para proteger contra draws e extrair valor.`
+      if (hand.hasFlushDraw || hand.hasStraightDraw)
+        return `${handName ? `${handName} — ` : ''}Raise como semi-blefe! Voce tem equity significativa com seus draws e adiciona fold equity. Se o vilao foldar, voce ganha na hora.`
+      return `${handName ? `${handName} — ` : ''}Raise ${posLabel}. Board ${boardDesc} no ${streetPT} permite pressionar o range do vilao.`
+    }
+  } else {
+    if (correctAction === 'check') {
+      if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
+        return `${handName || 'Mao monstruosa'} — check para induzir aposta do vilao (trapping). Se apostar, pode assustar e ele folda. Deixe ele blefar ou apostar por valor com mao pior.`
+      if (hand.isTopPair || hand.isOverpair)
+        return `${handName || 'Top pair/overpair'} — check para controle de pote ${posLabel}. Board ${boardDesc} no ${streetPT}${tex.isWet ? ' — muitos draws possiveis, nao infle o pote desnecessariamente' : ''}.`
+      if (hand.hasAnyPair)
+        return `${handName || 'Par'} — check. Mao com showdown value mas nao forte o bastante para apostar por valor. Board ${boardDesc}, controle o pote.`
+      if (hand.hasFlushDraw || hand.hasStraightDraw)
+        return `${handName ? `${handName} — ` : ''}Check com draw. ${heroPos === 'OOP' ? 'Fora de posicao, check e chame ou check-raise dependendo da acao do vilao.' : 'Em posicao, tome a carta gratis e tente completar.'}`
+      return `${handName ? `${handName} — ` : ''}Sem mao forte no ${streetPT}. Check — apostar sem valor ou blefe eficiente e desperdicar fichas. Board ${boardDesc}.`
+    }
+    if (correctAction === 'bet') {
+      if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
+        return `${handName || 'Mao monstruosa'}! Bet de valor — extraia fichas! Mao forte demais para dar carta gratis ao vilao.`
+      if (hand.isTwoPair)
+        return `${handName || 'Dois pares'} — bet de valor! Board ${boardDesc}, proteja sua mao e construa pote. Vilao pode pagar com par ou draw.`
+      if (hand.isOverpair || hand.isTopPair)
+        return `${handName || 'Top pair/overpair'} — bet de valor no ${streetPT}. ${tex.isWet ? 'Board umido — aposte para proteger contra draws.' : 'Board seco — aposte para extrair de maos piores.'}`
+      if (hand.hasFlushDraw || hand.hasStraightDraw)
+        return `${handName ? `${handName} — ` : ''}Bet como semi-blefe! Voce tem outs e fold equity. Se o vilao foldar, otimo. Se chamar, voce pode completar o draw.`
+      if (!hand.hasAnyPair && !hand.hasFlushDraw && !hand.hasStraightDraw)
+        return `${handName ? `${handName} — ` : ''}Blefe puro no ${streetPT}! Board ${boardDesc} permite representar mao forte. Sem showdown value, apostar e a unica forma de ganhar.`
+      return `${handName ? `${handName} — ` : ''}Bet no ${streetPT} ${posLabel}. Board ${boardDesc} favorece a agressividade neste spot.`
+    }
+    if (correctAction === 'raise') {
+      if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
+        return `${handName || 'Mao monstruosa'}! Raise para valor maximo — construa o pote com mao nuts.`
+      return `${handName ? `${handName} — ` : ''}Raise no ${streetPT}! ${hand.hasFlushDraw || hand.hasStraightDraw ? 'Semi-blefe com draw forte e fold equity.' : 'Pressione o range do vilao com agressividade.'}`
+    }
+  }
+  return handName ? `Sua mao: ${handName}` : ''
+}
+
 // ─── Generate a solver scenario ──────────────────────────────────────────────
 function generateScenario() {
   const cat = ALL_POSTFLOP_CATEGORIES[Math.floor(Math.random() * ALL_POSTFLOP_CATEGORIES.length)]
@@ -238,10 +393,18 @@ function Trainer() {
             {scenario.sizing && <span> (sizing: {scenario.sizing})</span>}
           </div>
           {(() => {
-            try {
-              const solved = Hand.solve([...scenario.hole, ...scenario.board])
-              return <div style={{ color: '#676671', fontSize: 12, marginTop: 4 }}>Sua mao: {solved.descr}</div>
-            } catch { return null }
+            const correctAction = scenario.isFacing
+              ? ['fold', 'call', 'raise'][scenario.correct]
+              : scenario.options[scenario.correct].toLowerCase()
+            const explanation = generateExplanation(
+              scenario.hole, scenario.board, correctAction,
+              scenario.isFacing, scenario.street, scenario.heroPos
+            )
+            return explanation ? (
+              <div style={{ color: '#9d9da3', fontSize: 13, marginTop: 8, lineHeight: 1.6, borderTop: '1px solid #2a2a2e', paddingTop: 8 }}>
+                {explanation}
+              </div>
+            ) : null
           })()}
         </div>
       )}
