@@ -6,6 +6,7 @@ import { RFI_RANGES, PUSH_FOLD_RANGES, BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI, BLIND_W
 import { POSTFLOP_SCENARIOS, ALL_POSTFLOP_CATEGORIES } from '../data/postflopScenarios'
 import Card, { handToCards, parseCard } from '../components/Card'
 import RangeViewer from '../components/RangeViewer'
+import { Hand } from 'pokersolver'
 
 // ─── Constantes ────────────────────────────────────────────
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
@@ -1447,6 +1448,12 @@ export default function Infinite() {
               <div style={{ color: result.isCorrect ? '#4fce82' : '#e5484d', fontWeight: 700, fontSize: 16 }}>
                 {result.isCorrect ? 'Correto!' : result.isTimeout ? `Tempo esgotado! Era ${result.correctLabel}` : `Errou - era ${result.correctLabel}`}
               </div>
+              {scenario?.board && scenario?.heroCards && (() => {
+                try {
+                  const solved = Hand.solve([...scenario.heroCards, ...scenario.board])
+                  return <div style={{ color: '#b3b3b8', fontSize: 12, marginTop: 3 }}>Sua mao: {solved.descr}</div>
+                } catch { return null }
+              })()}
               {result.isMix && (
                 <div style={{ color: '#f5a623', fontSize: 12, marginTop: 3 }}>Mao de transicao - ambas as acoes sao aceitaveis.</div>
               )}

@@ -3,6 +3,7 @@ import { useProgress } from '../../context/ProgressContext'
 import SessionReview from '../../components/SessionReview'
 import Card, { parseCard } from '../../components/Card'
 import { POSTFLOP_SCENARIOS, ALL_POSTFLOP_CATEGORIES } from '../../data/postflopScenarios'
+import { Hand } from 'pokersolver'
 
 // ─── Generate a solver scenario ──────────────────────────────────────────────
 function generateScenario() {
@@ -69,7 +70,7 @@ function Lesson({ onComplete }) {
       <Section title="O que sao cenarios de solver?">
         <p>Solvers GTO (como PioSOLVER, GTO+) calculam a estrategia <b>matematicamente otima</b> para cada spot do poker.</p>
         <p style={{ marginTop: 8 }}>Diferente de heuristicas simplificadas, o solver considera TODOS os combos, todas as sizing opcoes e encontra o equilibrio de Nash.</p>
-        <p style={{ marginTop: 8 }}>Este modulo usa <b>cenarios reais computados por solver</b> do dataset PokerBench — 240 situacoes com a decisao GTO correta.</p>
+        <p style={{ marginTop: 8 }}>Este modulo usa <b>cenarios reais computados por solver</b> do dataset PokerBench — 10.000 situacoes com a decisao GTO correta.</p>
       </Section>
 
       <Section title="Tipos de cenarios">
@@ -236,6 +237,12 @@ function Trainer() {
             Resposta do solver: <b style={{ color: '#4fce82' }}>{scenario.options[scenario.correct]}</b>
             {scenario.sizing && <span> (sizing: {scenario.sizing})</span>}
           </div>
+          {(() => {
+            try {
+              const solved = Hand.solve([...scenario.hole, ...scenario.board])
+              return <div style={{ color: '#676671', fontSize: 12, marginTop: 4 }}>Sua mao: {solved.descr}</div>
+            } catch { return null }
+          })()}
         </div>
       )}
 

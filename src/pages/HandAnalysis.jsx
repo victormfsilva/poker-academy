@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Hand } from 'pokersolver'
 
 // ================================================================
 // Parsing de Hand History (PokerStars / generico)
@@ -370,6 +371,11 @@ function countDraws(heroCards, boardCards) {
 
 function analyzeStreet(heroCards, boardCards, street, actions, prevAnalysis) {
   const strength = getHandStrength(heroCards, boardCards)
+  // Enrich with pokersolver for precise hand name
+  try {
+    const solved = Hand.solve([...heroCards, ...boardCards])
+    strength.solverDescr = solved.descr
+  } catch { /* fallback to heuristic description */ }
   const draws = countDraws(heroCards, boardCards)
   const totalOuts = draws.reduce((sum, d) => sum + d.outs, 0)
 
@@ -739,7 +745,7 @@ export default function HandAnalysis() {
                     }}>{em.label}</span>
                     {s.strength && (
                       <span style={{ color: '#676671', fontSize: 12, fontFamily: 'JetBrains Mono', marginLeft: 'auto' }}>
-                        {s.strength.description}
+                        {s.strength.solverDescr || s.strength.description}
                       </span>
                     )}
                   </div>
