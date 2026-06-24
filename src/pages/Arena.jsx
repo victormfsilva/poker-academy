@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import Card, { parseCard, handToCards } from '../components/Card'
 import { BLIND_WARS, BB_VS_RFI } from '../data/ranges'
 import { useProgress } from '../context/ProgressContext'
+import { Hand } from 'pokersolver'
 
 // ─── Constantes ────────────────────────────────────────────
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
@@ -22,70 +23,37 @@ function newDeck() {
 
 function cardRank(c) { return RANK_VAL[c[0]] || RANK_VAL[c.slice(0, -1)] }
 
-// ─── Avaliacao de mao (simplificada) ──────────────────────
+// ─── Avaliacao de mao (pokersolver) ──────────────────────
+const HAND_LABELS = {
+  'Straight Flush': 'Straight Flush', 'Four of a Kind': 'Quadra',
+  'Full House': 'Full House', 'Flush': 'Flush', 'Straight': 'Straight',
+  'Three of a Kind': 'Trinca', 'Two Pair': 'Dois Pares', 'Pair': 'Par',
+  'High Card': 'High Card',
+}
+const HAND_SCORES = {
+  'Straight Flush': 9, 'Four of a Kind': 8, 'Full House': 7, 'Flush': 6,
+  'Straight': 5, 'Three of a Kind': 4, 'Two Pair': 3, 'Pair': 2, 'High Card': 1,
+}
+
 function evalHand(hole, board) {
-  const all = [...hole, ...board]
-  const ranks = all.map(c => RANK_VAL[c.slice(0, -1)])
-  const suits = all.map(c => c.slice(-1))
-
-  // Flush
-  const sc = {}
-  suits.forEach(s => { sc[s] = (sc[s] || 0) + 1 })
-  const flushSuit = Object.entries(sc).find(([, v]) => v >= 5)?.[0]
-  const hasFlush = !!flushSuit
-
-  // Straight
-  const unique = [...new Set(ranks)].sort((a, b) => a - b)
-  if (unique.includes(14)) unique.unshift(1) // Ace low
-  let hasStraight = false
-  let straightHigh = 0
-  for (let i = 0; i <= unique.length - 5; i++) {
-    if (unique[i+4] - unique[i] === 4 &&
-        unique[i+1] === unique[i]+1 && unique[i+2] === unique[i]+2 && unique[i+3] === unique[i]+3) {
-      hasStraight = true
-      straightHigh = unique[i+4]
-    }
+  const cards = [...hole, ...board]
+  const solved = Hand.solve(cards)
+  return {
+    score: HAND_SCORES[solved.name] || 1,
+    label: HAND_LABELS[solved.name] || solved.name,
+    descr: solved.descr,
+    _hand: solved,
   }
-
-  // Rank counts
-  const rc = {}
-  ranks.forEach(r => { rc[r] = (rc[r] || 0) + 1 })
-  const counts = Object.entries(rc).sort((a, b) => b[1] - a[1] || b[0] - a[0])
-
-  // Hand strength score (higher = better)
-  // 9=straight flush, 8=quads, 7=full house, 6=flush, 5=straight, 4=trips, 3=two pair, 2=pair, 1=high card
-  if (hasFlush && hasStraight) {
-    const flushCards = all.filter(c => c.slice(-1) === flushSuit).map(c => RANK_VAL[c.slice(0, -1)])
-    const fu = [...new Set(flushCards)].sort((a, b) => a - b)
-    if (fu.includes(14)) fu.unshift(1)
-    let sf = false
-    for (let i = 0; i <= fu.length - 5; i++) {
-      if (fu[i+4] - fu[i] === 4 && fu[i+1]===fu[i]+1 && fu[i+2]===fu[i]+2 && fu[i+3]===fu[i]+3) sf = true
-    }
-    if (sf) return { score: 9, label: 'Straight Flush' }
-  }
-
-  if (counts[0][1] === 4) return { score: 8, label: 'Quadra' }
-  if (counts[0][1] === 3 && counts[1]?.[1] >= 2) return { score: 7, label: 'Full House' }
-  if (hasFlush) return { score: 6, label: 'Flush' }
-  if (hasStraight) return { score: 5, label: 'Straight' }
-  if (counts[0][1] === 3) return { score: 4, label: 'Trinca' }
-  if (counts[0][1] === 2 && counts[1]?.[1] === 2) return { score: 3, label: 'Dois Pares' }
-  if (counts[0][1] === 2) return { score: 2, label: 'Par' }
-  return { score: 1, label: 'High Card' }
 }
 
 function compareHands(h1, h2, board) {
-  const e1 = evalHand(h1, board)
-  const e2 = evalHand(h2, board)
-  if (e1.score !== e2.score) return e1.score > e2.score ? 1 : -1
-  // Tiebreak by high card
-  const r1 = h1.map(c => RANK_VAL[c.slice(0, -1)]).sort((a,b) => b-a)
-  const r2 = h2.map(c => RANK_VAL[c.slice(0, -1)]).sort((a,b) => b-a)
-  for (let i = 0; i < Math.min(r1.length, r2.length); i++) {
-    if (r1[i] !== r2[i]) return r1[i] > r2[i] ? 1 : -1
-  }
-  return 0
+  const cards1 = [...h1, ...board]
+  const cards2 = [...h2, ...board]
+  const solved1 = Hand.solve(cards1)
+  const solved2 = Hand.solve(cards2)
+  const winners = Hand.winners([solved1, solved2])
+  if (winners.length === 2) return 0
+  return winners[0] === solved1 ? 1 : -1
 }
 
 // ─── Hand strength relativa (pra bot decidir) ─────────────

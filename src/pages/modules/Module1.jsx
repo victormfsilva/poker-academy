@@ -4,6 +4,7 @@ import SessionReview from '../../components/SessionReview'
 import { RFI_RANGES, POSITION_INFO } from '../../data/ranges'
 import Card, { handToCards } from '../../components/Card'
 import RangeViewer from '../../components/RangeViewer'
+import RangeBuilder from '../../components/RangeBuilder'
 import ModulePokerTable from '../../components/ModulePokerTable'
 
 // Tabela de ranges por posição e stack (visual)
@@ -538,10 +539,92 @@ export default function Module1() {
           >
             🎯 Trainer {!progress.modules[1].lessonRead && '🔒'}
           </button>
+          <button
+            onClick={() => progress.modules[1].lessonRead && setView('builder')}
+            className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{
+              background: view === 'builder' ? '#0a84d7' : '#1a1a1d',
+              color: view === 'builder' ? 'white' : (progress.modules[1].lessonRead ? '#888' : '#444'),
+              border: '1px solid #2a2a2e',
+              cursor: progress.modules[1].lessonRead ? 'pointer' : 'not-allowed'
+            }}
+          >
+            🧩 Range Builder {!progress.modules[1].lessonRead && '🔒'}
+          </button>
         </div>
 
-        {view === 'lesson' ? <Lesson onComplete={onLessonComplete} /> : <Trainer />}
+        {view === 'lesson' && <Lesson onComplete={onLessonComplete} />}
+        {view === 'trainer' && <Trainer />}
+        {view === 'builder' && <RangeBuilderMode />}
       </div>
+    </div>
+  )
+}
+
+function RangeBuilderMode() {
+  const [pos, setPos] = useState('UTG')
+  const [stack, setStack] = useState(100)
+
+  const range = RFI_RANGES[pos]?.[stack]
+  const correctRange = range ? {
+    raise: range.raise || [],
+    fold: generateAllHands().filter(h => !range.raise?.includes(h) && !range.mix?.includes(h)),
+  } : { raise: [], fold: generateAllHands() }
+
+  return (
+    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+      <h2 className="text-lg font-bold mb-4" style={{ color: '#fdfdfd' }}>
+        Construa o Range de RFI
+      </h2>
+      <p className="text-sm mb-4" style={{ color: '#676671' }}>
+        Selecione todas as maos que voce abriria (raise) nessa posicao e stack. Clique e arraste no grid.
+      </p>
+
+      {/* Position / Stack selectors */}
+      <div className="flex gap-3 mb-4 flex-wrap">
+        <div>
+          <label className="text-xs block mb-1" style={{ color: '#676671' }}>Posicao</label>
+          <div className="flex gap-1">
+            {POSITIONS.map(p => (
+              <button
+                key={p}
+                onClick={() => setPos(p)}
+                className="px-2 py-1 rounded text-xs font-bold"
+                style={{
+                  background: pos === p ? '#e5484d' : '#222225',
+                  color: pos === p ? '#fdfdfd' : '#676671',
+                }}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="text-xs block mb-1" style={{ color: '#676671' }}>Stack</label>
+          <div className="flex gap-1">
+            {STACKS.map(s => (
+              <button
+                key={s}
+                onClick={() => setStack(s)}
+                className="px-2 py-1 rounded text-xs font-bold"
+                style={{
+                  background: stack === s ? '#0a84d7' : '#222225',
+                  color: stack === s ? '#fdfdfd' : '#676671',
+                }}
+              >
+                {s}bb
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <RangeBuilder
+        correctRange={correctRange}
+        actions={['raise', 'fold']}
+        title={`Range RFI — ${pos} ${stack}bb (~${getRangePercent(pos, stack)}%)`}
+      />
     </div>
   )
 }
