@@ -3,6 +3,7 @@ import { useProgress } from '../../context/ProgressContext'
 import SessionReview from '../../components/SessionReview'
 import Card from '../../components/Card'
 import ModulePokerTable from '../../components/ModulePokerTable'
+import { calcEquity } from '../../lib/equity'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
@@ -425,7 +426,7 @@ function generateScenario() {
   return {
     question,
     options: allOptions,
-    explanation: reason,
+    explanation: reason + (() => { const eq = calcEquity(heroCards, board); return eq !== null ? ` (${eq}% equity vs range aleatorio)` : '' })(),
     heroCards,
     boardCards: board,
     heroPos,

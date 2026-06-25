@@ -3,6 +3,7 @@ import { useProgress } from '../../context/ProgressContext'
 import SessionReview from '../../components/SessionReview'
 import Card from '../../components/Card'
 import ModulePokerTable from '../../components/ModulePokerTable'
+import { calcEquity } from '../../lib/equity'
 
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 const SUITS = ['s','h','d','c']
@@ -590,7 +591,10 @@ function Trainer() {
 
   function answer(action) {
     if (!scenario || feedback) return
-    const correct = scenario.correct
+    const correct = { ...scenario.correct }
+    const eq = calcEquity(scenario.hole, scenario.boardCards)
+    const eqStr = eq !== null ? ` (${eq}% equity vs range aleatorio)` : ''
+    correct.reason = correct.reason + eqStr
     const isCorrect = action === correct.action
     const newStreak = isCorrect ? streak + 1 : 0
     setStreak(newStreak)
