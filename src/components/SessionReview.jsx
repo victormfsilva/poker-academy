@@ -21,24 +21,17 @@ export default function SessionReview({ moduleId, sessionCorrect, sessionTotal, 
     const recentErrors = moduleHistory.filter(e => !e.ok).length
     const totalInModule = moduleHistory.length
 
-    // Quantas vezes errou esse modulo nos ultimos 50 respostas gerais
     const recent50 = history.slice(-50)
     const errorsInRecent = recent50.filter(e => e.m === moduleId && !e.ok).length
-
-    // Pattern: erros repetidos no mesmo modulo
     const isRepeatLeak = errorsInRecent >= 3
 
-    // Leaks gerais
     const leaks = analyzeLeaks(history)
     const topLeaks = leaks.slice(0, 3)
-
-    // Verificar se o modulo atual e um leak
     const isCurrentModuleLeak = topLeaks.some(l => l.moduleId === moduleId)
 
     return { recentErrors, totalInModule, isRepeatLeak, topLeaks, isCurrentModuleLeak, errorsInRecent }
   }, [progress.answerHistory, moduleId])
 
-  const emoji = accuracy >= 90 ? '🎯' : accuracy >= 70 ? '💪' : accuracy >= 50 ? '📚' : '🔄'
   const message = accuracy >= 90
     ? 'Excelente! Voce domina esse conteudo.'
     : accuracy >= 70
@@ -48,115 +41,121 @@ export default function SessionReview({ moduleId, sessionCorrect, sessionTotal, 
     : 'Esse modulo precisa de mais estudo. Releia a aula antes de tentar novamente.'
 
   const sessionErrors = sessionTotal - sessionCorrect
+  const accColor = accuracy >= 90 ? 'var(--emerald)' : accuracy >= 70 ? 'var(--gold)' : 'var(--crimson)'
+  const accBg = accuracy >= 90 ? 'var(--emerald-soft)' : accuracy >= 70 ? 'var(--gold-soft)' : 'var(--crimson-soft)'
 
   return (
-    <div className="min-h-screen pb-28 md:pb-8 md:pt-16" style={{ background: '#0f0f0f' }}>
-      <div className="max-w-2xl mx-auto px-4 pt-6">
-        <div className="rounded-2xl p-6" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+    <div className="min-h-screen pb-28 md:pb-8 md:pt-16" style={{ background: 'var(--bg)' }}>
+      <div className="max-w-2xl mx-auto px-4 pt-6 animate-in">
+        <div className="card" style={{ borderRadius: 'var(--radius-xl)' }}>
 
           {/* Header */}
           <div className="text-center mb-6">
-            <div style={{ fontSize: 48, marginBottom: 8 }}>{emoji}</div>
-            <h2 style={{ color: '#fdfdfd', fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
-              Sessao Completa!
+            <div style={{
+              width: 56, height: 56, borderRadius: 'var(--radius-lg)', margin: '0 auto 12px',
+              background: accBg, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accColor} strokeWidth="2">
+                {accuracy >= 70 ? <polyline points="20 6 9 17 4 12" /> : <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>}
+              </svg>
+            </div>
+            <h2 style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 700, marginBottom: 4, letterSpacing: '-0.025em' }}>
+              Sessao Completa
             </h2>
-            <p style={{ color: '#676671', fontSize: 13 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, fontFamily: 'JetBrains Mono, monospace' }}>
               {MOD_NAMES[moduleId] || `Modulo ${moduleId}`}
             </p>
           </div>
 
-          {/* Score principal */}
+          {/* Score */}
           <div className="rounded-xl p-5 mb-5 text-center" style={{
-            background: accuracy >= 90 ? 'rgba(79,206,130,0.08)' : accuracy >= 70 ? 'rgba(245,166,35,0.08)' : 'rgba(229,72,77,0.08)',
-            border: `1px solid ${accuracy >= 90 ? 'rgba(79,206,130,0.2)' : accuracy >= 70 ? 'rgba(245,166,35,0.2)' : 'rgba(229,72,77,0.2)'}`,
+            background: accBg,
+            border: `1px solid ${accColor}20`,
           }}>
             <div style={{
-              color: accuracy >= 90 ? '#4fce82' : accuracy >= 70 ? '#f5a623' : '#e5484d',
-              fontSize: 48, fontWeight: 700, fontFamily: 'JetBrains Mono', lineHeight: 1,
+              color: accColor,
+              fontSize: 48, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', lineHeight: 1,
             }}>
               {accuracy}%
             </div>
-            <div style={{ color: '#b3b3b8', fontSize: 13, marginTop: 6 }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 8 }}>
               {sessionCorrect}/{sessionTotal} corretas
             </div>
           </div>
 
-          {/* Stats da sessao */}
+          {/* Stats */}
           <div className="grid grid-cols-3 gap-2 mb-5">
             {[
-              { label: 'Acertos', value: sessionCorrect, color: '#4fce82' },
-              { label: 'Erros', value: sessionErrors, color: sessionErrors > 0 ? '#e5484d' : '#4fce82' },
-              { label: 'Total no modulo', value: analysis.totalInModule, color: '#0a84d7' },
+              { label: 'Acertos', value: sessionCorrect, color: 'var(--emerald)' },
+              { label: 'Erros', value: sessionErrors, color: sessionErrors > 0 ? 'var(--crimson)' : 'var(--emerald)' },
+              { label: 'Total', value: analysis.totalInModule, color: 'var(--sapphire)' },
             ].map(s => (
-              <div key={s.label} className="rounded-lg py-2.5 text-center" style={{ background: '#222225' }}>
-                <div style={{ color: s.color, fontSize: 20, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{s.value}</div>
-                <div style={{ color: '#676671', fontSize: 10 }}>{s.label}</div>
+              <div key={s.label} className="rounded-lg py-3 text-center" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <div style={{ color: s.color, fontSize: 20, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>{s.value}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 10, marginTop: 2 }}>{s.label}</div>
               </div>
             ))}
           </div>
 
-          {/* Mensagem */}
-          <div className="rounded-lg px-4 py-3 mb-4" style={{ background: '#222225' }}>
-            <p style={{ color: '#b3b3b8', fontSize: 13, lineHeight: 1.6 }}>{message}</p>
+          {/* Message */}
+          <div className="rounded-lg px-4 py-3 mb-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.6 }}>{message}</p>
           </div>
 
-          {/* Alerta de leak repetido */}
+          {/* Repeat leak alert */}
           {analysis.isRepeatLeak && sessionErrors > 0 && (
             <div className="rounded-lg px-4 py-3 mb-4" style={{
-              background: 'rgba(229,72,77,0.08)',
-              border: '1px solid rgba(229,72,77,0.2)',
+              background: 'var(--crimson-soft)',
+              border: '1px solid rgba(239,68,68,0.2)',
             }}>
-              <div style={{ color: '#e5484d', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+              <div style={{ color: 'var(--crimson)', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
                 Spot recorrente detectado
               </div>
-              <p style={{ color: '#b3b3b8', fontSize: 12, lineHeight: 1.5 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.5 }}>
                 Voce errou {analysis.errorsInRecent}x nesse modulo nas ultimas 50 respostas.
                 Esse e um dos seus leaks — revise a aula com calma antes de treinar mais.
               </p>
             </div>
           )}
 
-          {/* Leak atual */}
+          {/* Current module leak */}
           {analysis.isCurrentModuleLeak && sessionErrors > 0 && !analysis.isRepeatLeak && (
             <div className="rounded-lg px-4 py-3 mb-4" style={{
-              background: 'rgba(245,166,35,0.08)',
-              border: '1px solid rgba(245,166,35,0.2)',
+              background: 'var(--gold-soft)',
+              border: '1px solid rgba(245,158,11,0.2)',
             }}>
-              <div style={{ color: '#f5a623', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+              <div style={{ color: 'var(--gold)', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
                 Este modulo e um dos seus 3 maiores leaks
               </div>
-              <p style={{ color: '#b3b3b8', fontSize: 12, lineHeight: 1.5 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.5 }}>
                 Continue praticando — o Modo Infinito com Foco ON vai priorizar esses spots.
               </p>
             </div>
           )}
 
-          {/* Top 3 leaks gerais */}
+          {/* Top leaks */}
           {analysis.topLeaks.length > 0 && (
             <div className="mb-5">
-              <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>
-                SEUS MAIORES LEAKS ATUAIS
+              <div style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, marginBottom: 8, letterSpacing: '0.06em', fontFamily: 'JetBrains Mono, monospace' }}>
+                SEUS MAIORES LEAKS
               </div>
               <div className="space-y-1.5">
                 {analysis.topLeaks.map((leak, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: '#222225' }}>
-                    <div className="flex items-center gap-2">
+                  <div key={i} className="flex items-center justify-between rounded-lg px-3 py-2.5" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                    <div className="flex items-center gap-2.5">
                       <div style={{
-                        width: 20, height: 20, borderRadius: 4,
-                        background: i === 0 ? 'rgba(229,72,77,0.15)' : 'rgba(245,166,35,0.15)',
-                        color: i === 0 ? '#e5484d' : '#f5a623',
-                        fontSize: 10, fontWeight: 700,
+                        width: 22, height: 22, borderRadius: 'var(--radius-sm)',
+                        background: i === 0 ? 'var(--crimson-soft)' : 'var(--gold-soft)',
+                        color: i === 0 ? 'var(--crimson)' : 'var(--gold)',
+                        fontSize: 10, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         {i + 1}
                       </div>
-                      <span style={{ color: '#fdfdfd', fontSize: 12 }}>{leak.label}</span>
+                      <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 500 }}>{leak.label}</span>
                     </div>
-                    <span style={{
-                      color: leak.errorRate >= 40 ? '#e5484d' : '#f5a623',
-                      fontSize: 12, fontWeight: 600, fontFamily: 'JetBrains Mono',
-                    }}>
-                      {leak.errorRate}% erro
+                    <span className={`badge ${leak.errorRate >= 40 ? 'badge-crimson' : 'badge-gold'}`} style={{ fontSize: 10 }}>
+                      {leak.errorRate}%
                     </span>
                   </div>
                 ))}
@@ -164,13 +163,8 @@ export default function SessionReview({ moduleId, sessionCorrect, sessionTotal, 
             </div>
           )}
 
-          {/* Botao continuar */}
-          <button onClick={onContinue}
-            style={{
-              width: '100%', padding: '14px', borderRadius: 8,
-              background: '#4fce82', border: 'none', color: '#0f0f0f',
-              fontWeight: 600, fontSize: 15, cursor: 'pointer',
-            }}>
+          {/* Continue button */}
+          <button onClick={onContinue} className="btn-primary w-full" style={{ padding: '14px', fontSize: 15, borderRadius: 'var(--radius-md)' }}>
             Nova Sessao
           </button>
         </div>

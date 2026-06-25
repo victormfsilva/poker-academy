@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========================================
+   POKER ACADEMY — Design System Tokens
+   ======================================== */
+:root {
+  /* Surfaces */
+  --bg: #09090b;
+  --surface-1: #131316;
+  --surface-2: #1c1c21;
+  --surface-3: #26262d;
+  --border: #2e2e38;
+  --border-strong: #3a3a47;
+
+  /* Brand */
+  --emerald: #34d399;
+  --emerald-soft: rgba(52, 211, 153, 0.12);
+  --gold: #f59e0b;
+  --gold-soft: rgba(245, 158, 11, 0.12);
+  --crimson: #ef4444;
+  --crimson-soft: rgba(239, 68, 68, 0.10);
+  --sapphire: #3b82f6;
+  --sapphire-soft: rgba(59, 130, 246, 0.12);
+
+  /* Text */
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --text-muted: #52525b;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-glow-emerald: 0 0 20px rgba(52,211,153,0.15);
+  --shadow-glow-gold: 0 0 20px rgba(245,158,11,0.12);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,33 +50,139 @@
 }
 
 body {
-  background: #0f0f0f;
-  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #fdfdfd;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 #root {
   min-height: 100vh;
 }
 
+/* Signature: emerald felt-edge line */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--emerald), transparent);
+  z-index: 9999;
+  opacity: 0.7;
+}
+
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #0f0f0f; }
-::-webkit-scrollbar-thumb { background: #2a2a2e; border-radius: 3px; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
-/* Input */
-input::placeholder { color: #676671; }
-input:focus { border-color: #4fce82 !important; outline: none; }
-textarea::placeholder { color: #676671; }
-textarea:focus { border-color: #4fce82 !important; outline: none; }
+/* Inputs */
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+input:focus, textarea:focus {
+  border-color: var(--emerald) !important;
+  outline: none;
+  box-shadow: var(--shadow-glow-emerald);
+}
 
-/* Smooth transitions */
-button, a { transition: opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s; }
+/* Interactive transitions */
+button, a {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-/* Timer pulse */
+/* Animations */
 @keyframes pulse {
   from { opacity: 1; }
   to { opacity: 0.4; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Utility classes */
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+}
+
+.card-interactive:hover {
+  border-color: var(--emerald);
+  box-shadow: var(--shadow-glow-emerald);
+}
+
+.btn-primary {
+  background: var(--emerald);
+  color: var(--bg);
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  background: #2bc48a;
+  box-shadow: var(--shadow-glow-emerald);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.badge-emerald { background: var(--emerald-soft); color: var(--emerald); }
+.badge-gold { background: var(--gold-soft); color: var(--gold); }
+.badge-crimson { background: var(--crimson-soft); color: var(--crimson); }
+.badge-sapphire { background: var(--sapphire-soft); color: var(--sapphire); }
+
+.animate-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Selection */
+::selection {
+  background: rgba(52, 211, 153, 0.25);
+  color: var(--text-primary);
 }
