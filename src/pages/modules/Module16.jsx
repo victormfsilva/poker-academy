@@ -297,7 +297,7 @@ function Lesson({ onComplete }) {
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
         GTO vs Exploitative — Quando Sair do Livro
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>GTO é o baseline. Exploitative é o ajuste. Saber quando usar cada um é o que separa bons jogadores de otimos.</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>GTO é o baseline. Exploitative é o ajuste. Saber quando usar cada um é o que separa bons jogadores de ótimos.</p>
       <div className="space-y-4">
         <Section title="O Que é GTO?">
           <strong style={{ color: '#4a90e2' }}>Game Theory Optimal</strong> — a estratégia matematicamente perfeita que não pode ser explorada. Se você joga GTO perfeito, ninguem consegue lucrar contra você a longo prazo.<br /><br />

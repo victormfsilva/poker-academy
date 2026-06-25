@@ -275,7 +275,7 @@ export default function Stats() {
                     const firstAcc = first.hands > 0 ? Math.round((first.correct / first.hands) * 100) : 0
                     const lastAcc = last.hands > 0 ? Math.round((last.correct / last.hands) * 100) : 0
                     const diff = lastAcc - firstAcc
-                    return diff > 0 ? `+${diff}% de evolucao` : diff < 0 ? `${diff}% de variacao` : 'Estavel'
+                    return diff > 0 ? `+${diff}% de evolução` : diff < 0 ? `${diff}% de variação` : 'Estável'
                   })()}
                 </span>
               </div>

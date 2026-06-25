@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useProgress } from '../../context/ProgressContext'
 
 // Module 11 foi fundido com o Module 10 (Defesa vs CBet + Check-Raise)
-// Este componente auto-completa o modulo 11 e redireciona pro proximo
+// Este componente auto-completa o módulo 11 e redireciona pro próximo
 export default function Module11() {
   const { progress, markLessonRead, recordSession } = useProgress()
   const navigate = useNavigate()

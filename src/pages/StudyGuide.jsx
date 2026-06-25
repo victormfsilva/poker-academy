@@ -7,13 +7,13 @@ const PHASES = [
     tag: 'ESSENCIAL',
     color: '#4fce82',
     modules: [
-      { id: 1, name: 'RFI ChipEV', why: 'Base de tudo — se nao sabe abrir corretamente, nada funciona' },
+      { id: 1, name: 'RFI ChipEV', why: 'Base de tudo — se não sabe abrir corretamente, nada funciona' },
       { id: 3, name: 'Pot Odds e Outs', why: 'Matematica fundamental pra tomar decisoes lucrativas' },
-      { id: 9, name: '3-Bet Ranges', why: 'Unifica defesa do BB, SB e BTN num modulo so' },
-      { id: 4, name: 'BB vs RFI', why: 'Spot mais frequente — voce vai ser BB o tempo todo' },
-      { id: 7, name: 'SB vs RFI', why: 'Pior posicao — saber quando foldar salva fichas' },
-      { id: 8, name: 'BTN vs RFI', why: 'Melhor posicao — maximize valor' },
-      { id: 2, name: 'Push/Fold', why: 'Sobrevivencia em MTT — voce VAI ter 10bb' },
+      { id: 9, name: '3-Bet Ranges', why: 'Unifica defesa do BB, SB e BTN num módulo só' },
+      { id: 4, name: 'BB vs RFI', why: 'Spot mais frequente — você vai ser BB o tempo todo' },
+      { id: 7, name: 'SB vs RFI', why: 'Pior posição — saber quando foldar salva fichas' },
+      { id: 8, name: 'BTN vs RFI', why: 'Melhor posição — maximize valor' },
+      { id: 2, name: 'Push/Fold', why: 'Sobrevivência em MTT — você VAI ter 10bb' },
       { id: 6, name: 'Blind Wars', why: 'Spot unico SB vs BB isolados — muito frequente' },
     ],
   },
@@ -22,11 +22,11 @@ const PHASES = [
     tag: 'ESSENCIAL',
     color: '#0a84d7',
     modules: [
-      { id: 5, name: 'CBet Flop IP', why: 'Primeira decisao pos-flop quando voce foi o raiser' },
-      { id: 10, name: 'Defesa vs CBet', why: 'O outro lado — quando apostam em voce no flop' },
-      { id: 14, name: 'CBet Turn', why: 'Continuar a historia ou frear? Turn decide a mao' },
+      { id: 5, name: 'CBet Flop IP', why: 'Primeira decisão pós-flop quando você foi o raiser' },
+      { id: 10, name: 'Defesa vs CBet', why: 'O outro lado — quando apostam em você no flop' },
+      { id: 14, name: 'CBet Turn', why: 'Continuar a história ou frear? Turn decide a mao' },
       { id: 15, name: 'River Play', why: 'Decisao final — value, blefe ou give up' },
-      { id: 22, name: 'SPR', why: 'Muda TODA a estrategia — top pair pode ser all-in ou fold' },
+      { id: 22, name: 'SPR', why: 'Muda TODA a estratégia — top pair pode ser all-in ou fold' },
     ],
   },
   {
@@ -34,10 +34,10 @@ const PHASES = [
     tag: 'IMPORTANTE',
     color: '#f5a623',
     modules: [
-      { id: 23, name: 'Range vs Nut Advantage', why: 'Como solvers decidem frequencia e sizing' },
+      { id: 23, name: 'Range vs Nut Advantage', why: 'Como solvers decidem frequência e sizing' },
       { id: 24, name: 'Polarizacao vs Merge', why: 'Dois tipos de range de aposta — saber qual usar' },
-      { id: 25, name: 'Multistreet Planning', why: 'Pensar 3 streets a frente, nao so o flop' },
-      { id: 26, name: 'Sizing Theory', why: 'Cada tamanho de aposta conta uma historia' },
+      { id: 25, name: 'Multistreet Planning', why: 'Pensar 3 streets à frente, não só o flop' },
+      { id: 26, name: 'Sizing Theory', why: 'Cada tamanho de aposta conta uma história' },
     ],
   },
   {
@@ -45,28 +45,28 @@ const PHASES = [
     tag: 'ESSENCIAL pra MTT',
     color: '#e5484d',
     modules: [
-      { id: 17, name: 'ICM', why: 'Fichas de torneio nao valem linearmente — muda tudo na bolha' },
+      { id: 17, name: 'ICM', why: 'Fichas de torneio não valem linearmente — muda tudo na bolha' },
       { id: 21, name: 'Late Game MTT', why: 'Stacks curtos, resteal, squeeze — momentos decisivos' },
     ],
   },
   {
-    name: 'Fase 5 — Avancado',
+    name: 'Fase 5 — Avançado',
     tag: 'PROFUNDO',
     color: '#a78bfa',
     modules: [
-      { id: 16, name: 'GTO vs Exploit', why: 'Quando seguir o solver vs exploitar erros do vilao' },
-      { id: 18, name: 'Multiway Pots', why: 'Ajustes criticos com 3+ jogadores — fold equity despenca' },
-      { id: 27, name: 'Blocker Effects', why: 'Card removal — nivel que separa amador de reg' },
+      { id: 16, name: 'GTO vs Exploit', why: 'Quando seguir o solver vs exploitar erros do vilão' },
+      { id: 18, name: 'Multiway Pots', why: 'Ajustes críticos com 3+ jogadores — fold equity despenca' },
+      { id: 27, name: 'Blocker Effects', why: 'Card removal — nível que separa amador de reg' },
       { id: 13, name: 'Donk Bet', why: 'Spot raro mas poderoso quando usado certo' },
-      { id: 20, name: 'HUD e Solvers', why: 'So util se jogar online com tracker — pode deixar por ultimo' },
+      { id: 20, name: 'HUD e Solvers', why: 'So útil se jogar online com tracker — pode deixar por último' },
     ],
   },
 ]
 
 const NOTES = [
-  { icon: '9', text: 'Modulo 9 (3-Bet Ranges) unifica os conceitos dos modulos 4, 7 e 8. Se ja fez o 9, os outros sao revisao.' },
-  { icon: '27', text: 'Modulo 27 (Blockers) absorveu o antigo Modulo 19. Todo o conteudo esta unificado.' },
-  { icon: '20', text: 'Modulo 20 (HUD/Solvers) so vale se voce jogar online com tracker. Se joga live ou so na Academy, pode pular.' },
+  { icon: '9', text: 'Módulo 9 (3-Bet Ranges) unifica os conceitos dos módulos 4, 7 e 8. Se já fez o 9, os outros são revisão.' },
+  { icon: '27', text: 'Módulo 27 (Blockers) absorveu o antigo Módulo 19. Todo o conteúdo está unificado.' },
+  { icon: '20', text: 'Módulo 20 (HUD/Solvers) só vale se você jogar online com tracker. Se joga live ou só na Academy, pode pular.' },
 ]
 
 export default function StudyGuide() {

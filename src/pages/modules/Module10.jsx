@@ -138,33 +138,33 @@ function getCorrectAction(hole, flop, cbetSize) {
 
   // Mao monstruosa: check-raise de valor
   if (hasMadeFlush(hole, flop)) {
-    return { action: 'raise', actionType: 'raise-value', reason: 'Flush completo! Check-raise de VALOR — mao nuts ou perto. Construa o pote ao maximo. O adversario ja apostou, relance pra extrair valor.' }
+    return { action: 'raise', actionType: 'raise-value', reason: 'Flush completo! Check-raise de VALOR — mão nuts ou perto. Construa o pote ao máximo. O adversario ja apostou, relance pra extrair valor.' }
   }
   if (hasMadeStraight(hole, flop)) {
-    return { action: 'raise', actionType: 'raise-value', reason: 'Straight no flop! Check-raise de VALOR — mao muito forte. O adversario nao espera voce ter straight do BB.' }
+    return { action: 'raise', actionType: 'raise-value', reason: 'Straight no flop! Check-raise de VALOR — mão muito forte. O adversario não espera você ter straight do BB.' }
   }
   if (hasSet(hole, flop)) {
-    return { action: 'raise', actionType: 'raise-value', reason: 'Set (trinca)! Check-raise de VALOR — mao muito forte e disfarcada. O adversario dificilmente coloca voce nessa mao.' }
+    return { action: 'raise', actionType: 'raise-value', reason: 'Set (trinca)! Check-raise de VALOR — mão muito forte e disfarcada. O adversario difícilmente coloca você nessa mão.' }
   }
   if (hasTwoPair(hole, flop)) {
     if (texture.isWet) {
-      return { action: 'raise', actionType: 'raise-value', reason: 'Dois pares em board umido — check-raise de VALOR para proteger e construir pote. Muitos draws podem te ultrapassar se voce so chamar.' }
+      return { action: 'raise', actionType: 'raise-value', reason: 'Dois pares em board umido — check-raise de VALOR para proteger e construir pote. Muitos draws podem te ultrapassar se você so chamar.' }
     }
     return { action: 'raise', actionType: 'raise-value', reason: 'Dois pares — check-raise de VALOR. Mao forte o suficiente pra construir pote.' }
   }
 
   // Check-raise de blefe: draw forte em board umido
   if (hasStraightDraw(hole, flop) && hasFlushDraw(hole, flop)) {
-    return { action: 'raise', actionType: 'raise-bluff', reason: 'Combo draw (flush + straight draw)! Check-raise de BLEFE com equity monstruosa (~45%+). Uma das melhores maos pra semi-blefe.' }
+    return { action: 'raise', actionType: 'raise-bluff', reason: 'Combo draw (flush + straight draw)! Check-raise de BLEFE com equity monstruosa (~45%+). Uma das melhores mãos pra semi-blefe.' }
   }
   if (hasFlushDraw(hole, flop) && texture.isWet) {
     if (cbetSize === '75%') {
-      return { action: 'raise', actionType: 'raise-bluff', reason: `Flush draw contra aposta grande (75%) em board umido — check-raise de BLEFE! Voce tem ~35% equity (9 outs) e pressiona o adversario. Se ele foldar, voce ganha na hora.` }
+      return { action: 'raise', actionType: 'raise-bluff', reason: `Flush draw contra aposta grande (75%) em board umido — check-raise de BLEFE! Você tem ~35% equity (9 outs) e pressiona o adversario. Se ele foldar, você ganha na hora.` }
     }
-    return { action: 'call', actionType: 'call', reason: `Flush draw com pot odds favoraveis (${potOdds}% necessario, voce tem ~35% de equity com 9 outs). Call e continue no pote. Board umido mas sizing pequeno — nao precisa inflar o pote agora.` }
+    return { action: 'call', actionType: 'call', reason: `Flush draw com pot odds favoraveis (${potOdds}% necessario, você tem ~35% de equity com 9 outs). Call e continue no pote. Board umido mas sizing pequeno — não precisa inflar o pote agora.` }
   }
   if (hasFlushDraw(hole, flop) && !texture.isWet) {
-    return { action: 'call', actionType: 'call', reason: `Flush draw em board relativamente seco — call. Boas odds implicitas (${potOdds}% necessario, ~35% equity) e voce nao precisa inflar o pote ainda.` }
+    return { action: 'call', actionType: 'call', reason: `Flush draw em board relativamente seco — call. Boas odds implicitas (${potOdds}% necessario, ~35% equity) e você não precisa inflar o pote ainda.` }
   }
   const sdType = getStraightDrawType(hole, flop)
   const sdOuts = sdType === 'oesd' ? 8 : sdType === 'gutshot' ? 4 : 0
@@ -203,19 +203,19 @@ function getCorrectAction(hole, flop, cbetSize) {
     return { action: 'call', actionType: 'call', reason: 'Top pair ou overpair — call. Mao boa demais pra foldar, mas check-raise transforma em blefe desnecessariamente. Mantenha o pote controlado.' }
   }
 
-  // Par medio/baixo
+  // Par médio/baixo
   if (hasAnyPair(hole, flop)) {
     if (cbetSize === '75%') {
-      return { action: 'fold', actionType: 'fold', reason: 'Par medio/baixo contra aposta grande — voce provavelmente esta atras. O adversario esta representando mao forte com sizing de 75%. Fold.' }
+      return { action: 'fold', actionType: 'fold', reason: 'Par médio/baixo contra aposta grande — você provavelmente esta atras. O adversario esta representando mão forte com sizing de 75%. Fold.' }
     }
     if (texture.isDry) {
-      return { action: 'call', actionType: 'call', reason: `Par medio em board seco contra aposta ${cbetSize === '33%' ? 'pequena' : 'media'} — pot odds razoaveis e poucas cartas assustam no turn. Call.` }
+      return { action: 'call', actionType: 'call', reason: `Par médio em board seco contra aposta ${cbetSize === '33%' ? 'pequena' : 'media'} — pot odds razoaveis e poucas cartas assustam no turn. Call.` }
     }
-    return { action: 'call', actionType: 'call', reason: `Par medio/baixo contra aposta ${cbetSize === '33%' ? 'pequena' : 'media'} — pot odds razoaveis e voce pode melhorar. Call.` }
+    return { action: 'call', actionType: 'call', reason: `Par médio/baixo contra aposta ${cbetSize === '33%' ? 'pequena' : 'media'} — pot odds razoaveis e você pode melhorar. Call.` }
   }
 
-  // Nada: fold sempre — sem mao, sem draw, sem equity pra defender
-  return { action: 'fold', actionType: 'fold', reason: `Sem mao, sem draw, sem equity. Contra c-bet de ${cbetSize}, fold e a unica opcao correta. Nao desperdice fichas defendendo sem motivo.` }
+  // Nada: fold sempre — sem mão, sem draw, sem equity pra defender
+  return { action: 'fold', actionType: 'fold', reason: `Sem mão, sem draw, sem equity. Contra c-bet de ${cbetSize}, fold e a unica opção correta. Não desperdice fichas defendendo sem motivo.` }
 }
 
 function Lesson({ onComplete }) {
@@ -227,16 +227,16 @@ function Lesson({ onComplete }) {
       <p style={{ color: '#888', marginBottom: 24 }}>O adversario apostou no flop. Fold, call ou check-raise? Quando e como usar cada acao.</p>
       <div className="space-y-4">
         <Section title="O Cenario">
-          Voce esta no Big Blind. Alguem fez raise pre-flop, voce chamou. O flop saiu e o adversario faz uma aposta de continuacao (c-bet).<br /><br />
-          Agora voce tem 3 opcoes: <strong style={{ color: '#e5484d' }}>fold</strong>, <strong style={{ color: '#4a90e2' }}>call</strong> ou <strong style={{ color: '#f5a623' }}>check-raise</strong>.
+          Você esta no Big Blind. Alguem fez raise pre-flop, você chamou. O flop saiu e o adversario faz uma aposta de continuacao (c-bet).<br /><br />
+          Agora você tem 3 opções: <strong style={{ color: '#e5484d' }}>fold</strong>, <strong style={{ color: '#4a90e2' }}>call</strong> ou <strong style={{ color: '#f5a623' }}>check-raise</strong>.
         </Section>
 
         <Section title="Quando Foldar">
           <div className="space-y-2">
             {[
               'Sem par, sem draw, sem equity nenhuma',
-              'Aposta grande (75%) e voce so tem par baixo',
-              'Board favorece muito o range do adversario (ex: A-K-Q e voce tem 7-6)',
+              'Aposta grande (75%) e você so tem par baixo',
+              'Board favorece muito o range do adversario (ex: A-K-Q e você tem 7-6)',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#e5484d' }}>✗</span>
@@ -249,10 +249,10 @@ function Lesson({ onComplete }) {
         <Section title="Quando Chamar (Call)">
           <div className="space-y-2">
             {[
-              'Top pair ou overpair — mao boa mas nao excepcional',
+              'Top pair ou overpair — mão boa mas não excepcional',
               'Draw de flush (9 outs, ~35% equity) com pot odds favoraveis',
               'Draw de straight (8 outs, ~32% equity) contra sizing pequeno/medio',
-              'Par medio contra aposta pequena (33%) — pot odds bons',
+              'Par médio contra aposta pequena (33%) — pot odds bons',
               'Board seco e aposta pequena — pode flotar com backdoor equity',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
@@ -264,7 +264,7 @@ function Lesson({ onComplete }) {
         </Section>
 
         <Section title="Pot Odds na Defesa">
-          O tamanho da aposta muda quanto voce precisa ganhar pra justificar o call:
+          O tamanho da aposta muda quanto você precisa ganhar pra justificar o call:
           <div className="grid grid-cols-3 gap-2 mt-3">
             {[['33%', '20%', '#4fce82'], ['50%', '25%', '#f5a623'], ['75%', '30%', '#e5484d']].map(([bet, need, c]) => (
               <div key={bet} className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: `1px solid ${c}` }}>
@@ -292,8 +292,8 @@ function Lesson({ onComplete }) {
         <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '2px solid #f5a623' }}>
           <h3 style={{ color: '#f5a623', fontWeight: 700, fontSize: 18, marginBottom: 12 }}>Check-Raise — A Arma Mais Poderosa do OOP</h3>
           <div style={{ color: '#ccc', fontSize: 14, lineHeight: 1.7 }}>
-            Voce checa, o adversario aposta, e voce <strong style={{ color: '#f5a623' }}>relanca</strong>.<br /><br />
-            E a jogada mais forte que voce pode fazer fora de posicao. Sinaliza muita forca — ou simula forca com um blefe bem construido.
+            Você checa, o adversario aposta, e você <strong style={{ color: '#f5a623' }}>relanca</strong>.<br /><br />
+            E a jogada mais forte que você pode fazer fora de posição. Sinaliza muita forca — ou simula forca com um blefe bem construido.
           </div>
         </div>
 
@@ -302,9 +302,9 @@ function Lesson({ onComplete }) {
             <div className="rounded-lg p-4" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
               <div style={{ color: '#4fce82', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Check-Raise de Valor</div>
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.6 }}>
-                Maos muito fortes que querem construir pote:<br />
+                Mãos muito fortes que querem construir pote:<br />
                 <strong>Sets, dois pares, flush completo</strong><br /><br />
-                Voce checa pra induzir a aposta, depois relanca pra maximizar valor.
+                Você checa pra induzir a aposta, depois relanca pra maximizar valor.
               </div>
             </div>
             <div className="rounded-lg p-4" style={{ background: '#0f0f0f', border: '1px solid #f5a623' }}>
@@ -312,7 +312,7 @@ function Lesson({ onComplete }) {
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.6 }}>
                 Draws fortes que querem fold equity:<br />
                 <strong>Flush draw, straight draw, combo draw</strong><br /><br />
-                Se o adversario foldar, voce ganha na hora. Se chamar, voce tem outs.
+                Se o adversario foldar, você ganha na hora. Se chamar, você tem outs.
               </div>
             </div>
           </div>
@@ -322,8 +322,8 @@ function Lesson({ onComplete }) {
           <div className="space-y-2">
             {[
               { board: 'Board umido (ex: 9♠ 8♥ 6♠)', reason: 'Muitos draws possiveis — check-raise tanto de valor quanto de blefe faz sentido.' },
-              { board: 'Board com par (ex: 7♠ 7♦ 3♣)', reason: 'Se voce tem o 7, check-raise de valor e devastador — adversario nao te coloca nessa mao.' },
-              { board: 'Board medio-baixo (ex: 8♦ 5♣ 3♠)', reason: 'Favorece seu range de BB — voce tem mais 85s, 53s, 33 que o raiser.' },
+              { board: 'Board com par (ex: 7♠ 7♦ 3♣)', reason: 'Se você tem o 7, check-raise de valor e devastador — adversario não te coloca nessa mão.' },
+              { board: 'Board médio-baixo (ex: 8♦ 5♣ 3♠)', reason: 'Favorece seu range de BB — você tem mais 85s, 53s, 33 que o raiser.' },
             ].map(r => (
               <div key={r.board} className="rounded-lg p-3" style={{ background: '#0f0f0f' }}>
                 <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13 }}>{r.board}</div>
@@ -337,7 +337,7 @@ function Lesson({ onComplete }) {
           <div className="space-y-2">
             {[
               { board: 'Board alto e seco (ex: A♠ K♦ 7♣)', reason: 'Favorece o range do raiser (ele tem mais AK, AQ, KK). Check-raise e arriscado.' },
-              { board: 'Board monotone (ex: Q♥ 9♥ 4♥)', reason: 'Muito perigoso — se voce nao tem a flush, o adversario pode ter. Cautela.' },
+              { board: 'Board monotone (ex: Q♥ 9♥ 4♥)', reason: 'Muito perigoso — se você não tem a flush, o adversario pode ter. Cautela.' },
             ].map(r => (
               <div key={r.board} className="rounded-lg p-3" style={{ background: '#0f0f0f' }}>
                 <div style={{ color: '#e5484d', fontWeight: 600, fontSize: 13 }}>{r.board}</div>
@@ -351,8 +351,8 @@ function Lesson({ onComplete }) {
           <div className="rounded-lg p-3 mt-2" style={{ background: '#0f0f0f', border: '1px solid #4a90e2' }}>
             <div style={{ color: '#4a90e2', fontWeight: 700, marginBottom: 4 }}>Regra geral: 3x a aposta do adversario</div>
             <div style={{ color: '#ccc', fontSize: 13 }}>
-              Adversario aposta 5bb → voce raise pra 15bb.<br />
-              Isso da fold equity suficiente e constroi pote com maos de valor.
+              Adversario aposta 5bb → você raise pra 15bb.<br />
+              Isso da fold equity suficiente e constroi pote com mãos de valor.
             </div>
           </div>
         </Section>
@@ -360,10 +360,10 @@ function Lesson({ onComplete }) {
         <Section title="Quando NAO Check-Raise">
           <div className="space-y-2">
             {[
-              'Top pair sem kicker forte — so chame, nao transforme em blefe',
-              'Sem draw e sem mao — fold, nao invente',
+              'Top pair sem kicker forte — so chame, não transforme em blefe',
+              'Sem draw e sem mão — fold, não invente',
               'Board alto que favorece o raiser — sua fold equity e baixa',
-              'Adversario que nunca folda — check-raise de blefe nao funciona',
+              'Adversario que nunca folda — check-raise de blefe não funciona',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#e5484d' }}>✗</span>
@@ -452,7 +452,7 @@ function Trainer() {
         boardCards={flop || []}
         villainAction={`Bet ${cbetSize}`}
         potLabel="6.5bb"
-        contextTitle="Voce esta no BB (OOP)"
+        contextTitle="Você esta no BB (OOP)"
         contextDesc={`Adversario fez c-bet de ${cbetSize} do pote`}
         textureTags={texture ? [
           { label: texture.isDry ? 'Board Seco' : 'Board Umido', color: texture.isDry ? '#4fce82' : '#e5484d' },
@@ -491,8 +491,8 @@ function Trainer() {
                 <div>• <strong style={{ color: '#f5a623' }}>Combo draw (flush + straight)</strong> → CHECK-RAISE de blefe</div>
                 <div>• <strong style={{ color: '#4a90e2' }}>Top pair / Overpair</strong> → CALL</div>
                 <div>• <strong style={{ color: '#4a90e2' }}>Draw com pot odds bons</strong> → CALL</div>
-                <div>• <strong style={{ color: '#4a90e2' }}>Par medio em board seco</strong> → CALL</div>
-                <div>• <strong style={{ color: '#e5484d' }}>Sem mao, sem draw</strong> → FOLD</div>
+                <div>• <strong style={{ color: '#4a90e2' }}>Par médio em board seco</strong> → CALL</div>
+                <div>• <strong style={{ color: '#e5484d' }}>Sem mão, sem draw</strong> → FOLD</div>
               </div>
             </div>
           )}

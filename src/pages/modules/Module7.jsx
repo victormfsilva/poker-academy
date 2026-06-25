@@ -83,7 +83,7 @@ function Lesson({ onComplete }) {
           <div className="grid grid-cols-3 gap-3 mt-2">
             <div className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
               <div style={{ color: '#e5484d', fontWeight: 700 }}>FOLD</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mao fraca — não vale pagar pra jogar OOP</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Mão fraca — não vale pagar pra jogar OOP</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: '#0f0f0f', border: '1px solid #4fce82' }}>
               <div style={{ color: '#4fce82', fontWeight: 700 }}>CALL</div>

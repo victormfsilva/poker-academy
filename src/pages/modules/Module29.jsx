@@ -488,7 +488,7 @@ function Lesson({ onComplete }) {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #2a2a2e' }}>
-                  <th style={{ color: '#888', padding: '8px 12px', textAlign: 'left' }}>Sizing do Vilao</th>
+                  <th style={{ color: '#888', padding: '8px 12px', textAlign: 'left' }}>Sizing do vilão</th>
                   <th style={{ color: '#888', padding: '8px 12px', textAlign: 'center' }}>Equity Necessaria</th>
                   <th style={{ color: '#888', padding: '8px 12px', textAlign: 'right' }}>Nivel de Dificuldade</th>
                 </tr>
@@ -498,7 +498,7 @@ function Lesson({ onComplete }) {
                   { sz: '33% do pot', eq: '20%', dif: 'Facil de chamar', color: '#4fce82' },
                   { sz: '50% do pot', eq: '25%', dif: 'Razoavel', color: '#f5a623' },
                   { sz: '75% do pot', eq: '30%', dif: 'Dificil', color: '#f5a623' },
-                  { sz: '100% do pot', eq: '33%', dif: 'Muito dificil', color: '#e5484d' },
+                  { sz: '100% do pot', eq: '33%', dif: 'Muito difícil', color: '#e5484d' },
                 ].map(r => (
                   <tr key={r.sz} style={{ borderBottom: '1px solid #1a1a1d' }}>
                     <td style={{ color: '#fdfdfd', padding: '8px 12px' }}>{r.sz}</td>
@@ -531,7 +531,7 @@ function Lesson({ onComplete }) {
               { mao: 'Overpair (board limpo)', acao: 'Call 33-50%, fold 75%+', color: '#f5a623' },
               { mao: 'Top pair bom kicker', acao: 'Call 33-50%, fold 75%+', color: '#f5a623' },
               { mao: 'Top pair kicker ruim', acao: 'Fold quase sempre', color: '#e5484d' },
-              { mao: 'Par medio/baixo', acao: 'Fold (bluff catcher fraco)', color: '#e5484d' },
+              { mao: 'Par médio/baixo', acao: 'Fold (bluff catcher fraco)', color: '#e5484d' },
               { mao: 'Sem par', acao: 'Fold sempre', color: '#e5484d' },
             ].map(r => (
               <div key={r.mao} className="flex justify-between items-center rounded-lg px-3 py-2" style={{ background: '#0f0f0f' }}>
@@ -591,7 +591,7 @@ function Lesson({ onComplete }) {
             Modulo 29 — Facing River Bet
           </h1>
           <p style={{ color: '#676671', fontSize: 13, marginBottom: 20 }}>
-            Vilao aposta o river. Voce defende: call, fold ou raise?
+            vilão aposta o river. Voce defende: call, fold ou raise?
           </p>
 
           <div className="flex gap-1 mb-6 overflow-x-auto">
@@ -726,7 +726,7 @@ function Trainer() {
             villainAction={scenario.villainAction}
             potLabel={scenario.potLabel}
             contextTitle="Voce esta OOP — Facing River Bet"
-            contextDesc="Vilao apostou o river. Voce defende."
+            contextDesc="vilão apostou o river. Voce defende."
           />
 
           {/* Question */}

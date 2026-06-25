@@ -143,7 +143,7 @@ const TEMPLATES = [
       `K${suitChar}-${rank === 'K' ? 'J' : 'Q'}${suitChar}-7${suitChar}-3${otherSuit}-9${otherSuit}`
     ])
     return {
-      situation: `River: board ${board}. Flush de ${suit} possivel. Vilão aposta 75%. Você tem ${rank}${suitChar} em mão (segundo par).`,
+      situation: `River: board ${board}. Flush de ${suit} possível. Vilão aposta 75%. Você tem ${rank}${suitChar} em mão (segundo par).`,
       question: 'O que você faz?',
       options: [
         { id: 'call', label: 'Call — vilão pode blefar', correct: false },

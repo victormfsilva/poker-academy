@@ -577,13 +577,13 @@ function RangeBuilderMode() {
         Construa o Range de RFI
       </h2>
       <p className="text-sm mb-4" style={{ color: '#676671' }}>
-        Selecione todas as maos que voce abriria (raise) nessa posicao e stack. Clique e arraste no grid.
+        Selecione todas as mãos que você abriria (raise) nessa posição e stack. Clique e arraste no grid.
       </p>
 
       {/* Position / Stack selectors */}
       <div className="flex gap-3 mb-4 flex-wrap">
         <div>
-          <label className="text-xs block mb-1" style={{ color: '#676671' }}>Posicao</label>
+          <label className="text-xs block mb-1" style={{ color: '#676671' }}>Posição</label>
           <div className="flex gap-1">
             {POSITIONS.map(p => (
               <button

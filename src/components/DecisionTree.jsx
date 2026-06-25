@@ -1,6 +1,6 @@
 // ================================================================
-// Decision Tree — Mini-arvore visual de decisao no feedback de erro
-// Mostra: voce estava AQUI → caminho correto → por que
+// Decision Tree — Mini-árvore visual de decisão no feedback de erro
+// Mostra: você estava AQUI → caminho correto → por que
 // ================================================================
 
 export default function DecisionTree({ scenario, result }) {
@@ -119,7 +119,7 @@ function buildTree(scenario, result) {
 }
 
 function getUserChoice(scenario, result) {
-  if (result.isTimeout) return 'Tempo esgotado (nao respondeu)'
+  if (result.isTimeout) return 'Tempo esgotado (não respondeu)'
 
   // Cenarios com buttons (Infinite e módulos tipo scenario)
   if (scenario.buttons && result.action) {
@@ -168,18 +168,18 @@ function getCorrectChoice(scenario, result) {
 function getWrongReason(scenario, result) {
   // Mapear conceitos comuns por tipo de modulo
   const moduleReasons = {
-    1: 'Revise o range RFI para esta posicao e stack',
+    1: 'Revise o range RFI para esta posição e stack',
     2: 'Verifique a tabela push/fold para esse stack',
     3: 'Calcule os pot odds e compare com a equity',
-    4: 'Revise o range de defesa do BB vs esta posicao',
+    4: 'Revise o range de defesa do BB vs esta posição',
     5: 'Considere a textura do board pro sizing',
     6: 'SB vs BB tem dinamica propria — revise',
-    7: 'Revise o range do SB vs cada posicao de raiser',
-    8: 'BTN tem range mais amplo — aproveite a posicao',
+    7: 'Revise o range do SB vs cada posição de raiser',
+    8: 'BTN tem range mais amplo — aproveite a posição',
     9: 'Avalie se o spot favorece 3-bet por valor ou blefe',
-    10: 'Considere frequencia de c-bet do vilao e textura',
-    22: 'SPR muda completamente a estrategia pos-flop',
-    23: 'Pense em quem tem MAIS maos boas neste board',
+    10: 'Considere frequência de c-bet do vilão e textura',
+    22: 'SPR muda completamente a estratégia pós-flop',
+    23: 'Pense em quem tem MAIS mãos boas neste board',
     24: 'IP/river = polarize. OOP/flop = merge.',
     25: 'Planeje as 3 streets antes de agir no flop',
     26: 'O sizing deve ser consistente com seu range',
@@ -188,7 +188,7 @@ function getWrongReason(scenario, result) {
 }
 
 function getCorrectReason(scenario, result) {
-  // Se tem explanation (modulos 22-27), usar resumido
+  // Se tem explanation (módulos 22-27), usar resumido
   if (scenario.explanation) {
     return truncate(scenario.explanation, 80)
   }

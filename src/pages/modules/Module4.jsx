@@ -268,10 +268,10 @@ function M4RangeBuilder() {
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h2 className="text-lg font-bold mb-4" style={{ color: '#fdfdfd' }}>Construa o Range do BB vs RFI</h2>
       <p className="text-sm mb-4" style={{ color: '#676671' }}>
-        Selecione 3bet, call ou fold para cada mao quando o vilao abre de cada posicao.
+        Selecione 3bet, call ou fold para cada mão quando o vilão abre de cada posição.
       </p>
       <div className="mb-4">
-        <label className="text-xs block mb-1" style={{ color: '#676671' }}>Vilao abriu de</label>
+        <label className="text-xs block mb-1" style={{ color: '#676671' }}>vilão abriu de</label>
         <div className="flex gap-1 flex-wrap">
           {RAISER_POSITIONS.map(p => (
             <button key={p} onClick={() => setRaiser(p)} className="px-2 py-1 rounded text-xs font-bold"

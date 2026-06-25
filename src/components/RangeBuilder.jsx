@@ -113,7 +113,7 @@ export default function RangeBuilder({
           )
         })}
         <span className="ml-auto text-xs self-center" style={{ color: '#676671' }}>
-          {filledCount} maos selecionadas
+          {filledCount} mãos selecionadas
         </span>
       </div>
 

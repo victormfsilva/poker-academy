@@ -4,29 +4,29 @@ import { useProgress } from '../context/ProgressContext'
 
 const MODULES = [
   { id: 1, name: 'RFI ChipEV', desc: 'Raise First In — o spot mais importante do poker de torneios', icon: 'R' },
-  { id: 2, name: 'Push/Fold', desc: 'Short stack — abaixo de 15bb existem apenas 2 opcoes', icon: 'P' },
-  { id: 3, name: 'Pot Odds e Outs', desc: 'A matematica por tras de cada decisao no poker', icon: 'O' },
+  { id: 2, name: 'Push/Fold', desc: 'Short stack — abaixo de 15bb existem apenas 2 opções', icon: 'P' },
+  { id: 3, name: 'Pot Odds e Outs', desc: 'A matemática por trás de cada decisão no poker', icon: 'O' },
   { id: 4, name: 'BB vs RFI', desc: 'Como defender o Big Blind contra qualquer raise', icon: 'D' },
-  { id: 5, name: 'CBet Flop IP + Bet Sizing', desc: 'Apostar no flop em posicao e escolher o tamanho certo', icon: 'C' },
+  { id: 5, name: 'CBet Flop IP + Bet Sizing', desc: 'Apostar no flop em posição e escolher o tamanho certo', icon: 'C' },
   { id: 6, name: 'Blind Wars', desc: 'SB vs BB — o confronto mais complexo do poker', icon: 'W' },
   { id: 7, name: 'SB vs RFI', desc: 'Defendendo o Small Blind contra raises', icon: 'S' },
-  { id: 8, name: 'BTN vs RFI', desc: 'A melhor posicao da mesa contra raises', icon: 'B' },
+  { id: 8, name: 'BTN vs RFI', desc: 'A melhor posição da mesa contra raises', icon: 'B' },
   { id: 9, name: '3-Bet Ranges', desc: 'Quando relancar pre-flop — valor e blefe', icon: '3' },
-  { id: 10, name: 'Defesa vs CBet + Check-Raise', desc: 'Fold, call ou check-raise quando apostam em voce', icon: 'X' },
+  { id: 10, name: 'Defesa vs CBet + Check-Raise', desc: 'Fold, call ou check-raise quando apostam em você', icon: 'X' },
   { id: 13, name: 'Donk Bet', desc: 'Quando apostar antes do raiser no flop', icon: 'K' },
   { id: 14, name: 'CBet Turn', desc: 'Double barrel — continuar no turn', icon: 'T' },
   { id: 15, name: 'River Play', desc: 'Value bet, blefe ou check no river', icon: 'V' },
   { id: 16, name: 'GTO vs Exploit', desc: 'Quando sair do livro e ajustar', icon: 'G' },
   { id: 17, name: 'ICM', desc: 'Modelo de chip independente em torneios', icon: 'I' },
   { id: 18, name: 'Multiway Pots', desc: 'Potes com 3+ jogadores', icon: 'M' },
-  { id: 20, name: 'HUD e Solvers', desc: 'Estatisticas e estudo com solver', icon: 'H' },
+  { id: 20, name: 'HUD e Solvers', desc: 'Estatísticas e estudo com solver', icon: 'H' },
   { id: 21, name: 'Late Game MTT', desc: 'Dominando os momentos decisivos do torneio', icon: 'F' },
-  { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio e estrategia pos-flop', icon: 'S' },
-  { id: 23, name: 'Range vs Nut Advantage', desc: 'Como solvers decidem frequencia e sizing', icon: 'N' },
+  { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio e estratégia pós-flop', icon: 'S' },
+  { id: 23, name: 'Range vs Nut Advantage', desc: 'Como solvers decidem frequência e sizing', icon: 'N' },
   { id: 24, name: 'Polarizacao vs Merge', desc: 'Quando usar cada tipo de range de aposta', icon: 'P' },
   { id: 25, name: 'Multistreet Planning', desc: 'Planeje flop + turn + river antes de agir', icon: 'U' },
-  { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta uma historia diferente', icon: 'Z' },
-  { id: 27, name: 'Blocker Effects', desc: 'Como suas cartas afetam o range do vilao', icon: 'B' },
+  { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta uma história diferente', icon: 'Z' },
+  { id: 27, name: 'Blocker Effects', desc: 'Como suas cartas afetam o range do vilão', icon: 'B' },
   { id: 28, name: 'Facing Double Barrel', desc: 'Call, fold ou raise quando apostam de novo no turn', icon: 'F' },
   { id: 29, name: 'River Defense', desc: 'Enfrentar aposta no river com pot odds e blockers', icon: 'R' },
   { id: 30, name: 'Probe Bet', desc: 'Apostar OOP quando o raiser checa o flop', icon: 'Q' },
@@ -39,7 +39,7 @@ const FILTERS = [
   { key: 'postflop', label: 'Pos-Flop' },
   { key: 'math', label: 'Matematica' },
   { key: 'mtt', label: 'Torneio' },
-  { key: 'advanced', label: 'Avancado' },
+  { key: 'advanced', label: 'Avançado' },
   { key: 'order', label: 'Ordem de Estudo' },
 ]
 
@@ -82,7 +82,7 @@ export default function Modules() {
       <div className="max-w-5xl mx-auto pt-6">
         <div className="mb-6">
           <h1 style={{ color: '#fdfdfd', fontSize: 24, fontWeight: 600, marginBottom: 4 }}>Modulos de Estudo</h1>
-          <p style={{ color: '#b3b3b8', fontSize: 14 }}>Complete cada modulo antes de avancar. Meta: 90%+ em 2 sessoes seguidas.</p>
+          <p style={{ color: '#b3b3b8', fontSize: 14 }}>Complete cada módulo antes de avançar. Meta: 90%+ em 2 sessões seguidas.</p>
         </div>
 
         {/* Filtros */}
@@ -117,7 +117,7 @@ export default function Modules() {
         {filter === 'order' && (
           <div className="rounded-xl p-3 mb-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <div style={{ color: '#676671', fontSize: 12 }}>
-              Siga esta ordem para o estudo mais eficiente. Os numeros indicam a sequencia recomendada.
+              Siga esta ordem para o estudo mais eficiente. Os números indicam a sequência recomendada.
             </div>
           </div>
         )}

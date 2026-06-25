@@ -133,7 +133,7 @@ function SessionDiary({ onComplete }) {
       </div>
 
       <div className="mb-4">
-        <div style={{ color: '#b3b3b8', fontSize: 11, marginBottom: 8, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Como voce se sentiu?</div>
+        <div style={{ color: '#b3b3b8', fontSize: 11, marginBottom: 8, fontFamily: 'JetBrains Mono', letterSpacing: 1, textTransform: 'uppercase' }}>Como você se sentiu?</div>
         <div className="flex gap-2">
           {emotions.map(e => (
             <button key={e.value} onClick={() => setEmotion(e.value)}

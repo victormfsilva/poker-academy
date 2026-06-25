@@ -88,7 +88,7 @@ function generateExplanation(hole, board, correctAction, isFacing, street, heroP
   let handName = ''
   try { handName = Hand.solve([...hole, ...board]).descr } catch {}
   const equity = calcEquity(hole, board)
-  const posLabel = heroPos === 'IP' ? 'em posicao' : 'fora de posicao'
+  const posLabel = heroPos === 'IP' ? 'em posição' : 'fora de posição'
   const streetPT = street === 'Flop' ? 'flop' : street === 'Turn' ? 'turn' : 'river'
   const boardDesc = tex.isDry ? 'seco' : tex.isWet ? 'umido' : 'neutro'
   const eqStr = equity != null ? `${equity}% equity` : null
@@ -104,31 +104,31 @@ function generateExplanation(hole, board, correctAction, isFacing, street, heroP
       if (eqStr && eqLow)
         return `${handName || 'Sua mao'}${eqLabel}. Equity muito baixa para continuar. ${!hand.hasAnyPair && !hand.hasFlushDraw ? 'Sem par ou draw — ' : ''}fold evita perder fichas no ${streetPT} ${boardDesc}.`
       if (!hand.hasAnyPair && !hand.hasFlushDraw && !hand.hasStraightDraw)
-        return `Sem par, sem draw no ${streetPT}${eqLabel}. Fold — equity insuficiente contra a aposta do vilao.`
+        return `Sem par, sem draw no ${streetPT}${eqLabel}. Fold — equity insuficiente contra a aposta do vilão.`
       if (hand.hasAnyPair && !hand.isTopPair)
-        return `Par fraco no ${streetPT} ${boardDesc}${eqLabel}. Contra a aposta, voce esta atras do range do vilao. Fold.`
+        return `Par fraco no ${streetPT} ${boardDesc}${eqLabel}. Contra a aposta, você esta atras do range do vilão. Fold.`
       return `${handName ? `${handName} — ` : ''}equity insuficiente no ${streetPT}${eqLabel}. Board ${boardDesc}, fold correto.`
     }
     if (correctAction === 'call') {
       if (hand.isOverpair || hand.isTopPair)
-        return `${handName || 'Top pair/overpair'}${eqLabel}. Mao boa para call mas nao para raise. ${heroPos === 'OOP' ? 'Fora de posicao, controle o pote.' : 'Em posicao, chame e reavalie.'}`
+        return `${handName || 'Top pair/overpair'}${eqLabel}. Mao boa para call mas não para raise. ${heroPos === 'OOP' ? 'Fora de posição, controle o pote.' : 'Em posição, chame e reavalie.'}`
       if (hand.hasMadeFlush || hand.hasMadeStraight)
-        return `${handName || 'Mao forte'}${eqLabel}. Call para nao assustar o vilao. ${street === 'River' ? 'No river, call extrai mais do que raise.' : 'Slowplay para construir pote.'}`
+        return `${handName || 'Mao forte'}${eqLabel}. Call para não assustar o vilão. ${street === 'River' ? 'No river, call extrai mais do que raise.' : 'Slowplay para construir pote.'}`
       if (hand.hasFlushDraw)
-        return `Flush draw — 9 outs${eqLabel}. Pot odds favorecem call. Se completar, mao forte.`
+        return `Flush draw — 9 outs${eqLabel}. Pot odds favorecem call. Se completar, mão forte.`
       if (hand.hasStraightDraw)
         return `Straight draw${eqLabel}. Call pelas odds implicitas — se acertar, pote grande.`
       if (hand.isSet || hand.isTwoPair)
-        return `${handName || 'Mao forte'}${eqLabel}. Call para manter blefes do vilao no pote.`
+        return `${handName || 'Mao forte'}${eqLabel}. Call para manter blefes do vilão no pote.`
       if (hand.hasAnyPair)
         return `${handName || 'Par'}${eqLabel}. Showdown value suficiente para call. Board ${boardDesc}.`
       return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Equity suficiente para call ${posLabel}.`
     }
     if (correctAction === 'raise') {
       if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
-        return `${handName || 'Mao monstruosa'}!${eqLabel} Raise para valor maximo — o vilao ja apostou, construa o pote.`
+        return `${handName || 'Mao monstruosa'}!${eqLabel} Raise para valor máximo — o vilão ja apostou, construa o pote.`
       if (hand.isTwoPair)
-        return `${handName || 'Dois pares'}${eqLabel}. Raise de valor! Vilao paga com top pair ou draws.`
+        return `${handName || 'Dois pares'}${eqLabel}. Raise de valor! vilão paga com top pair ou draws.`
       if (hand.isOverpair || hand.isTopPair)
         return `${handName || 'Top pair/overpair'}${eqLabel}. Raise de valor ${posLabel}. Board ${boardDesc} favorece proteger contra draws.`
       if (hand.hasFlushDraw || hand.hasStraightDraw)
@@ -138,32 +138,32 @@ function generateExplanation(hole, board, correctAction, isFacing, street, heroP
   } else {
     if (correctAction === 'check') {
       if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
-        return `${handName || 'Mao monstruosa'}${eqLabel}. Check para trapping — induza aposta do vilao com mao pior.`
+        return `${handName || 'Mao monstruosa'}${eqLabel}. Check para trapping — induza aposta do vilão com mão pior.`
       if (hand.isTopPair || hand.isOverpair)
-        return `${handName || 'Top pair/overpair'}${eqLabel}. Check para controle de pote ${posLabel}. ${tex.isWet ? 'Board umido, nao infle desnecessariamente.' : ''}`
+        return `${handName || 'Top pair/overpair'}${eqLabel}. Check para controle de pote ${posLabel}. ${tex.isWet ? 'Board umido, não infle desnecessariamente.' : ''}`
       if (hand.hasAnyPair)
-        return `${handName || 'Par'}${eqLabel}. Showdown value mas nao forte para bet de valor. Check, controle o pote.`
+        return `${handName || 'Par'}${eqLabel}. Showdown value mas não forte para bet de valor. Check, controle o pote.`
       if (hand.hasFlushDraw || hand.hasStraightDraw)
-        return `${handName ? `${handName} — ` : ''}draw${eqLabel}. Check ${heroPos === 'OOP' ? 'e reaja ao vilao.' : 'e tome carta gratis.'}`
+        return `${handName ? `${handName} — ` : ''}draw${eqLabel}. Check ${heroPos === 'OOP' ? 'e reaja ao vilão.' : 'e tome carta gratis.'}`
       return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Sem valor para apostar no ${streetPT} ${boardDesc}. Check.`
     }
     if (correctAction === 'bet') {
       if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
-        return `${handName || 'Mao monstruosa'}!${eqLabel} Bet de valor — mao forte demais para dar carta gratis.`
+        return `${handName || 'Mao monstruosa'}!${eqLabel} Bet de valor — mão forte demais para dar carta gratis.`
       if (hand.isTwoPair)
-        return `${handName || 'Dois pares'}${eqLabel}. Bet de valor! Proteja sua mao e construa pote.`
+        return `${handName || 'Dois pares'}${eqLabel}. Bet de valor! Proteja sua mão e construa pote.`
       if (hand.isOverpair || hand.isTopPair)
-        return `${handName || 'Top pair/overpair'}${eqLabel}. Bet de valor no ${streetPT}. ${tex.isWet ? 'Proteja contra draws.' : 'Extraia de maos piores.'}`
+        return `${handName || 'Top pair/overpair'}${eqLabel}. Bet de valor no ${streetPT}. ${tex.isWet ? 'Proteja contra draws.' : 'Extraia de mãos piores.'}`
       if (hand.hasFlushDraw || hand.hasStraightDraw)
-        return `${handName ? `${handName} — ` : ''}semi-blefe!${eqLabel} Outs + fold equity. Vilao folda ou voce completa o draw.`
+        return `${handName ? `${handName} — ` : ''}semi-blefe!${eqLabel} Outs + fold equity. vilão folda ou você completa o draw.`
       if (!hand.hasAnyPair && !hand.hasFlushDraw && !hand.hasStraightDraw)
-        return `${handName ? `${handName} — ` : ''}blefe puro no ${streetPT}${eqLabel}! Board ${boardDesc}, represente mao forte. Sem showdown value, apostar e a unica forma de ganhar.`
+        return `${handName ? `${handName} — ` : ''}blefe puro no ${streetPT}${eqLabel}! Board ${boardDesc}, represente mão forte. Sem showdown value, apostar e a unica forma de ganhar.`
       return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Bet no ${streetPT} ${posLabel}. Board ${boardDesc} favorece agressividade.`
     }
     if (correctAction === 'raise') {
       if (hand.hasMadeFlush || hand.hasMadeStraight || hand.isSet)
-        return `${handName || 'Mao monstruosa'}!${eqLabel} Raise para valor maximo — construa o pote.`
-      return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Raise no ${streetPT}! ${hand.hasFlushDraw || hand.hasStraightDraw ? 'Semi-blefe com draw forte.' : 'Pressione o range do vilao.'}`
+        return `${handName || 'Mao monstruosa'}!${eqLabel} Raise para valor máximo — construa o pote.`
+      return `${handName ? `${handName}` : 'Sua mao'}${eqLabel}. Raise no ${streetPT}! ${hand.hasFlushDraw || hand.hasStraightDraw ? 'Semi-blefe com draw forte.' : 'Pressione o range do vilão.'}`
     }
   }
   return handName ? `Sua mao: ${handName}${eqLabel}` : (eqStr || '')
@@ -232,19 +232,19 @@ function Lesson({ onComplete }) {
       </h2>
 
       <Section title="O que sao cenarios de solver?">
-        <p>Solvers GTO (como PioSOLVER, GTO+) calculam a estrategia <b>matematicamente otima</b> para cada spot do poker.</p>
-        <p style={{ marginTop: 8 }}>Diferente de heuristicas simplificadas, o solver considera TODOS os combos, todas as sizing opcoes e encontra o equilibrio de Nash.</p>
-        <p style={{ marginTop: 8 }}>Este modulo usa <b>cenarios reais computados por solver</b> do dataset PokerBench — 10.000 situacoes com a decisao GTO correta.</p>
+        <p>Solvers GTO (como PioSOLVER, GTO+) calculam a estratégia <b>matematicamente otima</b> para cada spot do poker.</p>
+        <p style={{ marginTop: 8 }}>Diferente de heuristicas simplificadas, o solver considera TODOS os combos, todas as sizing opções e encontra o equilibrio de Nash.</p>
+        <p style={{ marginTop: 8 }}>Este módulo usa <b>cenarios reais computados por solver</b> do dataset PokerBench — 10.000 situações com a decisão GTO correta.</p>
       </Section>
 
       <Section title="Tipos de cenarios">
-        <p><b>Facing Bet</b> — Vilao apostou. Voce decide: Fold, Call ou Raise.</p>
-        <p style={{ marginTop: 4 }}><b>Bet or Check</b> — Vilao checkou. Voce decide: Check ou Bet.</p>
-        <p style={{ marginTop: 8 }}>Cenarios cobrem Flop, Turn e River em posicao IP e OOP.</p>
+        <p><b>Facing Bet</b> — vilão apostou. Você decide: Fold, Call ou Raise.</p>
+        <p style={{ marginTop: 4 }}><b>Bet or Check</b> — vilão checkou. Você decide: Check ou Bet.</p>
+        <p style={{ marginTop: 8 }}>Cenarios cobrem Flop, Turn e River em posição IP e OOP.</p>
       </Section>
 
       <Section title="Por que treinar com solver?">
-        <p>Heuristicas ("top pair = bet 50%") sao <b>aproximacoes uteis</b>, mas o solver mostra que a realidade e mais sutil.</p>
+        <p>Heuristicas ("top pair = bet 50%") sao <b>aproximacoes uteis</b>, mas o solver mostra que a realidade e mais sútil.</p>
         <p style={{ marginTop: 8 }}>Exemplos de onde heuristicas falham:</p>
         <ul style={{ paddingLeft: 20, marginTop: 4 }}>
           <li>Top pair com kicker fraco em board conectado = check (nao bet)</li>
@@ -254,12 +254,12 @@ function Lesson({ onComplete }) {
         <p style={{ marginTop: 8 }}>Praticar com cenarios de solver calibra sua intuicao para os spots nao-obvios.</p>
       </Section>
 
-      <Section title="Como usar este modulo">
-        <p>1. Analise o board, sua mao e a posicao (IP/OOP)</p>
+      <Section title="Como usar este módulo">
+        <p>1. Analise o board, sua mão e a posição (IP/OOP)</p>
         <p>2. Considere o tamanho do pot e a street</p>
-        <p>3. Escolha a acao que voce acha correta</p>
+        <p>3. Escolha a acao que você acha correta</p>
         <p>4. Compare com a resposta do solver</p>
-        <p style={{ marginTop: 8 }}>O objetivo nao e memorizar cada spot, mas <b>desenvolver intuicao</b> para quando suas heuristicas devem ser ajustadas.</p>
+        <p style={{ marginTop: 8 }}>O objetivo não e memorizar cada spot, mas <b>desenvolver intuicao</b> para quando suas heuristicas devem ser ajustadas.</p>
       </Section>
 
       <button
@@ -339,7 +339,7 @@ function Trainer() {
         </span>
         {scenario.isFacing && (
           <span style={{ background: '#2a1a1a', padding: '4px 10px', borderRadius: 6, color: '#e5484d', fontSize: 12 }}>
-            Vilao apostou
+            vilão apostou
           </span>
         )}
       </div>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Hand } from 'pokersolver'
 
 // ================================================================
-// Parsing de Hand History (PokerStars / generico)
+// Parsing de Hand History (PokerStars / genérico)
 // ================================================================
 
 const RANKS_ORDER = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 }
@@ -227,7 +227,7 @@ function getHandStrength(heroCards, boardCards) {
       if (heroContributes) {
         result.category = 'straight'
         result.strength = top5[4] === 14 ? 70 : top5[4] >= 13 ? 68 : 64
-        result.description = `Straight ate ${top5[4] === 14 ? 'A' : top5[4] === 13 ? 'K' : top5[4] === 12 ? 'Q' : top5[4]}`
+        result.description = `Straight até ${top5[4] === 14 ? 'A' : top5[4] === 13 ? 'K' : top5[4] === 12 ? 'Q' : top5[4]}`
         return result
       }
     }
@@ -390,7 +390,7 @@ function analyzeStreet(heroCards, boardCards, street, actions, prevAnalysis) {
   const boardVals = boardCards.map(c => RANKS_ORDER[c[0]]).sort((a, b) => b - a)
   const isConnected = boardVals.length >= 3 && (boardVals[0] - boardVals[2]) <= 4
   const isDry = !isMonotone && !isConnected && boardVals.length >= 3 && (boardVals[0] - boardVals[2]) >= 5
-  const boardTexture = isMonotone ? 'monotone' : isConnected ? 'conectado' : isTwoTone ? 'two-tone' : isDry ? 'seco' : 'medio'
+  const boardTexture = isMonotone ? 'monotone' : isConnected ? 'conectado' : isTwoTone ? 'two-tone' : isDry ? 'seco' : 'médio'
 
   // SPR estimate
   const potEstimate = street === 'flop' ? 7 : street === 'turn' ? 15 : 30
@@ -400,10 +400,10 @@ function analyzeStreet(heroCards, boardCards, street, actions, prevAnalysis) {
   let emoji = ''
 
   if (strength.strength >= 70) {
-    recommendation = `Mao muito forte (${strength.description}). Aposte por valor em todas as streets. Sizing grande (66-75%) em board ${boardTexture === 'seco' ? 'seco' : 'umido'}.`
+    recommendation = `Mão muito forte (${strength.description}). Aposte por valor em todas as streets. Sizing grande (66-75%) em board ${boardTexture === 'seco' ? 'seco' : 'úmido'}.`
     emoji = 'value'
   } else if (strength.strength >= 50) {
-    recommendation = `Mao forte (${strength.description}). ${street === 'river' ? 'Value bet medio (50-66%)' : 'Bet por valor e protecao (50-66%). Construa o pote gradualmente.'}`
+    recommendation = `Mão forte (${strength.description}). ${street === 'river' ? 'Value bet médio (50-66%)' : 'Bet por valor e proteção (50-66%). Construa o pote gradualmente.'}`
     emoji = 'value'
   } else if (strength.strength >= 35) {
     recommendation = `Mao boa (${strength.description}). ${boardTexture === 'seco' ? 'Bet por valor fino (33-50%). Pot control em streets futuras.' : 'Cuidado em board umido — protecao e importante. Bet 50-66%.'}`
@@ -413,17 +413,17 @@ function analyzeStreet(heroCards, boardCards, street, actions, prevAnalysis) {
       recommendation = `Mao mediana com draw forte (${draws.map(d => d.description).join(' + ')}). Semi-bluff e correto — ${totalOuts} outs. Sizing 50-75%.`
       emoji = 'draw'
     } else {
-      recommendation = `Mao marginal (${strength.description}). ${street === 'flop' ? 'Check ou bet fino de protecao (25-33%).' : street === 'turn' ? 'Check/pot control. Nao invista mais sem melhora.' : 'Check-back ou call se odds permitirem.'}`
+      recommendation = `Mao marginal (${strength.description}). ${street === 'flop' ? 'Check ou bet fino de protecao (25-33%).' : street === 'turn' ? 'Check/pot control. Não invista mais sem melhora.' : 'Check-back ou call se odds permitirem.'}`
       emoji = 'caution'
     }
   } else if (totalOuts >= 9) {
-    recommendation = `Mao fraca MAS com draw muito forte (${draws.map(d => d.description).join(' + ')}, ${totalOuts} outs). Semi-bluff agressivo — bet 66-75% ou check-raise.`
+    recommendation = `Mão fraca MAS com draw muito forte (${draws.map(d => d.description).join(' + ')}, ${totalOuts} outs). Semi-bluff agressivo — bet 66-75% ou check-raise.`
     emoji = 'draw'
   } else if (totalOuts >= 4) {
-    recommendation = `Mao fraca com draw fraco (${draws.map(d => d.description).join(', ')}, ${totalOuts} outs). ${street === 'flop' ? 'Pode semi-bluff se tiver fold equity. Senao, check.' : 'Give up — odds nao justificam investir mais.'}`
+    recommendation = `Mão fraca com draw fraco (${draws.map(d => d.description).join(', ')}, ${totalOuts} outs). ${street === 'flop' ? 'Pode semi-bluff se tiver fold equity. Senão, check.' : 'Give up — odds não justificam investir mais.'}`
     emoji = 'fold'
   } else {
-    recommendation = `Mao fraca (${strength.description}) sem draws. ${street === 'river' ? 'Pode considerar bluff se historia for consistente e vilao tiver range capped.' : 'Check/fold. Nao invista fichas sem equity.'}`
+    recommendation = `Mão fraca (${strength.description}) sem draws. ${street === 'river' ? 'Pode considerar bluff se história for consistente e vilão tiver range capped.' : 'Check/fold. Não invista fichas sem equity.'}`
     emoji = 'fold'
   }
 
@@ -431,13 +431,13 @@ function analyzeStreet(heroCards, boardCards, street, actions, prevAnalysis) {
   if (heroActions.length > 0) {
     const heroAction = heroActions[0]
     if (heroAction.action === 'folds' && strength.strength >= 35) {
-      feedback.push({ type: 'leak', text: `Fold com ${strength.description} pode ser tight demais. Considere call ou bet dependendo do sizing do vilao.` })
+      feedback.push({ type: 'leak', text: `Fold com ${strength.description} pode ser tight demais. Considere call ou bet dependendo do sizing do vilão.` })
     }
     if (heroAction.action === 'calls' && strength.strength >= 60 && street !== 'river') {
       feedback.push({ type: 'leak', text: `Call com ${strength.description} e passivo demais. Considere raise pra construir pote e proteger contra draws.` })
     }
     if ((heroAction.action === 'bets' || heroAction.action === 'raises') && strength.strength <= 15 && totalOuts <= 4) {
-      feedback.push({ type: 'leak', text: `Bet/raise com ${strength.description} sem draws parece um bluff ruim. Voce tem equity pra justificar?` })
+      feedback.push({ type: 'leak', text: `Bet/raise com ${strength.description} sem draws parece um bluff ruim. Você tem equity pra justificar?` })
     }
   }
 
@@ -468,25 +468,25 @@ function analyzeHand(parsed) {
   let preflopStrength = ''
   let preflopRec = ''
   if (isPocket) {
-    if (heroRanks[0] >= 12) { preflopStrength = 'Premium pair'; preflopRec = 'Raise/3-bet forte de qualquer posicao.' }
+    if (heroRanks[0] >= 12) { preflopStrength = 'Premium pair'; preflopRec = 'Raise/3-bet forte de qualquer posição.' }
     else if (heroRanks[0] >= 9) { preflopStrength = 'Medium pair'; preflopRec = 'Raise de MP+, call de EP contra raises. Set mine se SPR permitir.' }
-    else { preflopStrength = 'Small pair'; preflopRec = 'Call em posicao pra set mine (precisa SPR 10+). Fold OOP contra 3-bet.' }
+    else { preflopStrength = 'Small pair'; preflopRec = 'Call em posição pra set mine (precisa SPR 10+). Fold OOP contra 3-bet.' }
   } else if (heroRanks[0] === 14) {
-    if (heroRanks[1] >= 12) { preflopStrength = isSuited ? 'Premium suited' : 'Premium offsuit'; preflopRec = 'Raise/3-bet de qualquer posicao.' }
+    if (heroRanks[1] >= 12) { preflopStrength = isSuited ? 'Premium suited' : 'Premium offsuit'; preflopRec = 'Raise/3-bet de qualquer posição.' }
     else if (heroRanks[1] >= 9) { preflopStrength = isSuited ? 'Axs forte' : 'Axo medio'; preflopRec = isSuited ? 'Raise de MP+, bom 3-bet bluff.' : 'Raise de LP, fold de EP.' }
     else { preflopStrength = isSuited ? 'Axs fraco' : 'Axo fraco'; preflopRec = isSuited ? 'Excelente 3-bet bluff (Ace blocker). Raise de LP.' : 'Fold na maioria das posicoes.' }
   } else if (heroRanks[0] >= 11 && gap <= 2 && isSuited) {
     preflopStrength = 'Suited connector/gapper alto'
-    preflopRec = 'Muito playable — raise de LP, call contra raises em posicao. Faz straights e flushes.'
+    preflopRec = 'Muito playable — raise de LP, call contra raises em posição. Faz straights e flushes.'
   } else if (heroRanks[0] >= 11 && gap <= 2) {
     preflopStrength = 'Broadway offsuit'
     preflopRec = 'Raise de MP+. Cuidado com dominacao (KJ vs AK, etc).'
   } else if (gap <= 2 && isSuited) {
     preflopStrength = 'Suited connector baixo'
-    preflopRec = 'Call em posicao contra raises. Precisa de implied odds. Nao pague 3-bets.'
+    preflopRec = 'Call em posição contra raises. Precisa de implied odds. Não pague 3-bets.'
   } else {
     preflopStrength = 'Mao especulativa'
-    preflopRec = 'Playable apenas em posicao com stack profundo. Fold na maioria dos spots.'
+    preflopRec = 'Playable apenas em posição com stack profundo. Fold na maioria dos spots.'
   }
 
   analysis.push({
@@ -604,7 +604,7 @@ export default function HandAnalysis() {
     if (!parsed) parsed = parseSimpleInput(input)
 
     if (!parsed || !parsed.heroHand || parsed.heroHand.length < 2) {
-      setError('Nao consegui interpretar a mao. Use o formato: AhKs Qd7c2s (hero + board) ou cole um hand history do PokerStars.')
+      setError('Não consegui interpretar a mão. Use o formato: AhKs Qd7c2s (hero + board) ou cole um hand history do PokerStars.')
       return
     }
 
@@ -815,7 +815,7 @@ export default function HandAnalysis() {
             <div className="rounded-xl p-4 mb-4" style={{ background: '#222225', border: '1px solid #2a2a2e' }}>
               <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>NOTA</div>
               <div style={{ color: '#b3b3b8', fontSize: 12, lineHeight: 1.7 }}>
-                Esta analise usa heuristicas GTO simplificadas. Para estudo aprofundado, use um solver dedicado (PioSolver, GTO+, etc). A analise aqui foca nos conceitos fundamentais de hand strength, draws, e board texture.
+                Esta análise usa heurísticas GTO simplificadas. Para estudo aprofundado, use um solver dedicado (PioSolver, GTO+, etc). A análise aqui foca nos conceitos fundamentais de hand strength, draws, e board texture.
               </div>
             </div>
           </div>
@@ -829,7 +829,7 @@ export default function HandAnalysis() {
               {[
                 { title: 'Modo Rapido', desc: 'Digite suas cartas + board no formato: AhKs Qd7c2s Tc 5h', color: '#4fce82' },
                 { title: 'Hand History', desc: 'Cole o historico completo do PokerStars ou sites similares', color: '#0a84d7' },
-                { title: 'Analise', desc: 'Receba feedback GTO street-by-street: forca da mao, draws, textura do board e recomendacao', color: '#f5a623' },
+                { title: 'Análise', desc: 'Receba feedback GTO street-by-street: força da mão, draws, textura do board e recomendação', color: '#f5a623' },
               ].map((tip, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: tip.color, marginTop: 6, flexShrink: 0 }} />

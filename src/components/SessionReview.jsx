@@ -33,12 +33,12 @@ export default function SessionReview({ moduleId, sessionCorrect, sessionTotal, 
   }, [progress.answerHistory, moduleId])
 
   const message = accuracy >= 90
-    ? 'Excelente! Voce domina esse conteudo.'
+    ? 'Excelente! Você domina esse conteúdo.'
     : accuracy >= 70
-    ? 'Bom trabalho! Alguns spots ainda precisam de atencao.'
+    ? 'Bom trabalho! Alguns spots ainda precisam de atenção.'
     : accuracy >= 50
     ? 'Progresso! Revise a aula e foque nos erros.'
-    : 'Esse modulo precisa de mais estudo. Releia a aula antes de tentar novamente.'
+    : 'Esse módulo precisa de mais estudo. Releia a aula antes de tentar novamente.'
 
   const sessionErrors = sessionTotal - sessionCorrect
   const accColor = accuracy >= 90 ? 'var(--emerald)' : accuracy >= 70 ? 'var(--gold)' : 'var(--crimson)'
@@ -60,7 +60,7 @@ export default function SessionReview({ moduleId, sessionCorrect, sessionTotal, 
               </svg>
             </div>
             <h2 style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 700, marginBottom: 4, letterSpacing: '-0.025em' }}>
-              Sessao Completa
+              Sessão Completa
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, fontFamily: 'JetBrains Mono, monospace' }}>
               {MOD_NAMES[moduleId] || `Modulo ${moduleId}`}
@@ -112,7 +112,7 @@ export default function SessionReview({ moduleId, sessionCorrect, sessionTotal, 
                 Spot recorrente detectado
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.5 }}>
-                Voce errou {analysis.errorsInRecent}x nesse modulo nas ultimas 50 respostas.
+                Você errou {analysis.errorsInRecent}x nesse módulo nas últimas 50 respostas.
                 Esse e um dos seus leaks — revise a aula com calma antes de treinar mais.
               </p>
             </div>
@@ -125,7 +125,7 @@ export default function SessionReview({ moduleId, sessionCorrect, sessionTotal, 
               border: '1px solid rgba(245,158,11,0.2)',
             }}>
               <div style={{ color: 'var(--gold)', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
-                Este modulo e um dos seus 3 maiores leaks
+                Este módulo é um dos seus 3 maiores leaks
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.5 }}>
                 Continue praticando — o Modo Infinito com Foco ON vai priorizar esses spots.
@@ -165,7 +165,7 @@ export default function SessionReview({ moduleId, sessionCorrect, sessionTotal, 
 
           {/* Continue button */}
           <button onClick={onContinue} className="btn-primary w-full" style={{ padding: '14px', fontSize: 15, borderRadius: 'var(--radius-md)' }}>
-            Nova Sessao
+            Nova Sessão
           </button>
         </div>
       </div>

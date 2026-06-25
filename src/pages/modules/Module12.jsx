@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useProgress } from '../../context/ProgressContext'
 
 // Module 12 (Bet Sizing) foi fundido com o Module 5 (CBet Flop IP + Bet Sizing)
-// Este componente auto-completa o modulo 12 e redireciona pro proximo
+// Este componente auto-completa o módulo 12 e redireciona pro próximo
 export default function Module12() {
   const { progress, markLessonRead, recordSession } = useProgress()
   const navigate = useNavigate()

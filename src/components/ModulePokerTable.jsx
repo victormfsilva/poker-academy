@@ -53,7 +53,7 @@ function Seat({ pos, isHero, isVillain, isFolded, actionLabel, heroCards }) {
 }
 
 /**
- * Mesa de poker reutilizavel para os modulos de treino.
+ * Mesa de poker reutilizável para os modulos de treino.
  *
  * Props:
  *  - heroPos: string (ex: 'BTN', 'BB')

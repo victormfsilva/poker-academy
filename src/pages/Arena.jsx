@@ -23,7 +23,7 @@ function newDeck() {
 
 function cardRank(c) { return RANK_VAL[c[0]] || RANK_VAL[c.slice(0, -1)] }
 
-// ─── Avaliacao de mao (pokersolver) ──────────────────────
+// ─── Avaliação de mão (pokersolver) ──────────────────────
 const HAND_LABELS = {
   'Straight Flush': 'Straight Flush', 'Four of a Kind': 'Quadra',
   'Full House': 'Full House', 'Flush': 'Flush', 'Straight': 'Straight',
@@ -149,14 +149,14 @@ function botPreflopDecision(botHole, botIsSB, profile = 'gto') {
     if (raiseRange.includes(hand)) return 'raise'
     const completeRange = BLIND_WARS.SB_complete?.complete || []
     if (completeRange.includes(hand)) return 'call'
-    // LAG abre mais maos fora do range (random limp/raise)
+    // LAG abre mais mãos fora do range (random limp/raise)
     if (prof.preflopTight < 0 && Math.random() < Math.abs(prof.preflopTight)) return Math.random() < 0.6 ? 'raise' : 'call'
     return 'fold'
   } else {
     const bbRange = BB_VS_RFI.vsSB || {}
     if (bbRange.threebet?.includes(hand)) return 'raise'
     if (bbRange.call?.includes(hand)) {
-      // Nit folda maos do range de call
+      // Nit folda mãos do range de call
       if (prof.preflopTight > 0 && Math.random() < prof.preflopTight * 0.5) return 'fold'
       return 'call'
     }
@@ -183,7 +183,7 @@ function getHeroPreflopFeedback(heroHole, heroAction, heroIsSB) {
       reason = `${hand} esta no range de COMPLETE do SB. Limp para ver flop barato com boa jogabilidade.`
     } else {
       recommended = 'fold'
-      reason = `${hand} nao tem equity suficiente para jogar do SB.`
+      reason = `${hand} não tem equity suficiente para jogar do SB.`
     }
     const isCorrect = heroAction === recommended ||
       (recommended === 'raise' && heroAction === 'raise') ||
@@ -201,7 +201,7 @@ function getHeroPreflopFeedback(heroHole, heroAction, heroIsSB) {
       reason = `${hand} esta no range de CALL do BB vs SB. Boa equity para ver o flop.`
     } else {
       recommended = 'fold'
-      reason = `${hand} nao tem equity suficiente para defender do BB vs raise do SB.`
+      reason = `${hand} não tem equity suficiente para defender do BB vs raise do SB.`
     }
     const isCorrect = heroAction === recommended
     return { recommended, reason, isCorrect }
@@ -258,7 +258,7 @@ function blockerEffect(botHole, board) {
   const flushBlocker = dominantSuit && dominantSuit[1] >= 2 && botSuits.some(s => s === dominantSuit[0])
   const hasAceFlushBlocker = flushBlocker && botHole.some(c => c.slice(0, -1) === 'A' && c.slice(-1) === dominantSuit[0])
 
-  // Straight blocker: bot tem cartas que completam sequencias no board
+  // Straight blocker: bot tem cartas que completam sequências no board
   const sorted = [...new Set(boardRanks)].sort((a, b) => a - b)
   let straightBlocker = false
   for (let i = 0; i < sorted.length - 1; i++) {
@@ -309,7 +309,7 @@ function botDecision(botHole, board, street, pot, lastBet, isIP, profile = 'gto'
   // Profile: LAG aposta mais, Nit folda mais — rng shift
   const rng = Math.min(1, Math.max(0, Math.random() * (1 / prof.betMult)))
 
-  // Ajustes por posicao: IP pode blefar mais, OOP precisa proteger mais
+  // Ajustes por posição: IP pode blefar mais, OOP precisa proteger mais
   const ipBonus = isIP ? 0.08 : 0
   const oopProtect = !isIP ? 0.10 : 0
   // Blocker + profile adjustments
@@ -339,7 +339,7 @@ function botDecision(botHole, board, street, pot, lastBet, isIP, profile = 'gto'
         // Call quase sempre, raise pra proteger em board umido OOP
         if (streetIdx === 0 && texture.wet && !isIP) return rng < 0.20 ? 'raise' : 'call'
         if (streetIdx === 0 && texture.wet) return rng < 0.12 ? 'raise' : 'call'
-        if (streetIdx === 2 && betRelPot > 0.8) return rng < 0.15 ? 'fold' : 'call' // river overbet com mao boa = cuidado
+        if (streetIdx === 2 && betRelPot > 0.8) return rng < 0.15 ? 'fold' : 'call' // river overbet com mão boa = cuidado
         return 'call'
 
       case 'draw':
@@ -359,7 +359,7 @@ function botDecision(botHole, board, street, pot, lastBet, isIP, profile = 'gto'
         return rng < ((0.12 + callAdj) / prof.foldMult) ? 'call' : 'fold'
 
       case 'weak':
-        // Bluff-raise raro no river IP, resto fold — blockers aumentam frequencia
+        // Bluff-raise raro no river IP, resto fold — blockers aumentam frequência
         if (streetIdx === 2 && isIP && rng < (0.10 + bluffAdj)) return 'raise'
         if (betRelPot < 0.3 && streetIdx === 0) return rng < (0.15 + callAdj) ? 'call' : 'fold'
         return 'fold'
@@ -406,7 +406,7 @@ function botDecision(botHole, board, street, pot, lastBet, isIP, profile = 'gto'
       return 'check'
 
     case 'weak':
-      // Bluffs com frequencia GTO: mais em dry boards e IP — blockers boost bluff freq
+      // Bluffs com frequência GTO: mais em dry boards e IP — blockers boost bluff freq
       if (!texture.wet && isIP) {
         if (streetIdx === 0) return rng < (0.30 + bluffAdj) ? 'bet' : 'check'
         if (streetIdx === 1) return rng < (0.20 + bluffAdj) ? 'bet' : 'check'
@@ -436,14 +436,14 @@ function botBetSizing(botHole, board, street, pot, isIP) {
   const streetIdx = { flop: 0, turn: 1, river: 2 }[street] ?? 0
   const rng = Math.random()
 
-  // Polarizado: maos muito fortes e bluffs usam sizing grande
+  // Polarizado: mãos muito fortes e bluffs usam sizing grande
   // Maos medianas usam sizing menor (merged range)
   switch (strength) {
     case 'monster':
       // Overbet river pra extrair max valor, big sizing em wet boards
       if (streetIdx === 2) return rng < 0.35 ? 1.5 : rng < 0.7 ? 1.0 : 0.75
       if (texture.wet) return rng < 0.4 ? 0.75 : 0.66
-      // Dry board: sizing menor pra nao assustar (disfarcar trap)
+      // Dry board: sizing menor pra não assustar (disfarcar trap)
       return rng < 0.5 ? 0.5 : 0.66
 
     case 'strong':
@@ -452,7 +452,7 @@ function botBetSizing(botHole, board, street, pot, isIP) {
       return rng < 0.5 ? 0.5 : 0.66
 
     case 'good':
-      // Sizing menor pra protecao, nao inflar pote demais
+      // Sizing menor pra proteção, não inflar pote demais
       if (streetIdx === 0) return rng < 0.6 ? 0.33 : 0.5
       if (streetIdx === 1) return 0.5
       return rng < 0.6 ? 0.33 : 0.5 // river thin value = menor
@@ -466,14 +466,14 @@ function botBetSizing(botHole, board, street, pot, isIP) {
       return 0.33 // thin value / probe = sempre pequeno
 
     default: // weak/air bluffs
-      // Bluffs devem usar sizing que o range de valor tambem usa
+      // Bluffs devem usar sizing que o range de valor também usa
       if (streetIdx === 2) return rng < 0.45 ? 0.75 : 0.66 // river bluff polarizado = grande
       if (!texture.wet) return 0.33 // dry board cbet bluff = pequeno
       return 0.5
   }
 }
 
-// ─── Descricao da mao do hero em linguagem simples ──────
+// ─── Descrição da mão do hero em linguagem simples ──────
 function describeHeroHand(hole, board) {
   const e = evalHand(hole, board)
   const holeR = hole.map(c => c.slice(0, -1))
@@ -547,9 +547,9 @@ function describeHeroHand(hole, board) {
   if (holeR[0] === holeR[1]) return `Par de bolso (${holeR[0]}${holeR[1]}) abaixo do board`
 
   // Draws
-  if (flushDraw && straightDraw) return 'Combo draw (flush + sequencia)'
+  if (flushDraw && straightDraw) return 'Combo draw (flush + sequência)'
   if (flushDraw) return 'Draw de flush (faltam 1 carta)'
-  if (straightDraw) return 'Draw de sequencia'
+  if (straightDraw) return 'Draw de sequência'
 
   // High card
   const highCard = Math.max(...holeRanks)
@@ -579,35 +579,35 @@ function getHeroFeedback(heroHole, board, heroAction, pot, lastBet) {
       case 'monster':
         recommended = 'raise'
         acceptable.push('call')
-        reason = `${handDesc} — mao monstruosa no ${streetName}. Raise para extrair o maximo de valor. Call tambem funciona pra disfarcar a forca da sua mao (slowplay).`
+        reason = `${handDesc} — mão monstruosa no ${streetName}. Raise para extrair o máximo de valor. Call também funciona pra disfarçar a força da sua mão (slowplay).`
         break
       case 'strong':
         recommended = 'call'
         acceptable.push('raise')
         if (texture.wet) {
-          reason = `${handDesc} no ${textureDesc}. Num board com muitos draws, call protege sua mao sem inflar o pote demais. Raise tambem e ok pra negar equity dos draws do vilao.`
+          reason = `${handDesc} no ${textureDesc}. Num board com muitos draws, call protege sua mão sem inflar o pote demais. Raise também é ok pra negar equity dos draws do vilão.`
         } else {
-          reason = `${handDesc} no ${textureDesc}. Call pra manter o vilao na mao com maos piores. Raise pode assustar e fazer ele foldar.`
+          reason = `${handDesc} no ${textureDesc}. Call pra manter o vilão na mão com mãos piores. Raise pode assustar e fazer ele foldar.`
         }
         break
       case 'good':
         recommended = 'call'
-        reason = `${handDesc} — boa mao. Voce precisa de ${oddsPercent}% de equity pra call ser lucrativo (bet ${betRelPot}% do pote). Sua mao tem equity suficiente.`
+        reason = `${handDesc} — boa mão. Você precisa de ${oddsPercent}% de equity pra call ser lucrativo (bet ${betRelPot}% do pote). Sua mão tem equity suficiente.`
         break
       case 'draw':
         if (potOdds < 0.30) {
           recommended = 'call'
           acceptable.push('raise')
-          reason = `${handDesc} — pot odds de ${oddsPercent}% justificam o call. ${streetName === 'flop' ? 'Ainda tem turn e river pra completar.' : streetName === 'turn' ? 'Uma carta pra completar no river.' : 'Ultimo street — se nao completou, nao tem mais chances.'}`
+          reason = `${handDesc} — pot odds de ${oddsPercent}% justificam o call. ${streetName === 'flop' ? 'Ainda tem turn e river pra completar.' : streetName === 'turn' ? 'Uma carta pra completar no river.' : 'Último street — se não completou, não tem mais chances.'}`
           if (streetName === 'river') {
             recommended = 'fold'
             acceptable.length = 0
-            reason = `${handDesc} — draw nao completou no river. Sem mais cartas pra vir, fold e a jogada correta.`
+            reason = `${handDesc} — draw não completou no river. Sem mais cartas pra vir, fold é a jogada correta.`
           }
         } else {
           recommended = 'fold'
           acceptable.push('raise')
-          reason = `${handDesc} — pot odds de ${oddsPercent}% sao ruins pro seu draw. Fold e mais seguro. Raise como semi-bluff pode funcionar se o vilao foldar bastante.`
+          reason = `${handDesc} — pot odds de ${oddsPercent}% sao ruins pro seu draw. Fold e mais seguro. Raise como semi-bluff pode funcionar se o vilão foldar bastante.`
         }
         break
       case 'marginal':
@@ -616,12 +616,12 @@ function getHeroFeedback(heroHole, board, heroAction, pot, lastBet) {
           reason = `${handDesc} — bet pequena (${betRelPot}% do pote). Com esse preco, call e aceitavel pra ver mais uma carta.`
         } else {
           recommended = 'fold'
-          reason = `${handDesc} — mao marginal contra bet de ${betRelPot}% do pote. Sem equity suficiente pra continuar.`
+          reason = `${handDesc} — mão marginal contra bet de ${betRelPot}% do pote. Sem equity suficiente pra continuar.`
         }
         break
       case 'weak':
         recommended = 'fold'
-        reason = `${handDesc} — apenas carta alta. Sem mao feita nem draw, fold e a jogada correta.`
+        reason = `${handDesc} — apenas carta alta. Sem mão feita nem draw, fold é a jogada correta.`
         break
       default:
         recommended = 'fold'
@@ -633,64 +633,64 @@ function getHeroFeedback(heroHole, board, heroAction, pot, lastBet) {
       case 'monster':
         if (texture.wet) {
           recommended = 'bet'
-          reason = `${handDesc} no ${textureDesc}. Bet por valor — existem muitos draws que podem pagar. Nao de carta gratis num board perigoso.`
+          reason = `${handDesc} no ${textureDesc}. Bet por valor — existem muitos draws que podem pagar. Não dê carta grátis num board perigoso.`
         } else {
           recommended = 'bet'
           acceptable.push('check')
-          reason = `${handDesc} no ${textureDesc}. Bet por valor e a jogada padrao. Check (slowplay) tambem funciona num board seco — pouca chance do vilao melhorar de graca.`
+          reason = `${handDesc} no ${textureDesc}. Bet por valor é a jogada padrão. Check (slowplay) também funciona num board seco — pouca chance do vilão melhorar de graça.`
         }
         break
       case 'strong':
         recommended = 'bet'
         acceptable.push('check')
-        reason = `${handDesc} — mao forte. Bet por valor pra cobrar de maos piores. ${texture.wet ? 'Board umido = nao de carta gratis.' : 'Board seco = vilao tem poucas saidas, sizing menor e ok.'}`
+        reason = `${handDesc} — mão forte. Bet por valor pra cobrar de mãos piores. ${texture.wet ? 'Board úmido = não dê carta grátis.' : 'Board seco = vilão tem poucas saídas, sizing menor é ok.'}`
         break
       case 'good':
         recommended = 'bet'
         acceptable.push('check')
         if (streetName === 'river') {
-          reason = `${handDesc} — boa mao no river. Bet fino por valor, pra cobrar de pares piores ou draws que nao completaram. Check tambem e safe.`
+          reason = `${handDesc} — boa mão no river. Bet fino por valor, pra cobrar de pares piores ou draws que não completaram. Check também é safe.`
         } else {
-          reason = `${handDesc} — bet por valor e protecao. ${texture.wet ? 'Board umido — proteja sua mao negando equity.' : 'Board seco — sizing menor funciona, tipo 33-50% do pote.'}`
+          reason = `${handDesc} — bet por valor e proteção. ${texture.wet ? 'Board úmido — proteja sua mão negando equity.' : 'Board seco — sizing menor funciona, tipo 33-50% do pote.'}`
         }
         break
       case 'draw':
         if (streetName === 'flop' || streetName === 'turn') {
           recommended = 'bet'
           acceptable.push('check')
-          reason = `${handDesc} — semi-bluff e uma boa opcao. Voce pode ganhar agora se o vilao foldar, e se ele pagar, ainda tem outs pra melhorar. Check pra ver carta gratis tambem funciona.`
+          reason = `${handDesc} — semi-bluff é uma boa opção. Você pode ganhar agora se o vilão foldar, e se ele pagar, ainda tem outs pra melhorar. Check pra ver carta grátis também funciona.`
         } else {
           recommended = 'check'
-          reason = `${handDesc} — draw nao completou no river. Check e a jogada mais segura. Bluff so se voce tiver uma boa leitura do vilao.`
+          reason = `${handDesc} — draw não completou no river. Check é a jogada mais segura. Bluff só se você tiver uma boa leitura do vilão.`
         }
         break
       case 'marginal':
         recommended = 'check'
         if (streetName === 'river') {
           acceptable.push('bet')
-          reason = `${handDesc} — mao marginal no river. Check pra controlar o pote. Bet fino por valor pode funcionar contra ranges muito fracos.`
+          reason = `${handDesc} — mão marginal no river. Check pra controlar o pote. Bet fino por valor pode funcionar contra ranges muito fracos.`
         } else {
-          reason = `${handDesc} — mao marginal. Check pra controlar o pote e ver a proxima carta de graca.`
+          reason = `${handDesc} — mão marginal. Check pra controlar o pote e ver a próxima carta de graça.`
         }
         break
       case 'weak':
         if (!texture.wet && streetName === 'flop') {
           recommended = 'bet'
           acceptable.push('check')
-          reason = `${handDesc} no ${textureDesc}. Board seco no flop — bet pequeno (33%) como bluff e padrao GTO. Voce nao tem nada, mas o vilao provavelmente tambem nao.`
+          reason = `${handDesc} no ${textureDesc}. Board seco no flop — bet pequeno (33%) como bluff é padrão GTO. Você não tem nada, mas o vilão provavelmente também não.`
         } else {
           recommended = 'check'
-          reason = `${handDesc} — sem nada feito. Check e de graca, nao invista mais fichas sem mao.`
+          reason = `${handDesc} — sem nada feito. Check é de graça, não invista mais fichas sem mão.`
         }
         break
       default:
         if (!texture.wet && streetName === 'flop') {
           recommended = 'bet'
           acceptable.push('check')
-          reason = `${handDesc}. Board seco no flop — cbet bluff de 33% e lucrativo a longo prazo. Vilao vai foldar muitas maos fracas.`
+          reason = `${handDesc}. Board seco no flop — cbet bluff de 33% é lucrativo a longo prazo. Vilão vai foldar muitas mãos fracas.`
         } else {
           recommended = 'check'
-          reason = `${handDesc} no ${textureDesc}. Sem mao, sem draw. Desista silenciosamente com check.`
+          reason = `${handDesc} no ${textureDesc}. Sem mão, sem draw. Desista silenciosamente com check.`
         }
     }
   }
@@ -969,7 +969,7 @@ function streetName(s) {
   return { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', showdown: 'Showdown' }[s] || s
 }
 
-// ─── Blind structure (sobe a cada 5 maos) ─────────────────
+// ─── Blind structure (sobe a cada 5 mãos) ─────────────────
 const BLIND_LEVELS = [
   { sb: 1, bb: 2 },
   { sb: 2, bb: 4 },
@@ -1140,7 +1140,7 @@ function clearMatch() {
 export default function Arena() {
   const { progress, updateArenaData, recordArenaHand } = useProgress()
 
-  // Match = partida longa (muitas maos ate alguem zerar)
+  // Match = partida longa (muitas mãos até alguém zerar)
   const [match, setMatch] = useState(() => loadMatch())
   const [gameState, setGameState] = useState(null)
   const [feedbacks, setFeedbacks] = useState([])
@@ -1529,7 +1529,7 @@ export default function Arena() {
       }
     }
 
-    // Posicao pos-flop: BB (OOP) age primeiro, SB/BTN (IP) age por ultimo
+    // Posicao pos-flop: BB (OOP) age primeiro, SB/BTN (IP) age por último
     // heroIsBtn = hero eh SB/BTN = IP pos-flop -> bot (BB) age primeiro
     const heroIsIP = gs.heroIsBtn
     const nextGs = {
@@ -2013,7 +2013,7 @@ export default function Arena() {
 
             <p style={{ color: '#b3b3b8', fontSize: 15, marginBottom: 16, lineHeight: 1.6 }}>
               {arenaMode === 'hu' ? (
-                <>Jogue Heads-Up contra um bot.<br />500 vs 500 fichas. Blinds sobem a cada 5 maos.<br />Cada decisao afeta seu rating.</>
+                <>Jogue Heads-Up contra um bot.<br />500 vs 500 fichas. Blinds sobem a cada 5 mãos.<br />Cada decisão afeta seu rating.</>
               ) : (
                 <>Torneio com 9 jogadores e ICM.<br />Elimine oponentes e chegue ao top 3.<br />Premiacao: 50% / 30% / 20%</>
               )}
@@ -2321,12 +2321,12 @@ export default function Arena() {
                 />
               ) : (
                 <div style={{ textAlign: 'center', padding: '30px 0', color: '#676671', fontSize: 13 }}>
-                  Clique para comecar
+                  Clique para começar
                 </div>
               )}
             </div>
 
-            {/* Resultado da mao */}
+            {/* Resultado da mão */}
             {gameState?.result && !matchOver && (
               <div className="rounded-xl p-3 mb-3" style={{
                 background: gameState.result.winner === 'hero' ? 'rgba(79,206,130,0.1)' : gameState.result.winner === 'tie' ? 'rgba(245,166,35,0.1)' : 'rgba(229,72,77,0.1)',
@@ -2353,7 +2353,7 @@ export default function Arena() {
               </div>
             )}
 
-            {/* Hand History — resumo da mao por street */}
+            {/* Hand History — resumo da mão por street */}
             {gameState?.result && gameState.actions?.length > 0 && !matchOver && (() => {
               const streets = ['preflop', 'flop', 'turn', 'river']
               const grouped = {}
@@ -2475,7 +2475,7 @@ export default function Arena() {
             {/* Acoes / Proxima Mao / Comecar */}
             <div className="mb-3">
               {!gameState || (gameState.result && !matchOver) ? (
-                /* Proxima mao */
+                /* Próxima mão */
                 <button onClick={startNewHand}
                   style={{
                     width: '100%', padding: '14px', borderRadius: 8,
@@ -2636,7 +2636,7 @@ export default function Arena() {
               )}
             </div>
 
-            {/* Historico de maos */}
+            {/* Histórico de mãos */}
             {match.handHistory.length > 0 && (
               <div className="rounded-xl p-3 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
                 <div style={{ color: '#676671', fontSize: 11, fontWeight: 600, marginBottom: 8 }}>HISTORICO</div>

@@ -75,7 +75,7 @@ function Lesson({ onComplete }) {
       <div className="space-y-4">
         <Section title="Por Que o BTN é a Melhor Posicao?">
           O Button tem uma vantagem unica no poker:<br /><br />
-          <strong style={{ color: '#4fce82' }}>Você SEMPRE age por ultimo no pos-flop.</strong><br /><br />
+          <strong style={{ color: '#4fce82' }}>Você SEMPRE age por último no pos-flop.</strong><br /><br />
           Isso significa que você vê o que todos fazem antes de tomar sua decisão. Você pode:<br />
           - Controlar o tamanho do pote<br />
           - Fazer blefes mais eficientes<br />

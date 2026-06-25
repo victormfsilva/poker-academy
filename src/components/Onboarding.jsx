@@ -9,7 +9,7 @@ const STEPS = [
       </svg>
     ),
     title: 'Bem-vindo ao Poker Academy',
-    desc: 'Treine GTO de verdade com exercicios praticos baseados em ranges reais. Evolua seu jogo mao a mao.',
+    desc: 'Treine GTO de verdade com exercícios práticos baseados em ranges reais. Evolua seu jogo mão a mão.',
   },
   {
     icon: (
@@ -17,8 +17,8 @@ const STEPS = [
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
       </svg>
     ),
-    title: 'Modulos + Modo Infinito',
-    desc: 'Comece pelos modulos de RFI e avance ate cenarios pos-flop. Ou treine no modo infinito com maos aleatorias de todos os modulos.',
+    title: 'Módulos + Modo Infinito',
+    desc: 'Comece pelos módulos de RFI e avance até cenários pós-flop. Ou treine no modo infinito com mãos aleatórias de todos os módulos.',
   },
   {
     icon: (
@@ -26,8 +26,8 @@ const STEPS = [
         <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
       </svg>
     ),
-    title: 'Acompanhe sua Evolucao',
-    desc: 'Veja suas estatisticas, defina metas diarias e mantenha uma sequencia de dias treinando. Consistencia e a chave.',
+    title: 'Acompanhe sua Evolução',
+    desc: 'Veja suas estatísticas, defina metas diárias e mantenha uma sequência de dias treinando. Consistência é a chave.',
   },
 ]
 
@@ -76,7 +76,7 @@ export default function Onboarding({ onComplete }) {
 
         <button onClick={() => isLast ? onComplete() : setStep(step + 1)} className="btn-primary w-full"
           style={{ padding: '14px 0', fontSize: 16 }}>
-          {isLast ? 'Comecar a Treinar' : 'Proximo'}
+          {isLast ? 'Começar a Treinar' : 'Próximo'}
         </button>
 
         {!isLast && (

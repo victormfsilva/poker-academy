@@ -116,12 +116,12 @@ function hasStraightDraw(hole, board) {
   return false
 }
 
-// Verifica se a mao teria c-betado no flop (filtra maos irreais no cenario de double barrel)
+// Verifica se a mão teria c-betado no flop (filtra mãos irreais no cenario de double barrel)
 function wouldCbetFlop(hole, flop) {
   const holeRanks = hole.map(c => c.slice(0, -1))
   const isPocketPair = holeRanks[0] === holeRanks[1]
 
-  // Qualquer mao feita ou draw forte: sim
+  // Qualquer mão feita ou draw forte: sim
   if (hasMadeFlush(hole, flop) || hasSetFn(hole, flop) || hasTwoPairFn(hole, flop)) return true
   if (hasOverpair(hole, flop) || hasTopPair(hole, flop)) return true
   if (hasFlushDraw(hole, flop) || hasStraightDraw(hole, flop)) return true
@@ -154,15 +154,15 @@ function isTurnScary(flop, turn) {
 
   // Flush completing: turn faz 3 do mesmo naipe com flop
   const flopSuitCount = flopSuits.filter(s => s === turnSuit).length
-  if (flopSuitCount >= 2) return { scary: true, type: 'flush', desc: 'Carta do mesmo naipe - possivel flush completado' }
+  if (flopSuitCount >= 2) return { scary: true, type: 'flush', desc: 'Carta do mesmo naipe - possível flush completado' }
 
-  // Straight scary: 4 cartas no board formam sequencia possivel
+  // Straight scary: 4 cartas no board formam sequência possível
   let allVals = [...new Set([...flopVals, turnVal])].sort((a, b) => a - b)
   if (allVals.includes(14)) allVals = [1, ...allVals]
   for (let lo = 1; lo <= 11; lo++) {
     const run = [lo, lo+1, lo+2, lo+3]
     if (run.every(v => allVals.includes(v))) {
-      return { scary: true, type: 'straight', desc: 'Board muito conectado - possivel straight completado' }
+      return { scary: true, type: 'straight', desc: 'Board muito conectado - possível straight completado' }
     }
   }
 
@@ -173,7 +173,7 @@ function isTurnScary(flop, turn) {
   // Mid overcard (Q, J, T acima do flop)
   if (turnVal > maxFlop && turnVal >= 10) return { scary: false, type: 'overcard_low', desc: 'Overcard media - ligeiramente perigosa' }
 
-  return { scary: false, type: 'brick', desc: 'Brick - carta inofensiva que nao muda nada' }
+  return { scary: false, type: 'brick', desc: 'Brick - carta inofensiva que não muda nada' }
 }
 
 // Kicker quality usando RANK_VAL (A=14 melhor, 2=2 pior)
@@ -182,29 +182,29 @@ function getKickerVal(hole, board) {
   const holeVals = hole.map(toVal)
   const boardRanks = board.map(c => c.slice(0, -1))
   const holeRanks = hole.map(c => c.slice(0, -1))
-  // Kicker = carta da mao que NAO parou com o board
+  // Kicker = carta da mão que NAO parou com o board
   const kickers = holeRanks
     .map((r, i) => ({ rank: r, val: holeVals[i] }))
     .filter(h => !boardRanks.includes(h.rank))
   return kickers.length > 0 ? Math.max(...kickers.map(k => k.val)) : Math.max(...holeVals)
 }
 
-// CBet turn IP: voce apostou no flop, adversario chamou. Turn saiu. Double barrel ou check?
+// CBet turn IP: você apostou no flop, adversario chamou. Turn saiu. Double barrel ou check?
 function getCorrectAction(hole, flop, turn) {
   const board = [...flop, turn]
   const turnInfo = isTurnScary(flop, turn)
 
   // Mao muito forte: sempre barrel
   if (hasMadeFlush(hole, board) || hasSetFn(hole, board) || hasTwoPairFn(hole, board)) {
-    return { action: 'bet', sizing: '66%', reason: 'Mao muito forte no turn - aposte! Continue construindo pote. Voce quer ser pago.' }
+    return { action: 'bet', sizing: '66%', reason: 'Mao muito forte no turn - aposte! Continue construindo pote. Você quer ser pago.' }
   }
 
   // Overpair
   if (hasOverpair(hole, board)) {
     if (turnInfo.scary && turnInfo.type === 'flush') {
-      return { action: 'check', reason: 'Overpair mas turn completou possivel flush. Check pra controlar o pote - se o adversario apostar grande, pode estar com flush.' }
+      return { action: 'check', reason: 'Overpair mas turn completou possível flush. Check pra controlar o pote - se o adversario apostar grande, pode estar com flush.' }
     }
-    return { action: 'bet', sizing: '66%', reason: 'Overpair - continue apostando no turn. Sua mao provavelmente ainda e a melhor. Aposte 66% pra valor e protecao.' }
+    return { action: 'bet', sizing: '66%', reason: 'Overpair - continue apostando no turn. Sua mão provavelmente ainda e a melhor. Aposte 66% pra valor e proteção.' }
   }
 
   // Top pair
@@ -213,7 +213,7 @@ function getCorrectAction(hole, flop, turn) {
     const kickerVal = getKickerVal(hole, board)
     const goodKicker = kickerVal >= 11 // J=11, Q=12, K=13, A=14
     if (turnInfo.scary && turnInfo.type === 'flush') {
-      return { action: 'check', reason: 'Top pair mas turn completou possivel flush. Check pra controlar o pote.' }
+      return { action: 'check', reason: 'Top pair mas turn completou possível flush. Check pra controlar o pote.' }
     }
     if (goodKicker) {
       return { action: 'bet', sizing: '50%', reason: 'Top pair com bom kicker - continue apostando (50%). O adversario provavelmente tem pior e pode pagar com draws ou pares inferiores.' }
@@ -222,9 +222,9 @@ function getCorrectAction(hole, flop, turn) {
       return { action: 'check', reason: 'Top pair com kicker fraco em board conectado. Check pra controlar o pote.' }
     }
     if (turnInfo.type === 'overcard' || turnInfo.type === 'overcard_low') {
-      return { action: 'check', reason: 'Top pair com kicker fraco e turn trouxe overcard - check. Se turn e maior que seu par, voce pode estar atras. Controle o pote.' }
+      return { action: 'check', reason: 'Top pair com kicker fraco e turn trouxe overcard - check. Se turn e maior que seu par, você pode estar atras. Controle o pote.' }
     }
-    return { action: 'bet', sizing: '50%', reason: 'Top pair em turn favoravel - aposte 50%. Extraia valor enquanto sua mao ainda e boa.' }
+    return { action: 'bet', sizing: '50%', reason: 'Top pair em turn favoravel - aposte 50%. Extraia valor enquanto sua mão ainda e boa.' }
   }
 
   // Flush draw: barrel como semi-blefe (mas não se board tem 3+ suited — flush possível no board)
@@ -235,45 +235,45 @@ function getCorrectAction(hole, flop, turn) {
     if (boardHas3Suited) {
       return { action: 'check', reason: 'Flush draw mas o board ja tem 3 cartas do mesmo naipe - adversario pode ter flush completo. Check e controle o pote.' }
     }
-    return { action: 'bet', sizing: '50%', reason: 'Flush draw no turn - double barrel como semi-blefe! Voce tem 9 outs (~20% no river). Se ele foldar, voce ganha na hora. Se chamar, voce ainda pode completar.' }
+    return { action: 'bet', sizing: '50%', reason: 'Flush draw no turn - double barrel como semi-blefe! Você tem 9 outs (~20% no river). Se ele foldar, você ganha na hora. Se chamar, você ainda pode completar.' }
   }
 
   // Straight draw: quase sempre barrel como semi-blefe
   if (hasStraightDraw(hole, board)) {
     if (turnInfo.scary && turnInfo.type === 'flush') {
-      return { action: 'check', reason: 'Straight draw mas turn trouxe flush possivel. Check - adversario pode ter flush e seus outs podem nao ser limpos.' }
+      return { action: 'check', reason: 'Straight draw mas turn trouxe flush possível. Check - adversario pode ter flush e seus outs podem não ser limpos.' }
     }
-    return { action: 'bet', sizing: '33%', reason: 'Straight draw no turn - barrel pequeno (33%) como semi-blefe. Voce tem 8 outs e mantem a pressao.' }
+    return { action: 'bet', sizing: '33%', reason: 'Straight draw no turn - barrel pequeno (33%) como semi-blefe. Você tem 8 outs e mantem a pressao.' }
   }
 
-  // Par medio/baixo puro
+  // Par médio/baixo puro
   if (hasAnyPair(hole, board)) {
-    return { action: 'check', reason: 'Par medio/baixo no turn - check. Sua mao nao e forte o bastante pra apostar duas ruas. Controle o pote.' }
+    return { action: 'check', reason: 'Par médio/baixo no turn - check. Sua mão não e forte o bastante pra apostar duas ruas. Controle o pote.' }
   }
 
   // Overcard de A ou K no turn: bom para blefar (representa que acertou)
   if (turnInfo.type === 'overcard') {
-    return { action: 'bet', sizing: '50%', reason: 'Turn trouxe overcard alta - bom pra blefar! Voce pode representar que acertou a carta. Aposte 50% como blefe.' }
+    return { action: 'bet', sizing: '50%', reason: 'Turn trouxe overcard alta - bom pra blefar! Você pode representar que acertou a carta. Aposte 50% como blefe.' }
   }
 
-  // Duas overcards na mao (AK, AQ, KQ sem par): bom blefe no turn
+  // Duas overcards na mão (AK, AQ, KQ sem par): bom blefe no turn
   const toVal = c => RANK_VAL[c.slice(0, -1)]
   const holeVals = hole.map(toVal)
   const maxBoardVal = Math.max(...board.map(toVal))
   const bothOvercards = holeVals.every(v => v > maxBoardVal)
   if (bothOvercards && Math.min(...holeVals) >= 10) {
     if (!turnInfo.scary) {
-      return { action: 'bet', sizing: '50%', reason: 'Duas overcards (broadways) sem par - bom double barrel como blefe. Voce tem 6 outs de overcard e fold equity.' }
+      return { action: 'bet', sizing: '50%', reason: 'Duas overcards (broadways) sem par - bom double barrel como blefe. Você tem 6 outs de overcard e fold equity.' }
     }
   }
 
   // Carta alta (A, K, Q) sem par: barrel pequeno
   if (holeVals.some(v => v >= 12) && !turnInfo.scary) {
-    return { action: 'bet', sizing: '33%', reason: 'Carta alta sem par - barrel pequeno (33%). Voce ainda pode melhorar no river e tem fold equity.' }
+    return { action: 'bet', sizing: '33%', reason: 'Carta alta sem par - barrel pequeno (33%). Você ainda pode melhorar no river e tem fold equity.' }
   }
 
   // Nada: check
-  return { action: 'check', reason: 'Sem mao, sem draw, turn nao ajuda pra blefe. Check - nao desperdice mais fichas.' }
+  return { action: 'check', reason: 'Sem mão, sem draw, turn não ajuda pra blefe. Check - não desperdice mais fichas.' }
 }
 
 function Lesson({ onComplete }) {
@@ -435,8 +435,8 @@ function Trainer() {
         boardCards={flop && turn ? [...flop, turn] : flop || []}
         villainAction="Call"
         potLabel="13bb"
-        contextTitle="Voce esta IP — Turn"
-        contextDesc="Voce c-betou no flop e chamaram. Turn saiu. Double barrel?"
+        contextTitle="Você esta IP — Turn"
+        contextDesc="Você c-betou no flop e chamaram. Turn saiu. Double barrel?"
         textureTags={turnInfo ? [
           { label: turnInfo.desc, color: turnInfo.scary ? '#e5484d' : '#4fce82' },
         ] : null}

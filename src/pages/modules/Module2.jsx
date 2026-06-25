@@ -124,7 +124,7 @@ function Lesson({ onComplete }) {
         </Section>
 
         <Section title="O Poder do Ás com Poucas Fichas">
-          Sabe por que A5 vai all-in mais fácil que K5 com as mesmas fichas? Porque o Ás na sua mão <strong style={{ color: '#e5484d' }}>reduz a chance do adversário ter Ás</strong> — o que significa menos chance de alguém ter uma mão forte o suficiente para te chamar. É um efeito sutil mas real, é o GTO leva isso em conta.
+          Sabe por que A5 vai all-in mais fácil que K5 com as mesmas fichas? Porque o Ás na sua mão <strong style={{ color: '#e5484d' }}>reduz a chance do adversário ter Ás</strong> — o que significa menos chance de alguém ter uma mão forte o suficiente para te chamar. É um efeito sútil mas real, é o GTO leva isso em conta.
         </Section>
 
         <Section title="Mentalidade">
@@ -253,7 +253,7 @@ function Trainer() {
           heroCards={cards}
           potLabel={`${currentStack}bb`}
           contextTitle={`${currentPos} · ${currentStack}bb`}
-          contextDesc="Todos foldaram ate voce. Foldar ou ir all-in?"
+          contextDesc="Todos foldaram ate você. Foldar ou ir all-in?"
         />
       )}
       {currentHand && (
@@ -318,11 +318,11 @@ function M2RangeBuilder() {
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <h2 className="text-lg font-bold mb-4" style={{ color: '#fdfdfd' }}>Construa o Range de Push</h2>
       <p className="text-sm mb-4" style={{ color: '#676671' }}>
-        Selecione todas as maos que voce daria all-in nessa posicao e stack.
+        Selecione todas as mãos que você daria all-in nessa posição e stack.
       </p>
       <div className="flex gap-3 mb-4 flex-wrap">
         <div>
-          <label className="text-xs block mb-1" style={{ color: '#676671' }}>Posicao</label>
+          <label className="text-xs block mb-1" style={{ color: '#676671' }}>Posição</label>
           <div className="flex gap-1">
             {POSITIONS.map(p => (
               <button key={p} onClick={() => setPos(p)} className="px-2 py-1 rounded text-xs font-bold"

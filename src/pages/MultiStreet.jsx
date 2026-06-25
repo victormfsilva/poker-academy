@@ -32,7 +32,7 @@ const SPOTS = [
   },
 ]
 
-// ─── Card utilities ───────────────────────────────────
+// ─── Card útilities ───────────────────────────────────
 function shuffleArray(arr) {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -261,7 +261,7 @@ export default function MultiStreet() {
       if (isVillain) {
         const bestIdx = strat.avgFreqs.indexOf(Math.max(...strat.avgFreqs))
         const villainAction = parseAction(strat.actions[bestIdx])
-        setStreetActions(prev => [...prev, { player: strat.player + ' (vilao)', action: villainAction.label }])
+        setStreetActions(prev => [...prev, { player: strat.player + ' (vilão)', action: villainAction.label }])
         curHist = [...curHist, bestIdx]
         continue
       }
@@ -365,7 +365,7 @@ export default function MultiStreet() {
         {phase === PHASE.SETUP && ready && (
           <div className="rounded-xl p-6 text-center" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <p style={{ color: '#b3b3b8', fontSize: 14, marginBottom: 16 }}>
-              O solver GTO vai rodar no seu browser em tempo real. Voce recebe uma mao e decide em cada street.
+              O solver GTO vai rodar no seu browser em tempo real. Voce recebe uma mão e decide em cada street.
             </p>
             {solveError && (
               <div style={{ color: '#e5484d', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(229,72,77,0.08)', borderRadius: 8 }}>
@@ -493,7 +493,7 @@ export default function MultiStreet() {
             {!feedback && currentStrategy?.actions && (
               <div className="space-y-2">
                 <div style={{ color: '#676671', fontSize: 11 }}>
-                  {currentStrategy.player === heroPos ? 'Sua vez:' : 'Vilao decide...'}
+                  {currentStrategy.player === heroPos ? 'Sua vez:' : 'vilão decide...'}
                 </div>
                 {currentStrategy.player === heroPos && (
                   <div className="grid grid-cols-2 gap-2">

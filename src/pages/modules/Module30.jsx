@@ -161,55 +161,55 @@ function getCorrectAction(hole, flop, turn) {
   const drawCompleted        = turnFlushComplete || turnStraightComplete
 
   // ── VALUE hands: villain's range is capped so bet for thin to fat value ──
-  if (madFlush)    return { action: 'bet', sizing: '66%', reason: 'Flush completo! Aposta de valor de 66% — range do vilao esta capped (ele nao apostar ia o flop com hand muito forte), extraia o maximo.' }
-  if (madStraight) return { action: 'bet', sizing: '66%', reason: 'Straight completa! Aposte 66% por valor. Range capped do vilao significa que ele vai defender com par ou draw — lucre sobre isso.' }
-  if (isSet)       return { action: 'bet', sizing: '66%', reason: 'Set! Aposte 66% por valor — vilao checou o flop, entao o range dele e fraco. Construa o pote enquanto voce e forte.' }
-  if (isTwoPair)   return { action: 'bet', sizing: '66%', reason: 'Dois pares no turn! Probe bet de 66% — vilao nao pode ter mao muito forte (teria apostado no flop). Extraia valor do par dele.' }
-  if (isOP)        return { action: 'bet', sizing: '66%', reason: 'Overpair! Com o range do vilao capped pelo check do flop, overpair e muito forte aqui. Probe bet de 66% por valor.' }
+  if (madFlush)    return { action: 'bet', sizing: '66%', reason: 'Flush completo! Aposta de valor de 66% — range do vilão esta capped (ele não apostar ia o flop com hand muito forte), extraia o máximo.' }
+  if (madStraight) return { action: 'bet', sizing: '66%', reason: 'Straight completa! Aposte 66% por valor. Range capped do vilão significa que ele vai defender com par ou draw — lucre sobre isso.' }
+  if (isSet)       return { action: 'bet', sizing: '66%', reason: 'Set! Aposte 66% por valor — vilão checou o flop, entao o range dele e fraco. Construa o pote enquanto você e forte.' }
+  if (isTwoPair)   return { action: 'bet', sizing: '66%', reason: 'Dois pares no turn! Probe bet de 66% — vilão não pode ter mão muito forte (teria apostado no flop). Extraia valor do par dele.' }
+  if (isOP)        return { action: 'bet', sizing: '66%', reason: 'Overpair! Com o range do vilão capped pelo check do flop, overpair e muito forte aqui. Probe bet de 66% por valor.' }
 
   // ── GOOD VALUE: top pair after raiser checked is a premium spot ──────────
-  if (isTopPair)   return { action: 'bet', sizing: '50%', reason: 'Top pair no turn — probe bet de 50%. Vilao provavelmente tem par medio, draw ou ar. Range capped = seu top pair e quase sempre na frente.' }
+  if (isTopPair)   return { action: 'bet', sizing: '50%', reason: 'Top pair no turn — probe bet de 50%. vilão provavelmente tem par médio, draw ou ar. Range capped = seu top pair e quase sempre na frente.' }
 
   // ── SEMI-BLUFFS: draws bet less since villain may trap ───────────────────
   if (isFD && isSD) {
-    if (drawCompleted) return { action: 'bet', sizing: '33%', reason: 'Combo draw (flush + straight), mas turn completou possivel draw — cuidado com check-trap. Probe bet minima de 33% semi-blefe.' }
-    return { action: 'bet', sizing: '50%', reason: 'Combo draw (flush + straight)! Semi-blefe de 50% — muita equity (~45%) contra range capped do vilao. Chance alta de ganhar agora ou no river.' }
+    if (drawCompleted) return { action: 'bet', sizing: '33%', reason: 'Combo draw (flush + straight), mas turn completou possível draw — cuidado com check-trap. Probe bet minima de 33% semi-blefe.' }
+    return { action: 'bet', sizing: '50%', reason: 'Combo draw (flush + straight)! Semi-blefe de 50% — muita equity (~45%) contra range capped do vilão. Chance alta de ganhar agora ou no river.' }
   }
   if (isFD) {
-    if (drawCompleted) return { action: 'check', sizing: null, reason: 'Flush draw em turn que completa draws — risco de check-trap do vilao. Melhor checar e ver o river de graca.' }
-    return { action: 'bet', sizing: '33%', reason: 'Flush draw — semi-blefe de 33%. Range do vilao e capped pelo check do flop. Voce tem fold equity + 9 outs caso chamem.' }
+    if (drawCompleted) return { action: 'check', sizing: null, reason: 'Flush draw em turn que completa draws — risco de check-trap do vilão. Melhor checar e ver o river de graca.' }
+    return { action: 'bet', sizing: '33%', reason: 'Flush draw — semi-blefe de 33%. Range do vilão e capped pelo check do flop. Você tem fold equity + 9 outs caso chamem.' }
   }
   if (isSD) {
-    if (drawCompleted) return { action: 'check', sizing: null, reason: 'Straight draw em turn que completa possiveis draws — vilao pode ter se check-trapado. Cheque e preserve a equity.' }
-    return { action: 'bet', sizing: '33%', reason: 'Straight draw — semi-blefe de 33%. Check do vilao no flop limita o range dele. Voce tem 8 outs + fold equity contra maos medianas.' }
+    if (drawCompleted) return { action: 'check', sizing: null, reason: 'Straight draw em turn que completa possiveis draws — vilão pode ter se check-trapado. Cheque e preserve a equity.' }
+    return { action: 'bet', sizing: '33%', reason: 'Straight draw — semi-blefe de 33%. Check do vilão no flop limita o range dele. Você tem 8 outs + fold equity contra mãos medianas.' }
   }
 
   // ── SHOWDOWN VALUE: middle/bottom pair — do NOT build pot OOP ────────────
-  if (hasPair) return { action: 'check', sizing: null, reason: 'Par medio/baixo — cheque. Tem showdown value, mas nao e forte o suficiente pra construir pote OOP. Deixe o vilao blefar ou veja o river de graca.' }
+  if (hasPair) return { action: 'check', sizing: null, reason: 'Par médio/baixo — cheque. Tem showdown value, mas não e forte o suficiente pra construir pote OOP. Deixe o vilão blefar ou veja o river de graca.' }
 
   // ── BLUFFS without a pair: depends heavily on turn card and board ─────────
   // If turn is an overcard (A or K) — great bluff card (represent hitting it)
   if (!hasPair && (turnRank === 'A' || turnRank === 'K')) {
-    return { action: 'bet', sizing: '50%', reason: `Turn ${turnRank} e um excelente carte de blefe! Voce representa ter acertado o overcard. Range capped do vilao significa que ele nao pode ter o ${turnRank} muito frequentemente (teria apostado antes). Probe bet de 50%.` }
+    return { action: 'bet', sizing: '50%', reason: `Turn ${turnRank} e um excelente carte de blefe! Você representa ter acertado o overcard. Range capped do vilão significa que ele não pode ter o ${turnRank} muito frequentemente (teria apostado antes). Probe bet de 50%.` }
   }
 
   // Brick turn on dry board — attack villain's weakness freely
   if (!hasPair && texture.isDry && !drawCompleted) {
-    return { action: 'bet', sizing: '33%', reason: 'Turn brick em board seco — probe bet de 33% como blefe. Check do vilao no flop mostra fraqueza real em board seco. Ataque essa fraqueza com aposta barata.' }
+    return { action: 'bet', sizing: '33%', reason: 'Turn brick em board seco — probe bet de 33% como blefe. Check do vilão no flop mostra fraqueza real em board seco. Ataque essa fraqueza com aposta barata.' }
   }
 
   // Brick turn on wet board — villain may be check-trapping draws
   if (!hasPair && texture.isWet && !drawCompleted) {
-    return { action: 'check', sizing: null, reason: 'Board umido sem mao — cheque. Em boards conectados/suited, check do vilao pode ser check-trap com draw ou mao forte. Nao construa pote OOP sem equity.' }
+    return { action: 'check', sizing: null, reason: 'Board umido sem mão — cheque. Em boards conectados/suited, check do vilão pode ser check-trap com draw ou mão forte. Não construa pote OOP sem equity.' }
   }
 
   // Turn completes a draw and we have nothing — too risky to bluff
   if (!hasPair && drawCompleted) {
-    return { action: 'check', sizing: null, reason: 'Turn completou possivel draw e voce nao tem nada — cheque. Vilao pode ter check-trapeado com exatamente essa mao. Nao blefe em cartas que completam draws.' }
+    return { action: 'check', sizing: null, reason: 'Turn completou possível draw e você não tem nada — cheque. vilão pode ter check-trapeado com exatamente essa mão. Não blefe em cartas que completam draws.' }
   }
 
   // Default: no hand, no good story → check
-  return { action: 'check', sizing: null, reason: 'Sem mao e sem historia convincente — cheque. Para probe bet funcionar voce precisa de equity (draw), mao de valor, ou um turn card que faz sentido representar.' }
+  return { action: 'check', sizing: null, reason: 'Sem mão e sem história convincente — cheque. Para probe bet funcionar você precisa de equity (draw), mão de valor, ou um turn card que faz sentido representar.' }
 }
 
 // ─── Scenario generator ───────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ function generateScenario() {
 
   const turnDisplay = turn.slice(0, -1) + (turn.slice(-1) === 's' ? '♠' : turn.slice(-1) === 'h' ? '♥' : turn.slice(-1) === 'd' ? '♦' : '♣')
 
-  const question = `Vilao (${villainPos}) abriu pre-flop e voce chamou do ${heroPos}. Ele checou o flop. Turn: ${turnDisplay}. O que voce faz?`
+  const question = `vilão (${villainPos}) abriu pre-flop e você chamou do ${heroPos}. Ele checou o flop. Turn: ${turnDisplay}. O que você faz?`
 
   const options = [
     { id: 'bet33', label: 'Apostar 33% (blefe/draw)', action: 'bet', sizing: '33%' },
@@ -307,31 +307,31 @@ function Lesson({ onComplete }) {
         Probe Bet / Delayed CBet
       </h1>
       <p style={{ color: '#888', marginBottom: 24 }}>
-        Voce chamou fora de posicao. O raiser checou o flop — sinal de fraqueza. No turn, voce assume o controle.
+        Você chamou fora de posição. O raiser checou o flop — sinal de fraqueza. No turn, você assume o controle.
       </p>
 
       <div className="space-y-4">
 
         <Section title="O que e a Probe Bet?">
           A <strong style={{ color: '#4fce82' }}>probe bet</strong> (tambem chamada de <em>delayed c-bet</em>) e quando
-          voce aposta no turn <strong style={{ color: 'white' }}>depois que o raiser original checou o flop.</strong>
+          você aposta no turn <strong style={{ color: 'white' }}>depois que o raiser original checou o flop.</strong>
           <br /><br />
           Normalmente o raiser aposta o flop (c-bet). Quando ele <strong style={{ color: '#e5484d' }}>nao aposta</strong>,
-          isso e incomum e revela fraqueza — ele provavelmente nao conectou bem com o board.
+          isso e incomum e revela fraqueza — ele provavelmente não conectou bem com o board.
           Voce, que estava passivo no flop, agora toma a iniciativa no turn.
         </Section>
 
-        <Section title="Por que funciona? O range do vilao esta capped">
-          <strong style={{ color: '#f5a623' }}>Capped range</strong> significa que o vilao nao pode ter maos muito
-          fortes nessa situacao. Por que?
+        <Section title="Por que funciona? O range do vilão esta capped">
+          <strong style={{ color: '#f5a623' }}>Capped range</strong> significa que o vilão não pode ter mãos muito
+          fortes nessa situação. Por que?
           <br /><br />
           Se ele tivesse set, dois pares, overpair forte ou top pair com bom kicker, ele teria apostado o flop
-          pra proteger e extrair valor. O fato de ter checado elimina essas maos fortes do range dele.
+          pra proteger e extrair valor. O fato de ter checado elimina essas mãos fortes do range dele.
           <br /><br />
           <div className="rounded-lg p-3 mt-2" style={{ background: '#0f0f0f', border: '1px solid #f5a62344' }}>
             <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Resultado pratico:</div>
             <div style={{ color: '#ccc', fontSize: 13 }}>
-              Range capped = mais pares medianos, draws e maos fracas. Essas maos nao aguentam
+              Range capped = mais pares medianos, draws e mãos fracas. Essas mãos não aguentam
               pressao de probe bet — elas foldiam ou chamam com desvantagem.
             </div>
           </div>
@@ -342,9 +342,9 @@ function Lesson({ onComplete }) {
             {[
               { label: 'Mao forte (set, flush, straight, dois pares)', color: '#e5484d', desc: 'Valor direto — range capped del = ele paga mais do que deveria' },
               { label: 'Overpair', color: '#e5484d', desc: 'Muito forte contra range capped. Aposte e extraia valor' },
-              { label: 'Top pair', color: '#f5a623', desc: 'Bom valor OOP. Vilao provavelmente tem par medio ou pior' },
+              { label: 'Top pair', color: '#f5a623', desc: 'Bom valor OOP. vilão provavelmente tem par médio ou pior' },
               { label: 'Flush draw / Straight draw', color: '#4a90e2', desc: 'Semi-blefe com equity. Fold equity + outs = lucrativo' },
-              { label: 'Turn overcard (A, K)', color: '#4fce82', desc: 'Excelente blefe. Voce representa ter acertado o A ou K' },
+              { label: 'Turn overcard (A, K)', color: '#4fce82', desc: 'Excelente blefe. Você representa ter acertado o A ou K' },
               { label: 'Turn brick em board seco', color: '#4fce82', desc: 'Blefe barato. Check no flop seco = fraqueza real' },
             ].map((item, i) => (
               <div key={i} className="rounded-lg px-3 py-2" style={{ background: '#0f0f0f' }}>
@@ -358,10 +358,10 @@ function Lesson({ onComplete }) {
         <Section title="Quando NAO fazer Probe Bet">
           <div className="space-y-2 mt-2">
             {[
-              { label: 'Par medio ou baixo', color: '#e5484d', desc: 'Tem showdown value. Nao construa pote OOP com mao vulneravel' },
-              { label: 'Board umido sem mao nem draw', color: '#e5484d', desc: 'Vilao pode estar se check-trapando com draw ou mao forte' },
-              { label: 'Turn completa draw obvio (flush/straight)', color: '#e5484d', desc: 'Vilao pode ter checado o flop esperando exatamente essa carta' },
-              { label: 'Sem historia convincente', color: '#e5484d', desc: 'Probe bet precisa de uma narrativa. Sem equity e sem representacao, nao aposte' },
+              { label: 'Par médio ou baixo', color: '#e5484d', desc: 'Tem showdown value. Não construa pote OOP com mão vulneravel' },
+              { label: 'Board umido sem mão nem draw', color: '#e5484d', desc: 'vilão pode estar se check-trapando com draw ou mão forte' },
+              { label: 'Turn completa draw obvio (flush/straight)', color: '#e5484d', desc: 'vilão pode ter checado o flop esperando exatamente essa carta' },
+              { label: 'Sem história convincente', color: '#e5484d', desc: 'Probe bet precisa de uma narrativa. Sem equity e sem representacao, não aposte' },
             ].map((item, i) => (
               <div key={i} className="rounded-lg px-3 py-2" style={{ background: '#0f0f0f' }}>
                 <div style={{ color: item.color, fontWeight: 600, fontSize: 13 }}>{item.label}</div>
@@ -374,9 +374,9 @@ function Lesson({ onComplete }) {
         <Section title="Sizings da Probe Bet">
           <div className="grid grid-cols-3 gap-2 mt-2">
             {[
-              { size: '33%', color: '#4fce82', name: 'Pequena', when: 'Blefes puros e semi-blefes (draws)', note: 'Risco minimo, fold equity suficiente contra range capped' },
-              { size: '50%', color: '#f5a623', name: 'Media', when: 'Top pair, turn overcard (A/K), combo draws', note: 'Equilibrio entre extrair valor e nao assustar' },
-              { size: '66%', color: '#e5484d', name: 'Grande', when: 'Maos muito fortes: set, flush, straight, dois pares, overpair', note: 'Range do vilao e capped = ele paga com mao inferior' },
+              { size: '33%', color: '#4fce82', name: 'Pequena', when: 'Blefes puros e semi-blefes (draws)', note: 'Risco mínimo, fold equity suficiente contra range capped' },
+              { size: '50%', color: '#f5a623', name: 'Media', when: 'Top pair, turn overcard (A/K), combo draws', note: 'Equilibrio entre extrair valor e não assustar' },
+              { size: '66%', color: '#e5484d', name: 'Grande', when: 'Mãos muito fortes: set, flush, straight, dois pares, overpair', note: 'Range do vilão e capped = ele paga com mão inferior' },
             ].map(s => (
               <div key={s.size} className="rounded-lg p-3" style={{ background: '#0f0f0f', border: `1px solid ${s.color}` }}>
                 <div style={{ color: s.color, fontWeight: 700, fontSize: 18 }}>{s.size}</div>
@@ -392,10 +392,10 @@ function Lesson({ onComplete }) {
           O turn card muda completamente a dinamica da probe bet:
           <div className="space-y-2 mt-3">
             {[
-              { card: 'A ou K (overcard)', color: '#4fce82', desc: 'Excelente — voce representa ter acertado. Probe bet de 50%.' },
+              { card: 'A ou K (overcard)', color: '#4fce82', desc: 'Excelente — você representa ter acertado. Probe bet de 50%.' },
               { card: 'Brick em board seco', color: '#4fce82', desc: 'Bom blefe. Check do flop em board seco = fraqueza real. Probe 33%.' },
-              { card: 'Brick em board umido', color: '#f5a623', desc: 'Cuidado. Vilao pode estar check-trapeado com draw. Prefira checar.' },
-              { card: 'Completa flush/straight', color: '#e5484d', desc: 'Risco alto. Vilao pode ter esperado exatamente por essa carta. Nao blefe aqui.' },
+              { card: 'Brick em board umido', color: '#f5a623', desc: 'Cuidado. vilão pode estar check-trapeado com draw. Prefira checar.' },
+              { card: 'Completa flush/straight', color: '#e5484d', desc: 'Risco alto. vilão pode ter esperado exatamente por essa carta. Não blefe aqui.' },
               { card: 'Overcard pequeno (9, T)', color: '#888', desc: 'Depende do contexto. Normalize com o range e board geral.' },
             ].map((item, i) => (
               <div key={i} className="rounded-lg px-3 py-2" style={{ background: '#0f0f0f' }}>
@@ -419,7 +419,7 @@ function Lesson({ onComplete }) {
               <div style={{ color: '#e5484d', fontWeight: 600 }}>Board Umido</div>
               <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>
                 Ex: 9♠ 8♥ 7♠<br /><br />
-                Check pode ser check-trap com draw. Probe apenas com maos de valor ou draws proprios. Evite blefes puros.
+                Check pode ser check-trap com draw. Probe apenas com mãos de valor ou draws proprios. Evite blefes puros.
               </div>
             </div>
           </div>
@@ -429,10 +429,10 @@ function Lesson({ onComplete }) {
           <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #4a90e2' }}>
             <div style={{ color: '#4a90e2', fontWeight: 700, marginBottom: 6 }}>Pense assim:</div>
             <ul className="space-y-1" style={{ color: '#ccc', fontSize: 13 }}>
-              <li>1. Vilao checou = range capped (sem maos muito fortes)</li>
-              <li>2. Tenho equity (draw) ou mao de valor? → Aposta proporcional</li>
-              <li>3. O turn card favorece meu range ou me da historia? → Probe bet</li>
-              <li>4. Sem equity, sem historia, board umido? → Check e preserva o pote</li>
+              <li>1. vilão checou = range capped (sem mãos muito fortes)</li>
+              <li>2. Tenho equity (draw) ou mão de valor? → Aposta proporcional</li>
+              <li>3. O turn card favorece meu range ou me da história? → Probe bet</li>
+              <li>4. Sem equity, sem história, board umido? → Check e preserva o pote</li>
             </ul>
           </div>
         </Section>
@@ -529,7 +529,7 @@ function Trainer() {
         boardCards={scenario.boardCards}
         villainAction={scenario.villainAction}
         potLabel={scenario.potLabel}
-        contextTitle={`Voce esta OOP (${scenario.heroPos}) — Turn`}
+        contextTitle={`Você esta OOP (${scenario.heroPos}) — Turn`}
         contextDesc={scenario.question}
         textureTags={scenario.textureTags}
       />
@@ -593,7 +593,7 @@ function Trainer() {
                 <div>• <strong style={{ color: '#e5484d' }}>Set / Flush / Straight / Dois pares / Overpair</strong> → BET 66%</div>
                 <div>• <strong style={{ color: '#f5a623' }}>Top pair / Turn overcard (A, K) / Combo draw</strong> → BET 50%</div>
                 <div>• <strong style={{ color: '#4fce82' }}>Flush draw / Straight draw / Brick seco blefe</strong> → BET 33%</div>
-                <div>• <strong style={{ color: '#888' }}>Par medio, board umido sem mao, turn completa draw</strong> → CHECK</div>
+                <div>• <strong style={{ color: '#888' }}>Par médio, board umido sem mão, turn completa draw</strong> → CHECK</div>
               </div>
             </div>
           )}

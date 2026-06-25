@@ -279,8 +279,8 @@ function BoardTextureGuide() {
   const textures = [
     { name: 'Board Seco (Dry)', example: 'K♠ 7♥ 2♦', traits: ['Sem draws de flush', 'Sem draws de straight', 'Cartas desconectadas'], strategy: 'CBet com range inteiro, sizing pequeno (25-33%). Vantagem de range do raiser é enorme.', color: '#4fce82' },
     { name: 'Board Molhado (Wet)', example: 'J♥ T♥ 8♠', traits: ['Flush draw possível', 'Muitos straight draws', 'Cartas conectadas'], strategy: 'CBet seletivo com mãos fortes e draws. Sizing maior (66-75%). Check com air.', color: '#e5484d' },
-    { name: 'Board Pareado', example: 'Q♠ Q♦ 5♣', traits: ['Uma carta pareada', 'Poucos draws', 'Range de trips reduzido'], strategy: 'CBet pequeno com range amplo. Vilao raramente tem trips. Bom para blefe.', color: '#f5a623' },
-    { name: 'Board Monotone', example: 'A♠ 8♠ 3♠', traits: ['Tres cartas do mesmo naipe', 'Flush já possível', 'Flush draw morto'], strategy: 'Check muito. So aposte com flush feito ou nut flush draw. Board perigoso.', color: '#0a84d7' },
+    { name: 'Board Pareado', example: 'Q♠ Q♦ 5♣', traits: ['Uma carta pareada', 'Poucos draws', 'Range de trips reduzido'], strategy: 'CBet pequeno com range amplo. vilão raramente tem trips. Bom para blefe.', color: '#f5a623' },
+    { name: 'Board Monotone', example: 'A♠ 8♠ 3♠', traits: ['Três cartas do mesmo naipe', 'Flush já possível', 'Flush draw morto'], strategy: 'Check muito. Só aposte com flush feito ou nut flush draw. Board perigoso.', color: '#0a84d7' },
     { name: 'Board Alto (High)', example: 'A♠ K♥ J♦', traits: ['Cartas altas', 'Favorece range do raiser', 'Broadway draws'], strategy: 'CBet com frequência alta — seu range tem mais top pairs e overpairs.', color: '#4fce82' },
     { name: 'Board Baixo (Low)', example: '6♣ 4♥ 2♠', traits: ['Cartas baixas', 'Favorece range do caller', 'Sets e two pairs do BB'], strategy: 'Check mais frequentemente. BB tem muitos sets (66, 44, 22) e two pairs.', color: '#e5484d' },
   ]
@@ -413,7 +413,7 @@ export default function Tools() {
             <div style={{ fontSize: 40, marginBottom: 12 }}>🧠</div>
             <h2 style={{ color: '#fdfdfd', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Multi-Street GTO Trainer</h2>
             <p style={{ color: '#b3b3b8', fontSize: 13, marginBottom: 16, lineHeight: 1.6 }}>
-              Solver GTO real rodando no seu browser via WebAssembly. Receba uma mao, decida em cada street (flop, turn, river) e compare com a estrategia otima do solver.
+              Solver GTO real rodando no seu browser via WebAssembly. Receba uma mão, decida em cada street (flop, turn, river) e compare com a estratégia ótima do solver.
             </p>
             <Link
               to="/solver"

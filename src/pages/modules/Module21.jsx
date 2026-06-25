@@ -21,14 +21,14 @@ const TEMPLATES = [
     const vilBB = randBB(25, 40)
     const blindLevel = pick(['300/600', '400/800', '500/1000'])
     return {
-      situation: `Late game MTT. Blinds ${blindLevel} com ante. Voce tem ${heroBB}bb no BB. ${vilPos} (${vilBB}bb) faz raise 2.2x. Voce tem ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game MTT. Blinds ${blindLevel} com ante. Você tem ${heroBB}bb no BB. ${vilPos} (${vilBB}bb) faz raise 2.2x. Você tem ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'shove', label: 'Shove all-in (resteal)', correct: true },
         { id: 'call', label: 'Call', correct: false },
       ],
-      explanation: `Com ${heroBB}bb, flat call desperdiça fichas preciosas. Shove é a melhor jogada — voce ganha dead money dos blinds+antes+raise, ou joga all-in com equity decente. ${hand} tem fold equity contra raise de ${vilPos}.`,
-      concept: 'Com 8-14bb, resteal shove > flat call. Voce maximiza fold equity e evita decisoes dificeis pos-flop.',
+      explanation: `Com ${heroBB}bb, flat call desperdiça fichas preciosas. Shove é a melhor jogada — você ganha dead money dos blinds+antes+raise, ou joga all-in com equity decente. ${hand} tem fold equity contra raise de ${vilPos}.`,
+      concept: 'Com 8-14bb, resteal shove > flat call. Você maximiza fold equity e evita decisoes dificeis pos-flop.',
     }
   },
 
@@ -39,16 +39,16 @@ const TEMPLATES = [
     const heroPos = pick(['CO', 'BTN'])
     const antes = pick([0.1, 0.125, 0.15])
     return {
-      situation: `Late game. ${heroBB}bb no ${heroPos}. Antes de ${antes}bb por jogador. Fold ate voce. Voce tem ${hand}.`,
+      situation: `Late game. ${heroBB}bb no ${heroPos}. Antes de ${antes}bb por jogador. Fold ate você. Você tem ${hand}.`,
       question: `Com ${heroBB}bb, qual a melhor acao?`,
       options: [
         { id: 'shove', label: 'Open shove', correct: heroBB <= 10 },
         { id: 'raise', label: 'Raise 2.2x', correct: heroBB > 10 },
       ],
       explanation: heroBB <= 10
-        ? `Com ${heroBB}bb, open shove é melhor que min-raise. Se voce raisa e leva 3-bet, vai foldar e perder 2.2bb. Shove maximiza fold equity e evita o squeeze.`
-        : `Com ${heroBB}bb, voce ainda tem fold equity pos-3bet. Raise 2-2.2x permite foldar contra 3-bet sem comprometer todo o stack. Shove seria prematuro com este stack.`,
-      concept: 'Regra geral: abaixo de ~10bb, open shove. 10-20bb, min-raise. A fronteira depende do ante e posicao.',
+        ? `Com ${heroBB}bb, open shove é melhor que min-raise. Se você raisa e leva 3-bet, vai foldar e perder 2.2bb. Shove maximiza fold equity e evita o squeeze.`
+        : `Com ${heroBB}bb, você ainda tem fold equity pos-3bet. Raise 2-2.2x permite foldar contra 3-bet sem comprometer todo o stack. Shove seria prematuro com este stack.`,
+      concept: 'Regra geral: abaixo de ~10bb, open shove. 10-20bb, min-raise. A fronteira depende do ante e posição.',
     }
   },
 
@@ -59,14 +59,14 @@ const TEMPLATES = [
     const raiserPos = pick(['LJ', 'HJ', 'CO'])
     const callerPos = pick(['BTN', 'CO', 'HJ'].filter(p => p !== raiserPos))
     return {
-      situation: `Late game MTT. ${heroBB}bb no SB. ${raiserPos} raisa, ${callerPos} chama. Voce tem ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game MTT. ${heroBB}bb no SB. ${raiserPos} raisa, ${callerPos} chama. Você tem ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'squeeze', label: 'Squeeze (3-bet grande)', correct: true },
         { id: 'call', label: 'Call', correct: false },
       ],
       explanation: `Com dead money do raise + call + blinds + antes, squeeze é muito lucrativo. ${hand} tem equity excelente. O caller tem range cappado (teria 3-betado com premium). Squeezes no late game sao extremamente poderosos.`,
-      concept: 'Squeeze no late game: com 18-30bb, 3-bet grande (ou shove). O caller quase nunca tem mao forte.',
+      concept: 'Squeeze no late game: com 18-30bb, 3-bet grande (ou shove). O caller quase nunca tem mão forte.',
     }
   },
 
@@ -78,13 +78,13 @@ const TEMPLATES = [
     const playersLeft = pick([12, 15, 18])
     const itm = playersLeft - pick([1, 2, 3])
     return {
-      situation: `Late game, perto da bolha. ${playersLeft} restam, pagam ${itm}. Voce é chip leader (${heroBB}bb) no ${heroPos}. Fold ate voce. Voce tem ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game, perto da bolha. ${playersLeft} restam, pagam ${itm}. Você é chip leader (${heroBB}bb) no ${heroPos}. Fold ate você. Você tem ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'raise', label: 'Raise (abusar da bolha)', correct: true },
         { id: 'fold', label: 'Fold (esperar)', correct: false },
       ],
-      explanation: `Como chip leader perto da bolha, NINGUEM quer confrontar voce. Os stacks medios nao podem arriscar bustar antes do ITM. ${hand} é raise — voce coleta blinds e antes sem resistencia.`,
+      explanation: `Como chip leader perto da bolha, NINGUEM quer confrontar você. Os stacks médios não podem arriscar bustar antes do ITM. ${hand} é raise — você coleta blinds e antes sem resistencia.`,
       concept: 'Chip leaders devem abrir MUITO wide perto da bolha. A pressao ICM faz os outros foldarem demais.',
     }
   },
@@ -96,31 +96,31 @@ const TEMPLATES = [
     const heroPos = pick(['UTG', 'LJ', 'HJ'])
     const blindLevel = pick(['500/1000', '600/1200', '800/1600'])
     return {
-      situation: `Late game. Blinds ${blindLevel}. Voce tem ${heroBB}bb no ${heroPos} com ${hand}. Falta 1 orbita para os blinds chegarem.`,
-      question: 'O que voce faz?',
+      situation: `Late game. Blinds ${blindLevel}. Você tem ${heroBB}bb no ${heroPos} com ${hand}. Falta 1 orbita para os blinds chegarem.`,
+      question: 'O que você faz?',
       options: [
         { id: 'fold', label: 'Fold (esperar melhor spot)', correct: true },
         { id: 'shove', label: 'Shove (desesperado)', correct: false },
       ],
-      explanation: `${hand} do ${heroPos} é lixo mesmo com ${heroBB}bb. Voce ainda tem ${heroBB} maos ate bustar pelos blinds. Espere uma mao melhor no CO/BTN/SB onde o range de shove é muito mais amplo. Disciplina > desespero.`,
-      concept: 'Nao shove lixo em early position so porque tem poucos BBs. Espere posicao boa — voce tem tempo.',
+      explanation: `${hand} do ${heroPos} é lixo mesmo com ${heroBB}bb. Você ainda tem ${heroBB} mãos ate bustar pelos blinds. Espere uma mão melhor no CO/BTN/SB onde o range de shove é muito mais amplo. Disciplina > desespero.`,
+      concept: 'Não shove lixo em early position so porque tem poucos BBs. Espere posição boa — você tem tempo.',
     }
   },
 
-  // 6. Short stack shove — posicao tardia com mao ok
+  // 6. Short stack shove — posição tardia com mão ok
   () => {
     const heroBB = randBB(5, 9)
     const hand = pick(['A7o', 'K9s', 'QTs', 'A2s', 'K8o', 'J9s', '66', '55'])
     const heroPos = pick(['CO', 'BTN', 'SB'])
     return {
-      situation: `Late game. Voce tem ${heroBB}bb no ${heroPos}. Fold ate voce. Voce tem ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game. Você tem ${heroBB}bb no ${heroPos}. Fold ate você. Você tem ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'shove', label: 'Shove all-in', correct: true },
         { id: 'fold', label: 'Fold', correct: false },
       ],
       explanation: `${hand} do ${heroPos} com ${heroBB}bb é shove claro. Dead money dos blinds e antes vale muito em proporcao ao seu stack. Foldar aqui é desperdicar fold equity preciosa.`,
-      concept: 'Com 5-9bb em posicao tardia, shove ranges sao MUITO amplos. Nao desperdice fold equity.',
+      concept: 'Com 5-9bb em posição tardia, shove ranges sao MUITO amplos. Não desperdice fold equity.',
     }
   },
 
@@ -131,14 +131,14 @@ const TEMPLATES = [
     const hand = pick(HANDS_MARGINAL)
     const heroPos = pick(['CO', 'BTN'])
     return {
-      situation: `Late game. Voce tem ${heroBB}bb no ${heroPos}. BB tem apenas ${villainBB}bb. Fold ate voce. Voce tem ${hand}.`,
+      situation: `Late game. Você tem ${heroBB}bb no ${heroPos}. BB tem apenas ${villainBB}bb. Fold ate você. Você tem ${hand}.`,
       question: 'Como ajustar seu open?',
       options: [
         { id: 'tighter', label: 'Apertar range — BB pode shove', correct: true },
         { id: 'normal', label: 'Range normal de open', correct: false },
       ],
-      explanation: `O BB tem ${villainBB}bb — stack perfeito para resteal shove. Se voce abrir light com ${hand}, ele pode shove e voce tera que foldar. Aperte seu range quando shorts estao nos blinds.`,
-      concept: 'Ajuste para short stacks nos blinds: eles vao shove mais. Abra tighter para nao dar fold equity gratis.',
+      explanation: `O BB tem ${villainBB}bb — stack perfeito para resteal shove. Se você abrir light com ${hand}, ele pode shove e você tera que foldar. Aperte seu range quando shorts estao nos blinds.`,
+      concept: 'Ajuste para short stacks nos blinds: eles vao shove mais. Abra tighter para não dar fold equity gratis.',
     }
   },
 
@@ -149,13 +149,13 @@ const TEMPLATES = [
     const heroPos = 'SB'
     const bbBB = randBB(20, 35)
     return {
-      situation: `Late game. Voce tem ${heroBB}bb no SB. BB tem ${bbBB}bb e é agressivo (raisa vs limp 80%+). Voce tem ${hand}.`,
+      situation: `Late game. Você tem ${heroBB}bb no SB. BB tem ${bbBB}bb e é agressivo (raisa vs limp 80%+). Você tem ${hand}.`,
       question: 'Qual a melhor linha?',
       options: [
         { id: 'limp', label: 'Limp → re-shove quando ele raisa', correct: true },
         { id: 'raise', label: 'Raise normal', correct: false },
       ],
-      explanation: `Com BB agressivo que raisa 80%+ vs limp, o limp-shove é uma trap perfeita. Voce limpa com ${hand}, ele raisa, voce shova. Ele fica preso com range fraco contra sua mao forte. Ganha mais fichas que um raise direto.`,
+      explanation: `Com BB agressivo que raisa 80%+ vs limp, o limp-shove é uma trap perfeita. Você limpa com ${hand}, ele raisa, você shova. Ele fica preso com range fraco contra sua mão forte. Ganha mais fichas que um raise direto.`,
       concept: 'Limp-shove: com 12-18bb no SB contra BB agressivo, limpe com premiums para trapear o raise dele.',
     }
   },
@@ -168,13 +168,13 @@ const TEMPLATES = [
     const heroPos = pick(['LJ', 'HJ', 'CO'])
     const shortBB = randBB(3, 6)
     return {
-      situation: `Mesa final com ${players} jogadores. Short stack tem ${shortBB}bb. Voce tem ${heroBB}bb no ${heroPos} com ${hand}. Fold ate voce.`,
-      question: 'O que voce faz?',
+      situation: `Mesa final com ${players} jogadores. Short stack tem ${shortBB}bb. Você tem ${heroBB}bb no ${heroPos} com ${hand}. Fold ate você.`,
+      question: 'O que você faz?',
       options: [
         { id: 'fold', label: 'Fold (deixar short bustar)', correct: true },
         { id: 'raise', label: 'Raise', correct: false },
       ],
-      explanation: `Na FT com short de ${shortBB}bb prestes a bustar, cada eliminacao sobe seu premio. ${hand} do ${heroPos} nao vale o risco — se alguem chamar e voce perder, pode virar o short. Deixe o short bustar.`,
+      explanation: `Na FT com short de ${shortBB}bb prestes a bustar, cada eliminacao sobe seu premio. ${hand} do ${heroPos} não vale o risco — se alguem chamar e você perder, pode virar o short. Deixe o short bustar.`,
       concept: 'Na FT, deixe shorts bustarem. Cada eliminacao = salto de premiacao garantido sem risco.',
     }
   },
@@ -185,13 +185,13 @@ const TEMPLATES = [
     const hand = pick([...HANDS_MARGINAL, ...HANDS_SUITED_CONNECTORS, ...HANDS_WEAK.slice(0, 3)])
     const bbBB = randBB(12, 20)
     return {
-      situation: `Late game. Voce tem ${heroBB}bb no SB. Fold ate voce. BB tem ${bbBB}bb. Voce tem ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game. Você tem ${heroBB}bb no SB. Fold ate você. BB tem ${bbBB}bb. Você tem ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'raise', label: 'Raise 2.5x', correct: true },
         { id: 'fold', label: 'Fold', correct: false },
       ],
-      explanation: `SB vs BB no late game é o spot mais lucrativo. Com ${heroBB}bb, raise é melhor que limp — voce tem posicao e iniciativa. ${hand} é mais que suficiente. Blinds e antes fazem cada roubo muito valioso.`,
+      explanation: `SB vs BB no late game é o spot mais lucrativo. Com ${heroBB}bb, raise é melhor que limp — você tem posição e iniciativa. ${hand} é mais que suficiente. Blinds e antes fazem cada roubo muito valioso.`,
       concept: 'SB vs BB no late game: abra MUITO wide. Antes + blinds = muito dead money pra roubar.',
     }
   },
@@ -203,14 +203,14 @@ const TEMPLATES = [
     const vilPos = pick(['CO', 'BTN', 'SB'])
     const vilBB = randBB(20, 40)
     return {
-      situation: `Late game. Voce tem ${heroBB}bb no BB. ${vilPos} (${vilBB}bb) faz min-raise. Voce tem ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game. Você tem ${heroBB}bb no BB. ${vilPos} (${vilBB}bb) faz min-raise. Você tem ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'call', label: 'Call (pot odds excelentes)', correct: true },
         { id: 'fold', label: 'Fold', correct: false },
       ],
       explanation: `Min-raise no late game te dá pot odds enormes (~3.5:1 com antes). ${hand} tem equity suficiente para call. Foldar mãos jogaveis vs min-raise é desperdicar dinheiro no late game.`,
-      concept: 'Vs min-raise no BB: pot odds sao tao boas que voce deve defender quase tudo jogavel.',
+      concept: 'Vs min-raise no BB: pot odds sao tao boas que você deve defender quase tudo jogavel.',
     }
   },
 
@@ -220,14 +220,14 @@ const TEMPLATES = [
     const hand = pick(['QTs', 'J9s', 'T9s', 'A5o', 'K9o', 'Q9s'])
     const vilPos = pick(['CO', 'BTN'])
     return {
-      situation: `Late game. Voce tem ${heroBB}bb no BB. ${vilPos} raisa 2.2x. Voce tem ${hand}. O raise te da pot odds pra call.`,
+      situation: `Late game. Você tem ${heroBB}bb no BB. ${vilPos} raisa 2.2x. Você tem ${hand}. O raise te da pot odds pra call.`,
       question: 'Qual a melhor linha?',
       options: [
         { id: 'stop', label: 'Call pre → shove qualquer flop (stop and go)', correct: true },
         { id: 'shove', label: 'Shove pre-flop', correct: false },
       ],
-      explanation: `Stop and go: call pre, shove qualquer flop. Isso é melhor que shove pre porque: (1) se ele errou o flop, folda mesmo com overcards, (2) voce ganha fold equity extra pos-flop. Com ${heroBB}bb, o shove no flop é automatico.`,
-      concept: 'Stop and go: call pre → shove flop. Ganha fold equity extra contra maos que erraram o board.',
+      explanation: `Stop and go: call pre, shove qualquer flop. Isso é melhor que shove pre porque: (1) se ele errou o flop, folda mesmo com overcards, (2) você ganha fold equity extra pos-flop. Com ${heroBB}bb, o shove no flop é automatico.`,
+      concept: 'Stop and go: call pre → shove flop. Ganha fold equity extra contra mãos que erraram o board.',
     }
   },
 
@@ -237,14 +237,14 @@ const TEMPLATES = [
     const hand = pick([...HANDS_WEAK, ...HANDS_MARGINAL])
     const heroPos = pick(['CO', 'BTN', 'HJ'])
     return {
-      situation: `Late game. Mesa muito tight — todos esperando ITM. Voce tem ${heroBB}bb no ${heroPos} com ${hand}. Ninguem abriu nos ultimos 3 orbitas.`,
-      question: 'O que voce faz?',
+      situation: `Late game. Mesa muito tight — todos esperando ITM. Você tem ${heroBB}bb no ${heroPos} com ${hand}. Ninguem abriu nos últimos 3 orbitas.`,
+      question: 'O que você faz?',
       options: [
         { id: 'raise', label: 'Raise (explorar passividade)', correct: true },
         { id: 'fold', label: 'Fold (seguir o ritmo)', correct: false },
       ],
       explanation: `Mesa tight = oportunidade. Se ninguem esta abrindo, os blinds e antes estao la para serem roubados. ${hand} é mais que suficiente quando a mesa inteira esta jogando scared. Adapte-se!`,
-      concept: 'Mesas tight no late game = roubo facil. Enquanto todos esperam ITM, voce acumula fichas.',
+      concept: 'Mesas tight no late game = roubo facil. Enquanto todos esperam ITM, você acumula fichas.',
     }
   },
 
@@ -256,8 +256,8 @@ const TEMPLATES = [
     const playersLeft = pick([12, 15, 18])
     const itm = playersLeft - pick([2, 3])
     return {
-      situation: `Late game. ${playersLeft} restam, pagam ${itm}. Voce tem ${heroBB}bb. Vilao (${villainBB}bb) shova do CO. Voce esta no BB com ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game. ${playersLeft} restam, pagam ${itm}. Você tem ${heroBB}bb. vilão (${villainBB}bb) shova do CO. Você esta no BB com ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'fold', label: 'Fold (evitar flip perto do ITM)', correct: true },
         { id: 'call', label: 'Call (mao boa)', correct: false },
@@ -274,14 +274,14 @@ const TEMPLATES = [
     const vilPos = pick(['CO', 'BTN', 'HJ'])
     const vilBB = randBB(25, 45)
     return {
-      situation: `Late game. Voce tem ${heroBB}bb no BB. ${vilPos} (${vilBB}bb) raisa 2.2x. Voce tem ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game. Você tem ${heroBB}bb no BB. ${vilPos} (${vilBB}bb) raisa 2.2x. Você tem ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'shove', label: '3-bet shove all-in', correct: true },
         { id: 'call', label: 'Flat call', correct: false },
       ],
-      explanation: `Com ${heroBB}bb, 3-bet normal nao faz sentido — voce estaria comprometido. ${hand} é forte o suficiente para 3-bet shove. Voce ganha fold equity + equity quando pago. Flat call desperdiça posicao e iniciativa.`,
-      concept: 'Com 14-20bb, nao existe 3-bet light. E shove ou fold. Maos fortes = shove. O resto = fold ou call.',
+      explanation: `Com ${heroBB}bb, 3-bet normal não faz sentido — você estaria comprometido. ${hand} é forte o suficiente para 3-bet shove. Você ganha fold equity + equity quando pago. Flat call desperdiça posição e iniciativa.`,
+      concept: 'Com 14-20bb, não existe 3-bet light. E shove ou fold. Mãos fortes = shove. O resto = fold ou call.',
     }
   },
 
@@ -292,13 +292,13 @@ const TEMPLATES = [
     const vilPos = pick(['BTN', 'SB'])
     const antes = pick([0.1, 0.125])
     return {
-      situation: `Late game com antes de ${antes}bb. Voce tem ${heroBB}bb no BB. ${vilPos} faz min-raise. Voce tem ${hand}.`,
-      question: 'O que voce faz?',
+      situation: `Late game com antes de ${antes}bb. Você tem ${heroBB}bb no BB. ${vilPos} faz min-raise. Você tem ${hand}.`,
+      question: 'O que você faz?',
       options: [
         { id: 'call', label: 'Call (pot odds + antes)', correct: true },
         { id: 'fold', label: 'Fold', correct: false },
       ],
-      explanation: `Com antes, o pot pre-flop ja tem ~4bb. Voce precisa investir 1bb para ver o flop. Pot odds de 4:1! ${hand} suited tem potencial de flush/straight. Qualquer mao suited é call aqui.`,
+      explanation: `Com antes, o pot pre-flop ja tem ~4bb. Você precisa investir 1bb para ver o flop. Pot odds de 4:1! ${hand} suited tem potencial de flush/straight. Qualquer mão suited é call aqui.`,
       concept: 'No late game com antes, BB defende MUITO wide vs min-raise. Pot odds de 3.5-4:1 justificam quase tudo.',
     }
   },
@@ -318,9 +318,9 @@ function Lesson({ onComplete }) {
 
       <div className="space-y-4">
         <Section title="O Que e Late Game?">
-          Late game comeca quando os <strong style={{ color: '#e5484d' }}>blinds ficam grandes</strong> em relacao aos stacks. Tipicamente quando o stack medio cai para 15-25bb.
+          Late game comeca quando os <strong style={{ color: '#e5484d' }}>blinds ficam grandes</strong> em relacao aos stacks. Tipicamente quando o stack médio cai para 15-25bb.
           <br /><br />
-          Nessa fase, decisoes pre-flop dominam. A maioria das maos nao chega ao flop. <strong style={{ color: '#f5a623' }}>Fold equity, posicao e timing</strong> valem mais que a forca da sua mao.
+          Nessa fase, decisoes pre-flop dominam. A maioria das mãos não chega ao flop. <strong style={{ color: '#f5a623' }}>Fold equity, posição e timing</strong> valem mais que a forca da sua mão.
         </Section>
 
         <Section title="Stack Zones">
@@ -328,8 +328,8 @@ function Lesson({ onComplete }) {
             {[
               { range: '25-40bb', label: 'Open-raise normal', desc: 'Raise 2-2.5x. Pode 3-bet normal. Pos-flop existe.', color: '#4fce82' },
               { range: '15-25bb', label: 'Raise or shove', desc: 'Open raise, mas 3-bet = shove. Sem flat call de 3-bet.', color: '#f5a623' },
-              { range: '10-15bb', label: 'Shove or fold', desc: 'Open shove da maioria das posicoes. Min-raise so em posicao com reads.', color: '#e5484d' },
-              { range: '5-10bb', label: 'Desperate shove', desc: 'Shove qualquer mao decente. Fold equity diminuindo a cada mao.', color: '#e5484d' },
+              { range: '10-15bb', label: 'Shove or fold', desc: 'Open shove da maioria das posicoes. Min-raise so em posição com reads.', color: '#e5484d' },
+              { range: '5-10bb', label: 'Desperate shove', desc: 'Shove qualquer mão decente. Fold equity diminuindo a cada mão.', color: '#e5484d' },
             ].map(z => (
               <div key={z.range} className="flex gap-3 items-start rounded-lg p-3" style={{ background: '#0f0f0f' }}>
                 <div style={{ minWidth: 70 }}>
@@ -348,7 +348,7 @@ function Lesson({ onComplete }) {
           <div className="grid grid-cols-2 gap-3 mt-2">
             <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #e5484d' }}>
               <div style={{ color: '#e5484d', fontWeight: 700, fontSize: 13 }}>Fold Equity</div>
-              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Com stacks curtos, fazer o oponente foldar vale mais que a mao em si. Timing e posicao sao tudo.</div>
+              <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>Com stacks curtos, fazer o oponente foldar vale mais que a mão em si. Timing e posição sao tudo.</div>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #f5a623' }}>
               <div style={{ color: '#f5a623', fontWeight: 700, fontSize: 13 }}>Dead Money</div>
@@ -371,7 +371,7 @@ function Lesson({ onComplete }) {
               { err: 'Min-raise com 8bb', fix: 'Shove. Min-raise + fold ao 3-bet = fichas jogadas fora.' },
               { err: 'Foldar A7o do BTN com 7bb', fix: 'Shove. Qualquer Ax, Kx suited, par é shove em late position.' },
               { err: 'Flat call de 3-bet com 18bb', fix: 'Shove ou fold. Flat call te deixa sem fold equity no flop.' },
-              { err: 'Abrir muito tight esperando maos boas', fix: 'Blinds comem seu stack. Roube antes com range amplo.' },
+              { err: 'Abrir muito tight esperando mãos boas', fix: 'Blinds comem seu stack. Roube antes com range amplo.' },
               { err: 'Chamar flip perto do ITM', fix: 'Evite flips. ICM torna ganhar fichas menos valioso que sobreviver.' },
             ].map((e, i) => (
               <div key={i} className="rounded-lg p-3" style={{ background: '#0f0f0f' }}>
@@ -389,7 +389,7 @@ function Lesson({ onComplete }) {
               '12-20bb: raise 2.2x, mas 3-bet = shove',
               'Roube blinds/antes pelo menos 1x por orbita',
               'Contra min-raise no BB: defenda MUITO wide (pot odds excelentes)',
-              'Posicao > forca da mao no late game',
+              'Posição > forca da mão no late game',
               'Ajuste para short stacks nos blinds (eles vao shove)',
               'Limp-shove no SB com premiums contra BB agressivo',
               'Stop and go com 6-10bb quando pot odds justificam call pre',

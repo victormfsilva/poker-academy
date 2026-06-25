@@ -97,7 +97,7 @@ function boardHasStraightPossible(board) {
   return false
 }
 
-// Verifica se a mao faz sentido ter chegado ao river IP (teria c-betado no flop)
+// Verifica se a mão faz sentido ter chegado ao river IP (teria c-betado no flop)
 function wouldPlayToRiver(hole, board) {
   const flop = board.slice(0, 3)
   const flopRanks = flop.map(c => c.slice(0, -1))
@@ -208,7 +208,7 @@ function getCorrectAction(hole, board) {
     }
   }
 
-  return { action: 'check', reason: 'Sem mão e sem historia pra blefar. Check e desista — dar give up no river é correto quando não tem motivo pra apostar.' }
+  return { action: 'check', reason: 'Sem mão e sem história pra blefar. Check e desista — dar give up no river é correto quando não tem motivo pra apostar.' }
 }
 
 function Lesson({ onComplete }) {
@@ -259,7 +259,7 @@ function Lesson({ onComplete }) {
               'Você pode representar uma mão forte (flush/straight completou)',
               'Seu draw não completou e você não tem showdown value',
               'O adversário tem range capped (não pode ter mão forte)',
-              'Você apostou flop e turn — a historia faz sentido',
+              'Você apostou flop e turn — a história faz sentido',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#f5a623' }}>•</span>
@@ -277,7 +277,7 @@ function Lesson({ onComplete }) {
             {[
               'Par médio/baixo — tem showdown value, não transforme em blefe',
               'Board perigoso e você tem mão boa mas não nuts — controle',
-              'Sem mão e sem historia pra blefar — aceite o give up',
+              'Sem mão e sem história pra blefar — aceite o give up',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#888' }}>✓</span>
@@ -373,7 +373,7 @@ function Trainer() {
         boardCards={board || []}
         villainAction="Check"
         potLabel="26bb"
-        contextTitle="Voce esta IP — River"
+        contextTitle="Você esta IP — River"
         contextDesc="Todas as cartas foram reveladas. Qual sua acao final?"
       />
 

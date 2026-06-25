@@ -106,7 +106,7 @@ function hasMadeStraight(hole, board) {
   return false
 }
 
-// ─── Gerador de maos texto ────────────────────────────────
+// ─── Gerador de mãos texto ────────────────────────────────
 function generateAllHands() {
   const h = []
   for (let i = 0; i < RANKS.length; i++) {
@@ -839,19 +839,19 @@ function dynamicScenarioQuestion(moduleId) {
   const TEMPLATES = {
     16: [
       () => { const vpip = randInt(12, 16); const hand = pick(['A5s','A4s','K9s']); return { q: `BTN com ${hand}. UTG tight (VPIP ${vpip}%) fez raise. GTO diz 3-bet.`, a: 'Fold (Exploit)', b: '3-bet (GTO)', aCorrect: true } },
-      () => { const pct = randInt(65, 80); return { q: `BB defende ${pct}%+ dos raises. Voce CO com ${pick(['K9o','Q9o','J9o'])}.`, a: 'Raise (Exploit)', b: 'Fold (GTO)', aCorrect: true } },
+      () => { const pct = randInt(65, 80); return { q: `BB defende ${pct}%+ dos raises. Você CO com ${pick(['K9o','Q9o','J9o'])}.`, a: 'Raise (Exploit)', b: 'Fold (GTO)', aCorrect: true } },
       () => { const hand = pick(['87s','76s','98s']); return { q: `BB com ${hand} vs BTN regular forte. GTO diz call.`, a: 'Call (GTO)', b: 'Fold ou 3-bet', aCorrect: true } },
       () => { const cbet = randInt(85, 95); return { q: `BTN c-beta ${cbet}% dos flops. BB com ${pick(['65s','74s','53s'])} em ${pick(['A-7-2','K-8-3','Q-6-2'])}.`, a: 'Call/CR (Exploit)', b: 'Fold (GTO)', aCorrect: true } },
       () => { const f3b = randInt(75, 85); return { q: `BB folda ${f3b}% ao 3-bet. SB com ${pick(['K8s','Q9s','J8s'])}.`, a: '3-bet (Exploit)', b: 'Fold (GTO)', aCorrect: true } },
-      () => { const af = pick([0.4, 0.5, 0.6, 0.7]); return { q: `River com par medio. Vilao passivo (AF ${af}) fez raise.`, a: 'Fold (Exploit)', b: 'Call (pot odds)', aCorrect: true } },
+      () => { const af = pick([0.4, 0.5, 0.6, 0.7]); return { q: `River com par médio. vilão passivo (AF ${af}) fez raise.`, a: 'Fold (Exploit)', b: 'Call (pot odds)', aCorrect: true } },
       () => { return { q: `SB limpa. BB com ${pick(['J4o','T5o','93o','Q3o'])}.`, a: 'Raise grande (Exploit)', b: 'Check (GTO)', aCorrect: true } },
-      () => { const vpip = randInt(35, 48); const pfr = randInt(30, vpip - 2); return { q: `Vilao LAG (VPIP ${vpip}/PFR ${pfr}) 3-beta ${randInt(14, 20)}%. Voce tem ${pick(['AQs','JJ','TT'])}. 4-bet?`, a: '4-bet (Exploit — range de 3bet cheio de lixo)', b: 'Call (jogar pos-flop)', aCorrect: true } },
+      () => { const vpip = randInt(35, 48); const pfr = randInt(30, vpip - 2); return { q: `vilão LAG (VPIP ${vpip}/PFR ${pfr}) 3-beta ${randInt(14, 20)}%. Você tem ${pick(['AQs','JJ','TT'])}. 4-bet?`, a: '4-bet (Exploit — range de 3bet cheio de lixo)', b: 'Call (jogar pós-flop)', aCorrect: true } },
     ],
     17: [
-      () => { const left = randInt(4, 6); const pay = left - 1; const bb = randInt(18, 25); return { q: `${left} restam, pagam ${pay}. Voce ${bb}bb. Short ${randInt(3, 6)}bb. CO com ${pick(['AJo','KQo','ATo'])}.`, a: 'Fold (ICM)', b: 'Raise', aCorrect: true } },
-      () => { const bb = randInt(12, 18); return { q: `Mesa final 3-way. Voce ${bb}bb. Chip leader shova. ${pick(['QQ','KK','AA'])}.`, a: 'Call', b: 'Fold', aCorrect: true } },
-      () => { const left = randInt(8, 12); const pay = left - 1; return { q: `Satelite ${left} left, pagam ${pay}. Voce ${randInt(20, 30)}bb. Short ${randInt(8, 14)}bb shova. ${pick(['AKs','AQs','KQs'])}.`, a: 'Fold (ICM extremo)', b: 'Call', aCorrect: true } },
-      () => { const bb = randInt(25, 40); return { q: `Longe da bolha (${randInt(25, 40)}% restam). ${bb}bb. BTN raise, voce ${pick(['77','88','99','TT'])}.`, a: 'Call (ChipEV)', b: 'Fold', aCorrect: true } },
+      () => { const left = randInt(4, 6); const pay = left - 1; const bb = randInt(18, 25); return { q: `${left} restam, pagam ${pay}. Você ${bb}bb. Short ${randInt(3, 6)}bb. CO com ${pick(['AJo','KQo','ATo'])}.`, a: 'Fold (ICM)', b: 'Raise', aCorrect: true } },
+      () => { const bb = randInt(12, 18); return { q: `Mesa final 3-way. Você ${bb}bb. Chip leader shova. ${pick(['QQ','KK','AA'])}.`, a: 'Call', b: 'Fold', aCorrect: true } },
+      () => { const left = randInt(8, 12); const pay = left - 1; return { q: `Satelite ${left} left, pagam ${pay}. Você ${randInt(20, 30)}bb. Short ${randInt(8, 14)}bb shova. ${pick(['AKs','AQs','KQs'])}.`, a: 'Fold (ICM extremo)', b: 'Call', aCorrect: true } },
+      () => { const bb = randInt(25, 40); return { q: `Longe da bolha (${randInt(25, 40)}% restam). ${bb}bb. BTN raise, você${pick(['77','88','99','TT'])}.`, a: 'Call (ChipEV)', b: 'Fold', aCorrect: true } },
       () => { const bb = randInt(40, 60); return { q: `Mesa final ${randInt(5, 7)}. Chip leader ${bb}bb, demais ${randInt(8, 15)}bb. BTN com ${pick(['T8s','J9s','97s'])}.`, a: 'Raise (pressionar)', b: 'Fold (esperar)', aCorrect: true } },
       () => { const bb = randInt(15, 22); return { q: `Bolha ${randInt(4, 6)} left. ${bb}bb. Short ${randInt(2, 4)}bb shova. ${pick(['K2o','Q5o','J3o'])}.`, a: 'Fold', b: 'Call', aCorrect: true } },
       () => { return { q: `Inicio torneio. ${randInt(80, 120)}bb. UTG raise. ${pick(['AKo','AKs','QQ'])}.`, a: '3-bet (ChipEV)', b: 'Fold (conservar)', aCorrect: true } },
@@ -859,7 +859,7 @@ function dynamicScenarioQuestion(moduleId) {
     ],
     18: [
       () => { const hand = pick(['JTs','T9s','98s']); return { q: `BTN ${hand}. UTG raise, HJ call. 3-way.`, a: 'Call', b: '3-bet', aCorrect: true } },
-      () => { const board = pick(['K-8-3','A-9-4','Q-7-2']); return { q: `3-way flop ${board}. BB com ${pick(['A3s','A4s','K5s'])}. Todos checkam a voce.`, a: 'Check', b: 'Bet', aCorrect: true } },
+      () => { const board = pick(['K-8-3','A-9-4','Q-7-2']); return { q: `3-way flop ${board}. BB com ${pick(['A3s','A4s','K5s'])}. Todos checkam até você.`, a: 'Check', b: 'Bet', aCorrect: true } },
       () => { const board = pick(['Q-J-9','J-T-8','T-9-7']); return { q: `Flop ${board}, 3-way, IP com ${pick(['KTs','QTs','J9s'])} (draw).`, a: 'Check (multiway)', b: 'Bet', aCorrect: true } },
       () => { const board = pick(['A-7-2','K-8-3','A-5-2']); return { q: `3-way ${board} dry. CO raiser com ${pick(['AKo','AQo','KQs'])}.`, a: 'Bet', b: 'Check', aCorrect: true } },
       () => { const pair = pick(['55','44','33','66']); return { q: `CO com ${pair}. UTG raise, HJ call. Set mine?`, a: 'Call (set mine)', b: 'Fold', aCorrect: true } },
@@ -868,26 +868,26 @@ function dynamicScenarioQuestion(moduleId) {
       () => { const callers = randInt(2, 4); return { q: `SB com ${pick(['AQo','AJs','KQs'])}. ${callers} callers ja. Squeeze?`, a: 'Squeeze (3-bet)', b: 'Call', aCorrect: true } },
     ],
     19: [
-      () => { const board = pick(['K-Q-7-3-2','A-J-8-4-3','Q-T-6-5-2']); return { q: `River ${pick(['As5h','Ah7d','Ad3c'])}. Board ${board} sem flush. Vilao checkou 3 streets.`, a: 'Blefe (As bloqueia top pair)', b: 'Check back', aCorrect: true } },
-      () => { return { q: `BTN ${pick(['KsQs','KhQh','KdQd'])} vs UTG raise. 3-bet blefe?`, a: 'Nao (bloqueia folds)', b: 'Sim', aCorrect: true } },
+      () => { const board = pick(['K-Q-7-3-2','A-J-8-4-3','Q-T-6-5-2']); return { q: `River ${pick(['As5h','Ah7d','Ad3c'])}. Board ${board} sem flush. vilão checkou 3 streets.`, a: 'Blefe (As bloqueia top pair)', b: 'Check back', aCorrect: true } },
+      () => { return { q: `BTN ${pick(['KsQs','KhQh','KdQd'])} vs UTG raise. 3-bet blefe?`, a: 'Não(bloqueia folds)', b: 'Sim', aCorrect: true } },
       () => { const hand = pick(['Ah4d','Ah5c','Ad3s']); return { q: `BB ${hand} vs BTN raise. 3-bet blefe?`, a: 'Sim (bloqueia AA/AK)', b: 'Nao', aCorrect: true } },
-      () => { return { q: `SB ${pick(['JsTs','JhTh','JdTd'])} vs CO raise. 3-bet blefe?`, a: 'Nao (melhor call — playability)', b: 'Sim', aCorrect: true } },
-      () => { const board = pick(['A-K-8-5-2','K-Q-7-4-3','A-Q-9-6-2']); return { q: `River com 3 do naipe. Board ${board}. Voce tem ${pick(['Kh','Qh','Jh'])} (bloqueia flush). Vilao bet 75%.`, a: 'Fold (bloqueia blefes dele)', b: 'Call', aCorrect: true } },
-      () => { const board = pick(['Q-J-T-4-2','K-Q-J-5-3','A-K-Q-7-4']); return { q: `River ${pick(['9s8s','8h7h','7d6d'])}. Board ${board}. Vilao checkou. Blefar?`, a: 'Nao (nao bloqueia nuts)', b: 'Sim', aCorrect: true } },
+      () => { return { q: `SB ${pick(['JsTs','JhTh','JdTd'])} vs CO raise. 3-bet blefe?`, a: 'Não(melhor call — playability)', b: 'Sim', aCorrect: true } },
+      () => { const board = pick(['A-K-8-5-2','K-Q-7-4-3','A-Q-9-6-2']); return { q: `River com 3 do naipe. Board ${board}. Você tem ${pick(['Kh','Qh','Jh'])} (bloqueia flush). vilão bet 75%.`, a: 'Fold (bloqueia blefes dele)', b: 'Call', aCorrect: true } },
+      () => { const board = pick(['Q-J-T-4-2','K-Q-J-5-3','A-K-Q-7-4']); return { q: `River ${pick(['9s8s','8h7h','7d6d'])}. Board ${board}. vilão checkou. Blefar?`, a: 'Não(nao bloqueia nuts)', b: 'Sim', aCorrect: true } },
     ],
     20: [
-      () => { const vpip = randInt(42, 52); const pfr = randInt(6, 10); return { q: `Vilao VPIP ${vpip} / PFR ${pfr}. Ele fez raise ${pick(['UTG','LJ','HJ'])}.`, a: 'Range muito forte (so raise premium)', b: 'Range amplo', aCorrect: true } },
-      () => { const vpip = randInt(20, 25); const pfr = vpip - randInt(2, 4); return { q: `Vilao ${vpip}/${pfr}, 3-Bet ${randInt(8, 11)}%. Fez 3-bet do BTN.`, a: 'Defender normal (equilibrado)', b: 'Fold (muito forte)', aCorrect: true } },
-      () => { const f3b = randInt(72, 82); return { q: `BTN Fold to 3-Bet ${f3b}%. Voce BB com ${pick(['K8s','Q9s','J8s'])}.`, a: `3-bet blefe (${f3b}% fold)`, b: 'Call', aCorrect: true } },
-      () => { const cbet = randInt(82, 92); return { q: `Vilao CBet ${cbet}%. Ele checkou flop ${pick(['A-7-2','K-8-3','Q-6-2'])}. Voce tem ${pick(['65s','74s','T8s'])}.`, a: 'Range de check muito fraco', b: 'Pode ter maos fortes', aCorrect: true } },
+      () => { const vpip = randInt(42, 52); const pfr = randInt(6, 10); return { q: `vilão VPIP ${vpip} / PFR ${pfr}. Ele fez raise ${pick(['UTG','LJ','HJ'])}.`, a: 'Range muito forte (so raise premium)', b: 'Range amplo', aCorrect: true } },
+      () => { const vpip = randInt(20, 25); const pfr = vpip - randInt(2, 4); return { q: `vilão ${vpip}/${pfr}, 3-Bet ${randInt(8, 11)}%. Fez 3-bet do BTN.`, a: 'Defender normal (equilibrado)', b: 'Fold (muito forte)', aCorrect: true } },
+      () => { const f3b = randInt(72, 82); return { q: `BTN Fold to 3-Bet ${f3b}%. Você BB com ${pick(['K8s','Q9s','J8s'])}.`, a: `3-bet blefe (${f3b}% fold)`, b: 'Call', aCorrect: true } },
+      () => { const cbet = randInt(82, 92); return { q: `vilão CBet ${cbet}%. Ele checkou flop ${pick(['A-7-2','K-8-3','Q-6-2'])}. Você tem ${pick(['65s','74s','T8s'])}.`, a: 'Range de check muito fraco', b: 'Pode ter mãos fortes', aCorrect: true } },
       () => { return { q: `Solver: check ${randInt(55, 65)}% bet ${randInt(35, 45)}% com top pair no flop.`, a: 'Simplificar por textura', b: 'Aleatorizar', aCorrect: true } },
-      () => { const af = pick([0.5, 0.6, 0.7, 0.8]); return { q: `Vilao AF ${af}. Fez raise no river ${pick(['A-K-8-5-2','K-Q-7-3-9','Q-T-4-8-J'])}.`, a: 'MUITO forte (passivo nunca blefa)', b: 'Pode ser blefe', aCorrect: true } },
+      () => { const af = pick([0.5, 0.6, 0.7, 0.8]); return { q: `vilão AF ${af}. Fez raise no river ${pick(['A-K-8-5-2','K-Q-7-3-9','Q-T-4-8-J'])}.`, a: 'MUITO forte (passivo nunca blefa)', b: 'Pode ser blefe', aCorrect: true } },
       () => { const wtsd = randInt(33, 40); const wsd = randInt(42, 47); return { q: `Seus stats: WTSD ${wtsd}%, W$SD ${wsd}%.`, a: 'Chamando demais', b: 'Numeros normais', aCorrect: true } },
-      () => { const hands = randInt(30, 70); return { q: `Voce tem ${hands} maos de um vilao e quer usar 3-Bet% dele para decidir.`, a: 'Nao confiar (amostra pequena)', b: 'Usar o stat normalmente', aCorrect: true } },
+      () => { const hands = randInt(30, 70); return { q: `Você tem ${hands} mãosde um vilão e quer usar 3-Bet% dele para decidir.`, a: 'Nãoconfiar (amostra pequena)', b: 'Usar o stat normalmente', aCorrect: true } },
     ],
     21: [
-      () => { const bb = randInt(8, 14); const hand = pick(['A9o','KJs','QTs','88','77','ATs']); return { q: `Late game. ${bb}bb no BB. CO raisa 2.2x. Voce tem ${hand}.`, a: 'Shove all-in (resteal)', b: 'Call', aCorrect: true } },
-      () => { const bb = randInt(5, 9); const hand = pick(['A7o','K9s','QTs','A2s','66','55']); return { q: `Late game. ${bb}bb no ${pick(['CO','BTN'])}. Fold ate voce. ${hand}.`, a: 'Shove', b: 'Fold', aCorrect: true } },
+      () => { const bb = randInt(8, 14); const hand = pick(['A9o','KJs','QTs','88','77','ATs']); return { q: `Late game. ${bb}bb no BB. CO raisa 2.2x. Você tem ${hand}.`, a: 'Shove all-in (resteal)', b: 'Call', aCorrect: true } },
+      () => { const bb = randInt(5, 9); const hand = pick(['A7o','K9s','QTs','A2s','66','55']); return { q: `Late game. ${bb}bb no ${pick(['CO','BTN'])}. Fold ate você. ${hand}.`, a: 'Shove', b: 'Fold', aCorrect: true } },
       () => { const bb = randInt(15, 25); const hand = pick(['J7s','T6s','85s','97s','Q4s']); return { q: `Late game com antes. ${bb}bb no BB. ${pick(['BTN','SB'])} min-raise. ${hand}.`, a: 'Call (pot odds excelentes)', b: 'Fold', aCorrect: true } },
       () => { const bb = randInt(18, 30); const hand = pick(['AJs','KQs','TT','99','AQo']); return { q: `Late game. ${bb}bb no SB. ${pick(['LJ','HJ','CO'])} raisa, ${pick(['BTN','CO'])} chama. ${hand}.`, a: 'Squeeze (3-bet)', b: 'Call', aCorrect: true } },
       () => { const bb = randInt(5, 8); const hand = pick(['J3o','T4o','95o','Q2o','83o']); return { q: `Late game. ${bb}bb no ${pick(['UTG','LJ','HJ'])}. ${hand}. Falta 1 orbita pro blind.`, a: 'Fold (esperar spot melhor)', b: 'Shove', aCorrect: true } },
@@ -896,64 +896,64 @@ function dynamicScenarioQuestion(moduleId) {
       () => { const bb = randInt(20, 35); const hand = pick(['K8o','Q9o','J9o','T9o','A5o']); return { q: `Mesa tight esperando ITM. ${bb}bb no ${pick(['CO','BTN'])}. Ninguem abriu em 3 orbitas. ${hand}.`, a: 'Raise (explorar passividade)', b: 'Fold', aCorrect: true } },
     ],
     22: [
-      () => { const spr = pick([2, 2.5, 3, 3.5]); return { q: `SPR ${spr}. Flop A-7-2 rainbow. Voce tem ATo (top pair). Vilao betta 50%.`, a: 'All-in (commit com top pair em SPR baixo)', b: 'Call e avaliar turn', aCorrect: true } },
-      () => { const spr = pick([5, 6, 7]); return { q: `SPR ${spr}. Flop Q-9-4 com flush draw. Voce tem QJs (top pair + draw). Vilao checka.`, a: 'Bet 66-75% (proteger + valor)', b: 'Bet 33% (sizing pequeno)', aCorrect: true } },
-      () => { const spr = pick([10, 12, 15]); return { q: `SPR ${spr}. Flop K-8-3 rainbow. Voce tem AKo (TPTK). Vilao betta 66%.`, a: 'Call (pot control, SPR alto)', b: 'Raise', aCorrect: true } },
-      () => { const spr = pick([10, 12, 14]); return { q: `SPR ${spr}. Pre-flop single raise pot. Voce tem 55 no BTN. UTG raisa.`, a: 'Call (set mine — implied odds com SPR alto)', b: 'Fold', aCorrect: true } },
-      () => { const spr = pick([2, 3]); return { q: `4-bet pot. SPR ${spr}. Flop 9-5-2 rainbow. Voce tem AA. Vilao checka.`, a: 'Shove (SPR baixo, AA = commit total)', b: 'Check (trap)', aCorrect: true } },
-      () => { const spr = pick([4.5, 5, 6]); return { q: `SPR ${spr}. Flop A-K-2 rainbow. Voce tem TT. Vilao betta 50%.`, a: 'Fold (underpair em AK board, SPR medio)', b: 'Call', aCorrect: true } },
-      () => { const spr = pick([9, 11, 13]); return { q: `SPR ${spr}. Flop 9-8-6 com flush draw. Voce tem Ah5h (nut flush draw). Vilao betta 75%.`, a: 'Call (implied odds altas com SPR alto)', b: 'Fold', aCorrect: true } },
+      () => { const spr = pick([2, 2.5, 3, 3.5]); return { q: `SPR ${spr}. Flop A-7-2 rainbow. Você tem ATo (top pair). vilão betta 50%.`, a: 'All-in (commit com top pair em SPR baixo)', b: 'Call e avaliar turn', aCorrect: true } },
+      () => { const spr = pick([5, 6, 7]); return { q: `SPR ${spr}. Flop Q-9-4 com flush draw. Você tem QJs (top pair + draw). vilão checka.`, a: 'Bet 66-75% (proteger + valor)', b: 'Bet 33% (sizing pequeno)', aCorrect: true } },
+      () => { const spr = pick([10, 12, 15]); return { q: `SPR ${spr}. Flop K-8-3 rainbow. Você tem AKo (TPTK). vilão betta 66%.`, a: 'Call (pot control, SPR alto)', b: 'Raise', aCorrect: true } },
+      () => { const spr = pick([10, 12, 14]); return { q: `SPR ${spr}. Pre-flop single raise pot. Você tem 55 no BTN. UTG raisa.`, a: 'Call (set mine — implied odds com SPR alto)', b: 'Fold', aCorrect: true } },
+      () => { const spr = pick([2, 3]); return { q: `4-bet pot. SPR ${spr}. Flop 9-5-2 rainbow. Você tem AA. vilão checka.`, a: 'Shove (SPR baixo, AA = commit total)', b: 'Check (trap)', aCorrect: true } },
+      () => { const spr = pick([4.5, 5, 6]); return { q: `SPR ${spr}. Flop A-K-2 rainbow. Você tem TT. vilão betta 50%.`, a: 'Fold (underpair em AK board, SPR medio)', b: 'Call', aCorrect: true } },
+      () => { const spr = pick([9, 11, 13]); return { q: `SPR ${spr}. Flop 9-8-6 com flush draw. Você tem Ah5h (nut flush draw). vilão betta 75%.`, a: 'Call (implied odds altas com SPR alto)', b: 'Fold', aCorrect: true } },
       () => { const spr = pick([12, 15, 18]); return { q: `SPR ${spr}. Flop 5-8-T com flush draw + gutshot (12+ outs).`, a: 'Semi-bluff (combo draw + implied odds)', b: 'Check/fold', aCorrect: true } },
     ],
     23: [
       () => { const board = pick(['A-K-5','A-Q-8','K-J-4']); return { q: `Flop ${board} rainbow. BTN (raiser) vs BB (caller). Quem tem range advantage?`, a: 'BTN (mais Ax, Kx, broadways)', b: 'BB', aCorrect: true } },
       () => { const board = pick(['7-6-3','8-5-2','6-4-3']); return { q: `Flop ${board} rainbow. BTN (raiser) vs BB (caller). Quem tem range advantage?`, a: 'BB (mais suited connectors baixos e sets)', b: 'BTN', aCorrect: true } },
-      () => { return { q: `BTN tem range advantage no flop. Qual a estrategia de c-bet?`, a: 'Bet frequente (70%+) com sizing PEQUENO (25-33%)', b: 'Bet seletiva com sizing grande (66-75%)', aCorrect: true } },
+      () => { return { q: `BTN tem range advantage no flop. Qual a estratégia de c-bet?`, a: 'Bet frequente (70%+) com sizing PEQUENO (25-33%)', b: 'Bet seletiva com sizing grande (66-75%)', aCorrect: true } },
       () => { const board = pick(['Q-J-T','K-Q-J','A-K-Q']); return { q: `Flop ${board} conectado. CO (raiser) vs BB. Quem tem nut advantage?`, a: 'CO (mais combos de nuts: AK, sets, premium)', b: 'BB', aCorrect: true } },
-      () => { return { q: `Voce tem nut advantage mas NAO range advantage. Qual a estrategia?`, a: 'Bet MENOS frequente com sizing GRANDE (66-100%)', b: 'Bet frequente com sizing pequeno', aCorrect: true } },
+      () => { return { q: `Você tem nut advantage mas NÃO range advantage. Qual a estratégia?`, a: 'Bet MENOS frequente com sizing GRANDE (66-100%)', b: 'Bet frequente com sizing pequeno', aCorrect: true } },
       () => { const board = pick(['K-8-3','A-7-2','Q-5-2']); return { q: `Flop ${board} rainbow. UTG (raiser) vs BTN (caller). Quem tem range + nut advantage?`, a: 'UTG (range mais forte de EP)', b: 'BTN', aCorrect: true } },
       () => { return { q: `Board 9-8-7 com flush draw. BTN raiser vs BB caller. Quem tem nut advantage?`, a: 'Equilibrado (ambos tem straights e flush draws)', b: 'BTN claramente', aCorrect: true } },
-      () => { return { q: `Voce tem range advantage E nut advantage. Qual a estrategia?`, a: 'Bet frequente com sizing variado (mix small/big)', b: 'Check range inteiro', aCorrect: true } },
+      () => { return { q: `Você tem range advantage E nut advantage. Qual a estratégia?`, a: 'Bet frequente com sizing variado (mix small/big)', b: 'Check range inteiro', aCorrect: true } },
     ],
     24: [
       () => { const board = pick(['A-K-8-4-2','K-Q-7-3-9','Q-J-5-8-3']); return { q: `River ${board}. IP quer apostar. Qual tipo de range?`, a: 'Polarizado (nuts + bluffs, check o meio)', b: 'Merged (tudo que e bom)', aCorrect: true } },
       () => { const board = pick(['9-5-2','T-6-3','8-4-2']); return { q: `Flop ${board} rainbow. OOP como raiser. Qual tipo de c-bet range?`, a: 'Merged (overpairs, top/middle pairs)', b: 'Polarizado (so nuts e air)', aCorrect: true } },
-      () => { const board = pick(['J-T-8','Q-J-9','T-9-7']); return { q: `Board umido ${board} com flush draw. Raiser IP. Estrategia?`, a: 'Polarizado (maos fortes + semi-bluffs, check medianas)', b: 'Merge com tudo', aCorrect: true } },
+      () => { const board = pick(['J-T-8','Q-J-9','T-9-7']); return { q: `Board úmido ${board} com flush draw. Raiser IP. Estratégia?`, a: 'Polarizado (maos fortes + semi-bluffs, check medianas)', b: 'Merge com tudo', aCorrect: true } },
       () => { return { q: `Sizing ideal para range merged vs polarizado?`, a: 'Merged = 33-50%. Polarizado = 66-100%+', b: 'Merged = grande. Polarizado = pequeno', aCorrect: true } },
-      () => { const board = pick(['K-7-2','A-8-3','Q-5-2']); return { q: `Board seco ${board}. Raiser IP vs BB. Qual estrategia de c-bet?`, a: 'Merge: bet frequente com maos boas, sizing pequeno', b: 'Polarizado: so nuts e bluffs', aCorrect: true } },
-      () => { return { q: `Quando voce mais tende a polarizar?`, a: 'IP, streets tardias (turn/river), boards umidos', b: 'OOP, flop, boards secos', aCorrect: true } },
-      () => { return { q: `Qual a fraqueza de polarizar OOP?`, a: 'Range de check fica vulneravel (cheio de maos medianas)', b: 'Nao tem maos fortes suficientes', aCorrect: true } },
+      () => { const board = pick(['K-7-2','A-8-3','Q-5-2']); return { q: `Board seco ${board}. Raiser IP vs BB. Qual estratégia de c-bet?`, a: 'Merge: bet frequente com mãosboas, sizing pequeno', b: 'Polarizado: so nuts e bluffs', aCorrect: true } },
+      () => { return { q: `Quando vocêmais tende a polarizar?`, a: 'IP, streets tardias (turn/river), boards úmidos', b: 'OOP, flop, boards secos', aCorrect: true } },
+      () => { return { q: `Qual a fraqueza de polarizar OOP?`, a: 'Range de check fica vulnerável (cheio de mãosmedianas)', b: 'Nãotem mãos fortes suficientes', aCorrect: true } },
       () => { return { q: `Board A-A-5. BTN c-bet 100% sizing 25%. Conceito?`, a: 'Merge extremo (range advantage enorme, bet tudo barato)', b: 'Polarizado (proteger trips)', aCorrect: true } },
     ],
     25: [
-      () => { const turn = pick(['2h','3d','4c']); return { q: `Flop K-9-4 rainbow. IP com AKo. C-bet 50%, vilao call. Turn: ${turn} (blank). Plano?`, a: 'Bet turn (double barrel — AK muito forte aqui)', b: 'Check (pot control)', aCorrect: true } },
-      () => { return { q: `Flop A-7-3 com QQ. Bettou flop, vilao call. Turn: A. O que fazer?`, a: 'Check (A faz vilao ter mais trips, QQ piorou)', b: 'Bet (representar o A)', aCorrect: true } },
-      () => { return { q: `Conceito: por que planejar 3 streets ANTES de apostar no flop?`, a: 'Pra saber se a mao aguenta 3 streets de valor', b: 'Pra intimidar o vilao', aCorrect: true } },
+      () => { const turn = pick(['2h','3d','4c']); return { q: `Flop K-9-4 rainbow. IP com AKo. C-bet 50%, vilão call. Turn: ${turn} (blank). Plano?`, a: 'Bet turn (double barrel — AK muito forte aqui)', b: 'Check (pot control)', aCorrect: true } },
+      () => { return { q: `Flop A-7-3 com QQ. Bettou flop, vilão call. Turn: A. O que fazer?`, a: 'Check (A faz vilão ter mais trips, QQ piorou)', b: 'Bet (representar o A)', aCorrect: true } },
+      () => { return { q: `Conceito: por que planejar 3 streets ANTES de apostar no flop?`, a: 'Pra saber se a mão aguenta 3 streets de valor', b: 'Pra intimidar o vilão', aCorrect: true } },
       () => { return { q: `AA em board J-7-2 rainbow (SPR ~10). Plano de valor?`, a: 'Bet flop medio, bet turn medio, bet river — 3 streets de valor', b: 'Bet flop grande, check turn (trap), bet river', aCorrect: true } },
-      () => { return { q: `Draw perdido no river apos bet flop + turn. O que fazer?`, a: 'Avaliar triple barrel bluff (historia consistente)', b: 'Sempre give up', aCorrect: true } },
-      () => { return { q: `KK em board 8-5-2, bettou flop e turn. River: A. Plano?`, a: 'Check (A terrivel — vilao pode ter Ax)', b: 'Bet (KK ainda forte)', aCorrect: true } },
+      () => { return { q: `Draw perdido no river apos bet flop + turn. O que fazer?`, a: 'Avaliar triple barrel bluff (história consistente)', b: 'Sempre give up', aCorrect: true } },
+      () => { return { q: `KK em board 8-5-2, bettou flop e turn. River: A. Plano?`, a: 'Check (A terrivel — vilão pode ter Ax)', b: 'Bet (KK ainda forte)', aCorrect: true } },
       () => { return { q: `Set de 7 em board 7-6-5 com flush draw. Plano multistreet?`, a: 'Bet/raise GRANDE flop + bet grande turn (proteger urgente)', b: 'Slowplay (check flop, trap turn)', aCorrect: true } },
-      () => { return { q: `Regra de ouro pra decidir quantas streets apostar por valor?`, a: '"Quais maos piores me pagam?" — poucas = menos streets', b: 'Sempre aposte 3 streets com top pair+', aCorrect: true } },
+      () => { return { q: `Regra de ouro pra decidir quantas streets apostar por valor?`, a: '"Quais mãospiores me pagam?" — poucas = menos streets', b: 'Sempre aposte 3 streets com top pair+', aCorrect: true } },
     ],
     26: [
       () => { const board = pick(['A-K-5','A-Q-8','K-J-2']); return { q: `Flop ${board} rainbow. BTN range advantage vs BB. Sizing de c-bet?`, a: '25-33% pot (range advantage = frequente e barato)', b: '75% pot', aCorrect: true } },
       () => { const board = pick(['J-T-8','Q-J-9','T-9-7']); return { q: `Flop ${board} com flush draw. IP com set. Sizing?`, a: '66-75% pot (proteger contra draws)', b: '25-33% pot', aCorrect: true } },
-      () => { return { q: `Quando usar overbet (100%+ pot)?`, a: 'Range polarizado: voce pode ter nuts, vilao tem range capped', b: 'Sempre que tem mao forte', aCorrect: true } },
+      () => { return { q: `Quando usar overbet (100%+ pot)?`, a: 'Range polarizado: você pode ter nuts, vilão tem range capped', b: 'Sempre que tem mão forte', aCorrect: true } },
       () => { const board = pick(['9-5-2','T-6-3','8-4-2']); return { q: `Flop ${board} rainbow com AA. Range advantage claro. Sizing?`, a: '25-33% (consistente com range — mesmo sizing que o resto)', b: '75% (AA merece bet grande)', aCorrect: true } },
-      () => { return { q: `50% pot sizing e ideal para:`, a: 'Protecao moderada (top pair bom kicker)', b: 'Sempre que voce tem par', aCorrect: true } },
+      () => { return { q: `50% pot sizing é ideal para:`, a: 'Proteção moderada (top pair bom kicker)', b: 'Sempre que você tem par', aCorrect: true } },
       () => { return { q: `Regra de sizing por street?`, a: 'Flop 25-50% | Turn 50-75% | River 66-100%+', b: 'Mesmo sizing em todas as streets', aCorrect: true } },
-      () => { return { q: `Vilao min-betta (2x) no river. O que isso indica?`, a: 'Provavelmente valor fino (thin value) com mao mediana', b: 'Bluff claro', aCorrect: true } },
-      () => { return { q: `Por que sizing 33% no flop e mais eficiente que 75% em boards secos?`, a: 'Precisa funcionar menos vezes (25% vs 43%) e aposta com mais maos', b: 'Porque maos fortes preferem sizing pequeno', aCorrect: true } },
+      () => { return { q: `vilão min-betta (2x) no river. O que isso indica?`, a: 'Provavelmente valor fino (thin value) com mão mediana', b: 'Bluff claro', aCorrect: true } },
+      () => { return { q: `Por que sizing 33% no flop é mais eficiente que 75% em boards secos?`, a: 'Precisa funcionar menos vezes (25% vs 43%) e aposta com mais mãos', b: 'Porque mãos fortes preferem sizing pequeno', aCorrect: true } },
     ],
     27: [
-      () => { const suit = pick(['copas','espadas','ouros','paus']); return { q: `River com 3 ${suit} no board. Voce tem o A desse naipe sem par. Blefar?`, a: `Sim — bloqueia nut flush, vilao folda mais`, b: 'Nao — voce nao tem nada', aCorrect: true } },
-      () => { return { q: `Board A-K-8-5-3. Voce tem KK. Vilao betta grande. Seus blockers ajudam?`, a: 'Nao — nao bloqueia AA, AK, sets. Call e ruim.', b: 'Sim — KK e forte, sempre call', aCorrect: true } },
-      () => { return { q: `Pra BLEFAR, voce quer bloquear o que do vilao?`, a: 'Maos de VALOR (nuts, sets, straights)', b: 'Bluffs (draws perdidos)', aCorrect: true } },
-      () => { return { q: `Pra CALL, voce quer bloquear o que?`, a: 'Valor do vilao + NAO bloquear bluffs', b: 'Bloquear os bluffs dele', aCorrect: true } },
-      () => { return { q: `Voce tem 77 em board 9-8-5-4-2. Vilao shova. Seus 77 bloqueiam 76 (straight). Call?`, a: 'Sim — blocker favoravel, reduz combos de valor', b: 'Fold — 77 e muito fraco', aCorrect: true } },
-      () => { return { q: `Board pareado 8-8-K. Voce tem um 8 (trips). Vilao overbetta. Blocker effect?`, a: 'Voce bloqueia quads e trips — call forte', b: 'Overbet = sempre fold', aCorrect: true } },
-      () => { return { q: `Regra geral de blockers no river:`, a: 'Blefar = bloqueie valor. Call = bloqueie valor + unblock bluffs.', b: 'Blockers nao importam no river', aCorrect: true } },
-      () => { return { q: `"Unblocker" significa que voce NAO tem cartas de bluff do vilao. Isso e bom pra call?`, a: 'Sim — vilao pode ter mais bluffs = seu call e melhor', b: 'Nao — nao importa o que voce nao tem', aCorrect: true } },
+      () => { const suit = pick(['copas','espadas','ouros','paus']); return { q: `River com 3 ${suit} no board. Você tem o A desse naipe sem par. Blefar?`, a: `Sim — bloqueia nut flush, vilão folda mais`, b: 'Não — vocênao tem nada', aCorrect: true } },
+      () => { return { q: `Board A-K-8-5-3. Você tem KK. vilão betta grande. Seus blockers ajudam?`, a: 'Não — não bloqueia AA, AK, sets. Call é ruim.', b: 'Sim — KK é forte, sempre call', aCorrect: true } },
+      () => { return { q: `Pra BLEFAR, você quer bloquear o que do vilão?`, a: 'Mãos de VALOR (nuts, sets, straights)', b: 'Bluffs (draws perdidos)', aCorrect: true } },
+      () => { return { q: `Pra CALL, você quer bloquear o que?`, a: 'Valor do vilão + NAO bloquear bluffs', b: 'Bloquear os bluffs dele', aCorrect: true } },
+      () => { return { q: `Você tem 77 em board 9-8-5-4-2. vilão shova. Seus 77 bloqueiam 76 (straight). Call?`, a: 'Sim — blocker favorável, reduz combos de valor', b: 'Fold — 77 é muito fraco', aCorrect: true } },
+      () => { return { q: `Board pareado 8-8-K. Você tem um 8 (trips). vilão overbetta. Blocker effect?`, a: 'Você bloqueia quads e trips — call forte', b: 'Overbet = sempre fold', aCorrect: true } },
+      () => { return { q: `Regra geral de blockers no river:`, a: 'Blefar = bloqueie valor. Call = bloqueie valor + unblock bluffs.', b: 'Blockers não importam no river', aCorrect: true } },
+      () => { return { q: `"Unblocker" significa que você NÃO tem cartas de bluff do vilão. Isso é bom pra call?`, a: 'Sim — vilão pode ter mais bluffs = seu call é melhor', b: 'Não — não importa o que vocênao tem', aCorrect: true } },
     ],
   }
 
@@ -1455,7 +1455,7 @@ export default function Infinite() {
                 } catch { return null }
               })()}
               {result.isMix && (
-                <div style={{ color: '#f5a623', fontSize: 12, marginTop: 3 }}>Mao de transicao - ambas as acoes sao aceitaveis.</div>
+                <div style={{ color: '#f5a623', fontSize: 12, marginTop: 3 }}>Mao de transição - ambas as ações são aceitáveis.</div>
               )}
               {rangeViewerProps && (
                 <RangeViewer {...rangeViewerProps} />
@@ -1546,7 +1546,7 @@ export default function Infinite() {
           <div className="rounded-xl p-4 mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
             <div style={{ color: '#b3b3b8', fontSize: 12, fontWeight: 600, marginBottom: 8 }}>ACERTO POR MODULO</div>
             {Object.keys(moduleStats).length === 0 ? (
-              <div style={{ color: '#676671', fontSize: 13 }}>Jogue algumas maos para ver as estatisticas.</div>
+              <div style={{ color: '#676671', fontSize: 13 }}>Jogue algumas mãos para ver as estatísticas.</div>
             ) : (
               <div className="space-y-2">
                 {Object.entries(moduleStats)

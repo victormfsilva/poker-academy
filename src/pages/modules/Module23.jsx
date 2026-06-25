@@ -14,7 +14,7 @@ function makeRainbowBoard(ranks) {
 function makeHeroCards(r1, r2, suited) { const s1 = randSuit(); return [r1 + s1, r2 + (suited ? s1 : randSuitExcluding(s1))] }
 
 // ================================================================
-// MODULO 23 — Range Advantage vs Nut Advantage
+// MÓDULO 23 — Range Advantage vs Nut Advantage
 // ================================================================
 
 // ----------------------------------------------------------------
@@ -91,7 +91,7 @@ const SCENARIOS = [
       a: `${raiser} (range de open tem mais Ax, Kx, broadways)`,
       b: caller,
       aCorrect: true,
-      explanation: `${raiser} abriu o pote com range forte cheio de Ax, Kx e broadways. ${caller} defende wide mas com maos menos conectadas a esse board alto. Range advantage clara para o raiser.`,
+      explanation: `${raiser} abriu o pote com range forte cheio de Ax, Kx e broadways. ${caller} defende wide mas com mãos menos conectadas a esse board alto. Range advantage clara para o raiser.`,
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: heroHand, villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -108,7 +108,7 @@ const SCENARIOS = [
       a: `${caller} (defende com mais ${ranks[0]}x, sets baixos, suited connectors)`,
       b: raiser,
       aCorrect: true,
-      explanation: `Board baixo favorece o ${caller}. BB/SB defende com muitas maos conectadas baixas (suited connectors, pares pequenos) que o raiser nao teria aberto ou teria descartado. Range advantage vai para o caller.`,
+      explanation: `Board baixo favorece o ${caller}. BB/SB defende com muitas mãos conectadas baixas (suited connectors, pares pequenos) que o raiser não teria aberto ou teria descartado. Range advantage vai para o caller.`,
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: heroHand, villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -121,11 +121,11 @@ const SCENARIOS = [
     const [raiser, caller] = randRaiserCaller(LP_POSITIONS, ['BB','SB'])
     const heroHand = pick([makeHeroCards('K','T',false), makeHeroCards('Q','J',false), makeHeroCards('A','9',false)])
     return {
-      q: `${raiser} tem range advantage no flop ${ranks[0]}-${ranks[1]}-${ranks[2]}. Qual a estrategia correta de c-bet?`,
+      q: `${raiser} tem range advantage no flop ${ranks[0]}-${ranks[1]}-${ranks[2]}. Qual a estratégia correta de c-bet?`,
       a: 'C-bet frequente (70%+) com sizing PEQUENO (25-33%)',
       b: 'C-bet seletiva com sizing grande (66-75%)',
       aCorrect: true,
-      explanation: 'Range advantage = bet com alta frequencia e sizing pequeno. Voce aposta com muitas maos, entao usa um sizing que nao precisa funcionar muito pra ser lucrativo. Sizing pequeno maximiza EV com range inteiro.',
+      explanation: 'Range advantage = bet com alta frequência e sizing pequeno. Você aposta com muitas mãos, entao usa um sizing que não precisa funcionar muito pra ser lucrativo. Sizing pequeno maximiza EV com range inteiro.',
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: heroHand, villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -153,11 +153,11 @@ const SCENARIOS = [
     const board = makeRainbowBoard(ranks)
     const [raiser, caller] = randRaiserCaller([...MP_POSITIONS, 'BTN'], ['BB'])
     return {
-      q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]} rainbow. ${raiser} raiser, ${caller} caller. ${raiser} tem nut advantage mas NAO range advantage. Qual a estrategia?`,
+      q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]} rainbow. ${raiser} raiser, ${caller} caller. ${raiser} tem nut advantage mas NAO range advantage. Qual a estratégia?`,
       a: 'Bet MENOS frequente mas com sizing GRANDE (66-100%)',
       b: 'Bet muito frequente com sizing pequeno',
       aCorrect: true,
-      explanation: 'Nut advantage sem range advantage = polarize. Voce nao tem muitas maos boas no geral, mas quando tem sao monstros. Bet grande com maos fortes e bluffs polarizados, check com range medio.',
+      explanation: 'Nut advantage sem range advantage = polarize. Você não tem muitas mãos boas no geral, mas quando tem sao monstros. Bet grande com mãos fortes e bluffs polarizados, check com range médio.',
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('A','A',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -188,9 +188,9 @@ const SCENARIOS = [
     return {
       q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]} rainbow. ${raiser} (raiser) vs BB (caller). BB tem range advantage. O que BB deve fazer?`,
       a: 'Check-raise ou donk bet mais frequente (explorar a vantagem de range)',
-      b: 'Sempre checar pro raiser sem opcao de raise',
+      b: 'Sempre checar pro raiser sem opção de raise',
       aCorrect: true,
-      explanation: `Quando BB tem range advantage em board baixo, pode donk bet ou check-raise com mais frequencia. ${raiser} vai c-betar pouco nesse board, e BB pode tomar a iniciativa e explorar a vantagem.`,
+      explanation: `Quando BB tem range advantage em board baixo, pode donk bet ou check-raise com mais frequência. ${raiser} vai c-betar pouco nesse board, e BB pode tomar a iniciativa e explorar a vantagem.`,
       boardCards: board, heroPos: 'BB', villainPos: raiser,
       heroCards: makeHeroCards(ranks[0], pick(['5','6','7']), true), villainAction: `Bet ${pick(['33%','25%'])}`, potLabel: pick(LOW_POTS),
     }
@@ -206,7 +206,7 @@ const SCENARIOS = [
       a: `${raiser} (tem muito mais ${pairRank}x no range — A${pairRank}, K${pairRank}, ${pairRank}Q, etc.)`,
       b: `${caller} (defende com mais maos)`,
       aCorrect: true,
-      explanation: `Board pareado com ${pairRank}: ${raiser} tem muito mais combinacoes de ${pairRank}x do que ${caller}, que teria 3-bet ou foldado muitas dessas maos. Nut advantage claro para o raiser.`,
+      explanation: `Board pareado com ${pairRank}: ${raiser} tem muito mais combinacoes de ${pairRank}x do que ${caller}, que teria 3-bet ou foldado muitas dessas mãos. Nut advantage claro para o raiser.`,
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('A', pairRank, false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -222,7 +222,7 @@ const SCENARIOS = [
       a: 'Equilibrado (ambos tem sets, straights e flush draws nessa textura)',
       b: `${raiser} tem nut advantage claro`,
       aCorrect: true,
-      explanation: 'Em boards muito conectados com flush draw, ambos os ranges se conectam bem. O 3-bettor tem overpairs fortes, o caller tem mais suited connectors. Nut advantage e equilibrado — sizing medio e correto.',
+      explanation: 'Em boards muito conectados com flush draw, ambos os ranges se conectam bem. O 3-bettor tem overpairs fortes, o caller tem mais suited connectors. Nut advantage e equilibrado — sizing médio e correto.',
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('Q','Q',false), villainAction: 'Call', potLabel: pick(THREBET_POTS),
     }
@@ -234,11 +234,11 @@ const SCENARIOS = [
     const board = makeRainbowBoard(ranks)
     const [raiser, caller] = randRaiserCaller([...MP_POSITIONS, 'BTN'], ['BB'])
     return {
-      q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]}. ${raiser} (raiser) tem range advantage E nut advantage. Qual a estrategia?`,
-      a: 'C-bet com frequencia ALTA e sizing variado (mix de pequeno e grande)',
+      q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]}. ${raiser} (raiser) tem range advantage E nut advantage. Qual a estratégia?`,
+      a: 'C-bet com frequência ALTA e sizing variado (mix de pequeno e grande)',
       b: 'Sempre check pra induzir bluff',
       aCorrect: true,
-      explanation: 'Quando voce domina em ambos, c-bet com alta frequencia. Use sizing pequeno com range advantage (maos medianas) e sizing grande com nut advantage (monstros + bluffs polarizados). Mix confunde o vilao.',
+      explanation: 'Quando você domina em ambos, c-bet com alta frequência. Use sizing pequeno com range advantage (maos medianas) e sizing grande com nut advantage (monstros + bluffs polarizados). Mix confunde o vilão.',
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('K','K',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -255,7 +255,7 @@ const SCENARIOS = [
       a: 'Nut advantage dita o sizing (quem tem os nuts betta grande pra proteger e valorar)',
       b: 'Range advantage dita o sizing',
       aCorrect: true,
-      explanation: 'Em boards dinamicos com draws, o nut advantage importa mais pro sizing. Quem tem mais nuts pode bet grande pra proteger a mao e extrair valor contra draws antes que o turn chegue.',
+      explanation: 'Em boards dinamicos com draws, o nut advantage importa mais pro sizing. Quem tem mais nuts pode bet grande pra proteger a mão e extrair valor contra draws antes que o turn chegue.',
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('A','T',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -267,11 +267,11 @@ const SCENARIOS = [
     const highCard = board[0][0]
     const [raiser, caller] = randRaiserCaller([...MP_POSITIONS, 'BTN'], ['BB'])
     return {
-      q: `Flop ${board[0][0]}-${board[1][0]}-${board[2][0]} (board pareado baixo). ${raiser} raiser vs ${caller}. Qual a estrategia?`,
+      q: `Flop ${board[0][0]}-${board[1][0]}-${board[2][0]} (board pareado baixo). ${raiser} raiser vs ${caller}. Qual a estratégia?`,
       a: `Board seco e pareado — ${raiser} tem range advantage, c-bet pequeno e frequente`,
       b: `${caller} tem vantagem por ter mais pares pequenos`,
       aCorrect: true,
-      explanation: `Board muito seco e pareado. ${raiser} tem range advantage com overpairs (77-AA) e ${highCard}x. ${caller} tem poucos pares do board. ${raiser} deve c-bet frequente com sizing minimo (25-33%).`,
+      explanation: `Board muito seco e pareado. ${raiser} tem range advantage com overpairs (77-AA) e ${highCard}x. ${caller} tem poucos pares do board. ${raiser} deve c-bet frequente com sizing mínimo (25-33%).`,
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('T','T',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -287,7 +287,7 @@ const SCENARIOS = [
       a: 'Check-back mais frequente (board perigoso, nut advantage diluido)',
       b: 'C-bet grande sempre para proteger',
       aCorrect: true,
-      explanation: 'Board monotone conectado = muito perigoso. Ninguem tem nut advantage claro — flushes, straights e draws estao distribuidos. Check-back mais pra proteger o range e nao inflar pote em posicao ruim.',
+      explanation: 'Board monotone conectado = muito perigoso. Ninguem tem nut advantage claro — flushes, straights e draws estao distribuidos. Check-back mais pra proteger o range e não inflar pote em posição ruim.',
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('A','Q',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -301,10 +301,10 @@ const SCENARIOS = [
     const [raiser, caller] = randRaiserCaller([...LP_POSITIONS], ['BB'])
     return {
       q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]} rainbow. ${raiser} e o raiser IP. Por que o sizing PEQUENO e o melhor?`,
-      a: 'Range advantage enorme — nao precisa de sizing grande pra gerar lucro',
-      b: 'Para dar odds ao vilao e fazê-lo chamar mais',
+      a: 'Range advantage enorme — não precisa de sizing grande pra gerar lucro',
+      b: 'Para dar odds ao vilão e fazê-lo chamar mais',
       aCorrect: true,
-      explanation: `${raiser} tem range advantage massivo (todos Ax, Kx, AK). Sizing pequeno (25-33%) funciona porque: 1) lucra contra range fraco, 2) nao precisa de fold equity alta, 3) permite bet com mais maos do range.`,
+      explanation: `${raiser} tem range advantage massivo (todos Ax, Kx, AK). Sizing pequeno (25-33%) funciona porque: 1) lucra contra range fraco, 2) não precisa de fold equity alta, 3) permite bet com mais mãos do range.`,
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('K','J',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -326,17 +326,17 @@ const SCENARIOS = [
     }
   },
 
-  // ── T16: Caller tem range advantage em board medio-baixo ─────────
+  // ── T16: Caller tem range advantage em board médio-baixo ─────────
   () => {
     const ranks = pick(MID_BOARDS)
     const board = makeRainbowBoard(ranks)
     const [raiser, caller] = randRaiserCaller([...LP_POSITIONS], ['BB'])
     return {
-      q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]}. ${raiser} (raiser) vs BB (caller). Qual das opcoes e verdadeira?`,
-      a: 'BB tem vantagem de range nesse board medio-baixo por defender com suited connectors e pares medios',
+      q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]}. ${raiser} (raiser) vs BB (caller). Qual das opções e verdadeira?`,
+      a: 'BB tem vantagem de range nesse board médio-baixo por defender com suited connectors e pares médios',
       b: `${raiser} tem range advantage claro com broadways`,
       aCorrect: true,
-      explanation: `Em boards medios (${ranks[0]}-${ranks[1]}-${ranks[2]}), BB defende com muitas maos conectadas medias que o raiser nao tem: 9-8s, 8-7s, T-9s, pares medios. BB tem range advantage moderada aqui.`,
+      explanation: `Em boards médios (${ranks[0]}-${ranks[1]}-${ranks[2]}), BB defende com muitas mãos conectadas medias que o raiser não tem: 9-8s, 8-7s, T-9s, pares médios. BB tem range advantage moderada aqui.`,
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('A','Q',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -366,10 +366,10 @@ const SCENARIOS = [
     const potLabel = pick(LOW_POTS)
     return {
       q: `Pote SB vs BB (limpou). Flop ${ranks[0]}-${ranks[1]}-${ranks[2]}. SB c-betta. Quem tem range advantage?`,
-      a: `SB (range de complete/limp tem mais ${ranks[0]}x e maos fortes que BB defende em blind)`,
+      a: `SB (range de complete/limp tem mais ${ranks[0]}x e mãos fortes que BB defende em blind)`,
       b: 'BB (defende wide)',
       aCorrect: true,
-      explanation: 'SB que completa ou abre pequeno ainda tem range relativamente forte contra BB. Em boards altos, SB tem mais maos que conectam. Mas a vantagem e menor que IP vs BB — SB deve usar sizing medio.',
+      explanation: 'SB que completa ou abre pequeno ainda tem range relativamente forte contra BB. Em boards altos, SB tem mais mãos que conectam. Mas a vantagem e menor que IP vs BB — SB deve usar sizing médio.',
       boardCards: board, heroPos: 'SB', villainPos: 'BB',
       heroCards: makeHeroCards(ranks[0], pick(['J','T','9']), false), villainAction: 'Check', potLabel,
     }
@@ -382,10 +382,10 @@ const SCENARIOS = [
     const [raiser, caller] = randRaiserCaller([...EP_POSITIONS, ...MP_POSITIONS], ['BB'])
     return {
       q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]} rainbow. ${raiser} (raiser) vs BB. O que ${raiser} deve fazer nesse board?`,
-      a: `C-bet com frequencia BAIXA (menos de 40%) e preferir check pra proteger range`,
+      a: `C-bet com frequência BAIXA (menos de 40%) e preferir check pra proteger range`,
       b: 'C-bet 100% do range — sempre tem fold equity',
       aCorrect: true,
-      explanation: `BB tem range advantage em boards baixos conectados. ${raiser} deve desacelerar: c-bet seletivo com maos fortes (overpairs altos) e check com range fraco. Evitar ser check-raised fora do pote.`,
+      explanation: `BB tem range advantage em boards baixos conectados. ${raiser} deve desacelerar: c-bet seletivo com mãos fortes (overpairs altos) e check com range fraco. Evitar ser check-raised fora do pote.`,
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('A','K',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -401,7 +401,7 @@ const SCENARIOS = [
       a: 'Sizing PEQUENO (25-33%) pra manter potencia sem inflar o pote',
       b: 'Sizing grande (75%+) pra proteger contra flushes',
       aCorrect: true,
-      explanation: 'Em board monotone, mesmo com range advantage, o sizing deve ser pequeno. Bet grande pode ser perigoso pois o BB pode ter o flush completo ou flush draw poderoso. Sizing pequeno extrai valor sem inflar o pote em situacoes ruins.',
+      explanation: 'Em board monotone, mesmo com range advantage, o sizing deve ser pequeno. Bet grande pode ser perigoso pois o BB pode ter o flush completo ou flush draw poderoso. Sizing pequeno extrai valor sem inflar o pote em situações ruins.',
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards(ranks[0], pick(['Q','J','T']), false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -423,15 +423,15 @@ const SCENARIOS = [
     }
   },
 
-  // ── T22: Board A-A-x pareado — estrategia do raiser ─────────────
+  // ── T22: Board A-A-x pareado — estratégia do raiser ─────────────
   () => {
     const s1 = randSuit(); const s2 = randSuitExcluding(s1)
     const kick = pick(['K','Q','J','T','9','8','7'])
     const board = ['A'+s1, 'A'+s2, kick+randSuit()]
     const [raiser, caller] = randRaiserCaller([...LP_POSITIONS], ['BB'])
     return {
-      q: `Flop A-A-${kick}. ${raiser} (raiser) vs ${caller}. Qual a estrategia de c-bet?`,
-      a: 'C-bet PEQUENO com alta frequencia (raiser tem mais Ax, board favorece)',
+      q: `Flop A-A-${kick}. ${raiser} (raiser) vs ${caller}. Qual a estratégia de c-bet?`,
+      a: 'C-bet PEQUENO com alta frequência (raiser tem mais Ax, board favorece)',
       b: 'Check sempre — board muito perigoso para c-bet',
       aCorrect: true,
       explanation: `Board A-A-${kick}: ${raiser} tem muito mais Ax no range (AK, AQ, AJ, ATs). Deve c-bet pequeno e frequente para valorar e manter range advantage. Checking cede a iniciativa desnecessariamente.`,
@@ -446,11 +446,11 @@ const SCENARIOS = [
     const board = makeRainbowBoard(ranks)
     const [raiser, caller] = randRaiserCaller([...EP_POSITIONS], ['BTN','CO','HJ'])
     return {
-      q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]} seco. ${raiser} (EP raiser) vs ${caller}. Qual a frequencia de c-bet ideal?`,
-      a: `Alta frequencia (65%+) com sizing pequeno — ${raiser} tem range advantage com overpairs`,
-      b: 'Baixa frequencia — board favorece o caller',
+      q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]} seco. ${raiser} (EP raiser) vs ${caller}. Qual a frequência de c-bet ideal?`,
+      a: `Alta frequência (65%+) com sizing pequeno — ${raiser} tem range advantage com overpairs`,
+      b: 'Baixa frequência — board favorece o caller',
       aCorrect: true,
-      explanation: `${raiser} de EP tem range muito forte: AA, KK, QQ, JJ, TT — todos overpairs nesse board. Tem range advantage clara. C-bet pequeno e frequente e o padrao do solver aqui.`,
+      explanation: `${raiser} de EP tem range muito forte: AA, KK, QQ, JJ, TT — todos overpairs nesse board. Tem range advantage clara. C-bet pequeno e frequente e o padrão do solver aqui.`,
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('Q','Q',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -474,7 +474,7 @@ const SCENARIOS = [
     }
   },
 
-  // ── T25: Conceito consolidado — board que nao favorece ninguem ───
+  // ── T25: Conceito consolidado — board que não favorece ninguem ───
   () => {
     const fs = randSuit()
     const ranks = pick([['9','7','5'],['8','6','4'],['T','8','6'],['9','6','4']])
@@ -482,10 +482,10 @@ const SCENARIOS = [
     const [raiser, caller] = randRaiserCaller([...MP_POSITIONS, 'BTN'], ['BB'])
     return {
       q: `Flop ${ranks[0]}-${ranks[1]}-${ranks[2]} com flush draw. ${raiser} vs BB. Ninguem tem vantagem clara. O que fazer?`,
-      a: 'Frequencia BAIXA de c-bet, preferir check — evitar situacoes desfavoravelmente polarizadas',
+      a: 'Frequencia BAIXA de c-bet, preferir check — evitar situações desfavoravelmente polarizadas',
       b: 'C-bet 100% com sizing grande — sempre tem fold equity',
       aCorrect: true,
-      explanation: 'Quando ninguem tem range advantage nem nut advantage claro, o solver tende a check-back com alta frequencia. Apostas criam riscos sem beneficios estruturais: o vilao tem muitas maos que chamam ou raises.',
+      explanation: 'Quando ninguem tem range advantage nem nut advantage claro, o solver tende a check-back com alta frequência. Apostas criam riscos sem beneficios estruturais: o vilão tem muitas mãos que chamam ou raises.',
       boardCards: board, heroPos: raiser, villainPos: caller,
       heroCards: makeHeroCards('A','Q',false), villainAction: 'Check', potLabel: pick(LOW_POTS),
     }
@@ -513,7 +513,7 @@ function Lesson({ onComplete }) {
         <div>
           <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8, marginBottom: 16 }}>
             <strong style={{ color: '#4fce82' }}>Range Advantage</strong> significa que seu range tem
-            MAIS maos boas no geral naquele board. Nao e sobre ter a melhor mao — e sobre ter mais maos
+            MAIS mãos boas no geral naquele board. Não e sobre ter a melhor mão — e sobre ter mais maos
             que conectam com o flop.
           </p>
           <div className="rounded-lg p-4 mb-4" style={{ background: '#222225' }}>
@@ -538,8 +538,8 @@ function Lesson({ onComplete }) {
         <div>
           <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8, marginBottom: 16 }}>
             <strong style={{ color: '#e5484d' }}>Nut Advantage</strong> e diferente: quem tem mais
-            maos MONSTRO (sets, straights, flushes, full houses). Nao importa quantas maos boas
-            voce tem no geral — importa quem tem mais nuts.
+            mãos MONSTRO (sets, straights, flushes, full houses). Não importa quantas mãos boas
+            você tem no geral — importa quem tem mais nuts.
           </p>
           <div className="rounded-lg p-4 mb-4" style={{ background: '#222225' }}>
             <div style={{ color: '#fdfdfd', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Exemplo:</div>
@@ -562,7 +562,7 @@ function Lesson({ onComplete }) {
       content: (
         <div>
           <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8, marginBottom: 16 }}>
-            Isso e LITERALMENTE como solvers GTO decidem frequencia e sizing de bet. A logica:
+            Isso e LITERALMENTE como solvers GTO decidem frequência e sizing de bet. A lógica:
           </p>
           <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid #2a2a2e' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -598,8 +598,8 @@ function Lesson({ onComplete }) {
             </table>
           </div>
           <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8 }}>
-            Se voce entender so isso, ja joga melhor que 90% dos jogadores de poker.
-            A maioria aposta baseado na propria mao — voce aposta baseado no RANGE.
+            Se você entender so isso, ja joga melhor que 90% dos jogadores de poker.
+            A maioria aposta baseado na propria mão — você aposta baseado no RANGE.
           </p>
         </div>
       ),
@@ -646,7 +646,7 @@ function Lesson({ onComplete }) {
             Modulo 23 - Range vs Nut Advantage
           </h1>
           <p style={{ color: '#676671', fontSize: 13, marginBottom: 20 }}>
-            Como solvers decidem frequencia e sizing de aposta
+            Como solvers decidem frequência e sizing de aposta
           </p>
 
           <div className="flex gap-1 mb-6 overflow-x-auto">
@@ -819,7 +819,7 @@ export default function Module23() {
 
   if (!mod?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o modulo anterior para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o módulo anterior para desbloquear.</p></div>
     </div>
   )
   return (

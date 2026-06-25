@@ -8,10 +8,10 @@ const MODULES = [
   { id: 2, name: 'Push/Fold', desc: 'Short stack < 15bb', icon: 'P', cat: 'fundamentals' },
   { id: 3, name: 'Pot Odds', desc: 'Matematica do poker', icon: 'O', cat: 'fundamentals' },
   { id: 4, name: 'BB vs RFI', desc: 'Defender o Big Blind', icon: 'D', cat: 'fundamentals' },
-  { id: 5, name: 'CBet Flop IP', desc: 'Apostar no flop em posicao', icon: 'C', cat: 'fundamentals' },
+  { id: 5, name: 'CBet Flop IP', desc: 'Apostar no flop em posição', icon: 'C', cat: 'fundamentals' },
   { id: 6, name: 'Blind Wars', desc: 'SB vs BB confronto direto', icon: 'W', cat: 'fundamentals' },
   { id: 7, name: 'SB vs RFI', desc: 'Defendendo o Small Blind', icon: 'S', cat: 'intermediate' },
-  { id: 8, name: 'BTN vs RFI', desc: 'Melhor posicao vs raises', icon: 'B', cat: 'intermediate' },
+  { id: 8, name: 'BTN vs RFI', desc: 'Melhor posição vs raises', icon: 'B', cat: 'intermediate' },
   { id: 9, name: '3-Bet Ranges', desc: 'Quando relancar pre-flop', icon: '3', cat: 'intermediate' },
   { id: 10, name: 'Def vs CBet', desc: 'Fold, call ou check-raise', icon: 'X', cat: 'intermediate' },
   { id: 13, name: 'Donk Bet', desc: 'Apostar antes do raiser', icon: 'K', cat: 'advanced' },
@@ -20,14 +20,14 @@ const MODULES = [
   { id: 16, name: 'GTO vs Exploit', desc: 'Quando sair do livro', icon: 'G', cat: 'advanced' },
   { id: 17, name: 'ICM', desc: 'Chip independente em MTT', icon: 'I', cat: 'advanced' },
   { id: 18, name: 'Multiway', desc: 'Potes com 3+ jogadores', icon: 'M', cat: 'advanced' },
-  { id: 19, name: 'Blockers', desc: 'Card removal avancado', icon: 'L', cat: 'advanced' },
+  { id: 19, name: 'Blockers', desc: 'Card removal avançado', icon: 'L', cat: 'advanced' },
   { id: 20, name: 'HUD & Solvers', desc: 'Estatisticas e solver', icon: 'H', cat: 'advanced' },
   { id: 21, name: 'Late Game MTT', desc: 'Momentos decisivos', icon: 'F', cat: 'advanced' },
   { id: 22, name: 'SPR', desc: 'Stack-to-Pot Ratio', icon: 'S', cat: 'advanced' },
   { id: 23, name: 'Range vs Nut', desc: 'Frequencia e sizing', icon: 'N', cat: 'advanced' },
   { id: 24, name: 'Polar vs Merge', desc: 'Tipos de range de bet', icon: 'P', cat: 'advanced' },
   { id: 25, name: 'Multistreet', desc: 'Planejar 3 streets', icon: 'U', cat: 'advanced' },
-  { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta historia', icon: 'Z', cat: 'advanced' },
+  { id: 26, name: 'Sizing Theory', desc: 'Cada sizing conta história', icon: 'Z', cat: 'advanced' },
   { id: 27, name: 'Blocker Effects', desc: 'Cartas que mudam range', icon: 'B', cat: 'advanced' },
   { id: 28, name: 'Facing Barrel', desc: 'Defender vs double barrel', icon: 'F', cat: 'advanced' },
   { id: 29, name: 'River Defense', desc: 'Call ou fold no river', icon: 'R', cat: 'advanced' },
@@ -36,8 +36,8 @@ const MODULES = [
 
 const CATEGORIES = {
   fundamentals: 'Fundamentos',
-  intermediate: 'Intermediario',
-  advanced: 'Avancado',
+  intermediate: 'Intermediário',
+  advanced: 'Avançado',
 }
 
 function getLast7Days() {
@@ -108,8 +108,8 @@ export default function Dashboard() {
                 </h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6, maxWidth: 420 }}>
                   {progress.globalStats.totalHands === 0
-                    ? 'Domine ranges pre-flop, pot odds, e estrategia avancada com treino pratico.'
-                    : `${progress.globalStats.totalHands} maos treinadas. ${completedCount}/${totalModules} modulos completos.`
+                    ? 'Domine ranges pre-flop, pot odds e estratégia avançada com treino prático.'
+                    : `${progress.globalStats.totalHands} mãos treinadas. ${completedCount}/${totalModules} módulos completos.`
                   }
                 </p>
                 {currentModule && (
@@ -156,12 +156,12 @@ export default function Dashboard() {
                     style={{ background: 'var(--surface-3)', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: '2px 8px', fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}
                   >
                     {[20, 30, 50, 75, 100, 150, 200].map(v => (
-                      <option key={v} value={v}>{v} maos</option>
+                      <option key={v} value={v}>{v} mãos</option>
                     ))}
                   </select>
                 ) : (
                   <button onClick={() => setEditingGoal(true)} className="btn-secondary" style={{ padding: '2px 10px', fontSize: 11 }}>
-                    {goal} maos
+                    {goal} mãos
                   </button>
                 )}
               </div>
@@ -225,7 +225,7 @@ export default function Dashboard() {
               const weekGoal = goal * 7
               return weekHands > 0 ? (
                 <div className="flex items-center justify-between mt-3">
-                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Semana: {weekHands} maos</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Semana: {weekHands} mãos</span>
                   <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{Math.round((weekHands / weekGoal) * 100)}% da meta semanal</span>
                 </div>
               ) : null
@@ -244,7 +244,7 @@ export default function Dashboard() {
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
                 <span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em' }}>
-                  {reviews.length} revisao{reviews.length > 1 ? 'es' : ''} pendente{reviews.length > 1 ? 's' : ''}
+                  {reviews.length} revisão{reviews.length > 1 ? 'es' : ''} pendente{reviews.length > 1 ? 's' : ''}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -262,7 +262,7 @@ export default function Dashboard() {
                 })}
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 10 }}>
-                Revise para fixar o conteudo na memoria de longo prazo
+                Revise para fixar o conteúdo na memória de longo prazo
               </div>
             </div>
           )
@@ -281,7 +281,7 @@ export default function Dashboard() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--crimson)" strokeWidth="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 <span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em' }}>Seus 3 maiores leaks</span>
                 <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 'auto', fontFamily: 'JetBrains Mono, monospace' }}>
-                  {(progress.answerHistory || []).length} maos
+                  {(progress.answerHistory || []).length} mãos
                 </span>
               </div>
               <div className="flex flex-col gap-2">
@@ -322,8 +322,8 @@ export default function Dashboard() {
             <div className="card mb-6">
               <div className="flex items-center gap-2.5 mb-4">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" strokeWidth="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                <span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em' }}>Evolucao por Modulo</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 'auto', fontFamily: 'JetBrains Mono, monospace' }}>% por sessao</span>
+                <span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em' }}>Evolução por Módulo</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 'auto', fontFamily: 'JetBrains Mono, monospace' }}>% por sessão</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {modulesWithSessions.slice(0, 8).map(m => {
@@ -398,7 +398,7 @@ export default function Dashboard() {
                   const color = d.acc >= 90 ? 'var(--emerald)' : d.acc >= 60 ? 'var(--gold)' : d.hands > 0 ? 'var(--crimson)' : 'var(--surface-3)'
                   const isToday = d.day === today
                   return (
-                    <div key={d.day} className="flex-1 flex flex-col items-center" title={`${d.day}: ${d.hands} maos, ${d.acc}% acerto`}>
+                    <div key={d.day} className="flex-1 flex flex-col items-center" title={`${d.day}: ${d.hands} mãos, ${d.acc}% acerto`}>
                       <div style={{
                         height: barH, width: '100%', maxWidth: 24, minWidth: 4,
                         background: color, opacity: isToday ? 1 : 0.65,

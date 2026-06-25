@@ -57,11 +57,11 @@ const SPR_SCENARIOS = [
     const betSize = ['33%','50%','66%','75%'][Math.floor(Math.random() * 4)]
     const pos = [['CO','BB'],['BTN','SB'],['HJ','CO'],['MP','BTN']][Math.floor(Math.random() * 4)]
     return {
-      q: `Flop A-${midCards}-${lowCards} rainbow. Voce tem A${kickers}o (top pair top kicker). SPR = ${spr}. Vilao betta ${betSize}.`,
+      q: `Flop A-${midCards}-${lowCards} rainbow. Você tem A${kickers}o (top pair top kicker). SPR = ${spr}. vilão betta ${betSize}.`,
       a: 'All-in / Raise (SPR baixo = commit com top pair+)',
       b: 'Call e avaliar turn',
       aCorrect: true,
-      explanation: `Com SPR ${spr}, voce ja esta comprometido com o pote. Top pair+ em SPR baixo = vai com tudo. Nao tem estofo para jogar 3 streets — matematica manda commitar.`,
+      explanation: `Com SPR ${spr}, você ja esta comprometido com o pote. Top pair+ em SPR baixo = vai com tudo. Não tem estofo para jogar 3 streets — matematica manda commitar.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: `Bet ${betSize}`, potLabel: `SPR ${spr}`,
     }
   },
@@ -76,11 +76,11 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(pairs, pairs, false)
     const pos = [['BTN','BB'],['CO','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `3-bet pot. Flop K-${lowB}-${lowA} seco. Voce tem ${pairs}${pairs} (underpair ao K). SPR = ${spr}. Vilao checka.`,
+      q: `3-bet pot. Flop K-${lowB}-${lowA} seco. Você tem ${pairs}${pairs} (underpair ao K). SPR = ${spr}. vilão checka.`,
       a: 'Bet pequeno como blefe (representar o K)',
       b: 'Check pra pot control (underpair ao board)',
       aCorrect: false,
-      explanation: `${pairs}${pairs} NAO e overpair em K-high board — e underpair. Com SPR ${spr}, voce deve controlar o pote. O vilao pode ter Kx facilmente em 3-bet pot. Check e reavaliar no turn.`,
+      explanation: `${pairs}${pairs} NAO e overpair em K-high board — e underpair. Com SPR ${spr}, você deve controlar o pote. O vilão pode ter Kx facilmente em 3-bet pot. Check e reavaliar no turn.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check', potLabel: `SPR ${spr}`,
     }
   },
@@ -99,11 +99,11 @@ const SPR_SCENARIOS = [
     const hero = [setRank+heroSuit1, setRank+heroSuit2]
     const pos = [['CO','BTN'],['BTN','BB'],['HJ','CO']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${tops[0]}-${tops[1]}-${tops[2]} conectado. Voce tem ${setRank}${setRank} (top set). Vilao betta.`,
+      q: `SPR = ${spr}. Flop ${tops[0]}-${tops[1]}-${tops[2]} conectado. Você tem ${setRank}${setRank} (top set). vilão betta.`,
       a: 'Raise all-in (proteger o set em board perigoso)',
       b: 'Call (slowplay)',
       aCorrect: true,
-      explanation: `Board muito perigoso com muitos draws. SPR baixo = nao dar carta gratis. Raise all-in protege seu set e extrai valor dos draws imediatamente.`,
+      explanation: `Board muito perigoso com muitos draws. SPR baixo = não dar carta gratis. Raise all-in protege seu set e extrai valor dos draws imediatamente.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Bet', potLabel: `SPR ${spr}`,
     }
   },
@@ -117,16 +117,16 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(pairs[0], pairs[1], false)
     const pos = [['CO','BB'],['BTN','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${pairs[0]}-${pairs[1]}-${kicker} rainbow. Voce tem ${pairs[0]}${pairs[1]}o (two pair). Vilao check-raisa.`,
+      q: `SPR = ${spr}. Flop ${pairs[0]}-${pairs[1]}-${kicker} rainbow. Você tem ${pairs[0]}${pairs[1]}o (two pair). vilão check-raisa.`,
       a: 'Shove (two pair em SPR baixo = commit total)',
-      b: 'Fold (check-raise = mao forte)',
+      b: 'Fold (check-raise = mão forte)',
       aCorrect: true,
-      explanation: `Com SPR ${spr} e two pair, voce tem equity alta o suficiente pra commitar mesmo contra check-raise. Two pair nao faz fold em SPR baixo — e matematicamente errado.`,
+      explanation: `Com SPR ${spr} e two pair, você tem equity alta o suficiente pra commitar mesmo contra check-raise. Two pair não faz fold em SPR baixo — e matematicamente errado.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check-Raise', potLabel: `SPR ${spr}`,
     }
   },
 
-  // T5: Par medio FRACO em board dangerous, SPR baixo, villain bet pot
+  // T5: Par médio FRACO em board dangerous, SPR baixo, villain bet pot
   () => {
     const spr = [2.5, 3, 3.5][Math.floor(Math.random() * 3)]
     const boardRanks = [['T','6','2'],['J','5','3'],['Q','7','4'],['9','4','2']][Math.floor(Math.random() * 4)]
@@ -135,11 +135,11 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(pairRank, pairRank, false)
     const pos = [['CO','BTN'],['BTN','BB'],['SB','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} seco. Voce tem ${pairRank}${pairRank} (par medio, underpair). Vilao betta pot.`,
-      a: 'Fold/Call marginal (par medio sem top pair = fraco em SPR baixo)',
-      b: 'Raise (par medio = valor)',
+      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} seco. Você tem ${pairRank}${pairRank} (par médio, underpair). vilão betta pot.`,
+      a: 'Fold/Call marginal (par médio sem top pair = fraco em SPR baixo)',
+      b: 'Raise (par médio = valor)',
       aCorrect: true,
-      explanation: `SPR ${spr} com par medio sem top pair = situacao ruim. Precisa de top pair+ pra commitar. Call se pot odds forem boas, mas raise e erro — voce nao tem mao forte o bastante.`,
+      explanation: `SPR ${spr} com par médio sem top pair = situação ruim. Precisa de top pair+ pra commitar. Call se pot odds forem boas, mas raise e erro — você não tem mão forte o bastante.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Bet Pot', potLabel: `SPR ${spr}`,
     }
   },
@@ -153,18 +153,18 @@ const SPR_SCENARIOS = [
     const pos = [['BTN','BB'],['CO','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     const betAction = ['Bet pequeno','Bet 33%','Shove'][Math.floor(Math.random() * 3)]
     return {
-      q: `4-bet pot. SPR = ${spr}. Flop ${lowBoards[0]}-${lowBoards[1]}-${lowBoards[2]} rainbow. Voce tem AA. Vilao checka.`,
+      q: `4-bet pot. SPR = ${spr}. Flop ${lowBoards[0]}-${lowBoards[1]}-${lowBoards[2]} rainbow. Você tem AA. vilão checka.`,
       a: `${betAction} (SPR baixo, AA = commit total)`,
       b: 'Check (trap para extrair valor no turn)',
       aCorrect: true,
-      explanation: `SPR ${spr} com AA em board seco = commit total. Qualquer sizing funciona — ate shove. Check desperica valor contra o range de 4-bet do vilao que paga tudo.`,
+      explanation: `SPR ${spr} com AA em board seco = commit total. Qualquer sizing funciona — ate shove. Check desperica valor contra o range de 4-bet do vilão que paga tudo.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check', potLabel: `SPR ${spr}`,
     }
   },
 
-  // ── SPR MEDIO (4-8): protecao, sizing importa ──────────────────────────────
+  // ── SPR MEDIO (4-8): proteção, sizing importa ──────────────────────────────
 
-  // T7: Top pair + flush draw em board umido, SPR medio, villain check
+  // T7: Top pair + flush draw em board umido, SPR médio, villain check
   () => {
     const spr = [4.5, 5, 6, 7][Math.floor(Math.random() * 4)]
     const flushSuit = randSuit()
@@ -175,16 +175,16 @@ const SPR_SCENARIOS = [
     const pos = [['CO','BB'],['BTN','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     const sizing = ['66%','75%'][Math.floor(Math.random() * 2)]
     return {
-      q: `SPR = ${spr}. Flop ${topRanks[0]}-${topRanks[1]}-${topRanks[2]} com flush draw. Voce tem top pair + flush draw (suited). Vilao checka.`,
-      a: `Bet ${sizing} (proteger + valor, SPR medio)`,
+      q: `SPR = ${spr}. Flop ${topRanks[0]}-${topRanks[1]}-${topRanks[2]} com flush draw. Você tem top pair + flush draw (suited). vilão checka.`,
+      a: `Bet ${sizing} (proteger + valor, SPR médio)`,
       b: 'Bet 25-33% (sizing pequeno demais)',
       aCorrect: true,
-      explanation: `SPR medio com top pair + draw em board umido = sizing medio-grande. Voce quer proteger contra draws adversarios e construir pote. Bet pequeno nao protege o suficiente.`,
+      explanation: `SPR médio com top pair + draw em board umido = sizing médio-grande. Você quer proteger contra draws adversarios e construir pote. Bet pequeno não protege o suficiente.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check', potLabel: `SPR ${spr}`,
     }
   },
 
-  // T8: Underpair em board A-K, SPR medio, villain bet
+  // T8: Underpair em board A-K, SPR médio, villain bet
   () => {
     const spr = [4.5, 5, 5.5, 6][Math.floor(Math.random() * 4)]
     const lowCard = ['2','3','4','5'][Math.floor(Math.random() * 4)]
@@ -194,16 +194,16 @@ const SPR_SCENARIOS = [
     const betSize = ['50%','66%','75%'][Math.floor(Math.random() * 3)]
     const pos = [['BTN','CO'],['CO','HJ'],['BTN','SB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop A-K-${lowCard} rainbow. Voce tem ${pairs}${pairs} (underpair). Vilao betta ${betSize}.`,
-      a: 'Fold (SPR medio, underpair em AK board = muito fraco)',
+      q: `SPR = ${spr}. Flop A-K-${lowCard} rainbow. Você tem ${pairs}${pairs} (underpair). vilão betta ${betSize}.`,
+      a: 'Fold (SPR médio, underpair em AK board = muito fraco)',
       b: 'Call (par e par, esperar turn)',
       aCorrect: true,
-      explanation: `SPR medio com par de ${pairs} em board AK = muito ruim. Vilao representa range forte (AK, AQ, AJ, KQ). Seu par quase nunca e bom — fold direto.`,
+      explanation: `SPR médio com par de ${pairs} em board AK = muito ruim. vilão representa range forte (AK, AQ, AJ, KQ). Seu par quase nunca e bom — fold direto.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: `Bet ${betSize}`, potLabel: `SPR ${spr}`,
     }
   },
 
-  // T9: Set em board seco, SPR medio, villain check
+  // T9: Set em board seco, SPR médio, villain check
   () => {
     const spr = [5, 6, 7][Math.floor(Math.random() * 3)]
     const setBoards = [['7','6','3'],['8','4','2'],['9','5','2'],['T','3','2']][Math.floor(Math.random() * 4)]
@@ -214,16 +214,16 @@ const SPR_SCENARIOS = [
     const betSizes = ['40%','50%','55%']
     const betSize = betSizes[Math.floor(Math.random() * betSizes.length)]
     return {
-      q: `SPR = ${spr}. Flop ${setBoards[0]}-${setBoards[1]}-${setBoards[2]} seco. Voce tem ${setRank}${setRank} (top set). Vilao checka.`,
-      a: `Bet ${betSize} (valor e protecao, construir pote)`,
+      q: `SPR = ${spr}. Flop ${setBoards[0]}-${setBoards[1]}-${setBoards[2]} seco. Você tem ${setRank}${setRank} (top set). vilão checka.`,
+      a: `Bet ${betSize} (valor e proteção, construir pote)`,
       b: 'Check (slowplay, esperar turn)',
       aCorrect: true,
-      explanation: `SPR medio com set em board seco: betta por valor. Slowplay e arriscado — com SPR medio voce precisa construir pote em 3 streets pra stackar o vilao.`,
+      explanation: `SPR médio com set em board seco: betta por valor. Slowplay e arriscado — com SPR médio você precisa construir pote em 3 streets pra stackar o vilão.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check', potLabel: `SPR ${spr}`,
     }
   },
 
-  // T10: Flush draw em board medio, SPR medio, villain bet — semi-bluff vs call
+  // T10: Flush draw em board médio, SPR médio, villain bet — semi-bluff vs call
   () => {
     const spr = [4.5, 5.5, 6.5, 7][Math.floor(Math.random() * 4)]
     const flushSuit = randSuit()
@@ -233,16 +233,16 @@ const SPR_SCENARIOS = [
     const betSize = ['33%','40%','50%'][Math.floor(Math.random() * 3)]
     const pos = [['BTN','BB'],['CO','BB'],['SB','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} com 2 cartas do mesmo naipe. Voce tem A5s (nut flush draw). Vilao betta ${betSize}.`,
-      a: 'Call (draw com pot odds aceitaveis, SPR medio)',
-      b: 'Fold (so tem draw, SPR medio)',
+      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} com 2 cartas do mesmo naipe. Você tem A5s (nut flush draw). vilão betta ${betSize}.`,
+      a: 'Call (draw com pot odds aceitaveis, SPR médio)',
+      b: 'Fold (so tem draw, SPR médio)',
       aCorrect: true,
-      explanation: `SPR medio com nut flush draw e pot odds razoaveis = call. Voce tem ~36% de equity em 2 cartas. Implied odds existem mas sao menores que no SPR alto.`,
+      explanation: `SPR médio com nut flush draw e pot odds razoaveis = call. Você tem ~36% de equity em 2 cartas. Implied odds existem mas sao menores que no SPR alto.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: `Bet ${betSize}`, potLabel: `SPR ${spr}`,
     }
   },
 
-  // T11: Two pair em board umido, SPR medio, villain bet — protection sizing
+  // T11: Two pair em board umido, SPR médio, villain bet — protection sizing
   () => {
     const spr = [5, 6, 7][Math.floor(Math.random() * 3)]
     const combos = [['K','T'],['Q','9'],['J','8'],['A','6']][Math.floor(Math.random() * 4)]
@@ -252,16 +252,16 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(combos[0], combos[1], false)
     const pos = [['BTN','BB'],['CO','SB'],['HJ','CO']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${combos[0]}-${combos[1]}-${low} com flush draw. Voce tem two pair (${combos[0]}${combos[1]}). Vilao betta 50%.`,
-      a: 'Raise (proteger two pair contra draws, SPR medio)',
+      q: `SPR = ${spr}. Flop ${combos[0]}-${combos[1]}-${low} com flush draw. Você tem two pair (${combos[0]}${combos[1]}). vilão betta 50%.`,
+      a: 'Raise (proteger two pair contra draws, SPR médio)',
       b: 'Call (pot control com two pair)',
       aCorrect: true,
-      explanation: `SPR medio com two pair em board umido = raise por protecao. Voce nao quer dar flush draw gratis. Com SPR medio, construir pote agora e essencial.`,
+      explanation: `SPR médio com two pair em board umido = raise por proteção. Você não quer dar flush draw gratis. Com SPR médio, construir pote agora e essencial.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Bet 50%', potLabel: `SPR ${spr}`,
     }
   },
 
-  // T12: TPTK em board medio seco, SPR medio, villain check-raise
+  // T12: TPTK em board médio seco, SPR médio, villain check-raise
   () => {
     const spr = [5, 6, 7][Math.floor(Math.random() * 3)]
     const topRanks = [['Q','7','2'],['J','6','3'],['K','5','2'],['T','8','3']][Math.floor(Math.random() * 4)]
@@ -270,11 +270,11 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(topRanks[0], kicker, false)
     const pos = [['CO','BB'],['BTN','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${topRanks[0]}-${topRanks[1]}-${topRanks[2]} seco. Voce tem top pair + kicker alto. Vilao check-raisa sua cbet.`,
+      q: `SPR = ${spr}. Flop ${topRanks[0]}-${topRanks[1]}-${topRanks[2]} seco. Você tem top pair + kicker alto. vilão check-raisa sua cbet.`,
       a: 'Call (pot control, reavalie turn)',
       b: 'Shove (top pair e forte)',
       aCorrect: true,
-      explanation: `SPR medio com TPTK e check-raise = vilao tem range polarizado (sets, two pair, ou bluffs). Shove e muito agressivo — call e mais prudente para controlar o pote.`,
+      explanation: `SPR médio com TPTK e check-raise = vilão tem range polarizado (sets, two pair, ou bluffs). Shove e muito agressivo — call e mais prudente para controlar o pote.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check-Raise', potLabel: `SPR ${spr}`,
     }
   },
@@ -291,11 +291,11 @@ const SPR_SCENARIOS = [
     const betSize = ['50%','66%','75%'][Math.floor(Math.random() * 3)]
     const pos = [['BTN','CO'],['CO','HJ'],['BTN','SB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} rainbow. Voce tem TPTK. Vilao betta ${betSize}.`,
+      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} rainbow. Você tem TPTK. vilão betta ${betSize}.`,
       a: 'Call (pot control com TPTK, SPR alto)',
       b: 'Raise (top pair top kicker e forte)',
       aCorrect: true,
-      explanation: `SPR alto com TPTK = mao forte mas nao monstro. Raise infla o pote demais — voce perde pra sets e two pair que nao largam. Call e jogue as streets com cautela.`,
+      explanation: `SPR alto com TPTK = mão forte mas não monstro. Raise infla o pote demais — você perde pra sets e two pair que não largam. Call e jogue as streets com cautela.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: `Bet ${betSize}`, potLabel: `SPR ${spr}`,
     }
   },
@@ -309,16 +309,16 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(pairR, pairR, false)
     const pos = [['BTN','UTG'],['CO','MP'],['HJ','UTG'],['SB','BTN']][Math.floor(Math.random() * 4)]
     return {
-      q: `SPR = ${spr}. Pre-flop single raise pot. Voce tem ${pairR}${pairR} no ${pos[0]}. ${pos[1]} raisa.`,
+      q: `SPR = ${spr}. Pre-flop single raise pot. Você tem ${pairR}${pairR} no ${pos[0]}. ${pos[1]} raisa.`,
       a: 'Call (set mine — implied odds altas com SPR alto)',
-      b: 'Fold (par baixo nao tem valor)',
+      b: 'Fold (par baixo não tem valor)',
       aCorrect: true,
       explanation: `SPR alto = implied odds excelentes pra set mine. Se acertar o set (~12%), ganha pilhas grandes. Regra geral: SPR 10+ torna set mine lucrativo a longo prazo.`,
       heroCards: hero, boardCards: [], heroPos: pos[0], villainPos: pos[1], villainAction: 'Raise', potLabel: `SPR ${spr}`,
     }
   },
 
-  // T15: Nut flush draw em board medio, SPR alto, villain bet
+  // T15: Nut flush draw em board médio, SPR alto, villain bet
   () => {
     const spr = [9, 11, 13, 15][Math.floor(Math.random() * 4)]
     const flushSuit = randSuit()
@@ -328,11 +328,11 @@ const SPR_SCENARIOS = [
     const betSize = ['50%','66%','75%'][Math.floor(Math.random() * 3)]
     const pos = [['BTN','BB'],['CO','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} com 2 cartas do naipe. Voce tem A5s (nut flush draw). Vilao betta ${betSize}.`,
+      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} com 2 cartas do naipe. Você tem A5s (nut flush draw). vilão betta ${betSize}.`,
       a: 'Call (draw com implied odds enormes, SPR alto)',
       b: 'Fold (sem par feito)',
       aCorrect: true,
-      explanation: `SPR alto com nut flush draw = call otimo. Implied odds enormes — se completar, vilao vai pagar muito. Draw tem ~18% em 1 carta, ~36% em 2.`,
+      explanation: `SPR alto com nut flush draw = call ótimo. Implied odds enormes — se completar, vilão vai pagar muito. Draw tem ~18% em 1 carta, ~36% em 2.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: `Bet ${betSize}`, potLabel: `SPR ${spr}`,
     }
   },
@@ -346,11 +346,11 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(topRanks[0], kicker, false)
     const pos = [['CO','BB'],['BTN','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${topRanks[0]}-${topRanks[1]}-${topRanks[2]}. Voce tem top pair kicker alto. Vilao checka-raisa sua cbet.`,
-      a: 'Call (pot control, nao re-raise em SPR alto)',
+      q: `SPR = ${spr}. Flop ${topRanks[0]}-${topRanks[1]}-${topRanks[2]}. Você tem top pair kicker alto. vilão checka-raisa sua cbet.`,
+      a: 'Call (pot control, não re-raise em SPR alto)',
       b: 'Re-raise (top pair justifica aggressao)',
       aCorrect: true,
-      explanation: `SPR alto e check-raise = vilao tem mao forte (set, two pair) ou bluff draw grande. TPTK nao quer inflar mais. Call e reavalie no turn com mais informacao.`,
+      explanation: `SPR alto e check-raise = vilão tem mão forte (set, two pair) ou bluff draw grande. TPTK não quer inflar mais. Call e reavalie no turn com mais informação.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check-Raise', potLabel: `SPR ${spr}`,
     }
   },
@@ -369,11 +369,11 @@ const SPR_SCENARIOS = [
     const hero = [drawBoards.h[0]+flushSuit, drawBoards.h[1]+flushSuit]
     const pos = [['BTN','BB'],['CO','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Voce tem ${drawBoards.h[0]}${drawBoards.h[1]}s. Flop ${drawBoards.b[0]}-${drawBoards.b[1]}-${drawBoards.b[2]} com 2 do naipe. Flush draw + gutshot straight draw.`,
+      q: `SPR = ${spr}. Você tem ${drawBoards.h[0]}${drawBoards.h[1]}s. Flop ${drawBoards.b[0]}-${drawBoards.b[1]}-${drawBoards.b[2]} com 2 do naipe. Flush draw + gutshot straight draw.`,
       a: 'Semi-bluff bet (12+ outs, implied odds enormes)',
-      b: 'Check/fold (sem mao feita)',
+      b: 'Check/fold (sem mão feita)',
       aCorrect: true,
-      explanation: `SPR alto com combo draw (flush + straight = 12+ outs) = semi-bluff perfeito. ~45% de equity com 2 cartas. Se vilao folda, ótimo. Se chama, voce tem equity real.`,
+      explanation: `SPR alto com combo draw (flush + straight = 12+ outs) = semi-bluff perfeito. ~45% de equity com 2 cartas. Se vilão folda, ótimo. Se chama, você tem equity real.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check', potLabel: `SPR ${spr}`,
     }
   },
@@ -387,11 +387,11 @@ const SPR_SCENARIOS = [
     const hero = [setRank+randSuit(), setRank+randSuit()]
     const pos = [['BTN','BB'],['CO','SB'],['HJ','CO']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${setBoards[0]}-${setBoards[1]}-${setBoards[2]} seco. Voce tem set de ${setRank}s. Vilao checka.`,
+      q: `SPR = ${spr}. Flop ${setBoards[0]}-${setBoards[1]}-${setBoards[2]} seco. Você tem set de ${setRank}s. vilão checka.`,
       a: 'Bet pequeno (construir pote em 3 streets, SPR alto)',
       b: 'Check (slowplay pra induzi-lo a bluffar)',
       aCorrect: true,
-      explanation: `Set em SPR alto = voce tem estofo pra jogar 3 streets. Betta pequeno (25-33%) pra construir gradualmente. Slowplay pode funcionar, mas bet cria pote maior no longo prazo.`,
+      explanation: `Set em SPR alto = você tem estofo pra jogar 3 streets. Betta pequeno (25-33%) pra construir gradualmente. Slowplay pode funcionar, mas bet cria pote maior no longo prazo.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Check', potLabel: `SPR ${spr}`,
     }
   },
@@ -407,11 +407,11 @@ const SPR_SCENARIOS = [
     const betSize = ['50%','66%'][Math.floor(Math.random() * 2)]
     const pos = [['BTN','BB'],['CO','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} umido com flush draw. Voce tem ${overPairs}${overPairs} (overpair). Vilao betta ${betSize}.`,
+      q: `SPR = ${spr}. Flop ${boardRanks[0]}-${boardRanks[1]}-${boardRanks[2]} umido com flush draw. Você tem ${overPairs}${overPairs} (overpair). vilão betta ${betSize}.`,
       a: 'Call (pot control com overpair em board perigoso, SPR alto)',
-      b: 'Raise (overpair = mao forte)',
+      b: 'Raise (overpair = mão forte)',
       aCorrect: true,
-      explanation: `SPR alto com overpair em board conectado/umido = pot control. Raise infla o pote quando voce pode estar atras de sets, two pair e combo draws. Call e defensivo e correto.`,
+      explanation: `SPR alto com overpair em board conectado/umido = pot control. Raise infla o pote quando você pode estar atras de sets, two pair e combo draws. Call e defensivo e correto.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: `Bet ${betSize}`, potLabel: `SPR ${spr}`,
     }
   },
@@ -462,7 +462,7 @@ const SPR_SCENARIOS = [
     }
   },
 
-  // T22: SPR e decisao — qual o efeito no jogo
+  // T22: SPR e decisão — qual o efeito no jogo
   () => {
     const spr = [2, 5, 12][Math.floor(Math.random() * 3)]
     const category = spr <= 4 ? 'Baixo' : spr <= 8 ? 'Medio' : 'Alto'
@@ -472,24 +472,24 @@ const SPR_SCENARIOS = [
     const correctAction = spr <= 4
       ? 'Commit (SPR baixo = top pair vai tudo)'
       : spr <= 8
-        ? 'Bet medio e avaliar (SPR medio = protecao)'
-        : 'Pot control / Call (SPR alto = nao inflar)'
+        ? 'Bet médio e avaliar (SPR médio = proteção)'
+        : 'Pot control / Call (SPR alto = não inflar)'
     const wrongAction = spr <= 4
       ? 'Pot control (call e esperar turn)'
       : spr <= 8
-        ? 'All-in imediato (SPR medio nao justifica)'
-        : 'All-in imediato (top pair nao vale stacks profundos)'
+        ? 'All-in imediato (SPR médio não justifica)'
+        : 'All-in imediato (top pair não vale stacks profundos)'
     return {
-      q: `Voce tem T9o. Flop T-6-2 rainbow (top pair). SPR = ${spr} (${category}). Vilao betta 50%. Melhor acao?`,
+      q: `Você tem T9o. Flop T-6-2 rainbow (top pair). SPR = ${spr} (${category}). vilão betta 50%. Melhor acao?`,
       a: correctAction,
       b: wrongAction,
       aCorrect: true,
-      explanation: `Com SPR ${spr} (${category}) e top pair: ${correctAction}. O SPR define completamente o quanto voce deve comprometer com top pair.`,
+      explanation: `Com SPR ${spr} (${category}) e top pair: ${correctAction}. O SPR define completamente o quanto você deve comprometer com top pair.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Bet 50%', potLabel: `SPR ${spr}`,
     }
   },
 
-  // T23: Par medio fraco, SPR baixo — fold vs call
+  // T23: Par médio fraco, SPR baixo — fold vs call
   () => {
     const spr = [2.5, 3, 3.5][Math.floor(Math.random() * 3)]
     const boards = [['T','6','2'],['J','5','3'],['Q','7','4'],['K','8','3']][Math.floor(Math.random() * 4)]
@@ -498,11 +498,11 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards(pairR, pairR, false)
     const pos = [['CO','BTN'],['BTN','BB'],['SB','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${boards[0]}-${boards[1]}-${boards[2]}. Voce tem ${pairR}${pairR} (par medio, underpair). Vilao betta pot.`,
-      a: 'Call/Fold (par medio sem top pair = marginal)',
+      q: `SPR = ${spr}. Flop ${boards[0]}-${boards[1]}-${boards[2]}. Você tem ${pairR}${pairR} (par médio, underpair). vilão betta pot.`,
+      a: 'Call/Fold (par médio sem top pair = marginal)',
       b: 'Raise (proteger o par)',
       aCorrect: true,
-      explanation: `SPR ${spr} com par medio sem top pair = situacao ruim. Nao tem mao forte o suficiente pra commitar. Call se pot odds forem boas, fold se nao. Nunca raise.`,
+      explanation: `SPR ${spr} com par médio sem top pair = situação ruim. Não tem mão forte o suficiente pra commitar. Call se pot odds forem boas, fold se não. Nunca raise.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Bet Pot', potLabel: `SPR ${spr}`,
     }
   },
@@ -522,7 +522,7 @@ const SPR_SCENARIOS = [
     const betSize = ['50%','66%'][Math.floor(Math.random() * 2)]
     const pos = [['BTN','BB'],['CO','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${draws.board[0]}-${draws.board[1]}-${draws.board[2]}. Voce tem ${draws.hero[0]}${draws.hero[1]}o (open-ended straight draw). Vilao betta ${betSize}.`,
+      q: `SPR = ${spr}. Flop ${draws.board[0]}-${draws.board[1]}-${draws.board[2]}. Você tem ${draws.hero[0]}${draws.hero[1]}o (open-ended straight draw). vilão betta ${betSize}.`,
       a: 'Call (OESD com implied odds altas, SPR alto)',
       b: 'Fold (so tem draw)',
       aCorrect: true,
@@ -531,7 +531,7 @@ const SPR_SCENARIOS = [
     }
   },
 
-  // T25: KK em board low, SPR medio, villain raise — decisao difícil
+  // T25: KK em board low, SPR médio, villain raise — decisão difícil
   () => {
     const spr = [5, 6, 7][Math.floor(Math.random() * 3)]
     const boards = [['8','5','2'],['7','4','2'],['9','3','2'],['6','4','3']][Math.floor(Math.random() * 4)]
@@ -539,11 +539,11 @@ const SPR_SCENARIOS = [
     const hero = makeHeroCards('K','K', false)
     const pos = [['BTN','BB'],['CO','SB'],['HJ','BB']][Math.floor(Math.random() * 3)]
     return {
-      q: `SPR = ${spr}. Flop ${boards[0]}-${boards[1]}-${boards[2]} seco. Voce tem KK (overpair). Vilao raisa sua cbet.`,
-      a: 'Call e avaliar turn (SPR medio, KK pode estar bem ou mal)',
+      q: `SPR = ${spr}. Flop ${boards[0]}-${boards[1]}-${boards[2]} seco. Você tem KK (overpair). vilão raisa sua cbet.`,
+      a: 'Call e avaliar turn (SPR médio, KK pode estar bem ou mal)',
       b: 'Shove imediato (KK e muito forte)',
       aCorrect: true,
-      explanation: `SPR medio com KK e raise do vilao = complicado. KK pode estar frente a set ou bluff. Call e mais seguro que shove — com SPR medio, voce ainda tem estofo para desistir no turn.`,
+      explanation: `SPR médio com KK e raise do vilão = complicado. KK pode estar frente a set ou bluff. Call e mais seguro que shove — com SPR médio, você ainda tem estofo para desistir no turn.`,
       heroCards: hero, boardCards: board, heroPos: pos[0], villainPos: pos[1], villainAction: 'Raise', potLabel: `SPR ${spr}`,
     }
   },
@@ -581,7 +581,7 @@ function Lesson({ onComplete }) {
             </div>
           </div>
           <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8 }}>
-            O SPR muda COMPLETAMENTE como voce joga a mesma mao. Um par de As com SPR 2 e jogado
+            O SPR muda COMPLETAMENTE como você joga a mesma mão. Um par de As com SPR 2 e jogado
             de forma totalmente diferente do que com SPR 15.
           </p>
         </div>
@@ -598,12 +598,12 @@ function Lesson({ onComplete }) {
               <li>Top pair+ = <strong style={{ color: '#4fce82' }}>vai com tudo</strong> (all-in)</li>
               <li>Matematica pura: pot odds ja te comprometem</li>
               <li>Draws perdem valor (poucas implied odds)</li>
-              <li>Nao existe pot control — o pote ja e grande demais</li>
+              <li>Não existe pot control — o pote ja e grande demais</li>
             </ul>
           </div>
           <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8 }}>
             <strong style={{ color: '#fdfdfd' }}>Regra de ouro:</strong> Se SPR &le; 4, qualquer mao
-            top pair+ esta disposta a colocar todas as fichas. Nao tente ser esperto — va direto.
+            top pair+ esta disposta a colocar todas as fichas. Não tente ser esperto — va direto.
           </p>
         </div>
       ),
@@ -616,15 +616,15 @@ function Lesson({ onComplete }) {
             <div style={{ color: '#f5a623', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>SPR 4-8: Protecao e Valor</div>
             <ul style={{ color: '#b3b3b8', fontSize: 13, lineHeight: 2, paddingLeft: 16 }}>
               <li>Zona mais complexa — <strong style={{ color: '#fdfdfd' }}>sizing importa muito</strong></li>
-              <li>Top pair precisa de protecao (bet medio-grande)</li>
+              <li>Top pair precisa de proteção (bet médio-grande)</li>
               <li>Sets e 2-pair = construir pote em 3 streets</li>
-              <li>Draws tem alguma implied odds mas nao ilimitadas</li>
-              <li>Pot control com maos marginais (call, nao raise)</li>
+              <li>Draws tem alguma implied odds mas não ilimitadas</li>
+              <li>Pot control com mãos marginais (call, não raise)</li>
             </ul>
           </div>
           <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8 }}>
-            <strong style={{ color: '#fdfdfd' }}>Sizing e arma:</strong> Com SPR medio, escolha cuidadosamente
-            entre 33%, 50% e 75%. Cada sizing conta uma historia diferente.
+            <strong style={{ color: '#fdfdfd' }}>Sizing e arma:</strong> Com SPR médio, escolha cuidadosamente
+            entre 33%, 50% e 75%. Cada sizing conta uma história diferente.
           </p>
         </div>
       ),
@@ -645,7 +645,7 @@ function Lesson({ onComplete }) {
             </ul>
           </div>
           <p style={{ color: '#b3b3b8', fontSize: 14, lineHeight: 1.8 }}>
-            <strong style={{ color: '#fdfdfd' }}>A grande diferenca:</strong> Com SPR alto, top pair nao quer
+            <strong style={{ color: '#fdfdfd' }}>A grande diferenca:</strong> Com SPR alto, top pair não quer
             colocar todas as fichas. Mas set mining e flush draws sao muito mais valiosos porque quando acertam,
             ganham pilhas enormes.
           </p>
@@ -709,7 +709,7 @@ function Lesson({ onComplete }) {
             Modulo 22 - SPR (Stack-to-Pot Ratio)
           </h1>
           <p style={{ color: '#676671', fontSize: 13, marginBottom: 20 }}>
-            Como o tamanho do stack relativo ao pote muda toda a estrategia pos-flop
+            Como o tamanho do stack relativo ao pote muda toda a estratégia pos-flop
           </p>
 
           {/* Section nav */}
@@ -887,7 +887,7 @@ export default function Module22() {
 
   if (!mod?.unlocked) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f0f' }}>
-      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o modulo anterior para desbloquear.</p></div>
+      <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Modulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o módulo anterior para desbloquear.</p></div>
     </div>
   )
   return (

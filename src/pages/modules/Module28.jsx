@@ -64,7 +64,7 @@ function hasMadeStraight(hole, board) {
   for (let lo = 1; lo <= 10; lo++) {
     const run = [lo, lo+1, lo+2, lo+3, lo+4]
     if (run.every(v => vals.includes(v))) {
-      // Pelo menos uma carta da mao participa da sequencia
+      // Pelo menos uma carta da mão participa da sequência
       const holeVals = hole.map(toVal)
       const participates = holeVals.some(hv => run.includes(hv) || (hv === 14 && run.includes(1)))
       if (participates) return true
@@ -103,7 +103,7 @@ function hasStraightDraw(hole, board) {
   let vals = [...new Set(allCards.map(toVal))].sort((a, b) => a - b)
   if (vals.includes(14)) vals = [1, ...vals]
 
-  // Se ja tem straight feito, nao e draw
+  // Se ja tem straight feito, não e draw
   for (let lo = 1; lo <= 10; lo++) {
     const run = [lo, lo+1, lo+2, lo+3, lo+4]
     if (run.every(v => vals.includes(v))) return false
@@ -128,7 +128,7 @@ function hasGutshot(hole, board) {
   let vals = [...new Set(allCards.map(toVal))].sort((a, b) => a - b)
   if (vals.includes(14)) vals = [1, ...vals]
 
-  // Se ja tem straight feito, nao e draw
+  // Se ja tem straight feito, não e draw
   for (let lo = 1; lo <= 10; lo++) {
     const run = [lo, lo+1, lo+2, lo+3, lo+4]
     if (run.every(v => vals.includes(v))) return false
@@ -159,7 +159,7 @@ function wouldPlayTurn(hole, flop) {
   // Draw forte: chamaria no flop por outs
   if (hasFlushDraw(hole, flop) || hasStraightDraw(hole, flop)) return true
 
-  // Par medio: chamaria em muitas situacoes
+  // Par médio: chamaria em muitas situações
   if (hasAnyPair(hole, flop)) return true
 
   // Pocket pair abaixo do board (underpair): as vezes chama
@@ -188,14 +188,14 @@ function isTurnScary(flop, turn) {
   const flopVals = flop.map(toVal)
 
   const flopSuitCount = flopSuits.filter(s => s === turnSuit).length
-  if (flopSuitCount >= 2) return { scary: true, type: 'flush', desc: 'Turn completou possivel flush' }
+  if (flopSuitCount >= 2) return { scary: true, type: 'flush', desc: 'Turn completou possível flush' }
 
   let allVals = [...new Set([...flopVals, turnVal])].sort((a, b) => a - b)
   if (allVals.includes(14)) allVals = [1, ...allVals]
   for (let lo = 1; lo <= 11; lo++) {
     const run = [lo, lo+1, lo+2, lo+3]
     if (run.every(v => allVals.includes(v))) {
-      return { scary: true, type: 'straight', desc: 'Board muito conectado - possivel straight' }
+      return { scary: true, type: 'straight', desc: 'Board muito conectado - possível straight' }
     }
   }
 
@@ -218,41 +218,41 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
   if (hasMadeFlush(hole, board)) {
     return {
       action: 'raise',
-      reason: `Flush completo! Esta e sua mao de valor maxima. Contra double barrel, raise e obrigatorio — construa o pote e extraia o maximo. Sizing sugerido: 2.5x a aposta do villain.`
+      reason: `Flush completo! Esta e sua mão de valor maxima. Contra double barrel, raise e obrigatorio — construa o pote e extraia o máximo. Sizing sugerido: 2.5x a aposta do villain.`
     }
   }
   if (hasSetFn(hole, board)) {
     return {
       action: 'raise',
-      reason: `Set no turn! Mao muito forte. O villain esta apostando duas ruas — provavelmente tem valor tambem. Raise para construir pote maximo. Voce bate quase tudo no range dele.`
+      reason: `Set no turn! Mao muito forte. O villain esta apostando duas ruas — provavelmente tem valor também. Raise para construir pote máximo. Você bate quase tudo no range dele.`
     }
   }
   if (hasMadeStraight(hole, board)) {
     return {
       action: 'raise',
-      reason: `Straight completo no turn! Raise e a jogada correta. O villain nao para de apostar — pode ter valor inferior ou blefe. Em ambos os casos, voce quer o pote maior.`
+      reason: `Straight completo no turn! Raise e a jogada correta. O villain não para de apostar — pode ter valor inferior ou blefe. Em ambos os casos, você quer o pote maior.`
     }
   }
   if (hasTwoPairFn(hole, board)) {
     if (turnInfo.scary && turnInfo.type === 'flush') {
       return {
         action: 'call',
-        reason: `Dois pares, mas o turn completou possivel flush. Contra double barrel em board com flush, call e mais seguro. Se o villain tiver flush, seu raise nao seria bom. Chame e avalie o river.`
+        reason: `Dois pares, mas o turn completou possível flush. Contra double barrel em board com flush, call e mais seguro. Se o villain tiver flush, seu raise não seria bom. Chame e avalie o river.`
       }
     }
     if (turnInfo.scary && turnInfo.type === 'straight') {
       return {
         action: 'call',
-        reason: `Dois pares em board com straight possivel. Raise e arriscado — villain pode ter completado a straight. Call e avalie o river com cuidado.`
+        reason: `Dois pares em board com straight possível. Raise e arriscado — villain pode ter completado a straight. Call e avalie o river com cuidado.`
       }
     }
     return {
       action: 'raise',
-      reason: `Dois pares no turn! Mao forte o suficiente para raise. Contra double barrel, voce quer construir pote — o villain pode ter top pair ou draw pagando caro.`
+      reason: `Dois pares no turn! Mao forte o suficiente para raise. Contra double barrel, você quer construir pote — o villain pode ter top pair ou draw pagando caro.`
     }
   }
 
-  // === OVERPAIR: call (forte mas nao e raise padrao contra double barrel) ===
+  // === OVERPAIR: call (forte mas não e raise padrão contra double barrel) ===
   if (hasOverpair(hole, board)) {
     if (turnInfo.scary && (turnInfo.type === 'flush' || turnInfo.type === 'straight')) {
       if (sizingNum >= 66) {
@@ -268,7 +268,7 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
     }
     return {
       action: 'call',
-      reason: `Overpair — mao forte! Contra double barrel, call e a linha padrao. Voce geralmente nao quer raise com overpair aqui porque o range do villain que continua apostando tende a te bater. Chame e avalie o river.`
+      reason: `Overpair — mão forte! Contra double barrel, call e a linha padrão. Você geralmente não quer raise com overpair aqui porque o range do villain que continua apostando tende a te bater. Chame e avalie o river.`
     }
   }
 
@@ -281,7 +281,7 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
       if (sizingNum >= 66) {
         return {
           action: 'fold',
-          reason: `Top pair mas turn completou flush e villain aposta ${villainSizing}. Aposta grande em board com flush = muita força. Seu top pair nao bate flush. Fold correto.`
+          reason: `Top pair mas turn completou flush e villain aposta ${villainSizing}. Aposta grande em board com flush = muita força. Seu top pair não bate flush. Fold correto.`
         }
       }
       return {
@@ -294,12 +294,12 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
       if (sizingNum >= 75) {
         return {
           action: 'call',
-          reason: `Top pair bom kicker contra aposta grande de ${villainSizing}. Aposta grande e polarizada — villain tem valor forte ou blefe total. Com top pair bom kicker, voce chama mas nao raise.`
+          reason: `Top pair bom kicker contra aposta grande de ${villainSizing}. Aposta grande e polarizada — villain tem valor forte ou blefe total. Com top pair bom kicker, você chama mas não raise.`
         }
       }
       return {
         action: 'call',
-        reason: `Top pair com bom kicker (J+) — call correto contra double barrel. Sua mao e forte o suficiente para continuar mas nao e nuts para raise. Aposta de ${villainSizing} mantem odds favoraveis.`
+        reason: `Top pair com bom kicker (J+) — call correto contra double barrel. Sua mão e forte o suficiente para continuar mas não e nuts para raise. Aposta de ${villainSizing} mantem odds favoraveis.`
       }
     }
 
@@ -307,13 +307,13 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
     if (turnInfo.scary) {
       return {
         action: 'fold',
-        reason: `Top pair com kicker fraco em turn assustador (${turnInfo.desc}). Contra double barrel com kicker ruim, voce esta em bad position. Fold evita perder mais chips em situacoes marginais.`
+        reason: `Top pair com kicker fraco em turn assustador (${turnInfo.desc}). Contra double barrel com kicker ruim, você esta em bad position. Fold evita perder mais chips em situações marginais.`
       }
     }
     if (sizingNum >= 66) {
       return {
         action: 'fold',
-        reason: `Top pair com kicker fraco contra aposta grande de ${villainSizing}. Aposta grande + double barrel = range forte do villain. Sem kicker bom, voce perde para muitas maos no range dele.`
+        reason: `Top pair com kicker fraco contra aposta grande de ${villainSizing}. Aposta grande + double barrel = range forte do villain. Sem kicker bom, você perde para muitas mãos no range dele.`
       }
     }
     return {
@@ -329,19 +329,19 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
       if (sizingNum <= 50) {
         return {
           action: 'raise',
-          reason: `Flush draw + par (combo draw)! Contra aposta de ${villainSizing}, voce tem equity para raise como semi-blefe. 9 outs de flush + equity de par = mao forte o suficiente para pressionar.`
+          reason: `Flush draw + par (combo draw)! Contra aposta de ${villainSizing}, você tem equity para raise como semi-blefe. 9 outs de flush + equity de par = mão forte o suficiente para pressionar.`
         }
       }
       return {
         action: 'call',
-        reason: `Flush draw + par contra aposta de ${villainSizing}. Combo draw poderoso. Call e correto — aposta grande do villain reduz conveniencia do raise mas voce tem equity para continuar.`
+        reason: `Flush draw + par contra aposta de ${villainSizing}. Combo draw poderoso. Call e correto — aposta grande do villain reduz conveniencia do raise mas você tem equity para continuar.`
       }
     }
     // Flush draw puro: sempre call (9 outs = ~20% equity no river)
     if (sizingNum <= 66) {
       return {
         action: 'call',
-        reason: `Flush draw com 9 outs! Voce tem ~20% de equity no river. Contra aposta de ${villainSizing}, voce esta recebendo odds suficientes para chamar. Pot odds: precisa de ~${sizingNum <= 33 ? '20%' : sizingNum <= 50 ? '25%' : '28%'} e tem 20% de outs.`
+        reason: `Flush draw com 9 outs! Você tem ~20% de equity no river. Contra aposta de ${villainSizing}, você esta recebendo odds suficientes para chamar. Pot odds: precisa de ~${sizingNum <= 33 ? '20%' : sizingNum <= 50 ? '25%' : '28%'} e tem 20% de outs.`
       }
     }
     return {
@@ -355,18 +355,18 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
     if (sizingNum <= 50) {
       return {
         action: 'call',
-        reason: `Straight draw (OESD) com 8 outs! ~18% equity no river. Aposta de ${villainSizing} da odds de ${Math.round(sizingNum / (sizingNum + 100) * 100)}% necessario — voce esta recebendo 3:1+. Call correto para completar no river.`
+        reason: `Straight draw (OESD) com 8 outs! ~18% equity no river. Aposta de ${villainSizing} da odds de ${Math.round(sizingNum / (sizingNum + 100) * 100)}% necessario — você esta recebendo 3:1+. Call correto para completar no river.`
       }
     }
     if (sizingNum <= 66) {
       return {
         action: 'call',
-        reason: `OESD (8 outs) contra aposta de ${villainSizing}. Odds apertadas mas ainda viavel. Voce tem ~18% equity e precisa de ~28%. Chame pois pode ter implied odds no river.`
+        reason: `OESD (8 outs) contra aposta de ${villainSizing}. Odds apertadas mas ainda viavel. Você tem ~18% equity e precisa de ~28%. Chame pois pode ter implied odds no river.`
       }
     }
     return {
       action: 'fold',
-      reason: `Straight draw (8 outs) contra aposta grande de ${villainSizing}. Odds muito ruins — voce precisa de ~30% equity mas tem apenas 18%. Sem implied odds suficientes. Fold correto.`
+      reason: `Straight draw (8 outs) contra aposta grande de ${villainSizing}. Odds muito ruins — você precisa de ~30% equity mas tem apenas 18%. Sem implied odds suficientes. Fold correto.`
     }
   }
 
@@ -380,7 +380,7 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
     }
     return {
       action: 'fold',
-      reason: `Gutshot com apenas 4 outs (~9% equity) contra aposta de ${villainSizing}. Odds ruins — voce precisa de pelo menos ${Math.round(sizingNum / (sizingNum + 100) * 100)}% de equity mas tem apenas 9%. Fold correto.`
+      reason: `Gutshot com apenas 4 outs (~9% equity) contra aposta de ${villainSizing}. Odds ruins — você precisa de pelo menos ${Math.round(sizingNum / (sizingNum + 100) * 100)}% de equity mas tem apenas 9%. Fold correto.`
     }
   }
 
@@ -390,36 +390,36 @@ function getCorrectAction(hole, flop, turn, villainSizing) {
       if (sizingNum >= 50) {
         return {
           action: 'fold',
-          reason: `Par medio em turn assustador (${turnInfo.desc}) contra aposta de ${villainSizing}. Sem draw, sem top pair — sua mao esta atras de muitos combos no range do villain. Fold poupa chips.`
+          reason: `Par médio em turn assustador (${turnInfo.desc}) contra aposta de ${villainSizing}. Sem draw, sem top pair — sua mão esta atras de muitos combos no range do villain. Fold poupa chips.`
         }
       }
       return {
         action: 'call',
-        reason: `Par medio em turn levemente perigoso, mas villain aposta apenas ${villainSizing}. Odds ainda razoaveis para um call — mas nao esperneie no river se vier outra carta ruim.`
+        reason: `Par médio em turn levemente perigoso, mas villain aposta apenas ${villainSizing}. Odds ainda razoaveis para um call — mas não esperneie no river se vier outra carta ruim.`
       }
     }
     if (turnInfo.type === 'brick') {
       if (sizingNum >= 66) {
         return {
           action: 'fold',
-          reason: `Par medio em turn brick, mas villain aposta ${villainSizing}. Aposta grande com double barrel em board seco = valor real (sets, dois pares, overpairs). Seu par medio esta atras.`
+          reason: `Par médio em turn brick, mas villain aposta ${villainSizing}. Aposta grande com double barrel em board seco = valor real (sets, dois pares, overpairs). Seu par médio esta atras.`
         }
       }
       return {
         action: 'call',
-        reason: `Par medio em turn brick contra aposta de ${villainSizing}. Board seco + aposta pequena pode ser blefe. Seu par medio tem show-down value. Call defensavel — avalie o river.`
+        reason: `Par médio em turn brick contra aposta de ${villainSizing}. Board seco + aposta pequena pode ser blefe. Seu par médio tem show-down value. Call defensavel — avalie o river.`
       }
     }
     return {
       action: 'fold',
-      reason: `Par medio em board complicado contra double barrel. Sem draw, sem top pair — fold e a linha mais segura contra pressao continua.`
+      reason: `Par médio em board complicado contra double barrel. Sem draw, sem top pair — fold e a linha mais segura contra pressao continua.`
     }
   }
 
   // === SEM PAR SEM DRAW: fold ===
   return {
     action: 'fold',
-    reason: `Sem par, sem draw contra double barrel. Voce nao tem equity suficiente para continuar. O villain esta apostando duas ruas — independente do sizing (${villainSizing}), fold e obrigatorio aqui.`
+    reason: `Sem par, sem draw contra double barrel. Você não tem equity suficiente para continuar. O villain esta apostando duas ruas — independente do sizing (${villainSizing}), fold e obrigatorio aqui.`
   }
 }
 
@@ -449,7 +449,7 @@ function generateScenario() {
     villainPos: 'BTN',
     villainAction: `Bet ${villainSizing}`,
     potLabel: pot,
-    question: `Villain apostou no flop e agora aposta ${villainSizing} no turn. O que voce faz?`,
+    question: `Villain apostou no flop e agora aposta ${villainSizing} no turn. O que você faz?`,
     options: ['call', 'fold', 'raise'],
     turnInfo,
   }
@@ -461,7 +461,7 @@ function Lesson({ onComplete }) {
       <h1 style={{ color: 'white', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
         Enfrentando Double Barrel
       </h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Villain apostou no flop e agora aposta no turn. O que voce faz como defensor?</p>
+      <p style={{ color: '#888', marginBottom: 24 }}>Villain apostou no flop e agora aposta no turn. O que você faz como defensor?</p>
       <div className="space-y-4">
         <Section title="O Que e Double Barrel?">
           Double barrel e quando o villain aposta no flop E no turn como continuacao. Ele esta mantendo pressao em duas ruas.<br /><br />
@@ -486,7 +486,7 @@ function Lesson({ onComplete }) {
         <Section title="Quando Chamar (Call)">
           <div className="space-y-2">
             {[
-              'Maos fortes: overpair, top pair bom kicker (J+) — voce esta na frente do range de blefe',
+              'Mãos fortes: overpair, top pair bom kicker (J+) — você esta na frente do range de blefe',
               'Flush draw (9 outs) — ~20% equity, boas odds na maioria das apostas',
               'OESD (8 outs) — ~18% equity, viavel contra apostas ate 66%',
               'Combo draw (par + draw) — equity combinada justifica continuar',
@@ -503,8 +503,8 @@ function Lesson({ onComplete }) {
             {[
               'Sem par e sem draw — zero equity, qualquer aposta e lucrativa pra ele',
               'Gutshot (4 outs) contra aposta de 50%+ — odds ruins, ~9% equity',
-              'Par medio/baixo em turn assustador + aposta grande',
-              'Top pair kicker fraco em board perigoso — atras de muitas maos melhores',
+              'Par médio/baixo em turn assustador + aposta grande',
+              'Top pair kicker fraco em board perigoso — atras de muitas mãos melhores',
             ].map((t, i) => (
               <div key={i} className="flex gap-2 items-start">
                 <span style={{ color: '#e5484d' }}>✗</span>
@@ -516,7 +516,7 @@ function Lesson({ onComplete }) {
         <Section title="Quando Reraise (Raise)">
           <div className="space-y-2">
             {[
-              'Flush completo, straight completo, set — maos de valor maximo, construa o pote',
+              'Flush completo, straight completo, set — mãos de valor máximo, construa o pote',
               'Dois pares em board sem draws perigosos — valor forte contra range de valor do villain',
               'Combo draw (flush draw + par) contra aposta pequena — semi-blefe poderoso',
             ].map((t, i) => (
@@ -654,8 +654,8 @@ function Trainer() {
           boardCards={scenario.boardCards}
           villainAction={scenario.villainAction}
           potLabel={scenario.potLabel}
-          contextTitle="Voce esta OOP — Defensor"
-          contextDesc={`Villain c-betou no flop, voce chamou. Agora ele aposta ${scenario.villainSizing} no turn. Call, Fold ou Raise?`}
+          contextTitle="Você esta OOP — Defensor"
+          contextDesc={`Villain c-betou no flop, você chamou. Agora ele aposta ${scenario.villainSizing} no turn. Call, Fold ou Raise?`}
           textureTags={turnInfo ? [
             { label: turnInfo.desc, color: turnInfo.scary ? '#e5484d' : '#4fce82' },
             { label: `Villain bet ${scenario.villainSizing}`, color: '#f5a623' },
