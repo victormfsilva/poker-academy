@@ -107,7 +107,7 @@ function App() {
           <Route path="/modulos/16" element={<Module16 />} />
           <Route path="/modulos/17" element={<Module17 />} />
           <Route path="/modulos/18" element={<Module18 />} />
-          <Route path="/modulos/19" element={<Module27 />} />
+          <Route path="/modulos/19" element={<Module19 />} />
           <Route path="/modulos/20" element={<Module20 />} />
           <Route path="/modulos/21" element={<Module21 />} />
           <Route path="/modulos/22" element={<Module22 />} />
