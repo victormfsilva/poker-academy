@@ -868,6 +868,203 @@ function Section({ title, children }) {
   )
 }
 
+// ================================================================
+// ICM CALCULATOR — Malmuth-Harville
+// ================================================================
+
+function calcICM(stacks, payouts) {
+  const n = stacks.length
+  const total = stacks.reduce((s, v) => s + v, 0)
+  if (total === 0) return stacks.map(() => 0)
+
+  const probs = stacks.map(() => payouts.map(() => 0))
+
+  function recurse(remaining, place, currentProbs) {
+    if (place >= payouts.length || remaining.length === 0) return
+    const remTotal = remaining.reduce((s, r) => s + (r.stack > 0 ? r.stack : 0), 0)
+    if (remTotal === 0) return
+    for (const r of remaining) {
+      if (r.stack <= 0) continue
+      const prob = (r.stack / remTotal) * currentProbs
+      probs[r.idx][place] += prob
+      const next = remaining.filter(x => x.idx !== r.idx)
+      recurse(next, place + 1, prob)
+    }
+  }
+
+  const all = stacks.map((s, i) => ({ idx: i, stack: s }))
+  recurse(all, 0, 1)
+
+  return stacks.map((_, i) => {
+    let ev = 0
+    for (let p = 0; p < payouts.length; p++) {
+      ev += probs[i][p] * payouts[p]
+    }
+    return Math.round(ev * 100) / 100
+  })
+}
+
+function ICMCalculator() {
+  const [numPlayers, setNumPlayers] = useState(4)
+  const [stacks, setStacks] = useState([5000, 3000, 2000, 1000])
+  const [payouts, setPayouts] = useState([50, 30, 20])
+  const [results, setResults] = useState(null)
+
+  function updatePlayers(n) {
+    n = Math.max(2, Math.min(9, n))
+    setNumPlayers(n)
+    setStacks(prev => {
+      const arr = [...prev]
+      while (arr.length < n) arr.push(1000)
+      return arr.slice(0, n)
+    })
+    setPayouts(prev => {
+      const arr = [...prev]
+      const paySlots = Math.min(n, Math.max(2, n - 1))
+      while (arr.length < paySlots) arr.push(0)
+      return arr.slice(0, paySlots)
+    })
+    setResults(null)
+  }
+
+  function updateStack(i, val) {
+    setStacks(prev => { const a = [...prev]; a[i] = Math.max(0, Number(val) || 0); return a })
+    setResults(null)
+  }
+
+  function updatePayout(i, val) {
+    setPayouts(prev => { const a = [...prev]; a[i] = Math.max(0, Number(val) || 0); return a })
+    setResults(null)
+  }
+
+  function calculate() {
+    const totalStacks = stacks.reduce((s, v) => s + v, 0)
+    if (totalStacks === 0) return
+    const evs = calcICM(stacks, payouts)
+    const totalPrize = payouts.reduce((s, v) => s + v, 0)
+    setResults(evs.map((ev, i) => ({
+      player: i + 1,
+      stack: stacks[i],
+      pct: Math.round((stacks[i] / totalStacks) * 1000) / 10,
+      ev: ev,
+      chipEV: Math.round((stacks[i] / totalStacks) * totalPrize * 100) / 100,
+      diff: Math.round((ev - (stacks[i] / totalStacks) * totalPrize) * 100) / 100,
+    })))
+  }
+
+  function loadPreset(name) {
+    if (name === 'bubble4') { setNumPlayers(4); setStacks([8000, 5000, 4000, 3000]); setPayouts([50, 30, 20]) }
+    if (name === 'ft3') { setNumPlayers(3); setStacks([12000, 5000, 3000]); setPayouts([100, 60, 35]) }
+    if (name === 'satellite') { setNumPlayers(5); setStacks([6000, 5000, 4000, 3000, 2000]); setPayouts([20, 20, 20, 0, 0]) }
+    if (name === 'ft6') { setNumPlayers(6); setStacks([15000, 10000, 8000, 5000, 3000, 2000]); setPayouts([500, 300, 200, 150, 100, 50]) }
+    setResults(null)
+  }
+
+  const inputStyle = { background: '#0f0f0f', color: '#fdfdfd', border: '1px solid #3a3a42', borderRadius: 6, padding: '6px 10px', fontSize: 13, fontFamily: 'JetBrains Mono', width: '100%', textAlign: 'right' }
+
+  return (
+    <div style={{ maxWidth: 600, margin: '0 auto' }}>
+      <h2 style={{ color: '#fdfdfd', fontSize: 20, fontWeight: 700, marginBottom: 4 }}>ICM Calculator</h2>
+      <p style={{ color: '#888', fontSize: 13, marginBottom: 16 }}>Insira stacks e premiacao para calcular o $EV real de cada jogador via ICM</p>
+
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {[
+          { id: 'bubble4', label: 'Bolha 4p' },
+          { id: 'ft3', label: 'FT 3-way' },
+          { id: 'satellite', label: 'Satelite' },
+          { id: 'ft6', label: 'FT 6-max' },
+        ].map(p => (
+          <button key={p.id} onClick={() => loadPreset(p.id)} className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+            style={{ background: '#222225', color: '#b3b3b8', border: '1px solid #2a2a2e' }}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="rounded-xl p-4 mb-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+        <div className="flex items-center justify-between mb-3">
+          <span style={{ color: '#b3b3b8', fontSize: 12, fontWeight: 600 }}>JOGADORES</span>
+          <div className="flex gap-2">
+            <button onClick={() => updatePlayers(numPlayers - 1)} style={{ background: '#2a2a2e', color: '#fdfdfd', border: 'none', borderRadius: 6, width: 28, height: 28, cursor: 'pointer', fontSize: 16, fontWeight: 700 }}>-</button>
+            <span style={{ color: '#fdfdfd', fontFamily: 'JetBrains Mono', fontSize: 16, fontWeight: 700, width: 24, textAlign: 'center', lineHeight: '28px' }}>{numPlayers}</span>
+            <button onClick={() => updatePlayers(numPlayers + 1)} style={{ background: '#2a2a2e', color: '#fdfdfd', border: 'none', borderRadius: 6, width: 28, height: 28, cursor: 'pointer', fontSize: 16, fontWeight: 700 }}>+</button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <div style={{ color: '#676671', fontSize: 11, marginBottom: 6, fontWeight: 600 }}>STACKS (fichas)</div>
+            {stacks.slice(0, numPlayers).map((s, i) => (
+              <div key={i} className="flex items-center gap-2 mb-2">
+                <span style={{ color: '#888', fontSize: 12, fontFamily: 'JetBrains Mono', width: 20 }}>P{i + 1}</span>
+                <input type="number" value={s} onChange={e => updateStack(i, e.target.value)} style={inputStyle} />
+              </div>
+            ))}
+          </div>
+          <div>
+            <div style={{ color: '#676671', fontSize: 11, marginBottom: 6, fontWeight: 600 }}>PREMIACAO ($)</div>
+            {payouts.map((p, i) => (
+              <div key={i} className="flex items-center gap-2 mb-2">
+                <span style={{ color: '#888', fontSize: 12, fontFamily: 'JetBrains Mono', width: 20 }}>{i + 1}o</span>
+                <input type="number" value={p} onChange={e => updatePayout(i, e.target.value)} style={inputStyle} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <button onClick={calculate} className="w-full py-3 rounded-xl font-bold text-lg mb-4" style={{ background: '#e5484d', color: 'white' }}>
+        Calcular ICM
+      </button>
+
+      {results && (
+        <div className="rounded-xl p-4" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+          <div style={{ color: '#b3b3b8', fontSize: 12, fontWeight: 600, marginBottom: 12 }}>RESULTADO ICM</div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  {['', 'Stack', '%', '$EV (ICM)', '$EV (ChipEV)', 'Diff'].map(h => (
+                    <th key={h} style={{ color: '#676671', fontSize: 11, fontWeight: 600, padding: '4px 8px', textAlign: h === '' ? 'left' : 'right', borderBottom: '1px solid #2a2a2e' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {results.map(r => (
+                  <tr key={r.player}>
+                    <td style={{ color: '#fdfdfd', fontSize: 13, fontWeight: 600, padding: '8px', fontFamily: 'JetBrains Mono' }}>P{r.player}</td>
+                    <td style={{ color: '#b3b3b8', fontSize: 13, padding: '8px', textAlign: 'right', fontFamily: 'JetBrains Mono' }}>{r.stack.toLocaleString()}</td>
+                    <td style={{ color: '#888', fontSize: 12, padding: '8px', textAlign: 'right', fontFamily: 'JetBrains Mono' }}>{r.pct}%</td>
+                    <td style={{ color: '#4fce82', fontSize: 13, fontWeight: 700, padding: '8px', textAlign: 'right', fontFamily: 'JetBrains Mono' }}>${r.ev.toFixed(2)}</td>
+                    <td style={{ color: '#f5a623', fontSize: 13, padding: '8px', textAlign: 'right', fontFamily: 'JetBrains Mono' }}>${r.chipEV.toFixed(2)}</td>
+                    <td style={{ color: r.diff > 0 ? '#4fce82' : r.diff < 0 ? '#e5484d' : '#888', fontSize: 12, fontWeight: 600, padding: '8px', textAlign: 'right', fontFamily: 'JetBrains Mono' }}>
+                      {r.diff > 0 ? '+' : ''}{r.diff.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-4 rounded-lg p-3" style={{ background: '#0f0f0f', border: '1px solid #f5a62330' }}>
+            <div style={{ color: '#f5a623', fontWeight: 600, fontSize: 12 }}>Interpretacao</div>
+            <div style={{ color: '#ccc', fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
+              {(() => {
+                const bigStack = results.reduce((a, b) => a.stack > b.stack ? a : b)
+                const smallStack = results.reduce((a, b) => a.stack < b.stack ? a : b)
+                return <>
+                  <strong style={{ color: '#4fce82' }}>Stacks grandes</strong> valem MENOS que ChipEV (P{bigStack.player}: {bigStack.diff > 0 ? '+' : ''}{bigStack.diff.toFixed(2)}).{' '}
+                  <strong style={{ color: '#e5484d' }}>Stacks pequenos</strong> valem MAIS (P{smallStack.player}: {smallStack.diff > 0 ? '+' : ''}{smallStack.diff.toFixed(2)}).{' '}
+                  Isso explica por que arriscar fichas na bolha e na FT custa mais do que parece.
+                </>
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Trainer() {
   const { progress, recordAnswer, recordSession } = useProgress()
   const [scenario, setScenario] = useState(null)
@@ -961,14 +1158,24 @@ export default function Module17() {
       <div className="text-center"><div style={{ fontSize: 60 }}>🔒</div><h2 style={{ color: 'white', marginTop: 16 }}>Módulo Bloqueado</h2><p style={{ color: '#888', marginTop: 8 }}>Complete o Módulo 16 para desbloquear.</p></div>
     </div>
   )
+  const tabs = [
+    { id: 'lesson', label: 'Aula', locked: false },
+    { id: 'trainer', label: 'Trainer', locked: !progress.modules[17]?.lessonRead },
+    { id: 'calc', label: 'ICM Calc', locked: !progress.modules[17]?.lessonRead },
+  ]
   return (
     <div className="min-h-screen pb-28 md:pb-8 md:pt-20 px-4" style={{ background: '#0f0f0f' }}>
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setView('lesson')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'lesson' ? '#e5484d' : '#1a1a1d', color: view === 'lesson' ? 'white' : '#888', border: '1px solid #2a2a2e' }}>Aula</button>
-          <button onClick={() => progress.modules[17]?.lessonRead && setView('trainer')} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === 'trainer' ? '#e5484d' : '#1a1a1d', color: view === 'trainer' ? 'white' : (progress.modules[17]?.lessonRead ? '#888' : '#444'), border: '1px solid #2a2a2e', cursor: progress.modules[17]?.lessonRead ? 'pointer' : 'not-allowed' }}>Trainer {!progress.modules[17]?.lessonRead && '🔒'}</button>
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => !tab.locked && setView(tab.id)} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: view === tab.id ? '#e5484d' : '#1a1a1d', color: view === tab.id ? 'white' : (tab.locked ? '#444' : '#888'), border: '1px solid #2a2a2e', cursor: tab.locked ? 'not-allowed' : 'pointer' }}>
+              {tab.label} {tab.locked && '🔒'}
+            </button>
+          ))}
         </div>
-        {view === 'lesson' ? <Lesson onComplete={() => { markLessonRead(17); setView('trainer') }} /> : <Trainer />}
+        {view === 'lesson' && <Lesson onComplete={() => { markLessonRead(17); setView('trainer') }} />}
+        {view === 'trainer' && <Trainer />}
+        {view === 'calc' && <ICMCalculator />}
       </div>
     </div>
   )

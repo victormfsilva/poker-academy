@@ -317,6 +317,108 @@ export default function Dashboard() {
           )
         })()}
 
+        {/* Evolucao por Modulo - Graficos */}
+        {(() => {
+          const modulesWithSessions = MODULES.filter(m => {
+            const mod = progress.modules[m.id]
+            return mod?.trainerSessions?.length >= 2
+          })
+          if (!modulesWithSessions.length) return null
+
+          return (
+            <div className="rounded-xl p-5 mb-8" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4fce82" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span style={{ color: '#fdfdfd', fontSize: 14, fontWeight: 600 }}>Evolucao por Modulo</span>
+                <span style={{ color: '#676671', fontSize: 11, marginLeft: 'auto' }}>Acerto % por sessao</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {modulesWithSessions.slice(0, 8).map(m => {
+                  const sessions = progress.modules[m.id].trainerSessions
+                  const last = sessions[sessions.length - 1]
+                  const prev = sessions[sessions.length - 2]
+                  const trend = last.accuracy - prev.accuracy
+                  const points = sessions.slice(-10)
+                  const w = 120, h = 32, pad = 2
+                  const maxPts = points.length
+                  const pathD = points.map((p, i) => {
+                    const x = pad + (i / (maxPts - 1)) * (w - pad * 2)
+                    const y = h - pad - (p.accuracy / 100) * (h - pad * 2)
+                    return `${i === 0 ? 'M' : 'L'}${x},${y}`
+                  }).join(' ')
+
+                  return (
+                    <Link key={m.id} to={`/modulos/${m.id}`} className="flex items-center gap-3 rounded-lg px-3 py-2.5" style={{ background: '#222225', border: '1px solid #2a2a2e' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: '#fdfdfd', fontSize: 12, fontWeight: 600 }}>{m.name}</span>
+                          <span style={{
+                            color: trend > 0 ? '#4fce82' : trend < 0 ? '#e5484d' : '#888',
+                            fontSize: 11, fontFamily: 'JetBrains Mono', fontWeight: 600,
+                          }}>
+                            {trend > 0 ? '+' : ''}{trend}%
+                          </span>
+                        </div>
+                        <div style={{ color: '#676671', fontSize: 10 }}>{sessions.length} sessoes · Ultimo: {last.accuracy}%</div>
+                      </div>
+                      <svg width={w} height={h} style={{ flexShrink: 0 }}>
+                        <path d={pathD} fill="none" stroke={last.accuracy >= 90 ? '#4fce82' : last.accuracy >= 60 ? '#f5a623' : '#e5484d'} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+                        <circle cx={pad + ((maxPts - 1) / (maxPts - 1)) * (w - pad * 2)} cy={h - pad - (last.accuracy / 100) * (h - pad * 2)} r="3"
+                          fill={last.accuracy >= 90 ? '#4fce82' : last.accuracy >= 60 ? '#f5a623' : '#e5484d'} />
+                      </svg>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Historico Diario - Grafico de Barras */}
+        {(() => {
+          const days = []
+          for (let i = 13; i >= 0; i--) {
+            const d = new Date()
+            d.setDate(d.getDate() - i)
+            days.push(d.toISOString().slice(0, 10))
+          }
+          const data = days.map(day => {
+            const d = progress.dailyHistory?.[day] || { hands: 0, correct: 0 }
+            return { day, hands: d.hands, correct: d.correct, acc: d.hands > 0 ? Math.round((d.correct / d.hands) * 100) : 0 }
+          })
+          const maxHands = Math.max(...data.map(d => d.hands), 1)
+          const hasData = data.some(d => d.hands > 0)
+          if (!hasData) return null
+
+          return (
+            <div className="rounded-xl p-5 mb-8" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+              <div className="flex items-center gap-2 mb-4">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a84d7" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                <span style={{ color: '#fdfdfd', fontSize: 14, fontWeight: 600 }}>Atividade (14 dias)</span>
+                <span style={{ color: '#676671', fontSize: 11, marginLeft: 'auto' }}>
+                  Total: {data.reduce((s, d) => s + d.hands, 0)} maos
+                </span>
+              </div>
+              <div className="flex items-end gap-1" style={{ height: 64 }}>
+                {data.map(d => {
+                  const barH = d.hands > 0 ? Math.max(4, (d.hands / maxHands) * 56) : 2
+                  const color = d.acc >= 90 ? '#4fce82' : d.acc >= 60 ? '#f5a623' : d.hands > 0 ? '#e5484d' : '#2a2a2e'
+                  const isToday = d.day === today
+                  return (
+                    <div key={d.day} className="flex-1 flex flex-col items-center" title={`${d.day}: ${d.hands} maos, ${d.acc}% acerto`}>
+                      <div className="rounded-sm w-full" style={{ height: barH, background: color, opacity: isToday ? 1 : 0.7, minWidth: 4, maxWidth: 24 }} />
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="flex justify-between mt-1">
+                <span style={{ color: '#444', fontSize: 9, fontFamily: 'JetBrains Mono' }}>14d atras</span>
+                <span style={{ color: '#444', fontSize: 9, fontFamily: 'JetBrains Mono' }}>Hoje</span>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Progress overview bar */}
         <div className="flex items-center gap-4 mb-8">
           <div style={{ flex: 1 }}>
