@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Card, { parseCard, handToCards } from '../components/Card'
 import { BLIND_WARS, BB_VS_RFI } from '../data/ranges'
 import { useProgress } from '../context/ProgressContext'
@@ -1138,6 +1139,7 @@ function clearMatch() {
 
 // ─── Componente principal ─────────────────────────────────
 export default function Arena() {
+  const navigate = useNavigate()
   const { progress, updateArenaData, recordArenaHand } = useProgress()
 
   // Match = partida longa (muitas mãos até alguém zerar)
@@ -2008,6 +2010,16 @@ export default function Arena() {
                   cursor: 'pointer', fontSize: 14, fontWeight: 600,
                 }}>
                 Torneio MTT
+              </button>
+              <button onClick={() => navigate('/arena-mtt')}
+                className="px-5 py-2 rounded-lg"
+                style={{
+                  background: '#ff8f0020',
+                  border: '1px solid #ff8f00',
+                  color: '#ff8f00',
+                  cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                }}>
+                6-Max
               </button>
             </div>
 
