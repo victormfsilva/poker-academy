@@ -1,6 +1,7 @@
 // ================================================================
 // Bot AI Multiway — Lógica de decisão dos bots para mesas 2-9 jogadores
 // Usa ranges GTO reais (RFI, BB_VS_RFI, SB_VS_RFI, BTN_VS_RFI, etc.)
+// Usa equity calculator (phe) e cenários solver-computed (PokerBench 10k)
 // Integra com pokerEngine.js
 // ================================================================
 
@@ -8,6 +9,10 @@ import {
   RFI_RANGES, PUSH_FOLD_RANGES, BB_VS_RFI, BTN_VS_RFI,
   SB_VS_RFI, VS_3BET_RANGES, BLIND_WARS, ISO_RANGES,
 } from '../data/ranges.js'
+import {
+  POSTFLOP_SCENARIOS,
+} from '../data/postflopScenarios.js'
+import { calcEquity } from './equity.js'
 import {
   holeToNotation, evalHand, getCallAmount, getRaiseRange,
   getBlindIndexes, calcPositions, RANK_VAL,
@@ -622,8 +627,46 @@ export function blockerEffect(botHole, board) {
   return { nutBlocker, flushBlocker, straightBlocker, bluffBoost, callBoost }
 }
 
+// ─── Lookup em cenários solver (PokerBench 10k) ──────────
+// Tenta encontrar um cenário solver-computed similar à situação atual
+function lookupSolverScenario(hole, board, street, facingBet, isIP, position) {
+  // Mapear street + facingBet para categoria
+  const streetName = { flop: 'flop', turn: 'turn', river: 'river' }[street]
+  if (!streetName) return null
+
+  const catKey = facingBet
+    ? `facing_bet_${streetName}`
+    : `bet_or_check_${streetName}`
+
+  const scenarios = POSTFLOP_SCENARIOS[catKey]
+  if (!scenarios || scenarios.length === 0) return null
+
+  // Buscar cenário com board e hole cards exatamente iguais (raro mas possível)
+  const boardSet = new Set(board)
+  const holeSet = new Set(hole)
+  const exact = scenarios.find(s =>
+    s.h[0] === hole[0] && s.h[1] === hole[1] &&
+    s.b.length === board.length && s.b.every(c => boardSet.has(c))
+  )
+  if (exact) return exact
+
+  // Buscar cenário com mesmas hole cards e posição similar
+  const holeNotation = holeToNotation(hole)
+  const similar = scenarios.filter(s => {
+    const sNotation = holeToNotation(s.h)
+    return sNotation === holeNotation && s.hp === (isIP ? 'IP' : 'OOP')
+  })
+
+  if (similar.length > 0) {
+    // Retorna um aleatório entre os similares (diversidade)
+    return similar[Math.floor(Math.random() * similar.length)]
+  }
+
+  return null
+}
+
 // ─── Decisão pós-flop multiway ────────────────────────────
-// numPlayersInPot: quantos jogadores não-foldaram no pot atual
+// Integra: equity calculator (phe), cenários solver (PokerBench), heurísticas GTO
 export function botPostflopDecision(game, playerIdx) {
   const player = game.players[playerIdx]
   const prof = BOT_PROFILES[player.profile] || BOT_PROFILES.gto
@@ -644,6 +687,33 @@ export function botPostflopDecision(game, playerIdx) {
   const toCall = getCallAmount(game, playerIdx)
   const facingBet = toCall > 0
 
+  // ─── Equity real via phe (Monte Carlo) ───
+  // Usado para calibrar decisões de call/fold com pot odds reais
+  const equity = calcEquity(hole, board, 500) // 500 iterações (rápido para bot)
+
+  // ─── Lookup em cenários solver-computed ───
+  // Se temos um cenário GTO exato/similar, usar como guia (para perfil GTO)
+  if (prof.preflopTight === 0) { // apenas perfil GTO usa solver lookup
+    const scenario = lookupSolverScenario(hole, board, street, facingBet, isIP, player.position)
+    if (scenario) {
+      // Cenário solver encontrado — seguir a decisão com alta probabilidade
+      if (Math.random() < 0.75) {
+        const solverAction = scenario.d
+        if (solverAction === 'fold' && facingBet) return { action: 'fold', amount: 0 }
+        if (solverAction === 'call' && facingBet) return { action: 'call', amount: 0 }
+        if (solverAction === 'raise' && facingBet) {
+          const { min } = getRaiseRange(game, playerIdx)
+          return { action: 'raise', amount: min }
+        }
+        if (solverAction === 'bet' && !facingBet) {
+          const betSize = calcBetSize(strength, texture, streetIdx, pot, isIP, prof, 1.0)
+          return { action: 'bet', amount: Math.max(Math.round(pot * betSize), game.blinds.bb) }
+        }
+        if (solverAction === 'check' && !facingBet) return { action: 'check', amount: 0 }
+      }
+    }
+  }
+
   // ─── Fator multiway ───
   // Em potes multiway, reduzir agressividade significativamente
   // HU: mult = 1.0, 3way: mult = 0.65, 4+: mult = 0.45
@@ -662,15 +732,20 @@ export function botPostflopDecision(game, playerIdx) {
   const callAdj = blockers.callBoost * prof.callMult
 
   if (facingBet) {
-    return decideFacingBet(strength, texture, streetIdx, pot, toCall, isIP, rng, ipBonus, oopProtect, bluffAdj, callAdj, prof, multiwayFactor, game, playerIdx)
+    return decideFacingBet(strength, texture, streetIdx, pot, toCall, isIP, rng, ipBonus, oopProtect, bluffAdj, callAdj, prof, multiwayFactor, game, playerIdx, equity)
   }
-  return decideNoBet(strength, texture, streetIdx, pot, isIP, rng, ipBonus, oopProtect, bluffAdj, callAdj, prof, multiwayFactor, game, playerIdx)
+  return decideNoBet(strength, texture, streetIdx, pot, isIP, rng, ipBonus, oopProtect, bluffAdj, callAdj, prof, multiwayFactor, game, playerIdx, equity)
 }
 
 // ─── Facing a bet ────────────────────────────────────────
-function decideFacingBet(strength, texture, streetIdx, pot, toCall, isIP, rng, ipBonus, oopProtect, bluffAdj, callAdj, prof, mwf, game, playerIdx) {
+function decideFacingBet(strength, texture, streetIdx, pot, toCall, isIP, rng, ipBonus, oopProtect, bluffAdj, callAdj, prof, mwf, game, playerIdx, equity) {
   const potOdds = toCall / (pot + toCall)
   const betRelPot = toCall / Math.max(pot - toCall, 1)
+
+  // Equity real (phe) vs pot odds — decisão matemática de call/fold
+  // equity é % (0-100), potOdds é fração (0-1)
+  const equityFraction = (equity || 50) / 100
+  const hasEquityToCall = equityFraction >= potOdds
 
   const result = (action, amount) => {
     if (action === 'raise') {
@@ -693,32 +768,36 @@ function decideFacingBet(strength, texture, streetIdx, pot, toCall, isIP, rng, i
       return result(rng < 0.20 * mwf ? 'raise' : 'call')
 
     case 'good':
-      // Multiway: call mais, raise menos
       if (streetIdx === 0 && texture.wet && !isIP) return result(rng < 0.20 * mwf ? 'raise' : 'call')
-      if (streetIdx === 2 && betRelPot > 0.8) return result(rng < 0.15 / mwf ? 'fold' : 'call')
+      if (streetIdx === 2 && betRelPot > 0.8) {
+        // River overbet: usar equity real para decidir
+        return result(!hasEquityToCall ? 'fold' : 'call')
+      }
       return result('call')
 
     case 'draw': {
-      // Semi-bluff raise muito mais raro multiway
       const semiBluffRate = mwf * (isIP ? 0.28 + bluffAdj : 0.12 + bluffAdj)
       if (streetIdx === 0 && rng < semiBluffRate) return result('raise')
       if (streetIdx === 1 && isIP && rng < 0.15 * mwf + bluffAdj) return result('raise')
-      if (streetIdx === 0 && potOdds < 0.35) return result('call')
-      if (streetIdx === 1 && potOdds < 0.28) return result('call')
-      if (streetIdx === 2) return result(rng < (0.12 + callAdj) ? 'call' : 'fold')
-      return result(rng < (0.20 + callAdj) ? 'call' : 'fold')
+      // Usar equity real para decisão de call com draws
+      if (hasEquityToCall) return result('call')
+      // Sem equity para call — fold (a não ser que implied odds justifiquem)
+      if (streetIdx < 2 && equityFraction > potOdds * 0.7) return result('call') // implied odds
+      return result('fold')
     }
 
     case 'marginal':
-      if (betRelPot < 0.35) return result(rng < ((0.65 + callAdj) / prof.foldMult) ? 'call' : 'fold')
-      if (betRelPot < 0.55) return result(rng < ((0.35 + callAdj) / prof.foldMult) * mwf ? 'call' : 'fold')
-      if (streetIdx === 2) return result(rng < Math.max(0, callAdj / prof.foldMult) ? 'call' : 'fold')
-      return result(rng < ((0.12 + callAdj) / prof.foldMult) ? 'call' : 'fold')
+      // Usar equity real como base, ajustado por profile
+      if (hasEquityToCall) {
+        const callChance = Math.min(1, (equityFraction / potOdds) * 0.5 / prof.foldMult)
+        return result(rng < callChance ? 'call' : 'fold')
+      }
+      return result('fold')
 
     case 'weak':
-      // Bluff-raise muito raro multiway
       if (streetIdx === 2 && isIP && rng < (0.10 + bluffAdj) * mwf * 0.3) return result('raise')
-      if (betRelPot < 0.3 && streetIdx === 0) return result(rng < (0.15 + callAdj) ? 'call' : 'fold')
+      // Equity check: às vezes temos equity suficiente com high cards
+      if (hasEquityToCall && betRelPot < 0.35 && streetIdx === 0) return result('call')
       return result('fold')
 
     default: // air
@@ -728,8 +807,10 @@ function decideFacingBet(strength, texture, streetIdx, pot, toCall, isIP, rng, i
 }
 
 // ─── No bet to face ──────────────────────────────────────
-function decideNoBet(strength, texture, streetIdx, pot, isIP, rng, ipBonus, oopProtect, bluffAdj, callAdj, prof, mwf, game, playerIdx) {
+function decideNoBet(strength, texture, streetIdx, pot, isIP, rng, ipBonus, oopProtect, bluffAdj, callAdj, prof, mwf, game, playerIdx, equity) {
   const betSize = calcBetSize(strength, texture, streetIdx, pot, isIP, prof, mwf)
+  // Equity boost: equity alta (>65%) incentiva value bet, baixa (<30%) incentiva check
+  const eqBoost = equity !== null ? (equity - 50) / 200 : 0 // -0.10 a +0.25
 
   const result = (action) => {
     if (action === 'bet') {
@@ -742,28 +823,30 @@ function decideNoBet(strength, texture, streetIdx, pot, isIP, rng, ipBonus, oopP
   switch (strength) {
     case 'monster':
       if (texture.wet) return result(rng < 0.90 * mwf ? 'bet' : 'check')
-      if (streetIdx === 0) return result(rng < 0.35 * mwf ? 'bet' : 'check') // trap mais multiway
+      if (streetIdx === 0) return result(rng < 0.35 * mwf ? 'bet' : 'check')
       if (streetIdx === 2) return result(rng < 0.85 ? 'bet' : 'check')
       return result(rng < 0.70 ? 'bet' : 'check')
 
     case 'strong':
       if (texture.wet) return result(rng < (0.85 + ipBonus) * mwf ? 'bet' : 'check')
-      if (streetIdx === 2) return result(rng < 0.75 * mwf ? 'bet' : 'check')
-      return result(rng < 0.70 * mwf ? 'bet' : 'check')
+      if (streetIdx === 2) return result(rng < (0.75 + eqBoost) * mwf ? 'bet' : 'check')
+      return result(rng < (0.70 + eqBoost) * mwf ? 'bet' : 'check')
 
     case 'good':
-      // C-bet: ~70% HU, ~30% multiway
-      if (streetIdx === 0) return result(rng < (0.65 + oopProtect) * mwf ? 'bet' : 'check')
-      if (streetIdx === 1) return result(rng < 0.55 * mwf ? 'bet' : 'check')
-      return result(rng < 0.40 * mwf ? 'bet' : 'check')
+      // C-bet: ~70% HU, ~30% multiway. Equity calibra: alta = bet mais, baixa = check
+      if (streetIdx === 0) return result(rng < (0.65 + oopProtect + eqBoost) * mwf ? 'bet' : 'check')
+      if (streetIdx === 1) return result(rng < (0.55 + eqBoost) * mwf ? 'bet' : 'check')
+      return result(rng < (0.40 + eqBoost) * mwf ? 'bet' : 'check')
 
     case 'draw':
-      // Semi-bluff muito menos multiway
-      if (streetIdx === 0) return result(rng < (0.45 + ipBonus) * mwf ? 'bet' : 'check')
-      if (streetIdx === 1) return result(rng < (0.30 + ipBonus) * mwf ? 'bet' : 'check')
+      // Semi-bluff: equity alta (bom draw) incentiva bet, equity baixa = check
+      if (streetIdx === 0) return result(rng < (0.45 + ipBonus + eqBoost) * mwf ? 'bet' : 'check')
+      if (streetIdx === 1) return result(rng < (0.30 + ipBonus + eqBoost) * mwf ? 'bet' : 'check')
       return result(rng < 0.08 * mwf ? 'bet' : 'check')
 
     case 'marginal':
+      // Equity > 55%: thin value bet mais frequente
+      if (equity && equity > 55 && streetIdx === 2 && rng < 0.25 * mwf) return result('bet')
       if (streetIdx === 0 && !isIP && rng < 0.12 * mwf) return result('bet')
       if (streetIdx === 2 && rng < 0.12 * mwf) return result('bet')
       return result('check')

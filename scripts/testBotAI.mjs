@@ -292,6 +292,37 @@ assert(handsCompleted === 10, `${handsCompleted}/10 mãos completaram`)
 assert(finalChips === expectedChips, `Conservação de chips após 10 mãos: ${finalChips} = ${expectedChips}`)
 console.log(`  Stacks finais: ${gMulti.players.map(p => `${p.name}:${p.stack}`).join(', ')}`)
 
+// ─── Teste 12: Equity calculator integrado ──────────────
+console.log('\n=== Teste 12: Equity calculator (phe) ===')
+import { calcEquity } from '../src/lib/equity.js'
+const eqAA = calcEquity(['As', 'Ah'], ['Kd', '7c', '3h'], 1000)
+assert(eqAA !== null, `calcEquity retorna valor: ${eqAA}%`)
+assert(eqAA > 70, `AA vs random no flop K73 = ${eqAA}% (>70%)`)
+
+const eq72 = calcEquity(['7d', '2c'], ['As', 'Kh', 'Qd'], 1000)
+assert(eq72 !== null, `72o equity: ${eq72}%`)
+assert(eq72 < 25, `72o no flop AKQ = ${eq72}% (<25%)`)
+
+// Equity com draw
+const eqDraw = calcEquity(['Ah', 'Kh'], ['Qh', 'Jh', '2c'], 1000)
+assert(eqDraw > 50, `AKhh flush+straight draw = ${eqDraw}% (>50%)`)
+console.log(`  AA no K73: ${eqAA}%, 72o no AKQ: ${eq72}%, AKhh draw: ${eqDraw}%`)
+
+// ─── Teste 13: Cenários solver (PokerBench lookup) ──────
+console.log('\n=== Teste 13: Solver scenarios ===')
+import { POSTFLOP_SCENARIOS } from '../src/data/postflopScenarios.js'
+const cats = Object.keys(POSTFLOP_SCENARIOS)
+assert(cats.length >= 6, `${cats.length} categorias de cenários`)
+const totalScenarios = cats.reduce((s, k) => s + POSTFLOP_SCENARIOS[k].length, 0)
+assert(totalScenarios >= 5000, `${totalScenarios} cenários solver disponíveis`)
+console.log(`  Categorias: ${cats.join(', ')}`)
+console.log(`  Total cenários: ${totalScenarios}`)
+
+// Verificar que cenários têm estrutura correta
+const sample = POSTFLOP_SCENARIOS.facing_bet_flop[0]
+assert(sample.b && sample.h && sample.d, `Cenário tem board, hole, decision`)
+assert(['call', 'fold', 'raise', 'bet', 'check'].includes(sample.d), `Decisão válida: ${sample.d}`)
+
 // ─── Resumo ─────────────────────────────────────────────
 console.log(`\n${'='.repeat(40)}`)
 console.log(`Resultados: ${passed} OK, ${failed} FAIL`)
