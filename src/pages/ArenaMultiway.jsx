@@ -12,6 +12,9 @@ import {
   STARTING_RATING, getRatingTier, loadRating, saveRating,
   calcRatingChange, icmEquity,
 } from '../lib/rating.js'
+import {
+  getMultiwayPreflopFeedback, getMultiwayPostflopFeedback, getICMFeedback,
+} from '../lib/feedbackMultiway.js'
 import { useProgress } from '../context/ProgressContext'
 
 // ─── Constantes do torneio ──────────────────────────────
@@ -85,6 +88,7 @@ export default function ArenaMultiway() {
   const [ratingData, setRatingData] = useState(() => loadRating())
   const [sessionStats, setSessionStats] = useState({ handsPlayed: 0, heroWins: 0, heroFolds: 0 })
   const [pastHands, setPastHands] = useState([])   // últimas 20 mãos completas
+  const [feedback, setFeedback] = useState(null)   // GTO feedback da última ação
 
   const botTimerRef = useRef(null)
   const gameRef = useRef(null)
@@ -270,6 +274,7 @@ export default function ArenaMultiway() {
     setShowdown(false)
     setHandHistory([])
     setBetSize(0)
+    setFeedback(null)
     setSessionStats({ handsPlayed: 0, heroWins: 0, heroFolds: 0 })
     setPastHands([])
     setRatingData(loadRating())
@@ -299,6 +304,19 @@ export default function ArenaMultiway() {
     const newHistory = [...historyRef.current, {
       playerIdx: heroIdx, name: 'Hero', action: label, street: prevStreet,
     }]
+
+    // Generate GTO feedback
+    let fb = null
+    if (prevStreet === 'preflop') {
+      fb = getMultiwayPreflopFeedback(g, heroIdx, action)
+    } else {
+      fb = getMultiwayPostflopFeedback(g, heroIdx, action, amount)
+    }
+    // ICM feedback
+    const icmFb = getICMFeedback(g, heroIdx, action, PAYOUTS)
+    if (icmFb && fb) fb.icmNote = icmFb
+    else if (icmFb) fb = { icmNote: icmFb }
+    setFeedback(fb)
 
     setGame(newG)
     setActionLabels(newLabels)
@@ -339,6 +357,7 @@ export default function ArenaMultiway() {
     setShowdown(false)
     setHandHistory([])
     setBetSize(0)
+    setFeedback(null)
 
     if (!isHeroTurn(newG)) scheduleBotAction(newG)
   }
@@ -706,6 +725,60 @@ export default function ArenaMultiway() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* GTO Feedback */}
+        {feedback && (
+          <div className="rounded-xl p-3 mb-3" style={{
+            background: feedback.isCorrect ? 'rgba(79,206,130,0.08)' : 'rgba(229,72,77,0.08)',
+            border: `1px solid ${feedback.isCorrect ? 'rgba(79,206,130,0.3)' : 'rgba(229,72,77,0.3)'}`,
+          }}>
+            <div className="flex items-center gap-2 mb-1">
+              <span style={{
+                fontSize: 10, fontWeight: 800, textTransform: 'uppercase',
+                color: feedback.isCorrect ? '#4fce82' : '#e5484d',
+              }}>
+                {feedback.isCorrect ? 'Boa jogada' : 'Jogada questionavel'}
+              </span>
+              {feedback.position && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                  color: '#676671', background: '#2a2a2e', padding: '1px 5px', borderRadius: 3,
+                }}>
+                  {feedback.position}
+                </span>
+              )}
+              {feedback.recommended && !feedback.isCorrect && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, fontFamily: 'JetBrains Mono',
+                  color: '#f5a623', background: '#f5a62315', padding: '1px 5px', borderRadius: 3,
+                }}>
+                  Ideal: {feedback.recommended}
+                </span>
+              )}
+            </div>
+            {feedback.reason && (
+              <div style={{ fontSize: 11, color: '#b3b3b8', lineHeight: 1.4 }}>
+                {feedback.reason}
+              </div>
+            )}
+            {feedback.sizingFeedback && (
+              <div style={{
+                fontSize: 10, marginTop: 4, fontFamily: 'JetBrains Mono',
+                color: feedback.sizingFeedback.isGood ? '#4fce82' : '#f5a623',
+              }}>
+                {feedback.sizingFeedback.comment}
+              </div>
+            )}
+            {feedback.icmNote && (
+              <div style={{
+                fontSize: 10, marginTop: 4, fontWeight: 600,
+                color: '#a855f7', fontStyle: 'italic',
+              }}>
+                ICM: {feedback.icmNote}
+              </div>
+            )}
           </div>
         )}
 
