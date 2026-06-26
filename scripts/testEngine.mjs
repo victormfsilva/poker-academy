@@ -15,18 +15,13 @@ function assert(cond, msg) {
 // ─── Teste 1: Posições ──────────────────────────────────
 console.log('\n=== Teste 1: Posições ===')
 const pos6 = calcPositions(6, 0)
-assert(pos6[0] === 'UTG', `Seat 0 = ${pos6[0]} (esperado UTG)`)
-// Dealer=0 → pos[0]=UTG?? Não — dealer=0 significa seat 0 é o primeiro da rotação
-// Na verdade, offset=(i - dealerIdx) % n. Se dealer=0, seat 0 offset=0 → pos[0] = posNames[0]
-// Para 6 jogadores: ['UTG','MP','CO','BTN','SB','BB']
-// Seat 0 offset 0 → UTG... mas seat 0 deveria ser BTN se dealer=0
-// Vou ajustar: seat dealer deveria ter posição BTN
-// Verificando: pos6 = ?
+assert(pos6[0] === 'BTN', `Seat 0 dealer=0 = ${pos6[0]} (esperado BTN)`)
+// Dealer=0 → seat 0 = BTN, seat 1 = SB, seat 2 = BB, seat 3 = UTG
 console.log('  Positions (dealer=0):', pos6)
 
 const pos6d3 = calcPositions(6, 3)
 console.log('  Positions (dealer=3):', pos6d3)
-assert(pos6d3[3] === 'UTG', `Seat 3 dealer=3 offset=0 → ${pos6d3[3]}`)
+assert(pos6d3[3] === 'BTN', `Seat 3 dealer=3 = ${pos6d3[3]} (esperado BTN)`)
 
 // HU
 const pos2 = calcPositions(2, 0)

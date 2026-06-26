@@ -11,15 +11,16 @@ const SUITS = ['s','h','d','c']
 const RANK_VAL = { A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2 }
 
 // ─── Posições (baseado em número de jogadores) ───────────
+// Offset 0 = dealer (BTN), offset 1 = SB, offset 2 = BB, etc.
 const POSITION_NAMES = {
   2: ['BTN','BB'],
   3: ['BTN','SB','BB'],
-  4: ['CO','BTN','SB','BB'],
-  5: ['MP','CO','BTN','SB','BB'],
-  6: ['UTG','MP','CO','BTN','SB','BB'],
-  7: ['UTG','UTG+1','MP','CO','BTN','SB','BB'],
-  8: ['UTG','UTG+1','MP','MP+1','CO','BTN','SB','BB'],
-  9: ['UTG','UTG+1','LJ','HJ','CO','BTN','SB','BB','BB'],
+  4: ['BTN','SB','BB','CO'],
+  5: ['BTN','SB','BB','MP','CO'],
+  6: ['BTN','SB','BB','UTG','MP','CO'],
+  7: ['BTN','SB','BB','UTG','UTG+1','MP','CO'],
+  8: ['BTN','SB','BB','UTG','UTG+1','MP','MP+1','CO'],
+  9: ['BTN','SB','BB','UTG','UTG+1','LJ','HJ','MP','CO'],
 }
 
 // ─── Deck ────────────────────────────────────────────────
