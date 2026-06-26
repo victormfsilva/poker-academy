@@ -8,6 +8,11 @@ import {
   isHeroTurn, getCallAmount, getRaiseRange, prepareNextHand,
 } from '../lib/pokerEngine.js'
 import { botDecide, BOT_PROFILES, MTT_BOTS } from '../lib/botAI.js'
+import {
+  STARTING_RATING, getRatingTier, loadRating, saveRating,
+  calcRatingChange, icmEquity,
+} from '../lib/rating.js'
+import { useProgress } from '../context/ProgressContext'
 
 // ─── Constantes do torneio ──────────────────────────────
 const STARTING_STACK = 1500
@@ -47,8 +52,24 @@ function streetName(s) {
   return { preflop: 'Pre-Flop', flop: 'Flop', turn: 'Turn', river: 'River', showdown: 'Showdown' }[s] || s
 }
 
+function RatingSparkline({ history, color }) {
+  if (!history || history.length < 2) return null
+  const h = history.slice(-30)
+  const min = Math.min(...h) - 10
+  const max = Math.max(...h) + 10
+  const range = max - min || 1
+  const w = 100, ht = 24
+  const points = h.map((v, i) => `${(i / (h.length - 1)) * w},${ht - ((v - min) / range) * ht}`).join(' ')
+  return (
+    <svg width={w} height={ht} style={{ display: 'block' }}>
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export default function ArenaMultiway() {
   const navigate = useNavigate()
+  const { updateArenaData, recordArenaHand } = useProgress()
 
   // ─── State ──────────────────────────────────────────
   const [game, setGame] = useState(null)          // engine gameState
@@ -61,6 +82,9 @@ export default function ArenaMultiway() {
   const [heroPlace, setHeroPlace] = useState(null)
   const [showdown, setShowdown] = useState(false)
   const [handHistory, setHandHistory] = useState([]) // ações da mão atual
+  const [ratingData, setRatingData] = useState(() => loadRating())
+  const [sessionStats, setSessionStats] = useState({ handsPlayed: 0, heroWins: 0, heroFolds: 0 })
+  const [pastHands, setPastHands] = useState([])   // últimas 20 mãos completas
 
   const botTimerRef = useRef(null)
   const gameRef = useRef(null)
@@ -93,10 +117,36 @@ export default function ArenaMultiway() {
     return 'Fold'
   }
 
-  // ─── Hand complete — check eliminations ─────────────
+  // ─── Hand complete — check eliminations, update stats ─
   function handleHandComplete(g) {
-    setShowdown(!g.winners?.every(w => w.potType === 'fold'))
+    const isShowdown = !g.winners?.every(w => w.potType === 'fold')
+    setShowdown(isShowdown)
 
+    // Update session stats
+    const heroWon = g.winners?.some(w => g.players[w.playerIdx]?.isHero)
+    setSessionStats(prev => ({
+      handsPlayed: prev.handsPlayed + 1,
+      heroWins: prev.heroWins + (heroWon ? 1 : 0),
+      heroFolds: prev.heroFolds + (g.players.find(p => p.isHero)?.folded ? 1 : 0),
+    }))
+
+    // Record hand in global stats
+    recordArenaHand(heroWon, heroWon ? 1 : 0, 1)
+
+    // Save hand to pastHands for replay
+    setPastHands(prev => [{
+      handNum: handNumRef.current,
+      board: [...(g.board || [])],
+      winners: g.winners,
+      players: g.players.map(p => ({
+        name: p.name, isHero: p.isHero, stack: p.stack,
+        holeCards: p.holeCards, folded: p.folded, position: p.position,
+      })),
+      actions: [...historyRef.current],
+      pot: g.pot,
+    }, ...prev].slice(0, 20))
+
+    // Eliminations
     const prevElim = eliminatedRef.current
     const alive = g.players.filter(p => p.stack > 0)
     const newElim = [...prevElim]
@@ -107,27 +157,46 @@ export default function ArenaMultiway() {
       }
     })
 
-    // Assign places: last eliminated = highest place number
     const totalPlayers = g.players.length
     newElim.forEach((e, i) => { e.place = totalPlayers - i })
-
     setEliminated(newElim)
 
+    // Check hero eliminated
     const heroPlayer = g.players.find(p => p.isHero)
     if (heroPlayer && heroPlayer.stack <= 0) {
       const place = newElim.find(e => e.name === heroPlayer.name)?.place || totalPlayers
       setHeroPlace(place)
-      setPhase('tourneyOver')
+      finishTourney(place)
       return
     }
 
     if (alive.length <= 1) {
       setHeroPlace(1)
-      setPhase('tourneyOver')
+      finishTourney(1)
       return
     }
 
     setPhase('handOver')
+  }
+
+  // ─── Finish tourney — update rating based on placement ─
+  function finishTourney(place) {
+    // Rating change based on placement: 1st=+40, 2nd=+20, 3rd=+8, 4th=-5, 5th=-12, 6th=-20
+    const ratingDeltas = { 1: 40, 2: 20, 3: 8, 4: -5, 5: -12, 6: -20 }
+    const delta = ratingDeltas[place] || -10
+    const kFactor = ratingData.rating < 1400 ? 1.2 : ratingData.rating < 1800 ? 1.0 : 0.8
+    const adjustedDelta = Math.round(delta * kFactor)
+
+    const newRating = Math.max(0, ratingData.rating + adjustedDelta)
+    const newPeak = Math.max(ratingData.peak, newRating)
+    const newHistory = [...(ratingData.history || []), newRating].slice(-50)
+    const newRatingData = { rating: newRating, peak: newPeak, history: newHistory }
+
+    setRatingData(newRatingData)
+    saveRating(newRatingData)
+    updateArenaData({ rating: newRating, peak: newPeak, history: newHistory })
+
+    setPhase('tourneyOver')
   }
 
   // ─── Schedule bot action (with delay for UX) ────────
@@ -201,6 +270,9 @@ export default function ArenaMultiway() {
     setShowdown(false)
     setHandHistory([])
     setBetSize(0)
+    setSessionStats({ handsPlayed: 0, heroWins: 0, heroFolds: 0 })
+    setPastHands([])
+    setRatingData(loadRating())
 
     if (!isHeroTurn(g)) scheduleBotAction(g)
   }
@@ -282,6 +354,16 @@ export default function ArenaMultiway() {
   const blinds = BLIND_LEVELS[blindLevel]
   const handsUntilBlindUp = HANDS_PER_LEVEL - ((handNum - 1) % HANDS_PER_LEVEL)
   const alivePlayers = game?.players.filter(p => p.stack > 0) || []
+  const tier = getRatingTier(ratingData.rating)
+  const winRate = sessionStats.handsPlayed > 0 ? Math.round((sessionStats.heroWins / sessionStats.handsPlayed) * 100) : 0
+  const vpip = sessionStats.handsPlayed > 0 ? Math.round(((sessionStats.handsPlayed - sessionStats.heroFolds) / sessionStats.handsPlayed) * 100) : 0
+
+  // ICM equity
+  const heroIcm = game ? (() => {
+    const stacks = game.players.map(p => p.stack)
+    const eq = icmEquity(stacks, PAYOUTS)
+    return eq[heroIdx]
+  })() : 0
 
   // ─── Render: Lobby ──────────────────────────────────
   if (phase === 'lobby') {
@@ -289,6 +371,20 @@ export default function ArenaMultiway() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4"
         style={{ background: '#0f0f0f' }}>
         <div className="w-full max-w-md text-center">
+          {/* Rating badge */}
+          <div className="inline-flex flex-col items-center mb-4 px-5 py-2 rounded-xl"
+            style={{ background: '#1a1a1d', border: `1px solid ${tier.color}40` }}>
+            <span style={{ color: tier.color, fontSize: 24, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+              {ratingData.rating}
+            </span>
+            <span style={{ color: tier.color, fontSize: 12, fontWeight: 600 }}>{tier.label}</span>
+            {ratingData.history?.length >= 2 && (
+              <div style={{ marginTop: 4 }}>
+                <RatingSparkline history={ratingData.history} color={tier.color} />
+              </div>
+            )}
+          </div>
+
           <h1 style={{ color: '#fdfdfd', fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
             MTT 6-Max
           </h1>
@@ -422,8 +518,34 @@ export default function ArenaMultiway() {
             ))}
           </div>
 
-          <div style={{ color: '#676671', fontSize: 12, marginTop: 12 }}>
-            {handNum} maos jogadas
+          {/* Rating change */}
+          <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full"
+            style={{ background: `${tier.color}15`, border: `1px solid ${tier.color}40` }}>
+            <span style={{ color: tier.color, fontSize: 20, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+              {ratingData.rating}
+            </span>
+            <span style={{ color: tier.color, fontSize: 12, fontWeight: 600 }}>{tier.label}</span>
+          </div>
+          {ratingData.history?.length >= 2 && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 6 }}>
+              <RatingSparkline history={ratingData.history} color={tier.color} />
+            </div>
+          )}
+
+          {/* Session stats */}
+          <div className="grid grid-cols-3 gap-2 mt-4 max-w-xs mx-auto">
+            <div className="rounded-lg p-2" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+              <div style={{ color: '#676671', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Maos</div>
+              <div style={{ color: '#fdfdfd', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{handNum}</div>
+            </div>
+            <div className="rounded-lg p-2" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+              <div style={{ color: '#676671', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Win Rate</div>
+              <div style={{ color: winRate >= 50 ? '#4fce82' : '#e5484d', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{winRate}%</div>
+            </div>
+            <div className="rounded-lg p-2" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+              <div style={{ color: '#676671', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>VPIP</div>
+              <div style={{ color: '#fdfdfd', fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>{vpip}%</div>
+            </div>
           </div>
 
           <div className="flex gap-3 justify-center mt-6">
@@ -472,6 +594,32 @@ export default function ArenaMultiway() {
               {alivePlayers.length}/6 vivos
             </span>
           </div>
+        </div>
+
+        {/* Stats bar: rating + ICM + VPIP + win rate */}
+        <div className="flex gap-3 mb-2 justify-center flex-wrap px-1">
+          <div className="flex items-center gap-1">
+            <span style={{ color: tier.color, fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+              {ratingData.rating}
+            </span>
+            <span style={{ color: tier.color, fontSize: 9, fontWeight: 600 }}>{tier.label}</span>
+          </div>
+          {heroIcm > 0 && (
+            <>
+              <span style={{ color: '#676671', fontSize: 10 }}>·</span>
+              <span style={{ color: '#f5a623', fontSize: 11, fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
+                ICM {(heroIcm * 100).toFixed(1)}%
+              </span>
+            </>
+          )}
+          {sessionStats.handsPlayed > 0 && (
+            <>
+              <span style={{ color: '#676671', fontSize: 10 }}>·</span>
+              <span style={{ color: '#676671', fontSize: 10 }}>Win {winRate}%</span>
+              <span style={{ color: '#676671', fontSize: 10 }}>·</span>
+              <span style={{ color: '#676671', fontSize: 10 }}>VPIP {vpip}%</span>
+            </>
+          )}
         </div>
 
         {/* Standings bar */}
@@ -580,6 +728,48 @@ export default function ArenaMultiway() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Past hands replay (collapsible) */}
+        {pastHands.length > 0 && phase === 'handOver' && (
+          <details className="rounded-xl mb-3" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
+            <summary style={{
+              color: '#676671', fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+              padding: '8px 12px', cursor: 'pointer', userSelect: 'none',
+            }}>
+              Maos Anteriores ({pastHands.length})
+            </summary>
+            <div className="px-3 pb-3 space-y-2" style={{ maxHeight: 200, overflowY: 'auto' }}>
+              {pastHands.map((h, i) => (
+                <div key={i} className="rounded-lg p-2" style={{ background: '#222225' }}>
+                  <div className="flex items-center justify-between">
+                    <span style={{ color: '#676671', fontSize: 9, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
+                      #{h.handNum}
+                    </span>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700,
+                      color: h.winners?.some(w => h.players[w.playerIdx]?.isHero) ? '#4fce82' : '#e5484d',
+                    }}>
+                      {h.winners?.some(w => h.players[w.playerIdx]?.isHero) ? 'WIN' : 'LOSS'}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {h.actions.slice(0, 8).map((a, j) => (
+                      <span key={j} style={{
+                        fontSize: 8, fontFamily: 'JetBrains Mono', color: actionColor(a.action),
+                        background: `${actionColor(a.action)}10`, padding: '0 3px', borderRadius: 2,
+                      }}>
+                        {a.name.slice(0, 4)}: {a.action}
+                      </span>
+                    ))}
+                    {h.actions.length > 8 && (
+                      <span style={{ fontSize: 8, color: '#676671' }}>+{h.actions.length - 8}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
         )}
 
         {/* Actions panel */}

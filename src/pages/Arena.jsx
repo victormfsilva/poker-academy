@@ -4,6 +4,11 @@ import Card, { parseCard, handToCards } from '../components/Card'
 import { BLIND_WARS, BB_VS_RFI } from '../data/ranges'
 import { useProgress } from '../context/ProgressContext'
 import { Hand } from 'pokersolver'
+import {
+  RATING_KEY, STARTING_RATING, RATING_TIERS,
+  getRatingTier, loadRating, saveRating,
+  spotDifficulty, calcRatingChange, icmEquity,
+} from '../lib/rating.js'
 
 // ─── Constantes ────────────────────────────────────────────
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
@@ -988,66 +993,7 @@ const BLIND_LEVELS = [
 const HANDS_PER_LEVEL = 5
 const STARTING_STACK = 500
 
-// ─── Rating ELO ─────────────────────────────────────────
-const RATING_KEY = 'poker-arena-rating'
-const STARTING_RATING = 1200
-
-// Niveis de rating
-const RATING_TIERS = [
-  { min: 0, max: 999, label: 'Bronze', color: '#cd7f32' },
-  { min: 1000, max: 1299, label: 'Prata', color: '#b3b3b8' },
-  { min: 1300, max: 1599, label: 'Ouro', color: '#f5a623' },
-  { min: 1600, max: 1899, label: 'Platina', color: '#00b4d8' },
-  { min: 1900, max: 2199, label: 'Diamante', color: '#a855f7' },
-  { min: 2200, max: 9999, label: 'Elite', color: '#e5484d' },
-]
-
-function getRatingTier(rating) {
-  return RATING_TIERS.find(t => rating >= t.min && rating <= t.max) || RATING_TIERS[0]
-}
-
-// Dificuldade da situação (afeta quanto ganha/perde)
-function spotDifficulty(strength, lastBet, pot, street) {
-  // Decisões fáceis: monster bet, air fold
-  if (strength === 'monster' && lastBet === 0) return 0.5
-  if (strength === 'air' && lastBet > 0) return 0.5
-  // Decisões difíceis: draws com pot odds borderline, marginal facing bet
-  if (strength === 'draw') return 1.5
-  if (strength === 'marginal' && lastBet > 0) return 1.8
-  // Bluff spots
-  if ((strength === 'weak' || strength === 'air') && lastBet === 0) return 1.4
-  // Thin value
-  if (strength === 'good' && street === 'river') return 1.3
-  return 1.0
-}
-
-// Calcula mudança de rating por decisão
-function calcRatingChange(isCorrect, strength, lastBet, pot, street, currentRating) {
-  const basePoints = 8
-  const difficulty = spotDifficulty(strength, lastBet, pot, street)
-
-  // K-factor diminui conforme rating sobe (mais difícil subir no topo)
-  const kFactor = currentRating < 1400 ? 1.2 : currentRating < 1800 ? 1.0 : 0.8
-
-  if (isCorrect) {
-    return Math.round(basePoints * difficulty * kFactor)
-  } else {
-    // Perde mais por erros fáceis, menos por erros difíceis
-    return -Math.round(basePoints * (2.0 - difficulty * 0.5) * kFactor)
-  }
-}
-
-function loadRating() {
-  try {
-    const raw = localStorage.getItem(RATING_KEY)
-    if (!raw) return { rating: STARTING_RATING, peak: STARTING_RATING, history: [] }
-    return JSON.parse(raw)
-  } catch { return { rating: STARTING_RATING, peak: STARTING_RATING, history: [] } }
-}
-
-function saveRating(data) {
-  try { localStorage.setItem(RATING_KEY, JSON.stringify(data)) } catch {}
-}
+// Rating, ICM importados de ../lib/rating.js
 
 // ─── Bot Profiles ────────────────────────────────────────
 const BOT_PROFILES = {
@@ -1063,32 +1009,7 @@ const MTT_STARTING_STACK = 1500
 const MTT_PAYOUTS = [0.50, 0.30, 0.20] // top 3 paid
 const MTT_NAMES = ['Hero', 'Alice', 'Bob', 'Carlos', 'Diana', 'Erik', 'Fiona', 'Greg', 'Hana']
 
-// ICM: calcula equity ($EV) de cada jogador baseado nos stacks
-function icmEquity(stacks, payouts) {
-  const total = stacks.reduce((a, b) => a + b, 0)
-  if (total === 0) return stacks.map(() => 0)
-  const n = stacks.length
-  const alive = stacks.map((s, i) => ({ idx: i, stack: s })).filter(p => p.stack > 0)
-
-  // Simplified ICM via Malmuth-Harville
-  const equity = new Array(n).fill(0)
-
-  function distribute(remaining, probProduct, placeIdx) {
-    if (placeIdx >= payouts.length || remaining.length === 0) return
-    const totalRemaining = remaining.reduce((a, b) => a + b.stack, 0)
-    for (let i = 0; i < remaining.length; i++) {
-      const p = remaining[i]
-      const prob = (p.stack / totalRemaining) * probProduct
-      equity[p.idx] += prob * payouts[placeIdx]
-      // Recurse for next place without this player
-      const next = remaining.filter((_, j) => j !== i)
-      distribute(next, prob, placeIdx + 1)
-    }
-  }
-
-  distribute(alive, 1, 0)
-  return equity
-}
+// icmEquity importado de ../lib/rating.js
 
 function createMttState() {
   const players = MTT_NAMES.map((name, i) => ({
