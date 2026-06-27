@@ -401,17 +401,14 @@ function isBettingRoundComplete(game, lastActorIdx) {
   const allMatched = playersInHand.every(p => p.roundInvested === game.lastBet)
   if (!allMatched) return false
 
-  // Preflop special: BB ainda precisa agir se ninguém raisou
-  if (game.street === 'preflop') {
-    const { bbIdx } = getBlindIndexes(game.players.length, game.dealerIdx)
-    const bb = game.players[bbIdx]
-    if (bb && !bb.folded && !bb.allIn) {
-      // BB só pode ser pulado se: ele já agiu nessa rodada (não apenas postou blind)
-      const bbActed = game.actionHistory.some(
-        a => a.playerIdx === bbIdx && a.street === 'preflop' && a.action !== 'bb'
-      )
-      if (!bbActed) return false
-    }
+  // Verificar se todos os jogadores ativos realmente agiram nessa street
+  // (sem isso, check do primeiro jogador fecha a rodada prematuramente quando lastBet=0)
+  for (const p of playersInHand) {
+    const pIdx = game.players.indexOf(p)
+    const acted = game.actionHistory.some(
+      a => a.playerIdx === pIdx && a.street === game.street && a.action !== 'sb' && a.action !== 'bb'
+    )
+    if (!acted) return false
   }
 
   return true
