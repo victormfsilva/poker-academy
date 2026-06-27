@@ -329,7 +329,7 @@ export default function ArenaSpin() {
 
     const hero = { id: 'hero', name: 'Hero', stack: STARTING_STACK, isHero: true }
     const botPlayers = botSet.map(b => ({ ...b, stack: STARTING_STACK }))
-    const blinds = SPIN_BLIND_STRUCTURE[0]
+    const blinds = SPIN_BLIND_STRUCTURE.levels[0]
 
     let g = createGame([hero, ...botPlayers], { sb: blinds.sb, bb: blinds.bb, ante: blinds.ante || 0 }, 0)
     g = dealHand(g)
@@ -404,8 +404,8 @@ export default function ArenaSpin() {
     if (!g) return
 
     const newHandNum = handNumRef.current + 1
-    const newLevel = Math.min(Math.floor((newHandNum - 1) / HANDS_PER_LEVEL), SPIN_BLIND_STRUCTURE.length - 1)
-    const blinds = SPIN_BLIND_STRUCTURE[newLevel]
+    const newLevel = Math.min(Math.floor((newHandNum - 1) / HANDS_PER_LEVEL), SPIN_BLIND_STRUCTURE.levels.length - 1)
+    const blinds = SPIN_BLIND_STRUCTURE.levels[newLevel]
 
     const prepped = prepareNextHand(g)
     // Filtrar jogadores eliminados para criar novo jogo
@@ -446,7 +446,7 @@ export default function ArenaSpin() {
   const callAmount = isMyTurn ? getCallAmount(game, heroIdx) : 0
   const raiseRange = isMyTurn ? getRaiseRange(game, heroIdx) : { min: 0, max: 0 }
   const canRaise = availableActions.includes('raise') || availableActions.includes('bet')
-  const blinds = SPIN_BLIND_STRUCTURE[blindLevel] || SPIN_BLIND_STRUCTURE[0]
+  const blinds = SPIN_BLIND_STRUCTURE.levels[blindLevel] || SPIN_BLIND_STRUCTURE.levels[0]
   const handsUntilBlindUp = HANDS_PER_LEVEL - ((handNum - 1) % HANDS_PER_LEVEL)
   const alivePlayers = game?.players.filter(p => p.stack > 0) || []
   const tier = getRatingTier(ratingData.rating)
@@ -524,7 +524,7 @@ export default function ArenaSpin() {
             <div className="rounded-lg p-2" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
               <div style={{ color: '#676671', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Blinds</div>
               <div style={{ color: '#f5a623', fontSize: 16, fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
-                {SPIN_BLIND_STRUCTURE[0].sb}/{SPIN_BLIND_STRUCTURE[0].bb}
+                {SPIN_BLIND_STRUCTURE.levels[0].sb}/{SPIN_BLIND_STRUCTURE.levels[0].bb}
               </div>
             </div>
             <div className="rounded-lg p-2" style={{ background: '#1a1a1d', border: '1px solid #2a2a2e' }}>
