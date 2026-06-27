@@ -155,6 +155,7 @@ export default function ArenaSpin() {
   const eliminatedRef = useRef([])
   const handNumRef = useRef(0)
   const isHURef = useRef(false)
+  const pendingFinishRef = useRef(null) // { place } — showdown first, then tourneyOver
 
   useEffect(() => { gameRef.current = game }, [game])
   useEffect(() => { labelsRef.current = actionLabels }, [actionLabels])
@@ -223,14 +224,16 @@ export default function ArenaSpin() {
     if (heroPlayer && heroPlayer.stack <= 0) {
       const place = newElim.find(e => e.name === heroPlayer.name)?.place || totalPlayers
       setHeroPlace(place)
-      finishSpin(place)
+      pendingFinishRef.current = { place }
+      setPhase('handOver')
       return
     }
 
-    // Último jogador vivo
+    // Último jogador vivo — hero ganhou
     if (alive.length <= 1) {
       setHeroPlace(1)
-      finishSpin(1)
+      pendingFinishRef.current = { place: 1 }
+      setPhase('handOver')
       return
     }
 
@@ -352,6 +355,7 @@ export default function ArenaSpin() {
     setSessionStats({ played: 0, wins: 0, folds: 0 })
     setPastHands([])
     setRatingData(loadSpinRating())
+    pendingFinishRef.current = null
 
     if (!isHeroTurn(g)) scheduleBotAction(g)
   }
@@ -424,6 +428,14 @@ export default function ArenaSpin() {
 
   // ─── Next hand ────────────────────────────────────
   function nextHand() {
+    // Se torneio terminou, mostrar resultado final
+    if (pendingFinishRef.current) {
+      const { place } = pendingFinishRef.current
+      pendingFinishRef.current = null
+      finishSpin(place)
+      return
+    }
+
     const g = gameRef.current
     if (!g) return
 
@@ -954,11 +966,11 @@ export default function ArenaSpin() {
             <button onClick={nextHand}
               style={{
                 width: '100%', padding: '14px', borderRadius: 8,
-                background: '#4fce82', border: 'none',
+                background: pendingFinishRef.current ? '#f5a623' : '#4fce82', border: 'none',
                 color: '#0f0f0f', fontWeight: 600, fontSize: 15,
                 cursor: 'pointer',
               }}>
-              Proxima Mao
+              {pendingFinishRef.current ? 'Ver Resultado' : 'Proxima Mao'}
             </button>
           ) : isMyTurn ? (
             <div>
