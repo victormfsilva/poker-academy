@@ -1942,6 +1942,16 @@ export default function Arena() {
                 }}>
                 6-Max
               </button>
+              <button onClick={() => navigate('/arena-spin')}
+                className="px-5 py-2 rounded-lg"
+                style={{
+                  background: '#f9731620',
+                  border: '1px solid #f97316',
+                  color: '#f97316',
+                  cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                }}>
+                Spin & Go
+              </button>
             </div>
 
             <p style={{ color: '#b3b3b8', fontSize: 15, marginBottom: 16, lineHeight: 1.6 }}>

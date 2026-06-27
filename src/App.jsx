@@ -53,6 +53,7 @@ import StudyGuide from './pages/StudyGuide'
 import HandAnalysis from './pages/HandAnalysis'
 import MultiStreet from './pages/MultiStreet'
 import ArenaMultiway from './pages/ArenaMultiway'
+import ArenaSpin from './pages/ArenaSpin'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -142,6 +143,7 @@ function App() {
           <Route path="/analise" element={<HandAnalysis />} />
           <Route path="/solver" element={<MultiStreet />} />
           <Route path="/arena-mtt" element={<ArenaMultiway />} />
+          <Route path="/arena-spin" element={<ArenaSpin />} />
         </Routes>
       </BrowserRouter>
     </ProgressProvider>
