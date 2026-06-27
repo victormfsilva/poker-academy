@@ -442,7 +442,9 @@ export default function ArenaSpin() {
 
     if (aliveDefs.length < 2) return
 
-    let newG = createGame(aliveDefs, { sb: blinds.sb, bb: blinds.bb, ante: blinds.ante || 0 }, 0)
+    // Rotate dealer position each hand
+    const dealerIdx = (newHandNum - 1) % aliveDefs.length
+    let newG = createGame(aliveDefs, { sb: blinds.sb, bb: blinds.bb, ante: blinds.ante || 0 }, dealerIdx)
     newG = dealHand(newG)
 
     // Detect HU transition
