@@ -8,6 +8,7 @@ import {
   SPIN_DEFENSE_RANGES, SPIN_HU_RANGES, SPIN_MULTIPLIER_ADJUSTMENTS,
   getSpinStackTier, shouldPushFold, isHandInSpinRange,
 } from '../data/spinRanges.js'
+import { lookupSolverRange, buildActionHistory } from '../data/spinSolverData.js'
 import { holeToNotation, evalHand, getBlindIndexes, RANK_VAL } from './pokerEngine.js'
 
 // ─── Hand description ─────────────────────────────────────
@@ -52,24 +53,31 @@ export function getSpinPreflopFeedback(game, heroIdx, heroAction, multiplier = 2
   const hasRaise = actionsBefore.some(a => ['raise', 'bet'].includes(a.action))
   const hasAllIn = actionsBefore.some(a => a.action === 'allin')
 
+  // ─── Solver lookup (MCCFR 15bb) ───
+  const solverResult = !isHU ? getSolverEnrichedFeedback(hand, position, stackBB, heroAction, game, heroIdx) : null
+
   // ─── CALL vs ALL-IN ───
   if (hasAllIn && (position === 'BB' || position === 'SB')) {
-    return getCallPushFeedback(hand, position, stackBB, heroAction, game, heroIdx, multiplier, isHU)
+    const fb = getCallPushFeedback(hand, position, stackBB, heroAction, game, heroIdx, multiplier, isHU)
+    return mergeSolverFeedback(fb, solverResult)
   }
 
   // ─── PUSH/FOLD ZONE ───
   if (isPushZone && !hasRaise && (position === 'BTN' || position === 'SB')) {
-    return getPushFoldFeedback(hand, position, stackBB, heroAction, multiplier, isHU)
+    const fb = getPushFoldFeedback(hand, position, stackBB, heroAction, multiplier, isHU)
+    return mergeSolverFeedback(fb, solverResult)
   }
 
   // ─── DEFENSE (BB vs open, SB vs BTN open) ───
   if (hasRaise && !hasAllIn && (position === 'BB' || position === 'SB')) {
-    return getDefenseFeedback(hand, position, stackBB, heroAction, game, heroIdx, multiplier, isHU)
+    const fb = getDefenseFeedback(hand, position, stackBB, heroAction, game, heroIdx, multiplier, isHU)
+    return mergeSolverFeedback(fb, solverResult)
   }
 
   // ─── OPEN RAISE ───
   if (!hasRaise && (position === 'BTN' || position === 'SB')) {
-    return getOpenFeedback(hand, position, stackBB, heroAction, multiplier, isHU)
+    const fb = getOpenFeedback(hand, position, stackBB, heroAction, multiplier, isHU)
+    return mergeSolverFeedback(fb, solverResult)
   }
 
   // ─── HU: BB facing open ───
@@ -77,7 +85,7 @@ export function getSpinPreflopFeedback(game, heroIdx, heroAction, multiplier = 2
     return getDefenseFeedback(hand, 'BB', stackBB, heroAction, game, heroIdx, multiplier, true)
   }
 
-  return null
+  return solverResult ? formatSolverOnlyFeedback(solverResult, heroAction) : null
 }
 
 // ─── Open Raise Feedback ──────────────────────────────────
@@ -333,6 +341,72 @@ export function getSpinICMFeedback(game, heroIdx, heroAction, multiplier = 2) {
 function getMultiplierAdjustment(multiplier) {
   const key = multiplier <= 2 ? 2 : multiplier <= 5 ? 5 : multiplier <= 10 ? 10 : multiplier <= 25 ? 25 : 120
   return SPIN_MULTIPLIER_ADJUSTMENTS?.adjustments?.[key] || { tightenPct: 0, bubbleFactor: 1.0 }
+}
+
+// ─── Solver-backed Feedback (MCCFR 15bb) ─────────────────
+function getSolverEnrichedFeedback(hand, position, stackBB, heroAction, game, heroIdx) {
+  const ah = buildActionHistory(game, heroIdx)
+  const result = lookupSolverRange(hand, position, ah, stackBB)
+  if (!result) return null
+  return result
+}
+
+function mergeSolverFeedback(baseFeedback, solverResult) {
+  if (!baseFeedback) {
+    return solverResult ? formatSolverOnlyFeedback(solverResult) : null
+  }
+  if (!solverResult) return baseFeedback
+
+  // Adicionar info do solver ao feedback existente
+  const conf = solverResult.confidence >= 0.75 ? '' : ' (stack fora do range ideal do solver)'
+  const solverVerdict = solverResult.shouldPlay ? 'jogar' : 'fold'
+
+  // Se solver concorda com o feedback base, reforçar
+  if (baseFeedback.isCorrect) {
+    baseFeedback.reason += ` Solver MCCFR confirma: ${solverVerdict} (${solverResult.rangePct}% play range).`
+    baseFeedback.solverAgreement = true
+  } else {
+    // Se solver também discorda, é forte indicação de erro
+    const heroPlayed = baseFeedback.recommended === 'Fold'
+    const solverAgrees = (heroPlayed && solverResult.shouldFold) || (!heroPlayed && solverResult.shouldPlay)
+    if (!solverAgrees) {
+      baseFeedback.reason += ` Solver MCCFR tambem indica ${solverVerdict}${conf}.`
+      baseFeedback.solverAgreement = true
+    } else {
+      baseFeedback.reason += ` Nota: solver MCCFR sugere ${solverVerdict} neste spot${conf}.`
+      baseFeedback.solverAgreement = false
+    }
+  }
+
+  baseFeedback.solverData = {
+    source: solverResult.source,
+    confidence: solverResult.confidence,
+    rangePct: solverResult.rangePct,
+    scenario: solverResult.rangeDescription,
+  }
+
+  return baseFeedback
+}
+
+function formatSolverOnlyFeedback(solverResult, heroAction) {
+  if (!solverResult) return null
+  const heroPlayed = heroAction !== 'fold'
+  const isCorrect = (solverResult.shouldPlay && heroPlayed) || (solverResult.shouldFold && !heroPlayed)
+  const conf = solverResult.confidence >= 0.75 ? '' : ' (aproximado — stack diferente de 15bb)'
+
+  return {
+    isCorrect,
+    reason: isCorrect
+      ? `Solver MCCFR: decisao correta. ${solverResult.rangeDescription}${conf}.`
+      : `Solver MCCFR: ${solverResult.shouldPlay ? 'deveria jogar' : 'deveria fold'}. ${solverResult.rangeDescription}${conf}.`,
+    recommended: isCorrect ? null : (solverResult.shouldPlay ? 'Play' : 'Fold'),
+    solverData: {
+      source: solverResult.source,
+      confidence: solverResult.confidence,
+      rangePct: solverResult.rangePct,
+      scenario: solverResult.rangeDescription,
+    },
+  }
 }
 
 // ─── Postflop Feedback (simplified for Spin) ──────────────
