@@ -995,7 +995,8 @@ export const SPIN_BLIND_STRUCTURE = {
  * Retorna o tier de stack mais próximo disponível nos ranges
  */
 export function getSpinStackTier(effectiveBB, availableTiers) {
-  const sorted = [...availableTiers].sort((a, b) => a - b)
+  const tiers = availableTiers || [5, 8, 10, 13, 15, 20, 25]
+  const sorted = [...tiers].sort((a, b) => a - b)
   // Encontrar o tier mais próximo (arredonda pra baixo se entre dois)
   let best = sorted[0]
   for (const tier of sorted) {

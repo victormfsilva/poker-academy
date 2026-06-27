@@ -379,32 +379,36 @@ export default function ArenaSpin() {
       playerIdx: heroIdx, name: 'Hero', action: label, street: prevStreet,
     }]
 
-    // GTO Feedback
+    // GTO Feedback (wrapped so errors don't block game)
     let fb = null
-    if (prevStreet === 'preflop') {
-      fb = getSpinPreflopFeedback(g, heroIdx, action, multiplier, isHURef.current)
-    } else {
-      fb = getSpinPostflopFeedback(g, heroIdx, action, amount)
-    }
-    const icmFb = getSpinICMFeedback(g, heroIdx, action, multiplier)
-    if (icmFb && fb) fb.icmNote = icmFb
-    else if (icmFb) fb = { icmNote: icmFb }
+    try {
+      if (prevStreet === 'preflop') {
+        fb = getSpinPreflopFeedback(g, heroIdx, action, multiplier, isHURef.current)
+      } else {
+        fb = getSpinPostflopFeedback(g, heroIdx, action, amount)
+      }
+      const icmFb = getSpinICMFeedback(g, heroIdx, action, multiplier)
+      if (icmFb && fb) fb.icmNote = icmFb
+      else if (icmFb) fb = { icmNote: icmFb }
+    } catch (e) { console.warn('Spin feedback error:', e) }
     setFeedback(fb)
 
     // Track decision for leak/heatmap analysis
     if (fb && prevStreet === 'preflop') {
-      const hero = g.players[heroIdx]
-      const stackBB = Math.round((hero.stack + hero.invested) / g.blinds.bb)
-      recordHandDecision({
-        position: hero.position,
-        stackBB,
-        context: fb.context || 'open',
-        heroAction: action,
-        gtoAction: fb.gtoAction || action,
-        isCorrect: fb.correct !== false,
-        isHU: isHURef.current,
-        hand: holeToNotation(hero.holeCards),
-      })
+      try {
+        const hero = g.players[heroIdx]
+        const stackBB = Math.round((hero.stack + (hero.invested || 0)) / g.blinds.bb)
+        recordHandDecision({
+          position: hero.position || 'BTN',
+          stackBB: stackBB || 15,
+          context: fb.context || 'open',
+          heroAction: action,
+          gtoAction: fb.gtoAction || action,
+          isCorrect: fb.correct !== false,
+          isHU: isHURef.current,
+          hand: holeToNotation(hero.holeCards),
+        })
+      } catch (e) { /* tracking failure should not block game */ }
     }
 
     setGame(newG)
