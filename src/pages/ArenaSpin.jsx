@@ -19,6 +19,7 @@ import {
 import {
   getSpinPreflopFeedback, getSpinPostflopFeedback, getSpinICMFeedback,
 } from '../lib/feedbackSpin.js'
+import { recordSpinSession, recordHandDecision } from '../lib/spinTracker.js'
 import { useProgress } from '../context/ProgressContext'
 
 // ─── Constantes ──────────────────────────────────────────
@@ -261,6 +262,9 @@ export default function ArenaSpin() {
     setRatingData(newRatingData)
     saveSpinRating(newRatingData)
 
+    // Track session for Fase 5 stats
+    recordSpinSession(place, multiplier, handNumRef.current, isHURef.current)
+
     setPhase('tourneyOver')
   }
 
@@ -386,6 +390,22 @@ export default function ArenaSpin() {
     if (icmFb && fb) fb.icmNote = icmFb
     else if (icmFb) fb = { icmNote: icmFb }
     setFeedback(fb)
+
+    // Track decision for leak/heatmap analysis
+    if (fb && prevStreet === 'preflop') {
+      const hero = g.players[heroIdx]
+      const stackBB = Math.round((hero.stack + hero.invested) / g.blinds.bb)
+      recordHandDecision({
+        position: hero.position,
+        stackBB,
+        context: fb.context || 'open',
+        heroAction: action,
+        gtoAction: fb.gtoAction || action,
+        isCorrect: fb.correct !== false,
+        isHU: isHURef.current,
+        hand: holeToNotation(hero.holeCards),
+      })
+    }
 
     setGame(newG)
     setActionLabels(newLabels)
@@ -545,6 +565,11 @@ export default function ArenaSpin() {
               Jogar Spin
             </button>
           </div>
+          <button onClick={() => navigate('/spin-stats')}
+            className="mt-3 w-full py-2 rounded-xl font-semibold"
+            style={{ background: '#1a1a1d', color: '#676671', border: '1px solid #2a2a2e', cursor: 'pointer', fontSize: 12 }}>
+            Stats & Leaks & Bankroll
+          </button>
         </div>
       </div>
     )
@@ -654,6 +679,11 @@ export default function ArenaSpin() {
               Novo Spin
             </button>
           </div>
+          <button onClick={() => navigate('/spin-stats')}
+            className="mt-3 px-6 py-2 rounded-xl font-semibold"
+            style={{ background: '#1a1a1d', color: '#676671', border: '1px solid #2a2a2e', cursor: 'pointer', fontSize: 12 }}>
+            Ver Stats Completas
+          </button>
         </div>
       </div>
     )

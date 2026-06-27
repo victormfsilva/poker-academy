@@ -147,6 +147,9 @@ function getOpenFeedback(hand, position, stackBB, heroAction, multiplier, isHU) 
 
   return {
     isCorrect,
+    correct: isCorrect,
+    context: 'open',
+    gtoAction: shouldOpen ? 'raise' : 'fold',
     position,
     hand: describeHand,
     recommended: isCorrect ? null : (shouldOpen ? 'Raise' : 'Fold'),
@@ -194,6 +197,9 @@ function getPushFoldFeedback(hand, position, stackBB, heroAction, multiplier, is
 
   return {
     isCorrect,
+    correct: isCorrect,
+    context: 'push',
+    gtoAction: shouldPush ? 'allin' : 'fold',
     position,
     recommended: isCorrect ? null : (shouldPush ? 'All-In' : 'Fold'),
     reason,
@@ -253,6 +259,9 @@ function getDefenseFeedback(hand, position, stackBB, heroAction, game, heroIdx, 
 
   return {
     isCorrect,
+    correct: isCorrect,
+    context: 'defense',
+    gtoAction: inThreeBet ? 'raise' : (inCall ? 'call' : 'fold'),
     position,
     recommended: isCorrect ? null : recommended,
     reason,
@@ -311,6 +320,9 @@ function getCallPushFeedback(hand, position, stackBB, heroAction, game, heroIdx,
 
   return {
     isCorrect,
+    correct: isCorrect,
+    context: 'callPush',
+    gtoAction: shouldCall ? 'call' : 'fold',
     position,
     recommended: isCorrect ? null : (shouldCall ? 'Call' : 'Fold'),
     reason,
