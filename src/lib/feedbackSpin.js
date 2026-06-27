@@ -72,25 +72,25 @@ export function getSpinPreflopFeedback(game, heroIdx, heroAction, multiplier = 2
   // ─── CALL vs ALL-IN (3-max) ───
   if (hasAllIn && (position === 'BB' || position === 'SB')) {
     const fb = getCallPushFeedback(hand, position, stackBB, heroAction, game, heroIdx, multiplier, isHU)
-    return mergeSolverFeedback(fb, solverResult)
+    return mergeSolverFeedback(fb, solverResult, heroAction)
   }
 
   // ─── PUSH/FOLD ZONE (3-max) ───
   if (isPushZone && !hasRaise && (position === 'BTN' || position === 'SB')) {
     const fb = getPushFoldFeedback(hand, position, stackBB, heroAction, multiplier, isHU)
-    return mergeSolverFeedback(fb, solverResult)
+    return mergeSolverFeedback(fb, solverResult, heroAction)
   }
 
   // ─── DEFENSE (BB vs open, SB vs BTN open) ───
   if (hasRaise && !hasAllIn && (position === 'BB' || position === 'SB')) {
     const fb = getDefenseFeedback(hand, position, stackBB, heroAction, game, heroIdx, multiplier, isHU)
-    return mergeSolverFeedback(fb, solverResult)
+    return mergeSolverFeedback(fb, solverResult, heroAction)
   }
 
   // ─── OPEN RAISE ───
   if (!hasRaise && (position === 'BTN' || position === 'SB')) {
     const fb = getOpenFeedback(hand, position, stackBB, heroAction, multiplier, isHU)
-    return mergeSolverFeedback(fb, solverResult)
+    return mergeSolverFeedback(fb, solverResult, heroAction)
   }
 
   // ─── HU: BB facing open ───
@@ -376,9 +376,9 @@ function getSolverEnrichedFeedback(hand, position, stackBB, heroAction, game, he
   return result
 }
 
-function mergeSolverFeedback(baseFeedback, solverResult) {
+function mergeSolverFeedback(baseFeedback, solverResult, heroAction) {
   if (!baseFeedback) {
-    return solverResult ? formatSolverOnlyFeedback(solverResult) : null
+    return solverResult ? formatSolverOnlyFeedback(solverResult, heroAction) : null
   }
   if (!solverResult) return baseFeedback
 
