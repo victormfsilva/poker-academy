@@ -38,6 +38,12 @@ import Module28 from './pages/modules/Module28'
 import Module29 from './pages/modules/Module29'
 import Module30 from './pages/modules/Module30'
 import Module31 from './pages/modules/Module31'
+import Module32 from './pages/modules/Module32'
+import Module33 from './pages/modules/Module33'
+import Module34 from './pages/modules/Module34'
+import Module35 from './pages/modules/Module35'
+import Module36 from './pages/modules/Module36'
+import Module37 from './pages/modules/Module37'
 import Tools from './pages/Tools'
 import MentalGame from './pages/MentalGame'
 import Infinite from './pages/Infinite'
@@ -121,6 +127,12 @@ function App() {
           <Route path="/modulos/29" element={<Module29 />} />
           <Route path="/modulos/30" element={<Module30 />} />
           <Route path="/modulos/31" element={<Module31 />} />
+          <Route path="/modulos/32" element={<Module32 />} />
+          <Route path="/modulos/33" element={<Module33 />} />
+          <Route path="/modulos/34" element={<Module34 />} />
+          <Route path="/modulos/35" element={<Module35 />} />
+          <Route path="/modulos/36" element={<Module36 />} />
+          <Route path="/modulos/37" element={<Module37 />} />
           <Route path="/guia" element={<StudyGuide />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/ferramentas" element={<Tools />} />

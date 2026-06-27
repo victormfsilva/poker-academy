@@ -31,6 +31,12 @@ const MODULES = [
   { id: 29, name: 'River Defense', desc: 'Enfrentar aposta no river com pot odds e blockers', icon: 'R' },
   { id: 30, name: 'Probe Bet', desc: 'Apostar OOP quando o raiser checa o flop', icon: 'Q' },
   { id: 31, name: 'GTO Postflop Solver', desc: 'Cenarios reais de solver com decisoes GTO otimas', icon: 'S' },
+  { id: 32, name: 'Spin: Open Raise 3-Max', desc: 'Ranges de abertura BTN e SB no formato 3-max', icon: 'O' },
+  { id: 33, name: 'Spin: Defesa BB 3-Max', desc: 'Defenda o BB vs BTN e SB no Spin & Go', icon: 'D' },
+  { id: 34, name: 'Spin: Push/Fold 3-Handed', desc: 'All-in ou fold com stack curto no 3-max', icon: 'P' },
+  { id: 35, name: 'Spin: Transicao HU', desc: 'Quando o jogo vira heads-up, ranges explodem', icon: 'H' },
+  { id: 36, name: 'Spin: ICM por Multiplicador', desc: 'Como o multiplicador muda suas decisoes', icon: 'I' },
+  { id: 37, name: 'Spin: Call vs Push', desc: 'Quando chamar o all-in do adversario', icon: 'C' },
 ]
 
 const FILTERS = [
@@ -40,6 +46,7 @@ const FILTERS = [
   { key: 'math', label: 'Matematica' },
   { key: 'mtt', label: 'Torneio' },
   { key: 'advanced', label: 'Avançado' },
+  { key: 'spin', label: 'Spin & Go' },
   { key: 'order', label: 'Ordem de Estudo' },
 ]
 
@@ -49,6 +56,7 @@ const CATEGORY_IDS = {
   math: [3, 22, 23, 24, 25, 26],
   mtt: [2, 17, 21],
   advanced: [16, 18, 20, 27],
+  spin: [32, 33, 34, 35, 36, 37],
 }
 
 const STUDY_ORDER = [1, 3, 9, 4, 7, 8, 2, 6, 5, 10, 14, 15, 28, 29, 30, 31, 22, 23, 24, 25, 26, 17, 21, 16, 18, 27, 13, 20]
@@ -60,6 +68,7 @@ const FILTER_COLORS = {
   math: '#f5a623',
   mtt: '#e5484d',
   advanced: '#a78bfa',
+  spin: '#f97316',
   order: '#fdfdfd',
 }
 
