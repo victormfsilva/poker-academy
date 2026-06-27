@@ -8,7 +8,7 @@ import {
   SPIN_DEFENSE_RANGES, SPIN_HU_RANGES, SPIN_MULTIPLIER_ADJUSTMENTS,
   getSpinStackTier, shouldPushFold, isHandInSpinRange,
 } from '../data/spinRanges.js'
-import { lookupSolverRange, buildActionHistory } from '../data/spinSolverData.js'
+import { lookupSolverRange, lookupHuNash, buildActionHistory } from '../data/spinSolverData.js'
 import { holeToNotation, evalHand, getBlindIndexes, RANK_VAL } from './pokerEngine.js'
 
 // ─── Hand description ─────────────────────────────────────
@@ -53,16 +53,29 @@ export function getSpinPreflopFeedback(game, heroIdx, heroAction, multiplier = 2
   const hasRaise = actionsBefore.some(a => ['raise', 'bet'].includes(a.action))
   const hasAllIn = actionsBefore.some(a => a.action === 'allin')
 
-  // ─── Solver lookup (MCCFR 15bb) ───
+  // ─── Solver lookup (MCCFR 15bb para 3-max, Nash HU para heads-up) ───
   const solverResult = !isHU ? getSolverEnrichedFeedback(hand, position, stackBB, heroAction, game, heroIdx) : null
 
-  // ─── CALL vs ALL-IN ───
+  // ─── HU: Nash push/fold com tabelas dedicadas ───
+  if (isHU && isPushZone) {
+    const nashResult = lookupHuNash(hand, position, stackBB)
+    if (nashResult) {
+      if (hasAllIn && position === 'BB') {
+        return formatHuNashFeedback(nashResult, hand, position, stackBB, heroAction, true)
+      }
+      if (!hasRaise && (position === 'SB' || position === 'BTN')) {
+        return formatHuNashFeedback(nashResult, hand, position, stackBB, heroAction, false)
+      }
+    }
+  }
+
+  // ─── CALL vs ALL-IN (3-max) ───
   if (hasAllIn && (position === 'BB' || position === 'SB')) {
     const fb = getCallPushFeedback(hand, position, stackBB, heroAction, game, heroIdx, multiplier, isHU)
     return mergeSolverFeedback(fb, solverResult)
   }
 
-  // ─── PUSH/FOLD ZONE ───
+  // ─── PUSH/FOLD ZONE (3-max) ───
   if (isPushZone && !hasRaise && (position === 'BTN' || position === 'SB')) {
     const fb = getPushFoldFeedback(hand, position, stackBB, heroAction, multiplier, isHU)
     return mergeSolverFeedback(fb, solverResult)
@@ -407,6 +420,43 @@ function formatSolverOnlyFeedback(solverResult, heroAction) {
       scenario: solverResult.rangeDescription,
     },
   }
+}
+
+// ─── HU Nash Push/Fold Feedback ───────────────────────────
+function formatHuNashFeedback(nashResult, hand, position, stackBB, heroAction, hasAllIn) {
+  const isHeroPusher = position === 'SB' || position === 'BTN'
+
+  if (isHeroPusher && !hasAllIn) {
+    // SB decide push ou fold
+    const heroAllIn = heroAction === 'allin' || heroAction === 'raise'
+    const isCorrect = (nashResult.shouldPlay && heroAllIn) || (nashResult.shouldFold && heroAction === 'fold')
+    return {
+      isCorrect,
+      position,
+      recommended: isCorrect ? null : (nashResult.shouldPlay ? 'All-In' : 'Fold'),
+      reason: isCorrect
+        ? `Nash HU: ${hand} e ${nashResult.shouldPlay ? 'push' : 'fold'} correto com ${stackBB}bb (${nashResult.rangePct}% push range).`
+        : `Nash HU: ${hand} deveria ${nashResult.shouldPlay ? 'ALL-IN' : 'fold'} com ${stackBB}bb. ${nashResult.source}.`,
+      solverData: { source: nashResult.source, confidence: 1.0, rangePct: nashResult.rangePct, scenario: nashResult.rangeDescription },
+    }
+  }
+
+  if (position === 'BB' && hasAllIn) {
+    // BB decide call ou fold vs push
+    const heroCalled = heroAction === 'call' || heroAction === 'allin'
+    const isCorrect = (nashResult.shouldPlay && heroCalled) || (nashResult.shouldFold && heroAction === 'fold')
+    return {
+      isCorrect,
+      position,
+      recommended: isCorrect ? null : (nashResult.shouldPlay ? 'Call' : 'Fold'),
+      reason: isCorrect
+        ? `Nash HU: ${hand} e ${nashResult.shouldPlay ? 'call' : 'fold'} correto vs push com ${stackBB}bb (${nashResult.rangePct}% call range).`
+        : `Nash HU: ${hand} deveria ${nashResult.shouldPlay ? 'CALL' : 'fold'} vs push com ${stackBB}bb. ${nashResult.source}.`,
+      solverData: { source: nashResult.source, confidence: 1.0, rangePct: nashResult.rangePct, scenario: nashResult.rangeDescription },
+    }
+  }
+
+  return null
 }
 
 // ─── Postflop Feedback (simplified for Spin) ──────────────
