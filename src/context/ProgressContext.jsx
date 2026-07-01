@@ -125,13 +125,40 @@ function migrateModules(modules) {
   return modules
 }
 
+// Cadeia de desbloqueio: ordem numerica pulando os modulos ocultos (11, 12, 19 foram fundidos em outros)
+const HIDDEN_MODULES = [11, 12, 19]
+const UNLOCK_CHAIN = Array.from({ length: 37 }, (_, i) => i + 1).filter(id => !HIDDEN_MODULES.includes(id))
+
+function nextInChain(moduleId) {
+  const idx = UNLOCK_CHAIN.indexOf(Number(moduleId))
+  return idx >= 0 ? UNLOCK_CHAIN[idx + 1] : undefined
+}
+
+// Repara usuarios que travaram: se um modulo esta completo, o proximo da cadeia deve estar desbloqueado
+// (bug antigo: completar M10/M18 desbloqueava os ocultos M11/M19, e o cap <31 nunca abria os Spin 33-37)
+function repairUnlocks(modules) {
+  let changed = false
+  const repaired = { ...modules }
+  for (const id of UNLOCK_CHAIN) {
+    if (repaired[id]?.completed) {
+      const next = nextInChain(id)
+      if (next && repaired[next] && !repaired[next].unlocked) {
+        repaired[next] = { ...repaired[next], unlocked: true }
+        changed = true
+      }
+    }
+  }
+  return changed ? repaired : modules
+}
+
 function mergeProgress(saved) {
   if (!saved) return defaultProgress
   const migratedModules = migrateModules(saved.modules)
+  const merged = { ...defaultProgress.modules, ...migratedModules }
   return {
     ...defaultProgress,
     ...saved,
-    modules: { ...defaultProgress.modules, ...migratedModules }
+    modules: repairUnlocks(merged)
   }
 }
 
@@ -178,13 +205,27 @@ export function ProgressProvider({ children, userId, userEmail }) {
     if (!userId) return
 
     if (syncTimer.current) clearTimeout(syncTimer.current)
-    syncTimer.current = setTimeout(() => {
-      supabase.from('progress').upsert({
+    syncTimer.current = setTimeout(async () => {
+      const { error } = await supabase.from('progress').upsert({
         user_id: userId,
         data: progress,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' }).then(() => {})
+      }, { onConflict: 'user_id' })
+      if (error) {
+        console.warn('[ProgressContext] Falha ao sincronizar com Supabase:', error.message)
+        // Retry unico apos 5s — localStorage segue como fonte local ate a proxima sync
+        syncTimer.current = setTimeout(async () => {
+          const { error: retryError } = await supabase.from('progress').upsert({
+            user_id: userId,
+            data: progress,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' })
+          if (retryError) console.error('[ProgressContext] Retry de sync falhou:', retryError.message)
+        }, 5000)
+      }
     }, 1500)
+
+    return () => { if (syncTimer.current) clearTimeout(syncTimer.current) }
   }, [progress, userId])
 
   // Admin: todos os modulos desbloqueados
@@ -253,8 +294,11 @@ export function ProgressProvider({ children, userId, userEmail }) {
       const moduleCompleted = mod.completed || justCompleted
 
       const nextModules = { ...prev.modules }
-      if (justCompleted && moduleId < 31) {
-        nextModules[moduleId + 1] = { ...nextModules[moduleId + 1], unlocked: true }
+      if (justCompleted) {
+        const nextId = nextInChain(moduleId)
+        if (nextId && nextModules[nextId]) {
+          nextModules[nextId] = { ...nextModules[nextId], unlocked: true }
+        }
       }
 
       // Spaced Repetition: agendar revisao quando completa ou apos cada sessao de revisao

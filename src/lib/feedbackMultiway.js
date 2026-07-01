@@ -3,7 +3,7 @@
 // Usa handStrength/boardTexture do botAI.js e evalHand do pokerEngine.js
 // ================================================================
 
-import { RFI_RANGES, BB_VS_RFI, BLIND_WARS } from '../data/ranges.js'
+import { RFI_RANGES, BB_VS_RFI, BTN_VS_RFI, SB_VS_RFI, VS_3BET_RANGES, BLIND_WARS } from '../data/ranges.js'
 import { handStrength, boardTexture } from './botAI.js'
 import { holeToNotation, evalHand, getBlindIndexes, RANK_VAL } from './pokerEngine.js'
 
@@ -17,6 +17,16 @@ function mapPositionForRFI(position) {
 function mapRaiserForDefense(raiserPosition) {
   const map = { 'UTG': 'vsUTG', 'UTG+1': 'vsUTG', 'LJ': 'vsUTG', 'HJ': 'vsHJ', 'CO': 'vsCO', 'BTN': 'vsBTN', 'SB': 'vsSB' }
   return map[raiserPosition] || 'vsCO'
+}
+
+// Tenta a chave exata da tabela antes do fallback mapeado
+// (BB_VS_RFI usa 'vsUTG1', BTN/SB_VS_RFI usam 'vsUTG+1')
+function pickDefenseRange(table, raiserPosition) {
+  if (!table || !raiserPosition) return null
+  return table[`vs${raiserPosition}`]
+    || table[`vs${raiserPosition.replace('+', '')}`]
+    || table[mapRaiserForDefense(raiserPosition)]
+    || null
 }
 
 function getStackTier(stackBB) {
@@ -83,15 +93,21 @@ export function getMultiwayPreflopFeedback(game, heroIdx, heroAction) {
     a.street === 'preflop' && a.playerIdx !== heroIdx && a.action !== 'sb' && a.action !== 'bb'
   )
 
-  let numRaisers = 0, firstRaiserPosition = null, numLimpers = 0
+  let numRaisers = 0, firstRaiserPosition = null, lastRaiserPosition = null, numLimpers = 0
   for (const a of preflopActions) {
     if (a.action === 'raise' || a.action === 'allin') {
       numRaisers++
       if (numRaisers === 1) firstRaiserPosition = game.players[a.playerIdx]?.position
+      lastRaiserPosition = game.players[a.playerIdx]?.position
     } else if (a.action === 'call' && numRaisers === 0) {
       numLimpers++
     }
   }
+
+  // Herói já abriu raise nesta mão? Então qualquer raise de vilão é um 3-bet contra ele
+  const heroRaised = (game.actionHistory || []).some(a =>
+    a.street === 'preflop' && a.playerIdx === heroIdx && (a.action === 'raise' || a.action === 'allin')
+  )
 
   const isFirstIn = numRaisers === 0 && numLimpers === 0
 
@@ -106,14 +122,19 @@ export function getMultiwayPreflopFeedback(game, heroIdx, heroAction) {
     return feedbackRFI(hand, heroAction, position, stackTier)
   }
 
+  // ─── Herói abriu e levou 3-bet ───
+  if (heroRaised && numRaisers >= 1) {
+    return feedbackVs3Bet(hand, heroAction, position, lastRaiserPosition)
+  }
+
   // ─── Facing raise (single) ───
   if (numRaisers === 1) {
     return feedbackVsRaise(hand, heroAction, position, firstRaiserPosition)
   }
 
-  // ─── Facing 3-bet+ ───
+  // ─── Cold vs 3-bet+ (herói ainda não agiu) ───
   if (numRaisers >= 2) {
-    return feedbackVs3Bet(hand, heroAction, position)
+    return feedbackVs3BetGeneric(hand, heroAction, position)
   }
 
   // ─── Facing limpers ───
@@ -184,39 +205,36 @@ function feedbackSBOpen(hand, heroAction, position) {
 }
 
 function feedbackVsRaise(hand, heroAction, position, raiserPosition) {
-  const raiserKey = mapRaiserForDefense(raiserPosition)
+  // Tabelas solver-based por posicao do heroi
+  const tables = { BB: BB_VS_RFI, BTN: BTN_VS_RFI, SB: SB_VS_RFI }
+  const defRange = pickDefenseRange(tables[position], raiserPosition)
 
-  // BB vs raise
-  if (position === 'BB') {
-    const defRange = BB_VS_RFI?.[raiserKey]
-    if (!defRange) {
-      // Fallback generico
-      return feedbackVsRaiseGeneric(hand, heroAction, position, raiserPosition)
-    }
-
-    if ((defRange.threebet || []).includes(hand)) {
-      return {
-        recommended: 'raise', position,
-        reason: `${hand} esta no range de 3-BET do BB vs ${raiserPosition}. Relance para construir pote ou forcar fold.`,
-        isCorrect: heroAction === 'raise',
-        acceptable: ['call'],
-      }
-    }
-    if ((defRange.call || []).includes(hand)) {
-      return {
-        recommended: 'call', position,
-        reason: `${hand} esta no range de CALL do BB vs ${raiserPosition}. Boa equity para defender.`,
-        isCorrect: heroAction === 'call',
-      }
-    }
-    return {
-      recommended: 'fold', position,
-      reason: `${hand} nao tem equity suficiente para defender do BB vs raise do ${raiserPosition}.`,
-      isCorrect: heroAction === 'fold',
-    }
+  if (!defRange) {
+    // Posicao sem tabela dedicada (CO/HJ cold vs raise) — fallback generico
+    return feedbackVsRaiseGeneric(hand, heroAction, position, raiserPosition)
   }
 
-  return feedbackVsRaiseGeneric(hand, heroAction, position, raiserPosition)
+  if ((defRange.threebet || []).includes(hand)) {
+    const alsoCall = (defRange.call || []).includes(hand)
+    return {
+      recommended: 'raise', position,
+      reason: `${hand} esta no range de 3-BET do ${position} vs ${raiserPosition}. Relance para construir pote ou forcar fold.`,
+      isCorrect: heroAction === 'raise' || (alsoCall && heroAction === 'call'),
+      acceptable: alsoCall ? ['call'] : [],
+    }
+  }
+  if ((defRange.call || []).includes(hand)) {
+    return {
+      recommended: 'call', position,
+      reason: `${hand} esta no range de CALL do ${position} vs ${raiserPosition}. Boa equity para defender.`,
+      isCorrect: heroAction === 'call',
+    }
+  }
+  return {
+    recommended: 'fold', position,
+    reason: `${hand} nao tem equity suficiente para defender do ${position} vs raise do ${raiserPosition}.`,
+    isCorrect: heroAction === 'fold',
+  }
 }
 
 function feedbackVsRaiseGeneric(hand, heroAction, position, raiserPosition) {
@@ -253,7 +271,53 @@ function feedbackVsRaiseGeneric(hand, heroAction, position, raiserPosition) {
   }
 }
 
-function feedbackVs3Bet(hand, heroAction, position) {
+// Herói abriu raise e levou 3-bet — usa tabelas GreenCharts (VS_3BET_RANGES)
+function feedbackVs3Bet(hand, heroAction, position, threeBettorPosition) {
+  const heroKeyMap = { 'UTG': 'UTG', 'UTG+1': 'MP', 'LJ': 'MP', 'HJ': 'MP', 'CO': 'CO', 'BTN': 'BTN', 'SB': 'SB' }
+  const villainKeyMap = { 'UTG+1': 'vsMP', 'LJ': 'vsMP', 'HJ': 'vsMP', 'CO': 'vsCO', 'BTN': 'vsBTN', 'SB': 'vsSB', 'BB': 'vsBB' }
+
+  const heroTable = VS_3BET_RANGES[heroKeyMap[position]]
+  const range = heroTable?.[villainKeyMap[threeBettorPosition]]
+
+  if (!range) return feedbackVs3BetGeneric(hand, heroAction, position)
+
+  const inFourbet = (range.fourbet || []).includes(hand)
+  const inAllin = (range.allin || []).includes(hand)
+  const inMix = (range.mix || []).includes(hand)
+  const inCall = (range.call || []).includes(hand)
+
+  if (inFourbet || inAllin) {
+    return {
+      recommended: 'raise', position,
+      reason: `${hand} esta no range de 4-BET do ${position} vs 3-bet do ${threeBettorPosition}. Construa o pote com a parte forte do range.`,
+      isCorrect: heroAction === 'raise' || heroAction === 'allin' || (inCall && heroAction === 'call'),
+      acceptable: inCall ? ['call'] : [],
+    }
+  }
+  if (inCall) {
+    return {
+      recommended: 'call', position,
+      reason: `${hand} esta no range de CALL do ${position} vs 3-bet do ${threeBettorPosition}. Defenda e jogue pos-flop.`,
+      isCorrect: heroAction === 'call',
+    }
+  }
+  if (inMix) {
+    return {
+      recommended: 'raise', position,
+      reason: `${hand} e jogada MISTA vs 3-bet do ${threeBettorPosition} — 4-bet blefe ou fold, ambos corretos em frequencia.`,
+      isCorrect: heroAction === 'raise' || heroAction === 'allin' || heroAction === 'fold',
+      acceptable: ['fold'],
+    }
+  }
+  return {
+    recommended: 'fold', position,
+    reason: `${hand} nao continua vs 3-bet do ${threeBettorPosition}. Abrir e foldar pro 3-bet e normal — nao defenda demais.`,
+    isCorrect: heroAction === 'fold',
+  }
+}
+
+// Fallback: cold vs 3-bet ou posicao sem tabela
+function feedbackVs3BetGeneric(hand, heroAction, position) {
   const premium = ['AA','KK','QQ','AKs']
   const fourBet = ['JJ','TT','AKo','AQs']
   const callable = ['99','88','AJs','ATs','KQs','AQo']
